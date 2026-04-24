@@ -942,11 +942,11 @@ def api_production():
 
 @app.route('/api/send-production', methods=['GET', 'POST'])
 def api_send_production():
-    """Génère et envoie le rapport de production cuisine dans le groupe WhatsApp Prost News."""
+    """Génère et envoie le rapport de production cuisine dans le groupe WhatsApp Prost Kitchen chef."""
     GREEN_API_URL = "https://7107.api.greenapi.com"
     GREEN_ID = "7107599166"
     GREEN_TOKEN = "6741ac4b9a644be3983c4e69ec08b4f153cdade48db04b22ad"
-    GROUP_ID = "120363192837135531@g.us"
+    GROUP_ID = "120363407006393421@g.us"  # Prost kitchen chef 👨‍🍳
 
     try:
         # Récupérer les données de production
