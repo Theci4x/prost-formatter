@@ -719,6 +719,20 @@ def api_send_whatsapp():
             bname = booker.get('full_name', '?')
             resa_lines += f"  \u2022 {time_str} \u2014 {bname} ({pax} pers.)\n"
 
+        # Événements Bastille
+        events = get_events_bastille()
+        events_lines = ""
+        for ev in events[:5]:
+            title = ev.get('title', '?')
+            address = ev.get('address_name', '')
+            date_start = ev.get('date_start', '')[:10] if ev.get('date_start') else ''
+            events_lines += f"  \U0001f4cd {title}"
+            if address:
+                events_lines += f" \u2014 {address}"
+            if date_start:
+                events_lines += f" ({date_start})"
+            events_lines += "\n"
+
         msg = (
             f"\U0001f37a *Rapport Prost \u2014 {date_label}*\n\n"
             f"\U0001f321\ufe0f *M\u00e9t\u00e9o Bastille*\n"
@@ -729,6 +743,8 @@ def api_send_whatsapp():
             f"{top_plats_lines.rstrip() if top_plats_lines else '  Pas de donn\u00e9es'}\n\n"
             f"\U0001f4c5 *R\u00e9servations ce soir*\n"
             f"{resa_lines.rstrip() if resa_lines else '  Aucune r\u00e9servation'}\n\n"
+            f"\U0001f3ad *\u00c9v\u00e9nements Bastille*\n"
+            f"{events_lines.rstrip() if events_lines else '  Aucun \u00e9v\u00e9nement'}\n\n"
             f"\U0001f517 Dashboard : https://prost-formatter.onrender.com"
         )
 
