@@ -550,5 +550,122 @@ def format_plats():
     return jsonify({"html": html, "count": count})
 
 
+@app.route('/api/fidyo', methods=['GET'])
+def api_fidyo():
+    """Endpoint unique pour toutes les données Fidyo (ventes + top plats).
+    Remplace les appels directs Fidyo dans Make.com pour éviter les timeouts.
+    Paramètre optionnel: ?date=YYYY-MM-DD (défaut: hier)
+    """
+    try:
+        paris_tz = pytz.timezone('Europe/Paris')
+        now_paris = datetime.now(paris_tz)
+        yesterday = (now_paris - timedelta(days=1)).strftime('%Y-%m-%d')
+        date_str = request.args.get('date', yesterday)
+
+        # Ventes
+        ca, commandes, err_sales = get_fidyo_sales(date_str)
+        # Top plats
+        menu, err_menu = get_fidyo_menu(date_str)
+
+        # Formater top plats en texte WhatsApp
+        top_plats_text = ""
+        top_plats_html = ""
+        rows = ""
+        if menu:
+            sorted_menu = sorted(menu, key=lambda x: float(x.get('total_count', 0) or 0), reverse=True)
+            top10 = [m for m in sorted_menu if float(m.get('total_count', 0) or 0) >= 1][:10]
+            for i, item in enumerate(top10, 1):
+                name = item.get('menu_name', '?')
+                qty = int(float(item.get('total_count', 0) or 0))
+                sale = item.get('total_sale', 0)
+                cat = item.get('catalog', '')
+                top_plats_text += f"{i}. {name} x{qty} — {sale}€\n"
+                rows += f"<tr><td>{i}</td><td><strong>{name}</strong></td><td>{cat}</td><td>{qty}</td><td>{sale} €</td></tr>"
+            top_plats_html = ('<table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse;font-family:Arial;font-size:13px;width:100%">'
+                '<tr style="background:#f0f0f0;"><th>#</th><th>Plat</th><th>Catégorie</th><th>Qté</th><th>CA €</th></tr>'
+                + rows + '</table>')
+
+        return jsonify({
+            "date": date_str,
+            "ca": ca or 0,
+            "commandes": commandes or 0,
+            "top_plats_text": top_plats_text.strip(),
+            "top_plats_html": top_plats_html,
+            "error_sales": err_sales,
+            "error_menu": err_menu
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/api/whatsapp-message', methods=['GET'])
+def api_whatsapp_message():
+    """Retourne le message complet formaté pour WhatsApp (texte brut).
+    Paramètre optionnel: ?date=YYYY-MM-DD (défaut: aujourd'hui pour réservations, hier pour ventes)
+    """
+    try:
+        paris_tz = pytz.timezone('Europe/Paris')
+        now_paris = datetime.now(paris_tz)
+        today = now_paris.strftime('%Y-%m-%d')
+        yesterday = (now_paris - timedelta(days=1)).strftime('%Y-%m-%d')
+        date_label = now_paris.strftime('%d/%m/%Y')
+
+        # Météo
+        meteo = get_meteo()
+        tmin = meteo.get('tmin', '?')
+        tmax = meteo.get('tmax', '?')
+        pluie = meteo.get('pluie', 0)
+
+        # Ventes J-1
+        ca, commandes, _ = get_fidyo_sales(yesterday)
+        yesterday_label = (now_paris - timedelta(days=1)).strftime('%d/%m/%Y')
+
+        # Top plats J-1
+        menu, _ = get_fidyo_menu(yesterday)
+        top_plats_lines = ""
+        if menu:
+            sorted_menu = sorted(menu, key=lambda x: float(x.get('total_count', 0) or 0), reverse=True)
+            top5 = [m for m in sorted_menu if float(m.get('total_count', 0) or 0) >= 1][:5]
+            for i, item in enumerate(top5, 1):
+                name = item.get('menu_name', '?')
+                qty = int(float(item.get('total_count', 0) or 0))
+                sale = item.get('total_sale', 0)
+                top_plats_lines += f"  {i}. {name} x{qty} ({sale}€)\n"
+
+        # Réservations aujourd'hui
+        bookings, _ = get_joy_bookings(today)
+        resa_lines = ""
+        for b in bookings:
+            booker = b.get('booker_information') or {}
+            brief = b.get('brief') or {}
+            event_dt = brief.get('event_date_time', '')
+            time_str = event_dt[11:16] if len(event_dt) >= 16 else '?'
+            pax = b.get('pax', '?')
+            name = booker.get('full_name', '?')
+            resa_lines += f"  • {time_str} — {name} ({pax} pers.)\n"
+
+        # Construire le message
+        pluie_str = f"{pluie} mm" if pluie and float(pluie) > 0 else "Pas de pluie"
+        msg = f"""🍺 *Rapport Prost — {date_label}*
+
+🌡️ *Météo Bastille*
+{tmin}° → {tmax}°C | {pluie_str}
+
+📊 *Ventes J-1 ({yesterday_label})*
+CA : {ca or '—'} € | Commandes : {commandes or '—'}
+
+🍽️ *Top 5 plats J-1*
+{top_plats_lines.rstrip() if top_plats_lines else '  Pas de données'}
+
+📅 *Réservations ce soir*
+{resa_lines.rstrip() if resa_lines else '  Aucune réservation'}
+
+🔗 Dashboard : https://prost-formatter.onrender.com"""
+
+        return jsonify({"message": msg, "date": date_label})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=False)
