@@ -12,6 +12,8 @@ JOY_REFRESH_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsIm
 JOY_API_BASE = "https://manager-api.privateaser.com"
 FIDYO_BOUT_ID = "4484bbb0-244d-49cb-8a06-b2aa6321f3b5"
 FIDYO_API_BASE = "https://api.fidyo.fr"
+# Static JWT token valid until 2026-05-24 (update when expired)
+FIDYO_STATIC_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiZmR5dXNlciIsImlkIjoiZDJkYzM1YzUtYWU1Ni00NDhlLTg2YWEtN2NiYzI0NjQ3NzdjIiwiZXhwIjoxNzc5NjI3MTc3LCJ0eXBlIjoiZmR5dXNlciIsInNlc3Npb25faWQiOiJlMGI0ZjViMS00NTMyLTRlNjMtODBkNi1mYmJiOWY0M2VmYjUifQ.AnXuP_QOvMd9aQHmxfXbe4hgnbajap5UWjPMjCw_aYk"
 
 # Token cache
 _token_cache = {"token": None, "expires_at": None}
@@ -71,32 +73,8 @@ def get_joy_bookings(date_str):
 
 
 def get_fidyo_token():
-    now = datetime.now()
-    if _fidyo_token_cache["token"] and _fidyo_token_cache["expires_at"]:
-        if now < _fidyo_token_cache["expires_at"] - timedelta(seconds=60):
-            return _fidyo_token_cache["token"]
-    try:
-        resp = requests.post(
-            f"{FIDYO_API_BASE}/rpc/v2_login_email_web_admin",
-            json={"email": "michael.fink75@gmail.com", "pass": "50cent", "hash": "5a3bf890d653f20bdc77fded2c5be50b"},
-            headers={"Content-Type": "application/json"},
-            timeout=10
-        )
-        if resp.status_code == 200:
-            data = resp.json()
-            result = data.get("result", [{}])
-            if result and isinstance(result, list):
-                token_data = result[0].get("token", {})
-                token = token_data.get("token") if isinstance(token_data, dict) else token_data
-            else:
-                token = data.get("token") or data.get("access_token")
-            if token:
-                _fidyo_token_cache["token"] = token
-                _fidyo_token_cache["expires_at"] = now + timedelta(hours=23)
-                return token
-    except Exception as e:
-        pass
-    return None
+    """Return the static Fidyo JWT token (valid until 2026-05-24)."""
+    return FIDYO_STATIC_TOKEN
 
 
 def get_fidyo_sales(date_str):
