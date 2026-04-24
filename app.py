@@ -667,5 +667,83 @@ CA : {ca or '—'} € | Commandes : {commandes or '—'}
         return jsonify({"error": str(e)}), 500
 
 
+@app.route('/api/send-whatsapp', methods=['GET', 'POST'])
+def api_send_whatsapp():
+    """Génère le message complet et l'envoie directement dans le groupe WhatsApp Prost News.
+    Appeler cet endpoint depuis Make.com suffit — pas besoin de module Green API séparé.
+    """
+    GREEN_API_URL = "https://7107.api.greenapi.com"
+    GREEN_ID = "7107599166"
+    GREEN_TOKEN = "6741ac4b9a644be3983c4e69ec08b4f153cdade48db04b22ad"
+    GROUP_ID = "120363192837135531@g.us"
+
+    try:
+        paris_tz = pytz.timezone('Europe/Paris')
+        now_paris = datetime.now(paris_tz)
+        today = now_paris.strftime('%Y-%m-%d')
+        yesterday = (now_paris - timedelta(days=1)).strftime('%Y-%m-%d')
+        date_label = now_paris.strftime('%d/%m/%Y')
+        yesterday_label = (now_paris - timedelta(days=1)).strftime('%d/%m/%Y')
+
+        # Météo
+        meteo = get_meteo()
+        tmin = meteo.get('tmin', '?')
+        tmax = meteo.get('tmax', '?')
+        pluie = meteo.get('pluie', 0)
+        pluie_str = f"{pluie} mm" if pluie and float(str(pluie).replace('?','0') or 0) > 0 else "Pas de pluie"
+
+        # Ventes J-1
+        ca, commandes, _ = get_fidyo_sales(yesterday)
+
+        # Top plats J-1
+        menu, _ = get_fidyo_menu(yesterday)
+        top_plats_lines = ""
+        if menu:
+            sorted_menu = sorted(menu, key=lambda x: float(x.get('total_count', 0) or 0), reverse=True)
+            top5 = [m for m in sorted_menu if float(m.get('total_count', 0) or 0) >= 1][:5]
+            for i, item in enumerate(top5, 1):
+                name = item.get('menu_name', '?')
+                qty = int(float(item.get('total_count', 0) or 0))
+                sale = item.get('total_sale', 0)
+                top_plats_lines += f"  {i}. {name} x{qty} ({sale}\u20ac)\n"
+
+        # Réservations aujourd'hui
+        bookings, _ = get_joy_bookings(today)
+        resa_lines = ""
+        for b in bookings:
+            booker = b.get('booker_information') or {}
+            brief_data = b.get('brief') or {}
+            event_dt = brief_data.get('event_date_time', '')
+            time_str = event_dt[11:16] if len(event_dt) >= 16 else '?'
+            pax = b.get('pax', '?')
+            bname = booker.get('full_name', '?')
+            resa_lines += f"  \u2022 {time_str} \u2014 {bname} ({pax} pers.)\n"
+
+        msg = (
+            f"\U0001f37a *Rapport Prost \u2014 {date_label}*\n\n"
+            f"\U0001f321\ufe0f *M\u00e9t\u00e9o Bastille*\n"
+            f"{tmin}\u00b0 \u2192 {tmax}\u00b0C | {pluie_str}\n\n"
+            f"\U0001f4ca *Ventes J-1 ({yesterday_label})*\n"
+            f"CA : {ca or '\u2014'} \u20ac | Commandes : {commandes or '\u2014'}\n\n"
+            f"\U0001f37d\ufe0f *Top 5 plats J-1*\n"
+            f"{top_plats_lines.rstrip() if top_plats_lines else '  Pas de donn\u00e9es'}\n\n"
+            f"\U0001f4c5 *R\u00e9servations ce soir*\n"
+            f"{resa_lines.rstrip() if resa_lines else '  Aucune r\u00e9servation'}\n\n"
+            f"\U0001f517 Dashboard : https://prost-formatter.onrender.com"
+        )
+
+        # Envoyer dans le groupe
+        send_url = f"{GREEN_API_URL}/waInstance{GREEN_ID}/sendMessage/{GREEN_TOKEN}"
+        resp = requests.post(send_url, json={"chatId": GROUP_ID, "message": msg}, timeout=15)
+
+        if resp.status_code == 200:
+            return jsonify({"status": "sent", "idMessage": resp.json().get("idMessage")})
+        else:
+            return jsonify({"status": "error", "code": resp.status_code, "detail": resp.text}), 500
+
+    except Exception as e:
+        return jsonify({"status": "error", "detail": str(e)}), 500
+
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=False)
