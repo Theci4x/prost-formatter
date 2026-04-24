@@ -78,18 +78,23 @@ def get_fidyo_token():
     try:
         resp = requests.post(
             f"{FIDYO_API_BASE}/rpc/v2_login_email_web_admin",
-            json={"email": "michael.fink75@gmail.com", "password": "Kapu2025$"},
+            json={"email": "michael.fink75@gmail.com", "pass": "50cent", "hash": "5a3bf890d653f20bdc77fded2c5be50b"},
             headers={"Content-Type": "application/json"},
             timeout=10
         )
         if resp.status_code == 200:
             data = resp.json()
-            token = data.get("token") or data.get("access_token")
+            result = data.get("result", [{}])
+            if result and isinstance(result, list):
+                token_data = result[0].get("token", {})
+                token = token_data.get("token") if isinstance(token_data, dict) else token_data
+            else:
+                token = data.get("token") or data.get("access_token")
             if token:
                 _fidyo_token_cache["token"] = token
                 _fidyo_token_cache["expires_at"] = now + timedelta(hours=23)
                 return token
-    except:
+    except Exception as e:
         pass
     return None
 
@@ -102,7 +107,13 @@ def get_fidyo_sales(date_str):
         resp = requests.post(
             f"{FIDYO_API_BASE}/rpc/app_order_sale_stat",
             json={"bout_id": FIDYO_BOUT_ID, "date_from": date_str, "date_to": date_str},
-            headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+            headers={
+                "Authorization": f"Bearer {token}",
+                "Content-Type": "application/json",
+                "Accept": "application/vnd.pgrst.object+json",
+                "Prefer": "params=single-object",
+                "Content-Profile": "api_v2"
+            },
             timeout=10
         )
         if resp.status_code == 200:
@@ -110,7 +121,7 @@ def get_fidyo_sales(date_str):
             result = data.get("result", [{}])
             if result:
                 r = result[0]
-                return r.get("total_sale", 0), r.get("total_count", 0), None
+                return r.get("total_sale", 0), r.get("order_count", r.get("total_count", 0)), None
     except Exception as e:
         return None, None, str(e)
     return None, None, "No data"
@@ -124,7 +135,13 @@ def get_fidyo_menu(date_str):
         resp = requests.post(
             f"{FIDYO_API_BASE}/rpc/app_menu_sale_stat",
             json={"bout_id": FIDYO_BOUT_ID, "date_from": date_str, "date_to": date_str},
-            headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+            headers={
+                "Authorization": f"Bearer {token}",
+                "Content-Type": "application/json",
+                "Accept": "application/vnd.pgrst.object+json",
+                "Prefer": "params=single-object",
+                "Content-Profile": "api_v2"
+            },
             timeout=10
         )
         if resp.status_code == 200:
