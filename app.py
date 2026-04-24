@@ -761,5 +761,272 @@ def api_send_whatsapp():
         return jsonify({"status": "error", "detail": str(e)}), 500
 
 
+# Base de données cuisine — stocks tampons calculés sur 2 mois de ventes (mars-avril 2026)
+CUISINE_STOCK = [
+  {"nom": "Jarret de porc à la fleur de bière, purée de pomme de terre", "cat": "PLATS", "moy": 3.93, "tampon": 6},
+  {"nom": "Hampe de boeuf 180g", "cat": "PLATS", "moy": 2.78, "tampon": 4},
+  {"nom": "Wienerschnitzel  frites, sauce champignons", "cat": "PLATS", "moy": 2.73, "tampon": 4},
+  {"nom": "FRITES , SAUCE CURRY", "cat": "A partager", "moy": 2.69, "tampon": 4},
+  {"nom": "Magret de canard entier, sauce au miel, purée de patate douce violette", "cat": "PLATS", "moy": 2.11, "tampon": 3},
+  {"nom": "BRETZEL NATURE", "cat": "A partager", "moy": 1.89, "tampon": 3},
+  {"nom": "Pain perdu glace vanille chantilly", "cat": "DESSERT", "moy": 1.89, "tampon": 3},
+  {"nom": "Frites patates douces, sauce aioli", "cat": "A partager", "moy": 1.69, "tampon": 3},
+  {"nom": "Confit de canard, pommes sautées à l'ail et persil", "cat": "PLATS", "moy": 1.62, "tampon": 3},
+  {"nom": "Choucroute royale", "cat": "PLATS", "moy": 1.47, "tampon": 2},
+  {"nom": "Strudel aux pommes maison", "cat": "DESSERT", "moy": 1.35, "tampon": 2},
+  {"nom": "CALAMAR FRIT MAISON", "cat": "A partager", "moy": 1.25, "tampon": 2},
+  {"nom": "Confit d'agneau, légumes de saison", "cat": "PLATS", "moy": 1.25, "tampon": 2},
+  {"nom": "Currywurst", "cat": "A partager", "moy": 1.24, "tampon": 2},
+  {"nom": "Moelleux au chocolat + glace vanille", "cat": "DESSERT", "moy": 1.18, "tampon": 2},
+  {"nom": "Paleron de boeuf braise, puree au beurre", "cat": "PLATS", "moy": 1.16, "tampon": 2},
+  {"nom": "Pave de saumon mousseline de choux fleurs condiment wasabi et sauce vierge", "cat": "PLATS", "moy": 1.15, "tampon": 2},
+  {"nom": "Spätzle sauce truffe", "cat": "PLATS", "moy": 1.07, "tampon": 2},
+  {"nom": "frites a la truffe", "cat": "A partager", "moy": 1.05, "tampon": 2},
+  {"nom": "PLANCHE MIXTE", "cat": "A partager", "moy": 0.96, "tampon": 2},
+  {"nom": "croquette pomme de terre comté sauce poivre", "cat": "A partager", "moy": 0.96, "tampon": 2},
+  {"nom": "Tournedos de boeuf rossini", "cat": "PLATS", "moy": 0.89, "tampon": 2},
+  {"nom": "Demi langouste grille, tian de légumes riz pilaf sauce vierge", "cat": "PLATS", "moy": 0.84, "tampon": 2},
+  {"nom": "creme brulee a la vanille", "cat": "DESSERT", "moy": 0.84, "tampon": 2},
+  {"nom": "LÉGUMES TEMPURA MAISON", "cat": "A partager", "moy": 0.82, "tampon": 2},
+  {"nom": "CROQUETTE DE POULET MAISON", "cat": "A partager", "moy": 0.80, "tampon": 2},
+  {"nom": "Spatzle gratine au fromage pousse d'épinard et jambon fume", "cat": "PLATS", "moy": 0.78, "tampon": 2},
+  {"nom": "Yakitori au sésame", "cat": "A partager", "moy": 0.76, "tampon": 2},
+  {"nom": "Plateau terre et mer", "cat": "A partager", "moy": 0.76, "tampon": 2},
+  {"nom": "Volaille rotie, jus au romarin, gnocchi gorgonzola", "cat": "PLATS", "moy": 0.71, "tampon": 2},
+  {"nom": "Pavlova fruits éxotique", "cat": "DESSERT", "moy": 0.67, "tampon": 2},
+  {"nom": "Weltmeister platte", "cat": "A partager", "moy": 0.64, "tampon": 2},
+  {"nom": "Gyoza poulet", "cat": "A partager", "moy": 0.62, "tampon": 2},
+  {"nom": "Foret noire destructuree", "cat": "DESSERT", "moy": 0.60, "tampon": 2},
+  {"nom": "mix veggies houmous guacamole", "cat": "A partager", "moy": 0.58, "tampon": 2},
+  {"nom": "Gyoza légumes", "cat": "A partager", "moy": 0.56, "tampon": 2},
+  {"nom": "Apfelfannkuchen (crepe allemande aux pommes)", "cat": "DESSERT", "moy": 0.51, "tampon": 2},
+  {"nom": "PLANCHE APÉRO (FRITES/CALAMAR/POULET/LÉGUMES)", "cat": "A partager", "moy": 0.47, "tampon": 2},
+  {"nom": "Planche mixte", "cat": "A partager", "moy": 0.47, "tampon": 2},
+  {"nom": "Linguine fruits de mer, sauce safranée,moules, petits pois, poivrons, chorizos,crevettes", "cat": "PLATS", "moy": 0.45, "tampon": 2},
+  {"nom": "Cote de boeuf 1kg, fagot d'haricots vers au lard, frites, sauce bleu et poivre", "cat": "A partager", "moy": 0.40, "tampon": 2},
+  {"nom": "PLANCHE CHARCUTERIE 2/3P", "cat": "A partager", "moy": 0.25, "tampon": 2},
+  {"nom": "Assiette de fromage 1 personne", "cat": "DESSERT", "moy": 0.27, "tampon": 2},
+  {"nom": "entrecote chimichuri, tranchée pour speakeasy sur planche", "cat": "A partager", "moy": 0.20, "tampon": 2},
+  {"nom": "Plateau de fruits de mer chaud", "cat": "A partager", "moy": 0.16, "tampon": 2},
+  {"nom": "Terrine de foie gras, toast et chutney figues", "cat": "A partager", "moy": 0.15, "tampon": 2},
+  {"nom": "Assiette saumon fumé, toast", "cat": "A partager", "moy": 0.13, "tampon": 2},
+  {"nom": "PLANCHE FROMAGE", "cat": "A partager", "moy": 0.11, "tampon": 2},
+]
+
+
+@app.route('/api/production', methods=['GET'])
+def api_production():
+    """Rapport de production cuisine pour le lendemain.
+    Calcule les quantités à descendre de la chambre froide basé sur :
+    - Ventes J-1 (Fidyo)
+    - Réservations du soir (Joy) pour projection
+    - Stock tampon par article (calculé sur 2 mois de données)
+    """
+    try:
+        paris_tz = pytz.timezone('Europe/Paris')
+        now_paris = datetime.now(paris_tz)
+        today = now_paris.strftime('%Y-%m-%d')
+        yesterday = (now_paris - timedelta(days=1)).strftime('%Y-%m-%d')
+        today_label = now_paris.strftime('%d/%m/%Y')
+        yesterday_label = (now_paris - timedelta(days=1)).strftime('%d/%m/%Y')
+
+        # Ventes J-1 Fidyo (articles cuisine uniquement)
+        menu_raw, _ = get_fidyo_menu(yesterday)
+        cuisine_cats = {'PLATS', 'DESSERT', 'DESSERTS', 'A partager', 'Tapas 404 not found', 'Entrées'}
+        ventes_hier = {}
+        if menu_raw:
+            for item in menu_raw:
+                cat = item.get('catalog', '')
+                if cat in cuisine_cats:
+                    nom = item.get('menu_name', '').strip()
+                    qty = int(float(item.get('total_count', 0) or 0))
+                    if qty > 0:
+                        ventes_hier[nom] = qty
+
+        # Réservations ce soir (pour projection)
+        bookings, _ = get_joy_bookings(today)
+        total_couverts = sum(b.get('pax', 0) or 0 for b in bookings)
+        nb_resa = len(bookings)
+
+        # Coefficient de projection basé sur les couverts réservés
+        # Moyenne historique : ~30 couverts/soir (à ajuster)
+        MOY_COUVERTS = 30
+        coeff = max(0.5, min(2.5, total_couverts / MOY_COUVERTS)) if total_couverts > 0 else 1.0
+
+        # Calculer les quantités à préparer pour chaque article
+        production = []
+        for article in CUISINE_STOCK:
+            nom = article['nom']
+            cat = article['cat']
+            moy = article['moy']
+            tampon = article['tampon']
+
+            # Quantité vendue hier
+            vendu_hier = ventes_hier.get(nom, 0)
+
+            # Projection basée sur la moyenne historique × coefficient réservations
+            projection = round(moy * coeff)
+
+            # Quantité à préparer = max(vendu hier, projection) + tampon
+            a_preparer = max(vendu_hier, projection) + tampon
+
+            production.append({
+                "nom": nom,
+                "cat": cat,
+                "vendu_hier": vendu_hier,
+                "projection": projection,
+                "tampon": tampon,
+                "a_preparer": a_preparer
+            })
+
+        # Trier par quantité à préparer décroissante
+        production.sort(key=lambda x: x['a_preparer'], reverse=True)
+
+        # Grouper par catégorie pour le message WhatsApp
+        cats_order = ['PLATS', 'A partager', 'DESSERT']
+        by_cat = {}
+        for item in production:
+            c = item['cat'] if item['cat'] in cats_order else 'A partager'
+            by_cat.setdefault(c, []).append(item)
+
+        # Construire le message WhatsApp
+        resa_info = f"{nb_resa} réservation(s) — {total_couverts} couverts" if bookings else "Aucune réservation"
+        msg = f"🍳 *Rapport Production Cuisine — {today_label}*\n"
+        msg += f"📅 Réservations ce soir : {resa_info}\n"
+        msg += f"📊 Basé sur ventes du {yesterday_label} + projection\n\n"
+
+        cat_emojis = {'PLATS': '🍽️', 'A partager': '🫕', 'DESSERT': '🍮'}
+        for cat in cats_order:
+            items = by_cat.get(cat, [])
+            if not items:
+                continue
+            msg += f"{cat_emojis.get(cat, '▪️')} *{cat}*\n"
+            for item in items:
+                msg += f"  • {item['nom']} → *{item['a_preparer']} portions*"
+                if item['vendu_hier'] > 0:
+                    msg += f" (hier: {item['vendu_hier']})"
+                msg += "\n"
+            msg += "\n"
+
+        msg += f"🔗 Dashboard : https://prost-formatter.onrender.com"
+
+        # Construire aussi le HTML pour email
+        html = '<h3>🍳 Rapport Production Cuisine</h3>'
+        html += f'<p><strong>Réservations ce soir :</strong> {resa_info} | <strong>Coefficient :</strong> ×{coeff:.1f}</p>'
+        for cat in cats_order:
+            items = by_cat.get(cat, [])
+            if not items:
+                continue
+            html += f'<h4>{cat_emojis.get(cat, "")} {cat}</h4>'
+            html += '<table border="1" cellpadding="5" cellspacing="0" style="border-collapse:collapse;font-family:Arial;font-size:13px;width:100%">'
+            html += '<tr style="background:#f0f0f0"><th>Article</th><th>Hier</th><th>Projection</th><th>Tampon</th><th>À préparer</th></tr>'
+            for item in items:
+                color = '#d4edda' if item['a_preparer'] >= 5 else 'white'
+                html += f'<tr style="background:{color}"><td>{item["nom"]}</td><td>{item["vendu_hier"]}</td><td>{item["projection"]}</td><td>{item["tampon"]}</td><td><strong>{item["a_preparer"]}</strong></td></tr>'
+            html += '</table><br>'
+
+        return jsonify({
+            "date": today_label,
+            "yesterday": yesterday_label,
+            "nb_reservations": nb_resa,
+            "total_couverts": total_couverts,
+            "coefficient": coeff,
+            "production": production,
+            "message_whatsapp": msg,
+            "html": html
+        })
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/api/send-production', methods=['GET', 'POST'])
+def api_send_production():
+    """Génère et envoie le rapport de production cuisine dans le groupe WhatsApp Prost News."""
+    GREEN_API_URL = "https://7107.api.greenapi.com"
+    GREEN_ID = "7107599166"
+    GREEN_TOKEN = "6741ac4b9a644be3983c4e69ec08b4f153cdade48db04b22ad"
+    GROUP_ID = "120363192837135531@g.us"
+
+    try:
+        # Récupérer les données de production
+        with app.test_request_context():
+            pass
+
+        paris_tz = pytz.timezone('Europe/Paris')
+        now_paris = datetime.now(paris_tz)
+        today = now_paris.strftime('%Y-%m-%d')
+        yesterday = (now_paris - timedelta(days=1)).strftime('%Y-%m-%d')
+        today_label = now_paris.strftime('%d/%m/%Y')
+        yesterday_label = (now_paris - timedelta(days=1)).strftime('%d/%m/%Y')
+
+        menu_raw, _ = get_fidyo_menu(yesterday)
+        cuisine_cats = {'PLATS', 'DESSERT', 'DESSERTS', 'A partager', 'Tapas 404 not found', 'Entrées'}
+        ventes_hier = {}
+        if menu_raw:
+            for item in menu_raw:
+                cat = item.get('catalog', '')
+                if cat in cuisine_cats:
+                    nom = item.get('menu_name', '').strip()
+                    qty = int(float(item.get('total_count', 0) or 0))
+                    if qty > 0:
+                        ventes_hier[nom] = qty
+
+        bookings, _ = get_joy_bookings(today)
+        total_couverts = sum(b.get('pax', 0) or 0 for b in bookings)
+        nb_resa = len(bookings)
+        MOY_COUVERTS = 30
+        coeff = max(0.5, min(2.5, total_couverts / MOY_COUVERTS)) if total_couverts > 0 else 1.0
+
+        production = []
+        for article in CUISINE_STOCK:
+            nom = article['nom']
+            cat = article['cat']
+            moy = article['moy']
+            tampon = article['tampon']
+            vendu_hier = ventes_hier.get(nom, 0)
+            projection = round(moy * coeff)
+            a_preparer = max(vendu_hier, projection) + tampon
+            production.append({"nom": nom, "cat": cat, "vendu_hier": vendu_hier,
+                               "projection": projection, "tampon": tampon, "a_preparer": a_preparer})
+
+        production.sort(key=lambda x: x['a_preparer'], reverse=True)
+
+        cats_order = ['PLATS', 'A partager', 'DESSERT']
+        by_cat = {}
+        for item in production:
+            c = item['cat'] if item['cat'] in cats_order else 'A partager'
+            by_cat.setdefault(c, []).append(item)
+
+        resa_info = f"{nb_resa} résa — {total_couverts} couverts" if bookings else "Aucune réservation"
+        cat_emojis = {'PLATS': '🍽️', 'A partager': '🫕', 'DESSERT': '🍮'}
+
+        msg = f"🍳 *Production Cuisine — {today_label}*\n"
+        msg += f"📅 Ce soir : {resa_info} (coeff ×{coeff:.1f})\n\n"
+
+        for cat in cats_order:
+            items = by_cat.get(cat, [])
+            if not items:
+                continue
+            msg += f"{cat_emojis.get(cat, '')} *{cat}*\n"
+            for item in items:
+                msg += f"  • {item['nom']} → *{item['a_preparer']}*"
+                if item['vendu_hier'] > 0:
+                    msg += f" (J-1: {item['vendu_hier']})"
+                msg += "\n"
+            msg += "\n"
+
+        send_url = f"{GREEN_API_URL}/waInstance{GREEN_ID}/sendMessage/{GREEN_TOKEN}"
+        resp = requests.post(send_url, json={"chatId": GROUP_ID, "message": msg}, timeout=15)
+
+        if resp.status_code == 200:
+            return jsonify({"status": "sent", "nb_articles": len(production), "couverts": total_couverts})
+        else:
+            return jsonify({"status": "error", "code": resp.status_code, "detail": resp.text}), 500
+
+    except Exception as e:
+        return jsonify({"status": "error", "detail": str(e)}), 500
+
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=False)
