@@ -642,7 +642,12 @@ def api_whatsapp_message():
             time_str = event_dt[11:16] if len(event_dt) >= 16 else '?'
             pax = b.get('pax', '?')
             name = booker.get('full_name', '?')
-            resa_lines += f"  • {time_str} — {name} ({pax} pers.)\n"
+            note_obj = b.get('notes') or {}
+            note = note_obj.get('content', '') if isinstance(note_obj, dict) else ''
+            resa_lines += f"  • {time_str} — {name} ({pax} pers.)"
+            if note and note.strip():
+                resa_lines += f"\n    📝 {note.strip()}"
+            resa_lines += "\n"
 
         # Construire le message
         pluie_str = f"{pluie} mm" if pluie and float(pluie) > 0 else "Pas de pluie"
@@ -717,7 +722,12 @@ def api_send_whatsapp():
             time_str = event_dt[11:16] if len(event_dt) >= 16 else '?'
             pax = b.get('pax', '?')
             bname = booker.get('full_name', '?')
-            resa_lines += f"  \u2022 {time_str} \u2014 {bname} ({pax} pers.)\n"
+            note_obj = b.get('notes') or {}
+            note = note_obj.get('content', '') if isinstance(note_obj, dict) else ''
+            resa_lines += f"  \u2022 {time_str} \u2014 {bname} ({pax} pers.)"
+            if note and note.strip():
+                resa_lines += f"\n    \U0001f4dd {note.strip()}"
+            resa_lines += "\n"
 
         # Événements Bastille
         events = get_events_bastille()
