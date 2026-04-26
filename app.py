@@ -821,6 +821,8 @@ CUISINE_STOCK = [
   {"nom": "Terrine de foie gras, toast et chutney figues", "cat": "A partager", "moy": 0.15, "tampon": 2},
   {"nom": "Assiette saumon fumé, toast", "cat": "A partager", "moy": 0.13, "tampon": 2},
   {"nom": "PLANCHE FROMAGE", "cat": "A partager", "moy": 0.11, "tampon": 2},
+  {"nom": "Burger", "cat": "PLATS", "moy": 4.47, "tampon": 4},
+  {"nom": "Menu Burger + boisson", "cat": "PLATS", "moy": 0.35, "tampon": 2},
 ]
 
 
@@ -842,7 +844,7 @@ def api_production():
 
         # Ventes J-1 Fidyo (articles cuisine uniquement)
         menu_raw, _ = get_fidyo_menu(yesterday)
-        cuisine_cats = {'PLATS', 'DESSERT', 'DESSERTS', 'A partager', 'Tapas 404 not found', 'Entrées'}
+        cuisine_cats = {'PLATS', 'DESSERT', 'DESSERTS', 'A partager', 'Tapas 404 not found', 'Entrées', 'Burger', 'Menu'}
         ventes_hier = {}
         if menu_raw:
             for item in menu_raw:
@@ -971,7 +973,7 @@ def api_send_production():
         yesterday_label = (now_paris - timedelta(days=1)).strftime('%d/%m/%Y')
 
         menu_raw, _ = get_fidyo_menu(yesterday)
-        cuisine_cats = {'PLATS', 'DESSERT', 'DESSERTS', 'A partager', 'Tapas 404 not found', 'Entrées'}
+        cuisine_cats = {'PLATS', 'DESSERT', 'DESSERTS', 'A partager', 'Tapas 404 not found', 'Entrées', 'Burger', 'Menu'}
         ventes_hier = {}
         if menu_raw:
             for item in menu_raw:
