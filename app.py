@@ -775,6 +775,8 @@ def api_send_whatsapp():
 CUISINE_STOCK = [
   {"nom": "Jarret de porc à la fleur de bière, purée de pomme de terre", "cat": "PLATS", "moy": 3.93, "tampon": 6},
   {"nom": "Hampe de boeuf 180g", "cat": "PLATS", "moy": 2.78, "tampon": 4},
+  {"nom": "Burger", "cat": "PLATS", "moy": 4.47, "tampon": 4},
+  {"nom": "Menu Burger + boisson", "cat": "PLATS", "moy": 0.35, "tampon": 2},
   {"nom": "Wienerschnitzel  frites, sauce champignons", "cat": "PLATS", "moy": 2.73, "tampon": 4},
   {"nom": "FRITES , SAUCE CURRY", "cat": "A partager", "moy": 2.69, "tampon": 4},
   {"nom": "Magret de canard entier, sauce au miel, purée de patate douce violette", "cat": "PLATS", "moy": 2.11, "tampon": 3},
@@ -821,8 +823,6 @@ CUISINE_STOCK = [
   {"nom": "Terrine de foie gras, toast et chutney figues", "cat": "A partager", "moy": 0.15, "tampon": 2},
   {"nom": "Assiette saumon fumé, toast", "cat": "A partager", "moy": 0.13, "tampon": 2},
   {"nom": "PLANCHE FROMAGE", "cat": "A partager", "moy": 0.11, "tampon": 2},
-  {"nom": "Burger", "cat": "PLATS", "moy": 4.47, "tampon": 4},
-  {"nom": "Menu Burger + boisson", "cat": "PLATS", "moy": 0.35, "tampon": 2},
 ]
 
 
