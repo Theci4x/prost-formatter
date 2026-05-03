@@ -748,13 +748,13 @@ def api_send_whatsapp():
             f"\U0001f321\ufe0f *M\u00e9t\u00e9o Bastille*\n"
             f"{tmin}\u00b0 \u2192 {tmax}\u00b0C | {pluie_str}\n\n"
             f"\U0001f4ca *Ventes J-1 ({yesterday_label})*\n"
-            f"CA : {ca or '\u2014'} \u20ac | Commandes : {commandes or '\u2014'}\n\n"
+            f"CA : {ca or '—'} € | Commandes : {commandes or '—'}\n\n"
             f"\U0001f37d\ufe0f *Top 5 plats J-1*\n"
-            f"{top_plats_lines.rstrip() if top_plats_lines else '  Pas de donn\u00e9es'}\n\n"
+            f"{top_plats_lines.rstrip() if top_plats_lines else '  Pas de données'}\n\n"
             f"\U0001f4c5 *R\u00e9servations ce soir*\n"
-            f"{resa_lines.rstrip() if resa_lines else '  Aucune r\u00e9servation'}\n\n"
+            f"{resa_lines.rstrip() if resa_lines else '  Aucune réservation'}\n\n"
             f"\U0001f3ad *\u00c9v\u00e9nements Bastille*\n"
-            f"{events_lines.rstrip() if events_lines else '  Aucun \u00e9v\u00e9nement'}\n\n"
+            f"{events_lines.rstrip() if events_lines else '  Aucun événement'}\n\n"
             f"\U0001f517 Dashboard : https://prost-formatter.onrender.com"
         )
 
@@ -823,6 +823,29 @@ CUISINE_STOCK = [
   {"nom": "Terrine de foie gras, toast et chutney figues", "cat": "A partager", "moy": 0.15, "tampon": 2},
   {"nom": "Assiette saumon fumé, toast", "cat": "A partager", "moy": 0.13, "tampon": 2},
   {"nom": "PLANCHE FROMAGE", "cat": "A partager", "moy": 0.11, "tampon": 2},
+  # Entrées
+  {"nom": "gratinee a l oignons", "cat": "ENTREE", "moy": 1.5, "tampon": 2},
+  {"nom": "oeuf frit cremeux topinambours huile persillee", "cat": "ENTREE", "moy": 1.2, "tampon": 2},
+  {"nom": "ESCARGOTS 6 pièces", "cat": "ENTREE", "moy": 1.5, "tampon": 2},
+  {"nom": "ESCARGOTS 12 pièces", "cat": "ENTREE", "moy": 0.8, "tampon": 2},
+  {"nom": "6 couteaux à la plancha", "cat": "ENTREE", "moy": 1.0, "tampon": 2},
+  {"nom": "Foie gras, chutney figues et brioche", "cat": "ENTREE", "moy": 1.2, "tampon": 2},
+  {"nom": "Foie gras frais poêlé, toast de pain d'épices.", "cat": "ENTREE", "moy": 0.8, "tampon": 2},
+  {"nom": "Noix de saint jacques rôties aux herbes puree de panais a la vanille", "cat": "ENTREE", "moy": 1.0, "tampon": 2},
+  {"nom": "6 huitres  numéro 3", "cat": "ENTREE", "moy": 1.0, "tampon": 2},
+  {"nom": "12 huitres numero 3", "cat": "ENTREE", "moy": 0.5, "tampon": 2},
+  {"nom": "Poireaux vinaigrette à la truffe", "cat": "ENTREE", "moy": 0.8, "tampon": 2},
+  {"nom": "os a la moelle avec pain toaste", "cat": "ENTREE", "moy": 0.8, "tampon": 2},
+  {"nom": "Tartare aux 2 saumons", "cat": "ENTREE", "moy": 1.2, "tampon": 2},
+  {"nom": "Salade chevre chaud miel et noix", "cat": "ENTREE", "moy": 1.0, "tampon": 2},
+  # Flammenkueche
+  {"nom": "Flammenkueche orginale", "cat": "Flammenkueche", "moy": 2.0, "tampon": 3},
+  {"nom": "Flammenkueche vegetarienne", "cat": "Flammenkueche", "moy": 1.5, "tampon": 2},
+  {"nom": "Flammenkueche forestiere", "cat": "Flammenkueche", "moy": 1.5, "tampon": 2},
+  {"nom": "Flammenkueche chèvre miel", "cat": "Flammenkueche", "moy": 1.5, "tampon": 2},
+  {"nom": "Flammenkueche saumon fumee", "cat": "Flammenkueche", "moy": 1.2, "tampon": 2},
+  {"nom": "Flammenkueche blanche a la truffe", "cat": "Flammenkueche", "moy": 0.8, "tampon": 2},
+  {"nom": "Flammenkueche Montagnarde", "cat": "Flammenkueche", "moy": 1.0, "tampon": 2},
 ]
 
 
@@ -895,19 +918,18 @@ def api_production():
         production.sort(key=lambda x: x['a_preparer'], reverse=True)
 
         # Grouper par catégorie pour le message WhatsApp
-        cats_order = ['PLATS', 'A partager', 'DESSERT']
+        cats_order = ['ENTREE', 'PLATS', 'Flammenkueche', 'A partager', 'DESSERT']
         by_cat = {}
         for item in production:
             c = item['cat'] if item['cat'] in cats_order else 'A partager'
             by_cat.setdefault(c, []).append(item)
 
-        # Construire le message WhatsApp
         resa_info = f"{nb_resa} réservation(s) — {total_couverts} couverts" if bookings else "Aucune réservation"
         msg = f"🍳 *Rapport Production Cuisine — {today_label}*\n"
         msg += f"📅 Réservations ce soir : {resa_info}\n"
         msg += f"📊 Basé sur ventes du {yesterday_label} + projection\n\n"
 
-        cat_emojis = {'PLATS': '🍽️', 'A partager': '🫕', 'DESSERT': '🍮'}
+        cat_emojis = {'ENTREE': '🥗', 'PLATS': '🍽️', 'Flammenkueche': '🫓', 'A partager': '🫕', 'DESSERT': '🍮'}
         for cat in cats_order:
             items = by_cat.get(cat, [])
             if not items:
@@ -1004,14 +1026,14 @@ def api_send_production():
 
         production.sort(key=lambda x: x['a_preparer'], reverse=True)
 
-        cats_order = ['PLATS', 'A partager', 'DESSERT']
+        cats_order = ['ENTREE', 'PLATS', 'Flammenkueche', 'A partager', 'DESSERT']
         by_cat = {}
         for item in production:
             c = item['cat'] if item['cat'] in cats_order else 'A partager'
             by_cat.setdefault(c, []).append(item)
 
         resa_info = f"{nb_resa} résa — {total_couverts} couverts" if bookings else "Aucune réservation"
-        cat_emojis = {'PLATS': '🍽️', 'A partager': '🫕', 'DESSERT': '🍮'}
+        cat_emojis = {'ENTREE': '🥗', 'PLATS': '🍽️', 'Flammenkueche': '🫓', 'A partager': '🫕', 'DESSERT': '🍮'}
 
         msg = f"🍳 *Production Cuisine — {today_label}*\n"
         msg += f"📅 Ce soir : {resa_info} (coeff ×{coeff:.1f})\n\n"
