@@ -12,8 +12,8 @@ JOY_REFRESH_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsIm
 JOY_API_BASE = "https://manager-api.privateaser.com"
 FIDYO_BOUT_ID = "4484bbb0-244d-49cb-8a06-b2aa6321f3b5"
 FIDYO_API_BASE = "https://api.fidyo.fr"
-# Static JWT token valid until 2026-05-24 (update when expired)
-FIDYO_STATIC_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiZmR5dXNlciIsImlkIjoiZDJkYzM1YzUtYWU1Ni00NDhlLTg2YWEtN2NiYzI0NjQ3NzdjIiwiZXhwIjoxNzc5NjI3MTc3LCJ0eXBlIjoiZmR5dXNlciIsInNlc3Npb25faWQiOiJlMGI0ZjViMS00NTMyLTRlNjMtODBkNi1mYmJiOWY0M2VmYjUifQ.AnXuP_QOvMd9aQHmxfXbe4hgnbajap5UWjPMjCw_aYk"
+# Static JWT token valid until ~2026-06-18 (update when expired)
+FIDYO_STATIC_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiZmR5dXNlciIsImlkIjoiZDJkYzM1YzUtYWU1Ni00NDhlLTg2YWEtN2NiYzI0NjQ3NzdjIiwiZXhwIjoxNzgxODc5MzY2LCJ0eXBlIjoiZmR5dXNlciIsInNlc3Npb25faWQiOiI2OTdhM2JhMi0zM2QwLTQ1MGEtOTQ4Ni1jNjA5NTM0MjkwM2YifQ.dFLfiA78HMa2MVQjqlcFEhWepCyZ7kHRejWiJ-HrJIA"
 
 # Token cache
 _token_cache = {"token": None, "expires_at": None}
