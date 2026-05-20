@@ -1,3 +1,4 @@
+# v2026-05-20b — add /api/send-kitchen-reminder route
 from flask import Flask, request, jsonify, render_template_string
 import requests
 import json
