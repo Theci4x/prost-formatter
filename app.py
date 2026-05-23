@@ -1093,3 +1093,29 @@ def api_send_kitchen_reminder():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=False)
+
+@app.route('/api/send-prost-news-reminder', methods=['GET', 'POST'])
+def api_send_prost_news_reminder():
+    """Envoie un message de rappel personnalisé dans le groupe WhatsApp Prost News.
+    Paramètre optionnel : message (GET param ou JSON body)
+    """
+    GREEN_API_URL = "https://7107.api.greenapi.com"
+    GREEN_ID = "7107599166"
+    GREEN_TOKEN = "6741ac4b9a644be3983c4e69ec08b4f153cdade48db04b22ad"
+    GROUP_ID = "120363192837135531@g.us"  # Prost News
+    try:
+        if request.method == 'POST':
+            data = request.get_json(silent=True) or {}
+            msg = data.get('message', '')
+        else:
+            msg = request.args.get('message', '')
+        if not msg:
+            msg = "⏰ Rappel automatique Prost News"
+        send_url = f"{GREEN_API_URL}/waInstance{GREEN_ID}/sendMessage/{GREEN_TOKEN}"
+        resp = requests.post(send_url, json={"chatId": GROUP_ID, "message": msg}, timeout=15)
+        if resp.status_code == 200:
+            return jsonify({"status": "sent", "idMessage": resp.json().get("idMessage")})
+        else:
+            return jsonify({"status": "error", "code": resp.status_code, "detail": resp.text}), 500
+    except Exception as e:
+        return jsonify({"status": "error", "detail": str(e)}), 500
