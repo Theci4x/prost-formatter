@@ -488,7 +488,7 @@ def dashboard():
 
 @app.route('/health', methods=['GET'])
 def health():
-    return jsonify({"status": "ok", "service": "prost-formatter", "version": "2026-05-20b"})
+    return jsonify({"status": "ok", "service": "prost-formatter", "version": "2026-05-23a"})
 
 
 @app.route('/reservations', methods=['GET'])
