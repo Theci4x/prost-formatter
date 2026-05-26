@@ -29,7 +29,13 @@ def get_joy_access_token():
     try:
         resp = requests.post(
             f"{JOY_API_BASE}/api/refresh",
-            headers={"Authorization": f"Bearer {JOY_REFRESH_TOKEN}", "Origin": "https://app.joy.io"},
+            headers={
+                "Authorization": f"Bearer {JOY_REFRESH_TOKEN}",
+                "Origin": "https://app.joy.io",
+                "Referer": "https://app.joy.io/",
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36",
+                "x-app-version": "fde8fc177b34e68a7cf429a5a15b4ccff0678ae7"
+            },
             timeout=10
         )
         if resp.status_code == 200:
@@ -63,7 +69,13 @@ def get_joy_bookings(date_str):
                 "order_by": "event_date_time",
                 "order_dir": "asc"
             },
-            headers={"Authorization": token, "Origin": "https://app.joy.io"},
+            headers={
+                "Authorization": token,
+                "Origin": "https://app.joy.io",
+                "Referer": "https://app.joy.io/",
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36",
+                "x-app-version": "fde8fc177b34e68a7cf429a5a15b4ccff0678ae7"
+            },
             timeout=10
         )
         if resp.status_code == 200:
