@@ -1,4 +1,4 @@
-# v2026-05-20b — add /api/send-kitchen-reminder route
+# v2026-05-26a — fix Joy refresh token + add CF bypass headers
 from flask import Flask, request, jsonify, render_template_string
 import requests
 import json
