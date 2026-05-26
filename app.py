@@ -1171,3 +1171,4 @@ def api_send_prost_news_reminder():
             return jsonify({"status": "error", "code": resp.status_code, "detail": resp.text}), 500
     except Exception as e:
         return jsonify({"status": "error", "detail": str(e)}), 500
+# deploy trigger Tue May 26 11:16:13 UTC 2026
