@@ -662,6 +662,43 @@ def api_whatsapp_message():
                 resa_lines += f"\n    📝 {note.strip()}"
             resa_lines += "\n"
 
+        # Matchs de foot (L'Équipe)
+        foot_line = ""
+        try:
+            today_lequipe = now_paris.strftime('%Y%m%d')
+            resp_foot = requests.get(
+                'https://dwh.lequipe.fr/api/live/lives',
+                params={'date': today_lequipe, 'platform': 'desktop', 'version': '1.3'},
+                headers={
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                    'Referer': 'https://www.lequipe.fr/Directs'
+                },
+                timeout=10
+            )
+            if resp_foot.status_code == 200:
+                foot_data = resp_foot.json()
+                feed_items = foot_data.get('data', [{}])[0].get('content', {}).get('feed', {}).get('items', [])
+                foot_matches = []
+                for item in feed_items:
+                    for sub in item.get('items', []):
+                        for container in sub.get('items', []):
+                            for match in container.get('items', []):
+                                event = match.get('event', {})
+                                if event:
+                                    spec = event.get('specifics', {})
+                                    dom = spec.get('domicile', {}).get('equipe', {}).get('nom', '')
+                                    ext = spec.get('exterieur', {}).get('equipe', {}).get('nom', '')
+                                    statut = event.get('statut', {}).get('libelle', '')
+                                    if dom and ext:
+                                        foot_matches.append(f"{dom} vs {ext} ({statut})")
+                if foot_matches:
+                    fr_keywords = ['saint-étienne', 'nice', 'psg', 'paris', 'marseille', 'lyon', 'france', 'monaco', 'rennes', 'lens', 'lille', 'bordeaux', 'nantes']
+                    fr_matches = [m for m in foot_matches if any(k in m.lower() for k in fr_keywords)]
+                    display_matches = fr_matches[:3] if fr_matches else foot_matches[:3]
+                    foot_line = "\n".join([f"  ⚽ {m}" for m in display_matches])
+        except Exception:
+            foot_line = ""
+
         # Construire le message
         pluie_str = f"{pluie} mm" if pluie and float(pluie) > 0 else "Pas de pluie"
         msg = f"""🍺 *Rapport Prost — {date_label}*
@@ -677,6 +714,9 @@ CA : {ca or '—'} € | Commandes : {commandes or '—'}
 
 📅 *Réservations ce soir*
 {resa_lines.rstrip() if resa_lines else '  Aucune réservation'}
+
+⚽ *Foot du jour*
+{foot_line if foot_line else '  Aucun match aujourd\'hui'}
 
 🔗 Dashboard : https://prost-formatter.onrender.com"""
 
