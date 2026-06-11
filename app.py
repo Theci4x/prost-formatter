@@ -1,4 +1,4 @@
-# v2026-05-26a — fix Joy refresh token + add CF bypass headers
+# v2026-06-11a — fix météo wttr.in + filtre RECLAMER/A SUIVRE + foot L'Equipe complet
 from flask import Flask, request, jsonify, render_template_string
 import requests
 import json
@@ -144,23 +144,27 @@ def get_fidyo_menu(date_str):
 
 
 def get_meteo():
+    """Météo Bastille via wttr.in (fallback si open-meteo indisponible)."""
     try:
         resp = requests.get(
-            "https://api.open-meteo.com/v1/forecast",
-            params={
-                "latitude": 48.8534, "longitude": 2.3692,
-                "daily": "temperature_2m_min,temperature_2m_max,precipitation_sum",
-                "timezone": "Europe/Paris", "forecast_days": 2
-            },
+            "https://wttr.in/Paris?format=j1",
+            headers={"User-Agent": "Mozilla/5.0"},
             timeout=10
         )
         if resp.status_code == 200:
-            data = resp.json().get("daily", {})
-            return {
-                "tmin": data.get("temperature_2m_min", [None, None])[1],
-                "tmax": data.get("temperature_2m_max", [None, None])[1],
-                "pluie": data.get("precipitation_sum", [None, None])[1]
-            }
+            data = resp.json()
+            weather = data.get('weather', [])
+            if weather:
+                today_w = weather[0]
+                tmin = today_w.get('mintempC', '?')
+                tmax = today_w.get('maxtempC', '?')
+                hourly = today_w.get('hourly', [])
+                total_rain = sum(float(h.get('precipMM', 0) or 0) for h in hourly)
+                return {
+                    "tmin": int(tmin) if str(tmin).lstrip('-').isdigit() else tmin,
+                    "tmax": int(tmax) if str(tmax).lstrip('-').isdigit() else tmax,
+                    "pluie": round(total_rain, 1)
+                }
     except:
         pass
     return {"tmin": "?", "tmax": "?", "pluie": "?"}
@@ -580,13 +584,19 @@ def api_fidyo():
         # Top plats
         menu, err_menu = get_fidyo_menu(date_str)
 
-        # Formater top plats en texte WhatsApp
+        # Formater top plats en texte WhatsApp (filtrer les items de service)
+        ITEMS_SERVICE = {'RECLAMER', 'A SUIVRE', 'A  SUIVRE', 'FIDYO'}
         top_plats_text = ""
         top_plats_html = ""
         rows = ""
         if menu:
             sorted_menu = sorted(menu, key=lambda x: float(x.get('total_count', 0) or 0), reverse=True)
-            top10 = [m for m in sorted_menu if float(m.get('total_count', 0) or 0) >= 1][:10]
+            top10 = [
+                m for m in sorted_menu
+                if float(m.get('total_count', 0) or 0) >= 1
+                and m.get('menu_name', '').strip().upper() not in {s.upper() for s in ITEMS_SERVICE}
+                and 'fidyo' not in m.get('menu_name', '').lower()
+            ][:10]
             for i, item in enumerate(top10, 1):
                 name = item.get('menu_name', '?')
                 qty = int(float(item.get('total_count', 0) or 0))
@@ -633,12 +643,18 @@ def api_whatsapp_message():
         ca, commandes, _ = get_fidyo_sales(yesterday)
         yesterday_label = (now_paris - timedelta(days=1)).strftime('%d/%m/%Y')
 
-        # Top plats J-1
+        # Top plats J-1 (filtrer les items de service : RECLAMER, A SUIVRE, Fidyo)
+        ITEMS_SERVICE_WA = {'RECLAMER', 'A SUIVRE', 'A  SUIVRE', 'FIDYO'}
         menu, _ = get_fidyo_menu(yesterday)
         top_plats_lines = ""
         if menu:
             sorted_menu = sorted(menu, key=lambda x: float(x.get('total_count', 0) or 0), reverse=True)
-            top5 = [m for m in sorted_menu if float(m.get('total_count', 0) or 0) >= 1][:5]
+            top5 = [
+                m for m in sorted_menu
+                if float(m.get('total_count', 0) or 0) >= 1
+                and m.get('menu_name', '').strip().upper() not in {s.upper() for s in ITEMS_SERVICE_WA}
+                and 'fidyo' not in m.get('menu_name', '').lower()
+            ][:5]
             for i, item in enumerate(top5, 1):
                 name = item.get('menu_name', '?')
                 qty = int(float(item.get('total_count', 0) or 0))
@@ -662,10 +678,11 @@ def api_whatsapp_message():
                 resa_lines += f"\n    📝 {note.strip()}"
             resa_lines += "\n"
 
-        # Matchs de foot (L'Équipe)
+        # Matchs de foot (L'Équipe — tous les matchs du jour)
         foot_line = ""
         try:
             today_lequipe = now_paris.strftime('%Y%m%d')
+            FOOTBALL_FILTER_CODE = '449a5f6d01d5f416810d04b4df596b6a'
             resp_foot = requests.get(
                 'https://dwh.lequipe.fr/api/live/lives',
                 params={'date': today_lequipe, 'platform': 'desktop', 'version': '1.3'},
@@ -677,30 +694,65 @@ def api_whatsapp_message():
             )
             if resp_foot.status_code == 200:
                 foot_data = resp_foot.json()
-                feed_items = foot_data.get('data', [{}])[0].get('content', {}).get('feed', {}).get('items', [])
                 foot_matches = []
-                for item in feed_items:
-                    for sub in item.get('items', []):
-                        for container in sub.get('items', []):
-                            for match in container.get('items', []):
-                                event = match.get('event', {})
-                                if event:
-                                    spec = event.get('specifics', {})
-                                    dom = spec.get('domicile', {}).get('equipe', {}).get('nom', '')
-                                    ext = spec.get('exterieur', {}).get('equipe', {}).get('nom', '')
-                                    statut = event.get('statut', {}).get('libelle', '')
-                                    if dom and ext:
-                                        foot_matches.append(f"{dom} vs {ext} ({statut})")
+                def _extract_foot(obj, depth=0):
+                    if depth > 20: return
+                    if isinstance(obj, dict):
+                        if obj.get('__type') == 'sport_event_widget':
+                            filters = obj.get('content_filters_matching', {}).get('filters', [])
+                            is_foot = any(
+                                f.get('code') == 'sport' and FOOTBALL_FILTER_CODE in f.get('values', [])
+                                for f in filters
+                            )
+                            if is_foot:
+                                event = obj.get('event', {})
+                                statut = event.get('statut', {})
+                                statut_lib = statut.get('libelle', '') if isinstance(statut, dict) else ''
+                                statut_type = statut.get('type', '') if isinstance(statut, dict) else ''
+                                spec = event.get('specifics', {})
+                                dom_data = spec.get('domicile', {}) if spec else {}
+                                ext_data = spec.get('exterieur', {}) if spec else {}
+                                dom_nom = ''
+                                ext_nom = ''
+                                if isinstance(dom_data, dict):
+                                    eq = dom_data.get('equipe', {})
+                                    dom_nom = (eq.get('nom', '') or eq.get('short_name', '')) if isinstance(eq, dict) else ''
+                                if isinstance(ext_data, dict):
+                                    eq = ext_data.get('equipe', {})
+                                    ext_nom = (eq.get('nom', '') or eq.get('short_name', '')) if isinstance(eq, dict) else ''
+                                titre = event.get('titre', '')
+                                if dom_nom and ext_nom:
+                                    score_d = dom_data.get('score', '') if isinstance(dom_data, dict) else ''
+                                    score_e = ext_data.get('score', '') if isinstance(ext_data, dict) else ''
+                                    if score_d != '' and score_e != '' and statut_type not in ('avenir',):
+                                        display = f"{dom_nom} {score_d}-{score_e} {ext_nom}"
+                                    else:
+                                        display = f"{dom_nom} vs {ext_nom}"
+                                elif titre:
+                                    display = titre
+                                else:
+                                    display = None
+                                if display:
+                                    foot_matches.append((statut_lib, display))
+                        for v in obj.values():
+                            _extract_foot(v, depth+1)
+                    elif isinstance(obj, list):
+                        for item in obj:
+                            _extract_foot(item, depth+1)
+                _extract_foot(foot_data)
                 if foot_matches:
-                    fr_keywords = ['saint-étienne', 'nice', 'psg', 'paris', 'marseille', 'lyon', 'france', 'monaco', 'rennes', 'lens', 'lille', 'bordeaux', 'nantes']
-                    fr_matches = [m for m in foot_matches if any(k in m.lower() for k in fr_keywords)]
-                    display_matches = fr_matches[:3] if fr_matches else foot_matches[:3]
-                    foot_line = "\n".join([f"  ⚽ {m}" for m in display_matches])
+                    lines = []
+                    for heure, display in foot_matches:
+                        if heure and heure not in ('int.',):
+                            lines.append(f"  ⚽ {heure} — {display}")
+                        else:
+                            lines.append(f"  ⚽ {display}")
+                    foot_line = "\n".join(lines)
         except Exception:
             foot_line = ""
 
         # Construire le message
-        pluie_str = f"{pluie} mm" if pluie and float(pluie) > 0 else "Pas de pluie"
+        pluie_str = f"{pluie} mm" if pluie and float(str(pluie).replace('?','0') or 0) > 0 else "Pas de pluie"
         msg = f"""🍺 *Rapport Prost — {date_label}*
 
 🌡️ *Météo Bastille*
@@ -753,12 +805,18 @@ def api_send_whatsapp():
         # Ventes J-1
         ca, commandes, _ = get_fidyo_sales(yesterday)
 
-        # Top plats J-1
+        # Top plats J-1 (filtrer les items de service : RECLAMER, A SUIVRE, Fidyo)
+        ITEMS_SERVICE_SW = {'RECLAMER', 'A SUIVRE', 'A  SUIVRE', 'FIDYO'}
         menu, _ = get_fidyo_menu(yesterday)
         top_plats_lines = ""
         if menu:
             sorted_menu = sorted(menu, key=lambda x: float(x.get('total_count', 0) or 0), reverse=True)
-            top5 = [m for m in sorted_menu if float(m.get('total_count', 0) or 0) >= 1][:5]
+            top5 = [
+                m for m in sorted_menu
+                if float(m.get('total_count', 0) or 0) >= 1
+                and m.get('menu_name', '').strip().upper() not in {s.upper() for s in ITEMS_SERVICE_SW}
+                and 'fidyo' not in m.get('menu_name', '').lower()
+            ][:5]
             for i, item in enumerate(top5, 1):
                 name = item.get('menu_name', '?')
                 qty = int(float(item.get('total_count', 0) or 0))
@@ -796,18 +854,90 @@ def api_send_whatsapp():
                 events_lines += f" ({date_start})"
             events_lines += "\n"
 
+        # Matchs de foot (L'Équipe — tous les matchs du jour)
+        foot_line_sw = ""
+        try:
+            today_lequipe_sw = now_paris.strftime('%Y%m%d')
+            FOOTBALL_FILTER_CODE_SW = '449a5f6d01d5f416810d04b4df596b6a'
+            resp_foot_sw = requests.get(
+                'https://dwh.lequipe.fr/api/live/lives',
+                params={'date': today_lequipe_sw, 'platform': 'desktop', 'version': '1.3'},
+                headers={'User-Agent': 'Mozilla/5.0', 'Referer': 'https://www.lequipe.fr/Directs'},
+                timeout=10
+            )
+            if resp_foot_sw.status_code == 200:
+                foot_data_sw = resp_foot_sw.json()
+                foot_matches_sw = []
+                def _extract_foot_sw(obj, depth=0):
+                    if depth > 20: return
+                    if isinstance(obj, dict):
+                        if obj.get('__type') == 'sport_event_widget':
+                            filters = obj.get('content_filters_matching', {}).get('filters', [])
+                            is_foot = any(
+                                f.get('code') == 'sport' and FOOTBALL_FILTER_CODE_SW in f.get('values', [])
+                                for f in filters
+                            )
+                            if is_foot:
+                                event = obj.get('event', {})
+                                statut = event.get('statut', {})
+                                statut_lib = statut.get('libelle', '') if isinstance(statut, dict) else ''
+                                statut_type = statut.get('type', '') if isinstance(statut, dict) else ''
+                                spec = event.get('specifics', {})
+                                dom_data = spec.get('domicile', {}) if spec else {}
+                                ext_data = spec.get('exterieur', {}) if spec else {}
+                                dom_nom = ''
+                                ext_nom = ''
+                                if isinstance(dom_data, dict):
+                                    eq = dom_data.get('equipe', {})
+                                    dom_nom = (eq.get('nom', '') or eq.get('short_name', '')) if isinstance(eq, dict) else ''
+                                if isinstance(ext_data, dict):
+                                    eq = ext_data.get('equipe', {})
+                                    ext_nom = (eq.get('nom', '') or eq.get('short_name', '')) if isinstance(eq, dict) else ''
+                                titre = event.get('titre', '')
+                                if dom_nom and ext_nom:
+                                    score_d = dom_data.get('score', '') if isinstance(dom_data, dict) else ''
+                                    score_e = ext_data.get('score', '') if isinstance(ext_data, dict) else ''
+                                    if score_d != '' and score_e != '' and statut_type not in ('avenir',):
+                                        display = f"{dom_nom} {score_d}-{score_e} {ext_nom}"
+                                    else:
+                                        display = f"{dom_nom} vs {ext_nom}"
+                                elif titre:
+                                    display = titre
+                                else:
+                                    display = None
+                                if display:
+                                    foot_matches_sw.append((statut_lib, display))
+                        for v in obj.values():
+                            _extract_foot_sw(v, depth+1)
+                    elif isinstance(obj, list):
+                        for item in obj:
+                            _extract_foot_sw(item, depth+1)
+                _extract_foot_sw(foot_data_sw)
+                if foot_matches_sw:
+                    lines_sw = []
+                    for heure, display in foot_matches_sw:
+                        if heure and heure not in ('int.',):
+                            lines_sw.append(f"  \u26bd {heure} \u2014 {display}")
+                        else:
+                            lines_sw.append(f"  \u26bd {display}")
+                    foot_line_sw = "\n".join(lines_sw)
+        except Exception:
+            foot_line_sw = ""
+
         msg = (
             f"\U0001f37a *Rapport Prost \u2014 {date_label}*\n\n"
             f"\U0001f321\ufe0f *M\u00e9t\u00e9o Bastille*\n"
             f"{tmin}\u00b0 \u2192 {tmax}\u00b0C | {pluie_str}\n\n"
             f"\U0001f4ca *Ventes J-1 ({yesterday_label})*\n"
-            f"CA : {ca or '—'} € | Commandes : {commandes or '—'}\n\n"
+            f"CA : {ca or '\u2014'} \u20ac | Commandes : {commandes or '\u2014'}\n\n"
             f"\U0001f37d\ufe0f *Top 5 plats J-1*\n"
-            f"{top_plats_lines.rstrip() if top_plats_lines else '  Pas de données'}\n\n"
+            f"{top_plats_lines.rstrip() if top_plats_lines else '  Pas de donn\u00e9es'}\n\n"
             f"\U0001f4c5 *R\u00e9servations ce soir*\n"
-            f"{resa_lines.rstrip() if resa_lines else '  Aucune réservation'}\n\n"
+            f"{resa_lines.rstrip() if resa_lines else '  Aucune r\u00e9servation'}\n\n"
+            f"\u26bd *Foot du jour*\n"
+            f"{foot_line_sw if foot_line_sw else '  Aucun match aujourd\'hui'}\n\n"
             f"\U0001f3ad *\u00c9v\u00e9nements Bastille*\n"
-            f"{events_lines.rstrip() if events_lines else '  Aucun événement'}\n\n"
+            f"{events_lines.rstrip() if events_lines else '  Aucun \u00e9v\u00e9nement'}\n\n"
             f"\U0001f517 Dashboard : https://prost-formatter.onrender.com"
         )
 
