@@ -1,4 +1,4 @@
-# v2026-06-11a — fix météo wttr.in + filtre RECLAMER/A SUIVRE + foot L'Equipe complet
+# v2026-06-12a — fix météo wttr.in + filtre RECLAMER/A SUIVRE + foot L'Equipe complet
 from flask import Flask, request, jsonify, render_template_string
 import requests
 import json
@@ -504,7 +504,7 @@ def dashboard():
 
 @app.route('/health', methods=['GET'])
 def health():
-    return jsonify({"status": "ok", "service": "prost-formatter", "version": "2026-05-23a"})
+    return jsonify({"status": "ok", "service": "prost-formatter", "version": "2026-06-12a"})
 
 
 @app.route('/reservations', methods=['GET'])
