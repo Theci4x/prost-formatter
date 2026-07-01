@@ -537,44 +537,76 @@ def api_disponibilites():
                 pax = int(b.get('pax', 0) or 0)
                 couverts_par_creneau[time_str] = couverts_par_creneau.get(time_str, 0) + pax
 
-        # Créneaux standards proposés
-        creneaux_standards = ["18:00", "18:30", "19:00", "19:30", "20:00", "20:30", "21:00", "21:30", "22:00"]
+        # Déterminer le jour de la semaine (0=Lundi, 1=Mardi, ..., 6=Dimanche)
+        dt_obj = datetime.strptime(date_str, '%Y-%m-%d')
+        weekday = dt_obj.weekday()
+
+        # Définir les créneaux selon le jour
+        if weekday == 0:  # Lundi (Fermé ?)
+            creneaux_standards = []
+        elif weekday in [1, 2, 3, 4]:  # Mardi au Vendredi (16h30 - 00h00)
+            creneaux_standards = ["16:30", "17:00", "17:30", "18:00", "18:30", "19:00", "19:30", "20:00", "20:30", "21:00", "21:30", "22:00", "22:30", "23:00", "23:30"]
+        else:  # Samedi et Dimanche (15h00 - 00h00)
+            creneaux_standards = ["15:00", "15:30", "16:00", "16:30", "17:00", "17:30", "18:00", "18:30", "19:00", "19:30", "20:00", "20:30", "21:00", "21:30", "22:00", "22:30", "23:00", "23:30"]
         
         disponibilites = []
         total_resas = sum(couverts_par_creneau.values())
         
-        for creneau in creneaux_standards:
-            # Calcul très basique : on regarde si le total de la soirée dépasse la capacité
-            # Dans la vraie vie, il faudrait gérer la durée moyenne d'un repas (ex: 2h)
-            places_restantes = CAPACITE_MAX - total_resas
-            
-            if places_restantes > 0:
-                disponibilites.append({
-                    "heure": creneau,
-                    "places_disponibles": places_restantes,
-                    "statut": "disponible" if places_restantes >= 10 else "limité"
-                })
+        if not creneaux_standards:
+            message_vapi = f"Désolé, nous sommes fermés le {date_str} (Lundi)."
+        else:
+            for creneau in creneaux_standards:
+                # Calcul très basique : on regarde si le total de la soirée dépasse la capacité
+                places_restantes = CAPACITE_MAX - total_resas
+                
+                if places_restantes > 0:
+                    disponibilites.append({
+                        "heure": creneau,
+                        "places_disponibles": places_restantes,
+                        "statut": "disponible" if places_restantes >= 10 else "limité"
+                    })
+                else:
+                    disponibilites.append({
+                        "heure": creneau,
+                        "places_disponibles": 0,
+                        "statut": "complet"
+                    })
+
+            if total_resas >= CAPACITE_MAX:
+                message_vapi = f"Désolé, nous sommes complets pour le {date_str}."
             else:
-                disponibilites.append({
-                    "heure": creneau,
-                    "places_disponibles": 0,
-                    "statut": "complet"
-                })
+                creneaux_dispos = [d['heure'] for d in disponibilites if d['places_disponibles'] > 0]
+                message_vapi = f"Pour le {date_str}, nous avons de la place. Les créneaux disponibles sont : {', '.join(creneaux_dispos)}."
+
+        # Vérifier si le jour est bloqué (souvent indiqué par une réservation spéciale ou un statut spécifique dans Joy)
+        # On considère que si une réservation a un nom comme "BLOQUÉ" ou "FERMÉ", le jour est indisponible
+        jour_bloque = False
+        for b in bookings:
+            brief = b.get('brief') or {}
+            title = (brief.get('title') or "").upper()
+            if "BLOQUÉ" in title or "FERMÉ" in title or "PRIVATISATION TOTALE" in title:
+                jour_bloque = True
+                break
 
         # Message formaté pour que VAPI puisse le lire facilement
-        if total_resas >= CAPACITE_MAX:
+        if jour_bloque:
+            message_vapi = f"Désolé, l'établissement est exceptionnellement indisponible pour le {date_str}."
+            disponibilites = []
+        elif total_resas >= CAPACITE_MAX:
             message_vapi = f"Désolé, nous sommes complets pour le {date_str}."
         else:
             creneaux_dispos = [d['heure'] for d in disponibilites if d['places_disponibles'] > 0]
-            message_vapi = f"Pour le {date_str}, nous avons de la place. Les créneaux disponibles sont : {', '.join(creneaux_dispos)}."
+            message_vapi = f"Pour le {date_str}, nous avons de la place au premier étage. Les créneaux disponibles sont : {', '.join(creneaux_dispos)}. Pour les groupes de plus de 70 personnes, une privatisation de la salle du fond ou de la terrasse est possible sous réserve de disponibilité. Un texto avec le lien de réservation va vous être envoyé."
 
         return jsonify({
             "status": "success",
             "date": date_str,
+            "jour_bloque": jour_bloque,
             "capacite_max": CAPACITE_MAX,
             "total_reserves": total_resas,
             "creneaux": disponibilites,
-            "message_vapi": message_vapi
+            "message_vapi": message_vapi,
+            "note": "Réservations classiques au 1er étage. Privatisation > 70 pers (salle du fond/terrasse)."
         })
 
     except Exception as e:
