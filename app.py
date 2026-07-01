@@ -8,13 +8,13 @@ import pytz
 
 app = Flask(__name__)
 
-# Joy/Privateaser refresh token (expires 2026-06-25)
-JOY_REFRESH_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc3OTc4OTgxNiwianRpIjoiYzc2NzVlMzgtMGYxNS00YjRkLWIzMDEtODdmZjI3NDE2ZGRhIiwidHlwZSI6InJlZnJlc2giLCJpZGVudGl0eSI6MTU3MDIsIm5iZiI6MTc3OTc4OTgxNiwiZXhwIjoxNzgyMzgxODE2LCJjb3VudHJ5IjoiRlIiLCJyb2xlIjoiQURNSU4ifQ.MJYIXAIhvj9jMtGXYSep1IMOYwO9K3CT7ZQtH2UzSuI"
+# Joy/Privateaser refresh token (expires 2026-07-31)
+JOY_REFRESH_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc4MjkwMjEyOCwianRpIjoiZDAyY2VmNGItNzU3MC00NTVjLTk3MzItYTI3OWZjNmViN2JkIiwidHlwZSI6InJlZnJlc2giLCJpZGVudGl0eSI6MTU3MDIsIm5iZiI6MTc4MjkwMjEyOCwiZXhwIjoxNzg1NDk0MTI4LCJjb3VudHJ5IjoiRlIiLCJyb2xlIjoiQURNSU4ifQ.phg6hKk82rSz2-ivJASdNj0PNfob7tYz66doWFLkQaU"
 JOY_API_BASE = "https://manager-api.privateaser.com"
 FIDYO_BOUT_ID = "4484bbb0-244d-49cb-8a06-b2aa6321f3b5"
 FIDYO_API_BASE = "https://api.fidyo.fr"
-# Static JWT token valid until ~2026-06-25 (update when expired)
-FIDYO_STATIC_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiZmR5dXNlciIsImlkIjoiZDJkYzM1YzUtYWU1Ni00NDhlLTg2YWEtN2NiYzI0NjQ3NzdjIiwiZXhwIjoxNzgyMzc4ODE1LCJ0eXBlIjoiZmR5dXNlciIsInNlc3Npb25faWQiOiJkMjBiYjlmMC03YjNmLTQ0OWEtYWYwMC01ZDIyMWY3YmZkMmEifQ.K-ukhLQigsRkr3oPjeTlX_02MhcwuaPHpluBZJ3a2Vg"
+# Static JWT token valid until ~2026-07-31 (update when expired)
+FIDYO_STATIC_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiZmR5dXNlciIsImlkIjoiZDJkYzM1YzUtYWU1Ni00NDhlLTg2YWEtN2NiYzI0NjQ3NzdjIiwiZXhwIjoxNzg1NDkzMjkxLCJ0eXBlIjoiZmR5dXNlciIsInNlc3Npb25faWQiOiI5ZTU3ZDVlYi1iMzk1LTRmMzEtYjYyMi0zMjY3OThmODQ3YjgifQ.w2kAbxN6y38qWRc8xDwKW_1SuCLwZVw9ZUcfxgyW_Fw"
 
 # Token cache
 _token_cache = {"token": None, "expires_at": None}
