@@ -507,6 +507,80 @@ def health():
     return jsonify({"status": "ok", "service": "prost-formatter", "version": "2026-06-12a"})
 
 
+@app.route('/api/disponibilites', methods=['GET'])
+def api_disponibilites():
+    """Endpoint pour VAPI : retourne les disponibilités de réservation pour une date donnée.
+    Paramètre requis : ?date=YYYY-MM-DD
+    """
+    try:
+        date_str = request.args.get('date')
+        if not date_str:
+            paris_tz = pytz.timezone('Europe/Paris')
+            date_str = datetime.now(paris_tz).strftime('%Y-%m-%d')
+
+        # Récupérer les réservations existantes pour cette date
+        bookings, error = get_joy_bookings(date_str)
+        if error:
+            return jsonify({"status": "error", "detail": error}), 500
+
+        # Logique simplifiée de disponibilité :
+        # On suppose une capacité max de 100 couverts par service (à ajuster selon la réalité)
+        CAPACITE_MAX = 100
+        
+        # Grouper les couverts par créneau horaire
+        couverts_par_creneau = {}
+        for b in bookings:
+            brief = b.get('brief') or {}
+            event_dt = brief.get('event_date_time', '')
+            if len(event_dt) >= 16:
+                time_str = event_dt[11:16]
+                pax = int(b.get('pax', 0) or 0)
+                couverts_par_creneau[time_str] = couverts_par_creneau.get(time_str, 0) + pax
+
+        # Créneaux standards proposés
+        creneaux_standards = ["18:00", "18:30", "19:00", "19:30", "20:00", "20:30", "21:00", "21:30", "22:00"]
+        
+        disponibilites = []
+        total_resas = sum(couverts_par_creneau.values())
+        
+        for creneau in creneaux_standards:
+            # Calcul très basique : on regarde si le total de la soirée dépasse la capacité
+            # Dans la vraie vie, il faudrait gérer la durée moyenne d'un repas (ex: 2h)
+            places_restantes = CAPACITE_MAX - total_resas
+            
+            if places_restantes > 0:
+                disponibilites.append({
+                    "heure": creneau,
+                    "places_disponibles": places_restantes,
+                    "statut": "disponible" if places_restantes >= 10 else "limité"
+                })
+            else:
+                disponibilites.append({
+                    "heure": creneau,
+                    "places_disponibles": 0,
+                    "statut": "complet"
+                })
+
+        # Message formaté pour que VAPI puisse le lire facilement
+        if total_resas >= CAPACITE_MAX:
+            message_vapi = f"Désolé, nous sommes complets pour le {date_str}."
+        else:
+            creneaux_dispos = [d['heure'] for d in disponibilites if d['places_disponibles'] > 0]
+            message_vapi = f"Pour le {date_str}, nous avons de la place. Les créneaux disponibles sont : {', '.join(creneaux_dispos)}."
+
+        return jsonify({
+            "status": "success",
+            "date": date_str,
+            "capacite_max": CAPACITE_MAX,
+            "total_reserves": total_resas,
+            "creneaux": disponibilites,
+            "message_vapi": message_vapi
+        })
+
+    except Exception as e:
+        return jsonify({"status": "error", "detail": str(e)}), 500
+
+
 @app.route('/reservations', methods=['GET'])
 def get_reservations():
     try:
