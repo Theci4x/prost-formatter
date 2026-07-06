@@ -1156,13 +1156,16 @@ def api_production():
 
         # Ventes J-1 Fidyo (articles cuisine uniquement)
         menu_raw, _ = get_fidyo_menu(yesterday)
-        cuisine_cats = {'PLATS', 'DESSERT', 'DESSERTS', 'A partager', 'Tapas 404 not found', 'Entrées', 'Burger', 'Menu'}
+        # Catégories d'articles considérées comme de la cuisine (à exclure les boissons et services)
+        cuisine_cats = {"PLATS", "DESSERT", "DESSERTS", "A partager", "Tapas 404 not found", "ENTREE", "Burger", "Menu", "Flammenkueche"}
+        # Articles à exclure explicitement (boissons, services, etc.)
+        excluded_items = {"RECLAMER", "A SUIVRE", "A  SUIVRE", "FIDYO", "Krombacher Pils 50c", "KROMBACHER WEIZEN 50CL", "LIMONADE 25CL", "Vin blanc HH", "Sirop (veuillez preciser)", "KROMBACHER PILLS 25CL", "Jus de fruits"}
         ventes_hier = {}
         if menu_raw:
             for item in menu_raw:
                 cat = item.get('catalog', '')
-                if cat in cuisine_cats:
-                    nom = item.get('menu_name', '').strip()
+                nom = item.get('menu_name', '').strip()
+                if cat in cuisine_cats and nom not in excluded_items:
                     qty = int(float(item.get('total_count', 0) or 0))
                     if qty > 0:
                         ventes_hier[nom] = qty
@@ -1236,6 +1239,7 @@ def api_production():
         # Construire aussi le HTML pour email
         html = '<h3>🍳 Rapport Production Cuisine</h3>'
         html += f'<p><strong>Réservations ce soir :</strong> {resa_info} | <strong>Coefficient :</strong> ×{coeff:.1f}</p>'
+        html += f'<p><i>Basé sur les ventes du {yesterday_label} + projection + stock tampon.</i></p>'
         for cat in cats_order:
             items = by_cat.get(cat, [])
             if not items:
@@ -1284,13 +1288,16 @@ def api_send_production():
         yesterday_label = (now_paris - timedelta(days=1)).strftime('%d/%m/%Y')
 
         menu_raw, _ = get_fidyo_menu(yesterday)
-        cuisine_cats = {'PLATS', 'DESSERT', 'DESSERTS', 'A partager', 'Tapas 404 not found', 'Entrées', 'Burger', 'Menu'}
+        # Catégories d'articles considérées comme de la cuisine (à exclure les boissons et services)
+        cuisine_cats = {"PLATS", "DESSERT", "DESSERTS", "A partager", "Tapas 404 not found", "ENTREE", "Burger", "Menu", "Flammenkueche"}
+        # Articles à exclure explicitement (boissons, services, etc.)
+        excluded_items = {"RECLAMER", "A SUIVRE", "A  SUIVRE", "FIDYO", "Krombacher Pils 50c", "KROMBACHER WEIZEN 50CL", "LIMONADE 25CL", "Vin blanc HH", "Sirop (veuillez preciser)", "KROMBACHER PILLS 25CL", "Jus de fruits"}
         ventes_hier = {}
         if menu_raw:
             for item in menu_raw:
                 cat = item.get('catalog', '')
-                if cat in cuisine_cats:
-                    nom = item.get('menu_name', '').strip()
+                nom = item.get('menu_name', '').strip()
+                if cat in cuisine_cats and nom not in excluded_items:
                     qty = int(float(item.get('total_count', 0) or 0))
                     if qty > 0:
                         ventes_hier[nom] = qty
