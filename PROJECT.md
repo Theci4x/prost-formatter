@@ -57,8 +57,18 @@ semaines. Développement possible en attendant via un compte de test.
 - [ ] Suivi de positionnement / analyse concurrentielle (nécessite un
       fournisseur tiers payant, l'API Google ne fournit pas ces données)
 
-### Étape 5 — à venir
+### Étape 5 — Acquisition (terminée pour la V1)
+
+- [x] Landing page de présentation Klarr (design) — voir le lien Artifact
+      partagé en conversation
+- [x] Page publique `/test-presence-google` : formulaire de capture de
+      leads ("test gratuit de présence Google"), FR/EN/中文, avec FAQ
+- [x] Table `prospects` (Supabase) pour les leads capturés
+
+### Étape 6 — à venir
 
 - Paiement (Stripe : carte bancaire + prélèvement SEPA, abonnement) —
   en attente de la création de la société
 - Enrichissement du schéma `restaurants` (horaires, menu, etc.)
+- Coder la landing page (design) en dur dans l'app, avec lien vers
+  `/test-presence-google`

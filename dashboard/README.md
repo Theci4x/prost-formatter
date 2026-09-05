@@ -30,6 +30,8 @@ Dashboard de gestion des restaurants. Next.js (App Router) + Supabase.
    renseigner dans `ANTHROPIC_API_KEY`.
 8. Appliquer `supabase/migrations/0003_restaurant_keywords.sql` dans le SQL
    editor Supabase.
+9. Appliquer `supabase/migrations/0004_prospects.sql` dans le SQL editor
+   Supabase (table des leads du formulaire `/test-presence-google`).
 
 ## Développement
 
@@ -67,3 +69,8 @@ Ouvrir [http://localhost:3000](http://localhost:3000) — redirige vers
   connexion Google par restaurant.
 - `supabase/migrations/0003_restaurant_keywords.sql` — table des mots-clés
   SEO ciblés par restaurant.
+- `src/app/test-presence-google/` — page publique (pas de login requis)
+  de capture de leads ("test gratuit de présence Google"), FR/EN/中文,
+  avec FAQ. Les soumissions sont enregistrées dans `public.prospects`
+  (consultable via Supabase Studio, pas d'API de lecture publique).
+- `supabase/migrations/0004_prospects.sql` — table des leads capturés.
