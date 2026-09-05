@@ -2,14 +2,19 @@
 
 import { useActionState } from "react";
 import { submitProspect, type ProspectFormState } from "@/app/test-presence-google/actions";
+import { AuditResultCard } from "@/components/prospects/AuditResultCard";
 import type { translations } from "@/lib/i18n/testPresence";
 
 const initialState: ProspectFormState = { status: "idle" };
 
+type Translations = (typeof translations)[keyof typeof translations];
+
 export function ProspectForm({
   t,
+  auditT,
 }: {
-  t: (typeof translations)[keyof typeof translations]["form"];
+  t: Translations["form"];
+  auditT: Translations["audit"];
 }) {
   const [state, formAction, pending] = useActionState(
     submitProspect,
@@ -17,6 +22,9 @@ export function ProspectForm({
   );
 
   if (state.status === "success") {
+    if (state.audit) {
+      return <AuditResultCard audit={state.audit} t={auditT} />;
+    }
     return (
       <div className="rounded-xl border border-amber-200 bg-amber-50 px-6 py-8 text-center">
         <p className="text-lg font-medium text-stone-900">{t.successTitle}</p>
@@ -57,17 +65,31 @@ export function ProspectForm({
         </div>
       </div>
 
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="entreprise" className="text-sm font-medium text-stone-700">
-          {t.entreprise}
-        </label>
-        <input
-          id="entreprise"
-          name="entreprise"
-          type="text"
-          required
-          className="rounded-md border border-stone-300 px-3 py-2 text-sm outline-none focus:border-amber-600"
-        />
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="entreprise" className="text-sm font-medium text-stone-700">
+            {t.entreprise}
+          </label>
+          <input
+            id="entreprise"
+            name="entreprise"
+            type="text"
+            required
+            className="rounded-md border border-stone-300 px-3 py-2 text-sm outline-none focus:border-amber-600"
+          />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="ville" className="text-sm font-medium text-stone-700">
+            {t.ville}
+          </label>
+          <input
+            id="ville"
+            name="ville"
+            type="text"
+            required
+            className="rounded-md border border-stone-300 px-3 py-2 text-sm outline-none focus:border-amber-600"
+          />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

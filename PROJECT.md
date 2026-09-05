@@ -64,6 +64,13 @@ semaines. Développement possible en attendant via un compte de test.
 - [x] Page publique `/test-presence-google` : formulaire de capture de
       leads ("test gratuit de présence Google"), FR/EN/中文, avec FAQ
 - [x] Table `prospects` (Supabase) pour les leads capturés
+- [x] Audit de visibilité automatique (inspiré d'un rapport malou.io
+      partagé en conversation, algorithme de scoring propre à Klarr) :
+      score Fiche Google / E-réputation / Visibilité IA + synthèse
+      Claude, calculé via l'API Google Places (New) — pas de blocage
+      côté vérification Google, juste une clé API + facturation à
+      activer
+- [x] Table `visibility_audits` (Supabase)
 
 ### Étape 6 — à venir
 

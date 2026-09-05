@@ -38,7 +38,7 @@ export function TestPresencePage() {
           </p>
         </div>
 
-        <ProspectForm t={t.form} />
+        <ProspectForm t={t.form} auditT={t.audit} />
 
         <div className="flex flex-col gap-3">
           <h2 className="text-center text-lg font-semibold text-stone-900">

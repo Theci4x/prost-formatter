@@ -32,6 +32,15 @@ Dashboard de gestion des restaurants. Next.js (App Router) + Supabase.
    editor Supabase.
 9. Appliquer `supabase/migrations/0004_prospects.sql` dans le SQL editor
    Supabase (table des leads du formulaire `/test-presence-google`).
+10. Pour l'audit automatique de présence en ligne : sur Google Cloud
+    Console, activer l'API **"Places API (New)"** et configurer la
+    facturation (obligatoire, pas d'offre gratuite illimitée — mais pas de
+    délai de vérification comme pour l'API Business Profile). Créer une
+    clé API simple ("Identifiants" → "Créer des identifiants" → "Clé API"),
+    la restreindre à "Places API (New)", et la renseigner dans
+    `GOOGLE_PLACES_API_KEY`.
+11. Appliquer `supabase/migrations/0005_visibility_audits.sql` dans le SQL
+    editor Supabase.
 
 ## Développement
 
@@ -74,3 +83,18 @@ Ouvrir [http://localhost:3000](http://localhost:3000) — redirige vers
   avec FAQ. Les soumissions sont enregistrées dans `public.prospects`
   (consultable via Supabase Studio, pas d'API de lecture publique).
 - `supabase/migrations/0004_prospects.sql` — table des leads capturés.
+- `src/lib/audit/scoring.ts` — algorithme de scoring maison (Fiche Google /
+  E-réputation / Visibilité IA), fonctions pures testables sans réseau.
+- `src/lib/audit/website.ts` — vérifie l'accessibilité du site du
+  restaurant et la présence de données structurées (JSON-LD) / liens
+  réseaux sociaux.
+- `src/lib/google/places.ts` — appels à l'API Google Places (New) : clé
+  API simple, sans OAuth ni vérification à attendre.
+- Le formulaire `/test-presence-google` déclenche automatiquement cet
+  audit (recherche du restaurant sur Google Maps, analyse du site,
+  synthèse rédigée par Claude) et l'enregistre dans
+  `visibility_audits`. Se dégrade proprement (retombe sur le simple
+  message de remerciement) si `GOOGLE_PLACES_API_KEY` n'est pas encore
+  configurée ou si l'établissement n'est pas trouvé.
+- `supabase/migrations/0005_visibility_audits.sql` — table des audits
+  générés.
