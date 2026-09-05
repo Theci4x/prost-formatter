@@ -25,6 +25,11 @@ Dashboard de gestion des restaurants. Next.js (App Router) + Supabase.
    l'écran de consentement suffit pour développer/tester.
 6. Appliquer `supabase/migrations/0002_google_business_connections.sql`
    dans le SQL editor Supabase.
+7. Pour l'analyse SEO par Claude : créer une clé sur
+   [console.anthropic.com](https://console.anthropic.com) (API Keys) et la
+   renseigner dans `ANTHROPIC_API_KEY`.
+8. Appliquer `supabase/migrations/0003_restaurant_keywords.sql` dans le SQL
+   editor Supabase.
 
 ## Développement
 
@@ -54,6 +59,11 @@ Ouvrir [http://localhost:3000](http://localhost:3000) — redirige vers
 - `src/app/api/google/authorize` et `.../callback` — flow OAuth Google
   (état signé par cookie pour la protection CSRF).
 - `src/lib/google/oauth.ts` — échange de code, refresh, infos utilisateur.
+- `src/app/dashboard/[id]/seo/` — gestion des mots-clés SEO d'un restaurant
+  + analyse à la demande par Claude (`@anthropic-ai/sdk`, modèle
+  `claude-opus-5`).
 - `supabase/migrations/0001_init.sql` — schéma initial de `restaurants`.
 - `supabase/migrations/0002_google_business_connections.sql` — table de
   connexion Google par restaurant.
+- `supabase/migrations/0003_restaurant_keywords.sql` — table des mots-clés
+  SEO ciblés par restaurant.

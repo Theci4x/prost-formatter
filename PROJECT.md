@@ -41,15 +41,24 @@ Voir `dashboard/README.md` pour l'installation et la configuration.
       Google validé)
 - [ ] Lecture/réponse aux avis
 - [ ] Création et programmation de posts (avec photos)
+- [ ] Statistiques (vues, recherches, appels) via la Business Profile
+      Performance API — réutilise la connexion OAuth déjà en place
 
 **Bloquant externe** : le scope `business.manage` nécessite une
 vérification Google (écran de consentement OAuth) avant un usage public —
 démarche à faire côté Google Cloud Console, peut prendre plusieurs
 semaines. Développement possible en attendant via un compte de test.
 
-### Étape 4 — à venir
+### Étape 4 — SEO (en cours)
 
-- Paiement (Stripe : carte bancaire + prélèvement SEPA, abonnement)
-- Ranking / mots-clés / analyse concurrentielle (nécessite un fournisseur
-  tiers, l'API Google ne fournit pas ces données)
+- [x] Gestion des mots-clés ciblés par restaurant (ajout/suppression)
+- [x] Analyse à la demande par Claude (suggestions de mots-clés,
+      pertinence) — `dashboard/src/app/dashboard/[id]/seo/`
+- [ ] Suivi de positionnement / analyse concurrentielle (nécessite un
+      fournisseur tiers payant, l'API Google ne fournit pas ces données)
+
+### Étape 5 — à venir
+
+- Paiement (Stripe : carte bancaire + prélèvement SEPA, abonnement) —
+  en attente de la création de la société
 - Enrichissement du schéma `restaurants` (horaires, menu, etc.)
