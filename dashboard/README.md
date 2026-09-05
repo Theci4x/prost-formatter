@@ -55,16 +55,24 @@ Dashboard de gestion des restaurants. Next.js (App Router) + Supabase.
     Business"**, et déclare comme "Redirect URI" (dans Facebook Login for
     Business → Paramètres) :
     `http://localhost:3000/api/facebook/callback`. Renseigne
-    `FACEBOOK_APP_ID` et `FACEBOOK_APP_SECRET` (Paramètres de l'App).
+    `FACEBOOK_APP_ID` et `FACEBOOK_APP_SECRET` (Paramètres de l'App), et
+    recopie le même App ID dans `NEXT_PUBLIC_FACEBOOK_APP_ID` (le SDK
+    JavaScript Facebook tourne côté navigateur).
     Ce produit exige en plus une **Configuration** (Facebook Login for
     Business → Configurations → Créer une configuration) : choisis le
     token "Utilisateur" (pas "Utilisateur système") et ajoute les
     permissions `pages_show_list`, `pages_read_engagement`,
-    `instagram_basic`. Renseigne l'ID obtenu dans
-    `FACEBOOK_LOGIN_CONFIG_ID`. Il faut aussi que l'App (et au moins une
-    Page Facebook) soit rattachée à un **portefeuille business** Meta
-    (business.facebook.com/settings → Comptes → Applications / Pages),
-    sinon Facebook annule la connexion (`selected_business_id` vide).
+    `instagram_basic`. Renseigne l'ID obtenu dans `FACEBOOK_LOGIN_CONFIG_ID`
+    **et** `NEXT_PUBLIC_FACEBOOK_LOGIN_CONFIG_ID`. Il faut aussi que l'App
+    (et au moins une Page Facebook) soit rattachée à un **portefeuille
+    business** Meta (business.facebook.com/settings → Comptes →
+    Applications / Pages). **Important** : "Facebook Login for Business"
+    ne fonctionne pas avec une simple redirection vers
+    `/dialog/oauth?...&scope=...` (Facebook annule la connexion,
+    `selected_business_id` vide, quel que soit le paramétrage du
+    portefeuille business) — Meta impose le SDK JavaScript
+    (`FB.login({ config_id, response_type: "code" })`), ce que fait le
+    composant `FacebookConnectButton`.
     Tant que l'App est en mode développement, seuls les comptes ajoutés
     comme "testeurs" (Rôles de l'app → Testeurs) peuvent se connecter — il
     faut soumettre l'App à la revue Meta ("App Review") pour que

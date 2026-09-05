@@ -1,4 +1,4 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import {
   exchangeCodeForToken,
@@ -7,27 +7,18 @@ import {
   getPageDetails,
 } from "@/lib/facebook/oauth";
 
-export async function GET(request: NextRequest) {
-  const code = request.nextUrl.searchParams.get("code");
-  const state = request.nextUrl.searchParams.get("state");
-  const cookieState = request.cookies.get("facebook_oauth_state")?.value;
-
-  const clearStateCookie = (response: NextResponse) => {
-    response.cookies.delete("facebook_oauth_state");
-    return response;
+// Appelé côté client une fois que FB.login() (SDK JavaScript, "Facebook
+// Login for Business") a renvoyé un code d'autorisation. Le secret d'app
+// ne pouvant pas vivre côté navigateur, l'échange du code contre un token
+// et les appels Graph API se font ici, côté serveur.
+export async function POST(request: Request) {
+  const { code, restaurantId } = (await request.json()) as {
+    code?: string;
+    restaurantId?: string;
   };
 
-  if (!code || !state || !cookieState || state !== cookieState) {
-    return clearStateCookie(
-      NextResponse.redirect(new URL("/dashboard?facebook_error=1", request.url)),
-    );
-  }
-
-  const restaurantId = state.split(".")[1];
-  if (!restaurantId) {
-    return clearStateCookie(
-      NextResponse.redirect(new URL("/dashboard?facebook_error=1", request.url)),
-    );
+  if (!code || !restaurantId) {
+    return NextResponse.json({ error: "Paramètres manquants" }, { status: 400 });
   }
 
   const supabase = await createClient();
@@ -35,7 +26,16 @@ export async function GET(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) {
-    return clearStateCookie(NextResponse.redirect(new URL("/login", request.url)));
+    return NextResponse.json({ error: "Non connecté" }, { status: 401 });
+  }
+
+  const { data: restaurant } = await supabase
+    .from("restaurants")
+    .select("id")
+    .eq("id", restaurantId)
+    .maybeSingle();
+  if (!restaurant) {
+    return NextResponse.json({ error: "Restaurant introuvable" }, { status: 404 });
   }
 
   try {
@@ -62,20 +62,14 @@ export async function GET(request: NextRequest) {
       },
       { onConflict: "restaurant_id" },
     );
-
     if (error) throw error;
 
-    return clearStateCookie(
-      NextResponse.redirect(
-        new URL(`/dashboard/${restaurantId}/social?connected=1`, request.url),
-      ),
-    );
+    return NextResponse.json({ ok: true });
   } catch (err) {
-    console.error("[facebook/callback]", err);
-    return clearStateCookie(
-      NextResponse.redirect(
-        new URL(`/dashboard/${restaurantId}/social?error=1`, request.url),
-      ),
+    console.error("[facebook/exchange]", err);
+    return NextResponse.json(
+      { error: "La connexion a échoué. Réessaie." },
+      { status: 500 },
     );
   }
 }

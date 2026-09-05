@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getPageDetails, type PageDetails } from "@/lib/facebook/oauth";
 import { disconnectSocial } from "./actions";
+import { FacebookConnectButton } from "./FacebookConnectButton";
 import type { Restaurant } from "@/types/restaurant";
 
 export default async function SocialPage({
@@ -10,10 +11,10 @@ export default async function SocialPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ connected?: string; error?: string }>;
+  searchParams: Promise<{ connected?: string }>;
 }) {
   const { id } = await params;
-  const { connected, error } = await searchParams;
+  const { connected } = await searchParams;
 
   const supabase = await createClient();
 
@@ -71,23 +72,12 @@ export default async function SocialPage({
           Compte Facebook connecté avec succès.
         </p>
       )}
-      {error && (
-        <p className="max-w-md rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
-          La connexion a échoué. Réessaie.
-        </p>
-      )}
-
       {!connection ? (
         <div className="flex max-w-sm flex-col gap-4 rounded-md border border-zinc-200 p-4">
           <p className="text-sm text-zinc-500">
             Aucune page Facebook/Instagram connectée pour ce restaurant.
           </p>
-          <a
-            href={`/api/facebook/authorize?restaurant_id=${id}`}
-            className="rounded-md bg-zinc-900 px-4 py-2 text-center text-sm font-medium text-white transition-colors hover:bg-zinc-700"
-          >
-            Connecter Facebook / Instagram
-          </a>
+          <FacebookConnectButton restaurantId={id} />
         </div>
       ) : (
         <div className="flex max-w-md flex-col gap-4 rounded-md border border-zinc-200 p-4">
