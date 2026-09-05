@@ -33,6 +33,23 @@ Voir `dashboard/README.md` pour l'installation et la configuration.
 - [x] Édition (`/dashboard/[id]/edit`)
 - [x] Suppression (avec confirmation)
 
-### Étape 3 — à venir
+### Étape 3 — Connexion Google Business Profile (en cours)
 
+- [x] OAuth Google (connexion/déconnexion par restaurant, protection CSRF)
+- [x] Migration `google_business_connections`
+- [ ] Choix de la fiche Business Profile précise (une fois l'accès API
+      Google validé)
+- [ ] Lecture/réponse aux avis
+- [ ] Création et programmation de posts (avec photos)
+
+**Bloquant externe** : le scope `business.manage` nécessite une
+vérification Google (écran de consentement OAuth) avant un usage public —
+démarche à faire côté Google Cloud Console, peut prendre plusieurs
+semaines. Développement possible en attendant via un compte de test.
+
+### Étape 4 — à venir
+
+- Paiement (Stripe : carte bancaire + prélèvement SEPA, abonnement)
+- Ranking / mots-clés / analyse concurrentielle (nécessite un fournisseur
+  tiers, l'API Google ne fournit pas ces données)
 - Enrichissement du schéma `restaurants` (horaires, menu, etc.)

@@ -14,6 +14,17 @@ Dashboard de gestion des restaurants. Next.js (App Router) + Supabase.
 4. Dans Supabase > Authentication > URL Configuration, ajouter
    `http://localhost:3000/auth/callback` (et l'équivalent en prod) aux
    Redirect URLs.
+5. Pour la connexion Google Business Profile : créer un projet Google
+   Cloud, activer les "Business Profile APIs", configurer l'écran de
+   consentement OAuth et créer un ID client OAuth ("Application Web") avec
+   comme URI de redirection `http://localhost:3000/api/google/callback`.
+   Renseigner `GOOGLE_CLIENT_ID` et `GOOGLE_CLIENT_SECRET` dans
+   `.env.local`. Le scope `business.manage` nécessite une vérification
+   Google avant un usage public (peut prendre plusieurs semaines) ; en
+   attendant, ajouter son propre compte comme "utilisateur de test" dans
+   l'écran de consentement suffit pour développer/tester.
+6. Appliquer `supabase/migrations/0002_google_business_connections.sql`
+   dans le SQL editor Supabase.
 
 ## Développement
 
@@ -27,8 +38,9 @@ Ouvrir [http://localhost:3000](http://localhost:3000) — redirige vers
 
 ## Structure
 
-- `middleware.ts` + `src/lib/supabase/middleware.ts` — rafraîchit la session
-  Supabase et protège `/dashboard` sur chaque requête.
+- `src/proxy.ts` + `src/lib/supabase/proxy.ts` — rafraîchit la session
+  Supabase et protège `/dashboard` sur chaque requête (convention "Proxy"
+  de Next.js 16, anciennement "Middleware").
 - `src/lib/supabase/client.ts` — client Supabase pour les Client Components.
 - `src/lib/supabase/server.ts` — client Supabase pour les Server
   Components / Server Actions.
@@ -36,5 +48,12 @@ Ouvrir [http://localhost:3000](http://localhost:3000) — redirige vers
 - `src/app/auth/callback/` — échange le code de confirmation email contre
   une session.
 - `src/app/dashboard/` — layout protégé (vérification serveur en plus du
-  middleware) + page vide, à enrichir dans les prochaines étapes.
+  proxy) + liste/création/édition/suppression de restaurants.
+- `src/app/dashboard/[id]/google/` — statut de connexion Google Business
+  Profile pour un restaurant (connecter/déconnecter).
+- `src/app/api/google/authorize` et `.../callback` — flow OAuth Google
+  (état signé par cookie pour la protection CSRF).
+- `src/lib/google/oauth.ts` — échange de code, refresh, infos utilisateur.
 - `supabase/migrations/0001_init.sql` — schéma initial de `restaurants`.
+- `supabase/migrations/0002_google_business_connections.sql` — table de
+  connexion Google par restaurant.

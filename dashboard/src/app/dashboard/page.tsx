@@ -49,6 +49,12 @@ export default async function DashboardPage() {
               </div>
               <div className="flex items-center gap-4">
                 <Link
+                  href={`/dashboard/${restaurant.id}/google`}
+                  className="text-sm font-medium text-zinc-600 hover:text-zinc-900"
+                >
+                  Google Business Profile
+                </Link>
+                <Link
                   href={`/dashboard/${restaurant.id}/edit`}
                   className="text-sm font-medium text-zinc-600 hover:text-zinc-900"
                 >
