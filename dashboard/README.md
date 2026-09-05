@@ -49,6 +49,20 @@ Dashboard de gestion des restaurants. Next.js (App Router) + Supabase.
     commercial à négocier, contrairement à la plupart des connecteurs
     livraison/réservation (Uber Eats, Deliveroo, TheFork...) qui
     nécessitent une société établie et un dossier partenaire.
+13. Pour Facebook/Instagram : va sur
+    [developers.facebook.com](https://developers.facebook.com), crée une
+    App (type "Business"), ajoute le produit **"Facebook Login"**, et
+    déclare comme "Redirect URI" :
+    `http://localhost:3000/api/facebook/callback`. Renseigne
+    `FACEBOOK_APP_ID` et `FACEBOOK_APP_SECRET` (Paramètres de l'App).
+    Tant que l'App est en mode développement, seuls les comptes ajoutés
+    comme "testeurs" (Rôles de l'app → Testeurs) peuvent se connecter — il
+    faut soumettre l'App à la revue Meta ("App Review") pour que
+    n'importe quel restaurateur puisse s'y connecter, ce qui peut prendre
+    de quelques jours à quelques semaines et nécessite parfois une
+    vérification d'entreprise.
+14. Appliquer `supabase/migrations/0006_social_connections.sql` dans le
+    SQL editor Supabase.
 
 ## Développement
 
@@ -114,3 +128,14 @@ Ouvrir [http://localhost:3000](http://localhost:3000) — redirige vers
   casser la page.
 - `src/app/dashboard/[id]/avis/` — affichage des avis Yelp/Tripadvisor
   d'un restaurant (lecture seule, pas de gestion/réponse).
+- `src/lib/facebook/oauth.ts` — OAuth Meta Graph API (échange de code,
+  token longue durée, pages gérées, détails d'une page + compte
+  Instagram lié).
+- `src/app/api/facebook/authorize` et `.../callback` — même schéma que
+  Google (état signé par cookie pour la protection CSRF).
+- `src/app/dashboard/[id]/social/` — connexion Facebook/Instagram par
+  restaurant : statut, abonnés, derniers posts, déconnexion. Utilisable
+  immédiatement avec des comptes "testeurs" sur l'App Meta ; nécessite
+  l'App Review Meta pour un usage public.
+- `supabase/migrations/0006_social_connections.sql` — table de
+  connexion Facebook/Instagram par restaurant.

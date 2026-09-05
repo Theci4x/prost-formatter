@@ -81,8 +81,12 @@ Réalité vérifiée : la plupart nécessitent un partenariat commercial
 - [x] Avis Yelp + Tripadvisor (lecture seule) —
       `dashboard/src/app/dashboard/[id]/avis/` — APIs publiques
       self-service, aucun partenariat requis
-- [ ] Facebook / Instagram (posts) — API publique mais nécessite une
-      validation d'app Meta (jours à semaines)
+- [x] Connexion Facebook/Instagram (statut, abonnés, derniers posts) —
+      `dashboard/src/app/dashboard/[id]/social/` — utilisable
+      immédiatement avec des comptes testeurs sur l'App Meta ; App
+      Review Meta nécessaire pour un usage public par tout restaurateur
+- [ ] Publication de posts Facebook/Instagram — permissions plus lourdes
+      côté Meta, à faire une fois l'App Review obtenue
 - [ ] Bing Places, Apple Business Connect — APIs de gestion self-service
       identifiées, pas encore implémentées
 - [ ] Uber Eats, Deliveroo, DoorDash, TheFork, OpenTable, Resy, Zenchef,
