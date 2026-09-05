@@ -51,10 +51,20 @@ Dashboard de gestion des restaurants. Next.js (App Router) + Supabase.
     nécessitent une société établie et un dossier partenaire.
 13. Pour Facebook/Instagram : va sur
     [developers.facebook.com](https://developers.facebook.com), crée une
-    App (type "Business"), ajoute le produit **"Facebook Login"**, et
-    déclare comme "Redirect URI" :
+    App (type "Business"), ajoute le produit **"Facebook Login for
+    Business"**, et déclare comme "Redirect URI" (dans Facebook Login for
+    Business → Paramètres) :
     `http://localhost:3000/api/facebook/callback`. Renseigne
     `FACEBOOK_APP_ID` et `FACEBOOK_APP_SECRET` (Paramètres de l'App).
+    Ce produit exige en plus une **Configuration** (Facebook Login for
+    Business → Configurations → Créer une configuration) : choisis le
+    token "Utilisateur" (pas "Utilisateur système") et ajoute les
+    permissions `pages_show_list`, `pages_read_engagement`,
+    `instagram_basic`. Renseigne l'ID obtenu dans
+    `FACEBOOK_LOGIN_CONFIG_ID`. Il faut aussi que l'App (et au moins une
+    Page Facebook) soit rattachée à un **portefeuille business** Meta
+    (business.facebook.com/settings → Comptes → Applications / Pages),
+    sinon Facebook annule la connexion (`selected_business_id` vide).
     Tant que l'App est en mode développement, seuls les comptes ajoutés
     comme "testeurs" (Rôles de l'app → Testeurs) peuvent se connecter — il
     faut soumettre l'App à la revue Meta ("App Review") pour que

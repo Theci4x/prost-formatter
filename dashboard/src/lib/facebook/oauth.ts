@@ -1,18 +1,14 @@
-// Meta Graph API — nécessite une App Meta (developers.facebook.com).
-// pages_show_list / pages_read_engagement / instagram_basic sont
-// utilisables immédiatement avec les comptes ajoutés comme "testeurs" sur
-// l'app (mode développement). Pour que n'importe quel restaurateur puisse
-// se connecter, Meta exige une App Review (et parfois une vérification
-// d'entreprise), comme pour l'API Google Business Profile.
+// Meta Graph API — nécessite une App Meta (developers.facebook.com) avec le
+// produit "Facebook Login for Business". Ce produit exige une Configuration
+// (config_id) plutôt qu'un simple paramètre "scope" : les permissions
+// (pages_show_list / pages_read_engagement / instagram_basic) sont définies
+// une fois dans la Configuration côté Meta, pas dans l'URL. Pour que
+// n'importe quel restaurateur puisse se connecter, Meta exige aussi une App
+// Review (et parfois une vérification d'entreprise), comme pour l'API
+// Google Business Profile.
 const GRAPH_VERSION = "v21.0";
 const GRAPH_BASE_URL = `https://graph.facebook.com/${GRAPH_VERSION}`;
 const FACEBOOK_AUTH_URL = "https://www.facebook.com/v21.0/dialog/oauth";
-
-const SCOPES = [
-  "pages_show_list",
-  "pages_read_engagement",
-  "instagram_basic",
-].join(",");
 
 function getRedirectUri() {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
@@ -23,7 +19,7 @@ export function buildFacebookAuthUrl(state: string) {
   const url = new URL(FACEBOOK_AUTH_URL);
   url.searchParams.set("client_id", process.env.FACEBOOK_APP_ID!);
   url.searchParams.set("redirect_uri", getRedirectUri());
-  url.searchParams.set("scope", SCOPES);
+  url.searchParams.set("config_id", process.env.FACEBOOK_LOGIN_CONFIG_ID!);
   url.searchParams.set("state", state);
   url.searchParams.set("response_type", "code");
   return url.toString();
