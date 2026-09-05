@@ -41,6 +41,14 @@ Dashboard de gestion des restaurants. Next.js (App Router) + Supabase.
     `GOOGLE_PLACES_API_KEY`.
 11. Appliquer `supabase/migrations/0005_visibility_audits.sql` dans le SQL
     editor Supabase.
+12. Pour les avis Yelp/Tripadvisor (page `/dashboard/[id]/avis`) : créer
+    une clé sur [yelp.com/developers](https://www.yelp.com/developers)
+    (`YELP_API_KEY`) et sur
+    [tripadvisor.com/developers](https://www.tripadvisor.com/developers)
+    (`TRIPADVISOR_API_KEY`) — auto-inscription, pas de partenariat
+    commercial à négocier, contrairement à la plupart des connecteurs
+    livraison/réservation (Uber Eats, Deliveroo, TheFork...) qui
+    nécessitent une société établie et un dossier partenaire.
 
 ## Développement
 
@@ -98,3 +106,11 @@ Ouvrir [http://localhost:3000](http://localhost:3000) — redirige vers
   configurée ou si l'établissement n'est pas trouvé.
 - `supabase/migrations/0005_visibility_audits.sql` — table des audits
   générés.
+- `src/lib/reviews/yelp.ts`, `src/lib/reviews/tripadvisor.ts` — APIs
+  publiques self-service (lecture seule des avis, 2-3 avis par appel
+  selon les quotas de chaque plateforme).
+- `src/lib/reviews/aggregate.ts` — combine les deux, se dégrade
+  proprement (établissement introuvable, clé absente) sans jamais
+  casser la page.
+- `src/app/dashboard/[id]/avis/` — affichage des avis Yelp/Tripadvisor
+  d'un restaurant (lecture seule, pas de gestion/réponse).

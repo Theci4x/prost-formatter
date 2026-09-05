@@ -72,7 +72,28 @@ semaines. Développement possible en attendant via un compte de test.
       activer
 - [x] Table `visibility_audits` (Supabase)
 
-### Étape 6 — à venir
+### Étape 6 — Autres plateformes (partielle)
+
+Inspiré d'une liste de connecteurs malou.io partagée en conversation.
+Réalité vérifiée : la plupart nécessitent un partenariat commercial
+(société établie + dossier + délais), pas juste une clé API.
+
+- [x] Avis Yelp + Tripadvisor (lecture seule) —
+      `dashboard/src/app/dashboard/[id]/avis/` — APIs publiques
+      self-service, aucun partenariat requis
+- [ ] Facebook / Instagram (posts) — API publique mais nécessite une
+      validation d'app Meta (jours à semaines)
+- [ ] Bing Places, Apple Business Connect — APIs de gestion self-service
+      identifiées, pas encore implémentées
+- [ ] Uber Eats, Deliveroo, DoorDash, TheFork, OpenTable, Resy, Zenchef,
+      Zelty — **bloqué** : programmes partenaires fermés, nécessitent
+      une société établie + dossier de candidature (même blocage que
+      Stripe)
+- [ ] ~40 petits annuaires locaux (Herold, Das Örtliche, Krak, etc.) —
+      **bloqué** : pas d'API publique pour la plupart, nécessiterait un
+      agrégateur de données tiers payant (type Uberall/Yext)
+
+### Étape 7 — à venir
 
 - Paiement (Stripe : carte bancaire + prélèvement SEPA, abonnement) —
   en attente de la création de la société

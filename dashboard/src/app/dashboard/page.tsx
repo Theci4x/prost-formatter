@@ -55,6 +55,12 @@ export default async function DashboardPage() {
                   SEO
                 </Link>
                 <Link
+                  href={`/dashboard/${restaurant.id}/avis`}
+                  className="text-sm font-medium text-zinc-600 hover:text-zinc-900"
+                >
+                  Avis
+                </Link>
+                <Link
                   href={`/dashboard/${restaurant.id}/google`}
                   className="text-sm font-medium text-zinc-600 hover:text-zinc-900"
                 >
