@@ -11,7 +11,7 @@ Ce repo contient deux projets indépendants :
 ## Stack
 
 - Next.js (App Router) + TypeScript + Tailwind CSS
-- Supabase (Auth + Postgres) — projet : `cioikfdqjbjjcqkcfcsw.supabase.co`
+- Supabase (Auth + Postgres) — projet "Klarr" : `qjyykthkxaqiomhlzaeq.supabase.co`
 
 ## Étapes
 
