@@ -15,7 +15,7 @@ Ce repo contient deux projets indépendants :
 
 ## Étapes
 
-### Étape 1 — Auth + structure du dashboard (en cours)
+### Étape 1 — Auth + structure du dashboard (terminée)
 
 - [x] Projet Next.js (TypeScript, Tailwind, App Router)
 - [x] Connexion Supabase (client + config d'environnement)
@@ -26,7 +26,13 @@ Ce repo contient deux projets indépendants :
 
 Voir `dashboard/README.md` pour l'installation et la configuration.
 
-### Étape 2 — à venir
+### Étape 2 — Gestion des restaurants (terminée)
 
-- Gestion des restaurants depuis le dashboard (création, édition)
-- Enrichissement du schéma `restaurants`
+- [x] Liste des restaurants de l'utilisateur sur `/dashboard`
+- [x] Création (`/dashboard/new`)
+- [x] Édition (`/dashboard/[id]/edit`)
+- [x] Suppression (avec confirmation)
+
+### Étape 3 — à venir
+
+- Enrichissement du schéma `restaurants` (horaires, menu, etc.)
