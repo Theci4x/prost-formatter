@@ -12,12 +12,12 @@ Dashboard de gestion des restaurants. Next.js (App Router) + Supabase.
    contenu de `supabase/migrations/0001_init.sql` (crée la table
    `restaurants` avec Row Level Security).
 4. Dans Supabase > Authentication > URL Configuration, ajouter
-   `http://localhost:3000/auth/callback` (et l'équivalent en prod) aux
+   `https://localhost:3000/auth/callback` (et l'équivalent en prod) aux
    Redirect URLs.
 5. Pour la connexion Google Business Profile : créer un projet Google
    Cloud, activer les "Business Profile APIs", configurer l'écran de
    consentement OAuth et créer un ID client OAuth ("Application Web") avec
-   comme URI de redirection `http://localhost:3000/api/google/callback`.
+   comme URI de redirection `https://localhost:3000/api/google/callback`.
    Renseigner `GOOGLE_CLIENT_ID` et `GOOGLE_CLIENT_SECRET` dans
    `.env.local`. Le scope `business.manage` nécessite une vérification
    Google avant un usage public (peut prendre plusieurs semaines) ; en
@@ -54,7 +54,7 @@ Dashboard de gestion des restaurants. Next.js (App Router) + Supabase.
     App (type "Business"), ajoute le produit **"Facebook Login for
     Business"**, et déclare comme "Redirect URI" (dans Facebook Login for
     Business → Paramètres) :
-    `http://localhost:3000/api/facebook/callback`. Renseigne
+    `https://localhost:3000/api/facebook/callback`. Renseigne
     `FACEBOOK_APP_ID` et `FACEBOOK_APP_SECRET` (Paramètres de l'App), et
     recopie le même App ID dans `NEXT_PUBLIC_FACEBOOK_APP_ID` (le SDK
     JavaScript Facebook tourne côté navigateur).
@@ -72,7 +72,10 @@ Dashboard de gestion des restaurants. Next.js (App Router) + Supabase.
     `selected_business_id` vide, quel que soit le paramétrage du
     portefeuille business) — Meta impose le SDK JavaScript
     (`FB.login({ config_id, response_type: "code" })`), ce que fait le
-    composant `FacebookConnectButton`.
+    composant `FacebookConnectButton`. Le SDK JavaScript refuse en plus de
+    s'exécuter sur une page `http://` (sauf exceptions internes à Meta qui
+    ne couvrent pas toujours `localhost`) : `npm run dev` lance donc le
+    serveur en HTTPS local (voir section Développement plus bas).
     Tant que l'App est en mode développement, seuls les comptes ajoutés
     comme "testeurs" (Rôles de l'app → Testeurs) peuvent se connecter — il
     faut soumettre l'App à la revue Meta ("App Review") pour que
@@ -89,8 +92,15 @@ npm install
 npm run dev
 ```
 
-Ouvrir [http://localhost:3000](http://localhost:3000) — redirige vers
-`/login`, puis `/dashboard` une fois connecté.
+`npm run dev` lance le serveur en HTTPS local (`--experimental-https`,
+requis par le SDK JavaScript Facebook) : Next.js génère un certificat
+auto-signé (via `mkcert`) au premier lancement. Ouvrir
+[https://localhost:3000](https://localhost:3000) — le navigateur peut
+afficher un avertissement de sécurité ("Non sécurisé" / certificat non
+reconnu) la première fois, il suffit de cliquer sur "Avancé" puis
+"Continuer vers localhost" (c'est un certificat auto-signé local, normal
+en développement). L'app redirige ensuite vers `/login`, puis `/dashboard`
+une fois connecté.
 
 ## Structure
 

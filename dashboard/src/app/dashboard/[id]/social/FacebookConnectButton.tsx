@@ -63,7 +63,7 @@ export function FacebookConnectButton({ restaurantId }: { restaurantId: string }
     }
 
     setLoading(true);
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://localhost:3000";
 
     window.FB.login(
       (response) => {
