@@ -99,6 +99,9 @@ Dashboard de gestion des restaurants. Next.js (App Router) + Supabase.
 15. Appliquer `supabase/migrations/0007_google_business_location.sql`
     dans le SQL editor Supabase (colonnes pour la fiche établissement
     choisie côté Google Business Profile).
+16. Appliquer `supabase/migrations/0008_restaurant_details.sql` dans le
+    SQL editor Supabase (téléphone/site web/description/horaires sur
+    `restaurants`, table `restaurant_menu_items` pour le menu).
 
 ## Développement
 

@@ -110,6 +110,9 @@ Réalité vérifiée : la plupart nécessitent un partenariat commercial
 
 - [x] Landing page codée en dur sur `/` (reprise du design Artifact
       "Klarr Landing Page"), avec lien vers `/test-presence-google`
+- [x] Enrichissement de la fiche restaurant : téléphone, site web,
+      description, horaires par jour (migration `0008`)
+- [x] Menu (carte) par restaurant — `dashboard/[id]/menu`, table
+      `restaurant_menu_items`
 - [ ] Paiement (Stripe : carte bancaire + prélèvement SEPA, abonnement) —
       en attente de la création de la société
-- [ ] Enrichissement du schéma `restaurants` (horaires, menu, etc.)

@@ -49,6 +49,12 @@ export default async function DashboardPage() {
               </div>
               <div className="flex items-center gap-4">
                 <Link
+                  href={`/dashboard/${restaurant.id}/menu`}
+                  className="text-sm font-medium text-zinc-600 hover:text-zinc-900"
+                >
+                  Menu
+                </Link>
+                <Link
                   href={`/dashboard/${restaurant.id}/seo`}
                   className="text-sm font-medium text-zinc-600 hover:text-zinc-900"
                 >
