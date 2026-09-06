@@ -102,6 +102,20 @@ Dashboard de gestion des restaurants. Next.js (App Router) + Supabase.
 16. Appliquer `supabase/migrations/0008_restaurant_details.sql` dans le
     SQL editor Supabase (téléphone/site web/description/horaires sur
     `restaurants`, table `restaurant_menu_items` pour le menu).
+17. Pour TikTok : va sur [developers.tiktok.com](https://developers.tiktok.com)
+    ("Manage apps"), crée une app, ajoute le produit **"Login Kit"**, et
+    déclare comme "Redirect URI" :
+    `https://localhost:3000/api/tiktok/callback`. Active les scopes
+    `user.info.basic`, `user.info.stats`, `video.list`. Renseigne
+    `TIKTOK_CLIENT_KEY` et `TIKTOK_CLIENT_SECRET` dans `.env.local`.
+    Contrairement à Google/Facebook, TikTok exige PKCE
+    (`code_verifier`/`code_challenge`) même pour ce flux serveur classique
+    — déjà géré par `src/lib/tiktok/oauth.ts`. Fonctionne immédiatement en
+    mode Sandbox avec ton propre compte TikTok ajouté comme testeur ; une
+    revue TikTok est nécessaire pour un usage public par tout
+    restaurateur.
+18. Appliquer `supabase/migrations/0009_tiktok_connections.sql` dans le
+    SQL editor Supabase.
 
 ## Développement
 

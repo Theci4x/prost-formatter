@@ -79,6 +79,12 @@ export default async function DashboardPage() {
                   Réseaux sociaux
                 </Link>
                 <Link
+                  href={`/dashboard/${restaurant.id}/tiktok`}
+                  className="text-sm font-medium text-zinc-600 hover:text-zinc-900"
+                >
+                  TikTok
+                </Link>
+                <Link
                   href={`/dashboard/${restaurant.id}/edit`}
                   className="text-sm font-medium text-zinc-600 hover:text-zinc-900"
                 >
