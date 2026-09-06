@@ -78,4 +78,10 @@ export const dashboardIcons = {
       <line x1="5" y1="12" x2="19" y2="12" />
     </svg>
   ),
+  photos: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 7h3l2-2h8l2 2h3v13H3z" />
+      <circle cx="12" cy="13" r="4" />
+    </svg>
+  ),
 };

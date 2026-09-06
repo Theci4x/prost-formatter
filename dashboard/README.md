@@ -116,6 +116,12 @@ Dashboard de gestion des restaurants. Next.js (App Router) + Supabase.
     restaurateur.
 18. Appliquer `supabase/migrations/0009_tiktok_connections.sql` dans le
     SQL editor Supabase.
+19. Appliquer `supabase/migrations/0010_restaurant_photos.sql` dans le
+    SQL editor Supabase — crée le bucket Storage public
+    `restaurant-photos` (facade, plats, ambiance) et la table
+    `restaurant_photos`. Aucune configuration Supabase manuelle
+    supplémentaire n'est nécessaire (le bucket est créé par la
+    migration elle-même).
 
 ## Développement
 

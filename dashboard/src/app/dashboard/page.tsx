@@ -5,6 +5,7 @@ import { dashboardIcons } from "@/components/dashboard/PageHeader";
 import type { Restaurant } from "@/types/restaurant";
 
 const FEATURE_LINKS = [
+  { href: "photos", label: "Photos", icon: dashboardIcons.photos },
   { href: "menu", label: "Menu", icon: dashboardIcons.menu },
   { href: "seo", label: "SEO", icon: dashboardIcons.seo },
   { href: "avis", label: "Avis", icon: dashboardIcons.avis },

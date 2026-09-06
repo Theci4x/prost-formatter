@@ -123,5 +123,13 @@ Réalité vérifiée : la plupart nécessitent un partenariat commercial
       description, horaires par jour (migration `0008`)
 - [x] Menu (carte) par restaurant — `dashboard/[id]/menu`, table
       `restaurant_menu_items`
+- [x] Identité visuelle Klarr intégrée partout : logo (recréé en
+      vectoriel, `src/components/brand/`), favicon, page de connexion
+      illustrée en deux panneaux, touches décoratives sur la landing
+      page, dashboard interne restylé (couleur de marque + icône par
+      page, `src/components/dashboard/PageHeader.tsx`)
+- [x] Photos par restaurant (façade, plats, ambiance) — Supabase
+      Storage (bucket public `restaurant-photos`, migration `0010`),
+      `dashboard/[id]/photos`
 - [ ] Paiement (Stripe : carte bancaire + prélèvement SEPA, abonnement) —
       en attente de la création de la société
