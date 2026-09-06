@@ -103,7 +103,7 @@ export function FacebookConnectButton({ restaurantId }: { restaurantId: string }
         type="button"
         onClick={handleClick}
         disabled={loading}
-        className="rounded-md bg-zinc-900 px-4 py-2 text-center text-sm font-medium text-white transition-colors hover:bg-zinc-700 disabled:opacity-50"
+        className="rounded-md bg-brand-navy px-4 py-2 text-center text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover disabled:opacity-50"
       >
         {loading ? "Connexion..." : "Connecter Facebook / Instagram"}
       </button>

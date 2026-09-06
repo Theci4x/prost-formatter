@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -6,6 +5,7 @@ import {
   fetchTripadvisorPlatformReviews,
 } from "@/lib/reviews/aggregate";
 import { PlatformReviewsCard } from "@/components/reviews/PlatformReviewsCard";
+import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
 import type { Restaurant } from "@/types/restaurant";
 
 export default async function AvisPage({
@@ -35,15 +35,7 @@ export default async function AvisPage({
 
   return (
     <div className="flex flex-1 flex-col gap-6 px-6 py-8">
-      <Link
-        href="/dashboard"
-        className="text-sm text-zinc-500 hover:text-zinc-900"
-      >
-        ← Retour
-      </Link>
-      <h1 className="text-lg font-semibold text-zinc-900">
-        Avis — {restaurant.nom}
-      </h1>
+      <PageHeader icon={dashboardIcons.avis} title={`Avis — ${restaurant.nom}`} />
 
       <div className="grid max-w-3xl grid-cols-1 gap-4 sm:grid-cols-2">
         <PlatformReviewsCard data={yelp} />

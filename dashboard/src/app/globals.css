@@ -5,6 +5,15 @@
   --foreground: #171717;
 }
 
+/* Couleurs de marque Klarr — utilisées dans le dashboard interne
+   (bg-brand-navy, hover:bg-brand-navy-hover, text-brand-orange, etc.). */
+@theme {
+  --color-brand-navy: #0f1e3d;
+  --color-brand-navy-hover: #16295a;
+  --color-brand-orange: #e8871e;
+  --color-brand-orange-soft: #fdf1e2;
+}
+
 html,
 body {
   height: 100%;

@@ -1,9 +1,9 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getPageDetails, type PageDetails } from "@/lib/facebook/oauth";
 import { disconnectSocial } from "./actions";
 import { FacebookConnectButton } from "./FacebookConnectButton";
+import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
 import type { Restaurant } from "@/types/restaurant";
 
 export default async function SocialPage({
@@ -57,15 +57,10 @@ export default async function SocialPage({
 
   return (
     <div className="flex flex-1 flex-col gap-6 px-6 py-8">
-      <Link
-        href="/dashboard"
-        className="text-sm text-zinc-500 hover:text-zinc-900"
-      >
-        ← Retour
-      </Link>
-      <h1 className="text-lg font-semibold text-zinc-900">
-        Réseaux sociaux — {restaurant.nom}
-      </h1>
+      <PageHeader
+        icon={dashboardIcons.social}
+        title={`Réseaux sociaux — ${restaurant.nom}`}
+      />
 
       {connected && (
         <p className="max-w-md rounded-md bg-emerald-50 px-4 py-3 text-sm text-emerald-700">

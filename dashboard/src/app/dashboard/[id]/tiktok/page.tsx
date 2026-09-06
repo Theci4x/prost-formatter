@@ -1,9 +1,9 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getValidAccessToken } from "@/lib/tiktok/connection";
 import { getUserInfo, getRecentVideos, type TikTokVideo } from "@/lib/tiktok/oauth";
 import { disconnectTikTok } from "./actions";
+import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
 import type { Restaurant } from "@/types/restaurant";
 import type { TikTokConnection } from "@/types/tiktok";
 
@@ -63,15 +63,7 @@ export default async function TikTokPage({
 
   return (
     <div className="flex flex-1 flex-col gap-6 px-6 py-8">
-      <Link
-        href="/dashboard"
-        className="text-sm text-zinc-500 hover:text-zinc-900"
-      >
-        ← Retour
-      </Link>
-      <h1 className="text-lg font-semibold text-zinc-900">
-        TikTok — {restaurant.nom}
-      </h1>
+      <PageHeader icon={dashboardIcons.tiktok} title={`TikTok — ${restaurant.nom}`} />
 
       {connected && (
         <p className="max-w-md rounded-md bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
@@ -91,7 +83,7 @@ export default async function TikTokPage({
           </p>
           <a
             href={`/api/tiktok/authorize?restaurant_id=${id}`}
-            className="rounded-md bg-zinc-900 px-4 py-2 text-center text-sm font-medium text-white transition-colors hover:bg-zinc-700"
+            className="rounded-md bg-brand-navy px-4 py-2 text-center text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover"
           >
             Connecter TikTok
           </a>

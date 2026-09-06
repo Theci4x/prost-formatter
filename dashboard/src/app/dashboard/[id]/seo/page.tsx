@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { addKeyword, removeKeyword, analyzeKeywords } from "./actions";
 import { KeywordAnalysis } from "@/components/seo/KeywordAnalysis";
+import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
 import type { Restaurant } from "@/types/restaurant";
 import type { RestaurantKeyword } from "@/types/keyword";
 
@@ -36,15 +36,7 @@ export default async function SeoPage({
 
   return (
     <div className="flex flex-1 flex-col gap-8 px-6 py-8">
-      <Link
-        href="/dashboard"
-        className="text-sm text-zinc-500 hover:text-zinc-900"
-      >
-        ← Retour
-      </Link>
-      <h1 className="text-lg font-semibold text-zinc-900">
-        SEO — {restaurant.nom}
-      </h1>
+      <PageHeader icon={dashboardIcons.seo} title={`SEO — ${restaurant.nom}`} />
 
       <div className="flex max-w-lg flex-col gap-3">
         <h2 className="text-sm font-medium text-zinc-700">
@@ -61,7 +53,7 @@ export default async function SeoPage({
           />
           <button
             type="submit"
-            className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-700"
+            className="rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover"
           >
             Ajouter
           </button>

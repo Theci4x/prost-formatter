@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { addMenuItem, removeMenuItem } from "./actions";
+import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
 import type { Restaurant } from "@/types/restaurant";
 import type { MenuItem } from "@/types/menu";
 
@@ -43,15 +43,7 @@ export default async function MenuPage({
 
   return (
     <div className="flex flex-1 flex-col gap-6 px-6 py-8">
-      <Link
-        href="/dashboard"
-        className="text-sm text-zinc-500 hover:text-zinc-900"
-      >
-        ← Retour
-      </Link>
-      <h1 className="text-lg font-semibold text-zinc-900">
-        Menu — {restaurant.nom}
-      </h1>
+      <PageHeader icon={dashboardIcons.menu} title={`Menu — ${restaurant.nom}`} />
 
       <form
         action={addMenuItem}
@@ -106,7 +98,7 @@ export default async function MenuPage({
         </div>
         <button
           type="submit"
-          className="rounded-md bg-zinc-900 px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-zinc-700"
+          className="rounded-md bg-brand-navy px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover"
         >
           Ajouter
         </button>

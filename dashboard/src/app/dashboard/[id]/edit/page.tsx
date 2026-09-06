@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { updateRestaurant } from "@/app/dashboard/actions";
 import { RestaurantForm } from "@/components/restaurants/RestaurantForm";
+import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
 import type { Restaurant } from "@/types/restaurant";
 
 export default async function EditRestaurantPage({
@@ -27,15 +27,7 @@ export default async function EditRestaurantPage({
 
   return (
     <div className="flex flex-1 flex-col gap-6 px-6 py-8">
-      <Link
-        href="/dashboard"
-        className="text-sm text-zinc-500 hover:text-zinc-900"
-      >
-        ← Retour
-      </Link>
-      <h1 className="text-lg font-semibold text-zinc-900">
-        Modifier {restaurant.nom}
-      </h1>
+      <PageHeader icon={dashboardIcons.edit} title={`Modifier ${restaurant.nom}`} />
       <RestaurantForm
         action={updateRestaurant}
         restaurant={restaurant}

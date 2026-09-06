@@ -57,7 +57,7 @@ export function LoginForm() {
         <button
           formAction={loginAction}
           disabled={loginPending || signupPending}
-          className="flex-1 rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-700 disabled:opacity-50"
+          className="flex-1 rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover disabled:opacity-50"
         >
           {loginPending ? "Connexion..." : "Se connecter"}
         </button>
