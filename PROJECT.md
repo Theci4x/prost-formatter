@@ -37,8 +37,9 @@ Voir `dashboard/README.md` pour l'installation et la configuration.
 
 - [x] OAuth Google (connexion/déconnexion par restaurant, protection CSRF)
 - [x] Migration `google_business_connections`
-- [ ] Choix de la fiche Business Profile précise (une fois l'accès API
-      Google validé)
+- [x] Code prêt pour choisir la fiche Business Profile précise
+      (`src/lib/google/business.ts`, migration `0007`) — bloqué par la
+      demande d'accès API ci-dessous
 - [ ] Lecture/réponse aux avis
 - [ ] Création et programmation de posts (avec photos)
 - [ ] Statistiques (vues, recherches, appels) via la Business Profile
@@ -48,6 +49,14 @@ Voir `dashboard/README.md` pour l'installation et la configuration.
 vérification Google (écran de consentement OAuth) avant un usage public —
 démarche à faire côté Google Cloud Console, peut prendre plusieurs
 semaines. Développement possible en attendant via un compte de test.
+
+**Bloquant externe (2)** : les API Account Management / Business
+Information ("My Business") ont un quota par défaut de zéro requête tant
+qu'une demande d'accès n'est pas approuvée par Google (formulaire
+"Demande d'accès de base aux API" sur
+developers.google.com/my-business/content/prereqs). Demande soumise le
+06/09/2026, numéro **9-9237000040848**, délai annoncé 7 à 10 jours
+ouvrés.
 
 ### Étape 4 — SEO (en cours)
 
