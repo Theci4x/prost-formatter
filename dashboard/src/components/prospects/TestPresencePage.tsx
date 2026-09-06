@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { ProspectForm } from "@/components/prospects/ProspectForm";
 import { languages, translations, type Lang } from "@/lib/i18n/testPresence";
+import { KlarrMark, KlarrWordmark } from "@/components/brand/KlarrMark";
 
 export function TestPresencePage() {
   const [lang, setLang] = useState<Lang>("fr");
@@ -11,6 +13,14 @@ export function TestPresencePage() {
   return (
     <div className="flex flex-1 flex-col items-center bg-stone-50 px-6 py-20">
       <div className="flex w-full max-w-lg flex-col gap-8">
+        <Link
+          href="/"
+          className="flex items-center justify-center gap-2 text-stone-900"
+        >
+          <KlarrMark size={26} />
+          <KlarrWordmark className="text-xl" />
+        </Link>
+
         <div className="flex justify-center gap-1">
           {languages.map((l) => (
             <button
