@@ -62,17 +62,23 @@ Dashboard de gestion des restaurants. Next.js (App Router) + Supabase.
     Business → Configurations → Créer une configuration) : choisis le
     token "Utilisateur" (pas "Utilisateur système") et ajoute les
     permissions `pages_show_list`, `pages_read_engagement`,
-    `instagram_basic`. Renseigne l'ID obtenu dans `FACEBOOK_LOGIN_CONFIG_ID`
-    **et** `NEXT_PUBLIC_FACEBOOK_LOGIN_CONFIG_ID`. Il faut aussi que l'App
-    (et au moins une Page Facebook) soit rattachée à un **portefeuille
-    business** Meta (business.facebook.com/settings → Comptes →
-    Applications / Pages). **Important** : "Facebook Login for Business"
+    `instagram_basic`, **`business_management`**. Renseigne l'ID obtenu
+    dans `FACEBOOK_LOGIN_CONFIG_ID` **et**
+    `NEXT_PUBLIC_FACEBOOK_LOGIN_CONFIG_ID`. Il faut aussi que l'App (et au
+    moins une Page Facebook) soit rattachée à un **portefeuille business**
+    Meta (business.facebook.com/settings → Comptes → Applications /
+    Pages). **Important** : une Page créée à l'intérieur d'un portefeuille
+    business n'apparaît pas via `/me/accounts` (accès Page "classique") —
+    `getUserPages` se rabat automatiquement sur `/me/businesses` puis
+    `/{business_id}/owned_pages`, d'où le besoin de la permission
+    `business_management`. Par ailleurs, "Facebook Login for Business"
     ne fonctionne pas avec une simple redirection vers
     `/dialog/oauth?...&scope=...` (Facebook annule la connexion,
     `selected_business_id` vide, quel que soit le paramétrage du
     portefeuille business) — Meta impose le SDK JavaScript
-    (`FB.login({ config_id, response_type: "code" })`), ce que fait le
-    composant `FacebookConnectButton`. Le SDK JavaScript refuse en plus de
+    (`FB.login({ config_id })`, flux implicite qui renvoie directement un
+    token), ce que fait le composant `FacebookConnectButton`. Le SDK
+    JavaScript refuse en plus de
     s'exécuter sur une page `http://` (sauf exceptions internes à Meta qui
     ne couvrent pas toujours `localhost`) : `npm run dev` lance donc le
     serveur en HTTPS local (voir section Développement plus bas).

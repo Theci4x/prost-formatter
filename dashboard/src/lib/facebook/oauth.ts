@@ -42,6 +42,19 @@ export type FacebookPage = {
 export async function getUserPages(
   userAccessToken: string,
 ): Promise<FacebookPage[]> {
+  const personalPages = await fetchAccountsPages(userAccessToken);
+  if (personalPages.length > 0) return personalPages;
+
+  // Une Page créée à l'intérieur d'un portefeuille business Meta (Business
+  // Manager) n'apparaît pas via /me/accounts, qui ne reflète que les rôles
+  // "classiques" (Page ajoutée hors Business Manager) : il faut lister les
+  // portefeuilles business de l'utilisateur, puis leurs Pages.
+  return fetchBusinessOwnedPages(userAccessToken);
+}
+
+async function fetchAccountsPages(
+  userAccessToken: string,
+): Promise<FacebookPage[]> {
   const url = new URL(`${GRAPH_BASE_URL}/me/accounts`);
   url.searchParams.set("access_token", userAccessToken);
 
@@ -59,6 +72,55 @@ export async function getUserPages(
     name: p.name,
     accessToken: p.access_token,
   }));
+}
+
+async function fetchBusinessOwnedPages(
+  userAccessToken: string,
+): Promise<FacebookPage[]> {
+  const businessesUrl = new URL(`${GRAPH_BASE_URL}/me/businesses`);
+  businessesUrl.searchParams.set("access_token", userAccessToken);
+  const businessesRes = await fetch(businessesUrl);
+  if (!businessesRes.ok) return [];
+
+  const businessesData = (await businessesRes.json()) as {
+    data?: { id: string }[];
+  };
+
+  const pages: FacebookPage[] = [];
+  for (const business of businessesData.data ?? []) {
+    const ownedUrl = new URL(`${GRAPH_BASE_URL}/${business.id}/owned_pages`);
+    ownedUrl.searchParams.set("access_token", userAccessToken);
+    const ownedRes = await fetch(ownedUrl);
+    if (!ownedRes.ok) continue;
+
+    const ownedData = (await ownedRes.json()) as {
+      data?: { id: string; name: string }[];
+    };
+
+    for (const page of ownedData.data ?? []) {
+      const accessToken = await fetchPageAccessToken(page.id, userAccessToken);
+      if (accessToken) pages.push({ id: page.id, name: page.name, accessToken });
+    }
+  }
+
+  return pages;
+}
+
+// /owned_pages ne renvoie pas de token par Page (contrairement à
+// /me/accounts) : il faut le récupérer séparément pour chaque Page.
+async function fetchPageAccessToken(
+  pageId: string,
+  userAccessToken: string,
+): Promise<string | null> {
+  const url = new URL(`${GRAPH_BASE_URL}/${pageId}`);
+  url.searchParams.set("fields", "access_token");
+  url.searchParams.set("access_token", userAccessToken);
+
+  const res = await fetch(url);
+  if (!res.ok) return null;
+
+  const data = (await res.json()) as { access_token?: string };
+  return data.access_token ?? null;
 }
 
 export type PageDetails = {
