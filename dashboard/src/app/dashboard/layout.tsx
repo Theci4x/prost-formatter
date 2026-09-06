@@ -20,8 +20,8 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="flex flex-1 flex-col">
-      <header className="flex items-center justify-between border-b border-zinc-200 px-6 py-4">
+    <div className="flex min-h-screen flex-1 flex-col bg-[#FAF7F0]">
+      <header className="sticky top-0 z-10 flex items-center justify-between border-b border-zinc-200/70 bg-white/90 px-6 py-4 shadow-sm backdrop-blur">
         <span className="flex items-center gap-2">
           <KlarrMark size={22} />
           <KlarrWordmark className="text-lg text-zinc-900" />

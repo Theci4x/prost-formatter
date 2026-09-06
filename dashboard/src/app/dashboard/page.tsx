@@ -26,20 +26,25 @@ export default async function DashboardPage() {
   return (
     <div className="flex flex-1 flex-col gap-6 px-6 py-8">
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold text-zinc-900">
-          Mes restaurants
-        </h1>
+        <div>
+          <h1 className="text-xl font-semibold text-zinc-900">
+            Mes restaurants
+          </h1>
+          <p className="text-sm text-zinc-500">
+            Gère la présence en ligne de tes établissements.
+          </p>
+        </div>
         <Link
           href="/dashboard/new"
-          className="rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover"
+          className="rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-brand-navy-hover hover:shadow"
         >
           Ajouter un restaurant
         </Link>
       </div>
 
       {restaurants.length === 0 ? (
-        <div className="flex max-w-md flex-col items-center gap-4 rounded-lg border border-dashed border-zinc-300 px-6 py-16 text-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-brand-orange-soft text-brand-navy">
+        <div className="flex max-w-md flex-col items-center gap-4 rounded-2xl border border-dashed border-zinc-300 bg-white px-6 py-16 text-center shadow-sm">
+          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-brand-orange-soft to-white text-brand-navy shadow-sm">
             {dashboardIcons.menu}
           </div>
           <div className="flex flex-col gap-1">
@@ -53,7 +58,7 @@ export default async function DashboardPage() {
           </div>
           <Link
             href="/dashboard/new"
-            className="rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover"
+            className="rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-brand-navy-hover hover:shadow"
           >
             Ajouter un restaurant
           </Link>
@@ -63,18 +68,23 @@ export default async function DashboardPage() {
           {restaurants.map((restaurant) => (
             <li
               key={restaurant.id}
-              className="flex flex-col gap-3 rounded-lg border border-zinc-200 p-4"
+              className="flex flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm transition-shadow hover:shadow-md"
             >
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-zinc-900">
-                    {restaurant.nom}
-                  </p>
-                  {restaurant.adresse && (
-                    <p className="text-sm text-zinc-500">
-                      {restaurant.adresse}
+                <div className="flex items-center gap-3">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-navy text-sm font-semibold text-white">
+                    {restaurant.nom.slice(0, 1).toUpperCase()}
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-zinc-900">
+                      {restaurant.nom}
                     </p>
-                  )}
+                    {restaurant.adresse && (
+                      <p className="text-sm text-zinc-500">
+                        {restaurant.adresse}
+                      </p>
+                    )}
+                  </div>
                 </div>
                 <div className="flex items-center gap-4">
                   <Link
@@ -91,7 +101,7 @@ export default async function DashboardPage() {
                   <Link
                     key={feature.href}
                     href={`/dashboard/${restaurant.id}/${feature.href}`}
-                    className="flex items-center gap-1.5 rounded-full border border-zinc-200 px-3 py-1.5 text-xs font-medium text-zinc-600 transition-colors hover:border-brand-navy hover:text-brand-navy"
+                    className="flex items-center gap-1.5 rounded-full bg-brand-orange-soft px-3 py-1.5 text-xs font-medium text-brand-navy transition-colors hover:bg-brand-navy hover:text-white"
                   >
                     <span className="[&_svg]:h-3.5 [&_svg]:w-3.5">
                       {feature.icon}

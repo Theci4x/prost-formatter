@@ -42,7 +42,7 @@ export default async function PhotosPage({
 
       <form
         action={uploadPhoto}
-        className="flex max-w-xl items-center gap-3 rounded-md border border-zinc-200 p-4"
+        className="flex max-w-xl items-center gap-3 rounded-2xl border border-zinc-200/70 bg-white p-4 shadow-sm"
       >
         <input type="hidden" name="restaurant_id" value={id} />
         <input
@@ -67,7 +67,7 @@ export default async function PhotosPage({
           {photos.map((photo) => (
             <li
               key={photo.id}
-              className="group relative aspect-square overflow-hidden rounded-md border border-zinc-200"
+              className="group relative aspect-square overflow-hidden rounded-xl border border-zinc-200/70 shadow-sm"
             >
               {/* eslint-disable-next-line @next/next/no-img-element -- URLs Supabase Storage arbitraires, pas de domaine fixe a whitelister dans next/image */}
               <img
