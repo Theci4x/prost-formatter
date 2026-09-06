@@ -15,14 +15,20 @@ Dashboard de gestion des restaurants. Next.js (App Router) + Supabase.
    `https://localhost:3000/auth/callback` (et l'équivalent en prod) aux
    Redirect URLs.
 5. Pour la connexion Google Business Profile : créer un projet Google
-   Cloud, activer les "Business Profile APIs", configurer l'écran de
-   consentement OAuth et créer un ID client OAuth ("Application Web") avec
-   comme URI de redirection `https://localhost:3000/api/google/callback`.
-   Renseigner `GOOGLE_CLIENT_ID` et `GOOGLE_CLIENT_SECRET` dans
-   `.env.local`. Le scope `business.manage` nécessite une vérification
-   Google avant un usage public (peut prendre plusieurs semaines) ; en
-   attendant, ajouter son propre compte comme "utilisateur de test" dans
-   l'écran de consentement suffit pour développer/tester.
+   Cloud, configurer l'écran de consentement OAuth (externe, scope
+   `business.manage` + `openid` + `email` ajoutés manuellement s'ils
+   n'apparaissent pas dans la liste, propre compte ajouté comme
+   "utilisateur test") et créer un ID client OAuth ("Application Web")
+   avec comme URI de redirection
+   `https://localhost:3000/api/google/callback`. Renseigner
+   `GOOGLE_CLIENT_ID` et `GOOGLE_CLIENT_SECRET` dans `.env.local`. Le
+   scope `business.manage` nécessite une vérification Google avant un
+   usage public (peut prendre plusieurs semaines) ; en attendant, un
+   compte ajouté comme "utilisateur test" suffit pour développer/tester.
+   Pour choisir la fiche établissement précise (`src/lib/google/business.ts`),
+   active aussi **"My Business Account Management API"** et **"My
+   Business Business Information API"** dans "API et services" >
+   "Bibliothèque".
 6. Appliquer `supabase/migrations/0002_google_business_connections.sql`
    dans le SQL editor Supabase.
 7. Pour l'analyse SEO par Claude : créer une clé sur
@@ -90,6 +96,9 @@ Dashboard de gestion des restaurants. Next.js (App Router) + Supabase.
     vérification d'entreprise.
 14. Appliquer `supabase/migrations/0006_social_connections.sql` dans le
     SQL editor Supabase.
+15. Appliquer `supabase/migrations/0007_google_business_location.sql`
+    dans le SQL editor Supabase (colonnes pour la fiche établissement
+    choisie côté Google Business Profile).
 
 ## Développement
 
