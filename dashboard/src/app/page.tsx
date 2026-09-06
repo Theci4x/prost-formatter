@@ -189,7 +189,7 @@ export default async function Home() {
                 letterSpacing: "0.02em",
               }}
             >
-              Pensé pour les restaurateurs indépendants
+              Pensé pour les restaurateurs indépendants et petits groupes
             </span>
           </div>
           <h1
@@ -846,7 +846,7 @@ export default async function Home() {
           </span>
         </div>
         <span style={{ fontSize: 13, color: "var(--ink-soft)" }}>
-          © Klarr — fait pour les restaurateurs indépendants.
+          © Klarr — fait pour les restaurateurs indépendants et petits groupes.
         </span>
       </div>
     </div>
