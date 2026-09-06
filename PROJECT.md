@@ -100,8 +100,13 @@ Réalité vérifiée : la plupart nécessitent un partenariat commercial
       usage public par tout restaurateur
 - [ ] Publication de posts Facebook/Instagram/TikTok — permissions plus
       lourdes côté Meta/TikTok, à faire une fois les revues obtenues
-- [ ] Bing Places, Apple Business Connect — APIs de gestion self-service
-      identifiées, pas encore implémentées
+- [ ] Bing Places, Apple Business Connect — **bloqué** : vérifié début
+      septembre 2026, ce ne sont *pas* des API self-service (hypothèse
+      initiale erronée). Bing exige un certificat client obtenu après
+      demande directe à Microsoft (compte "vérifié"/chaîne) ; Apple exige
+      d'être approuvé comme "Third-Party Partner" + un compte
+      Organization Administrator. Les deux supposent en pratique une
+      société établie, comme Stripe
 - [ ] Uber Eats, Deliveroo, DoorDash, TheFork, OpenTable, Resy, Zenchef,
       Zelty — **bloqué** : programmes partenaires fermés, nécessitent
       une société établie + dossier de candidature (même blocage que
