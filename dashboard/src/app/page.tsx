@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Instrument_Serif, Manrope } from "next/font/google";
 import { createClient } from "@/lib/supabase/server";
+import { KlarrMark } from "@/components/brand/KlarrMark";
 
 const instrumentSerif = Instrument_Serif({
   weight: "400",
@@ -16,7 +17,7 @@ const manrope = Manrope({
   variable: "--font-manrope",
 });
 
-const ACCENT = "oklch(58% 0.14 55)";
+const ACCENT = "#E8871E";
 
 export default async function Home() {
   const supabase = await createClient();
@@ -62,30 +63,7 @@ export default async function Home() {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div
-            style={{
-              width: 28,
-              height: 28,
-              borderRadius: 8,
-              background: "var(--accent)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="white"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M20 6L9 17l-5-5" />
-            </svg>
-          </div>
+          <KlarrMark size={28} />
           <span
             style={{
               fontFamily: "var(--font-instrument-serif), serif",
@@ -817,30 +795,7 @@ export default async function Home() {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div
-            style={{
-              width: 20,
-              height: 20,
-              borderRadius: 6,
-              background: "var(--accent)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <svg
-              width="10"
-              height="10"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="white"
-              strokeWidth="3"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M20 6L9 17l-5-5" />
-            </svg>
-          </div>
+          <KlarrMark size={20} />
           <span style={{ fontFamily: "var(--font-instrument-serif), serif", fontSize: 16 }}>
             Klarr
           </span>

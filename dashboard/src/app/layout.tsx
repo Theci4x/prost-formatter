@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Prost — Dashboard",
-  description: "Dashboard de gestion Prost",
+  title: "Klarr — Dashboard",
+  description: "Klarr, la clarté pour vos restaurants.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

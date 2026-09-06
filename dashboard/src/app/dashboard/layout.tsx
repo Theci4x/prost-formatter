@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { LogoutButton } from "@/components/auth/LogoutButton";
+import { KlarrMark, KlarrWordmark } from "@/components/brand/KlarrMark";
 
 export default async function DashboardLayout({
   children,
@@ -21,8 +22,9 @@ export default async function DashboardLayout({
   return (
     <div className="flex flex-1 flex-col">
       <header className="flex items-center justify-between border-b border-zinc-200 px-6 py-4">
-        <span className="text-sm font-medium text-zinc-900">
-          Prost — dashboard
+        <span className="flex items-center gap-2">
+          <KlarrMark size={22} />
+          <KlarrWordmark className="text-lg text-zinc-900" />
         </span>
         <div className="flex items-center gap-4">
           <span className="text-sm text-zinc-500">{user.email}</span>
