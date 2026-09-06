@@ -97,10 +97,10 @@ Réalité vérifiée : la plupart nécessitent un partenariat commercial
       **bloqué** : pas d'API publique pour la plupart, nécessiterait un
       agrégateur de données tiers payant (type Uberall/Yext)
 
-### Étape 7 — à venir
+### Étape 7 — en cours
 
-- Paiement (Stripe : carte bancaire + prélèvement SEPA, abonnement) —
-  en attente de la création de la société
-- Enrichissement du schéma `restaurants` (horaires, menu, etc.)
-- Coder la landing page (design) en dur dans l'app, avec lien vers
-  `/test-presence-google`
+- [x] Landing page codée en dur sur `/` (reprise du design Artifact
+      "Klarr Landing Page"), avec lien vers `/test-presence-google`
+- [ ] Paiement (Stripe : carte bancaire + prélèvement SEPA, abonnement) —
+      en attente de la création de la société
+- [ ] Enrichissement du schéma `restaurants` (horaires, menu, etc.)
