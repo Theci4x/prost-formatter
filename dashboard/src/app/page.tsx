@@ -49,8 +49,26 @@ export default async function Home() {
         background: "var(--bg)",
         fontFamily: "var(--font-manrope), system-ui, sans-serif",
         color: "var(--ink)",
+        position: "relative",
       }}
     >
+      {/* Tache décorative derrière le hero, même esprit que le panneau de connexion */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: "absolute",
+          top: -120,
+          right: -160,
+          width: 520,
+          height: 520,
+          borderRadius: "50%",
+          background: "var(--accent)",
+          opacity: 0.14,
+          filter: "blur(110px)",
+          pointerEvents: "none",
+        }}
+      />
+
       {/* NAV */}
       <div
         style={{
@@ -610,7 +628,25 @@ export default async function Home() {
             padding: "44px 48px",
           }}
         >
-          <div style={{ display: "flex", flexDirection: "column", gap: 12, maxWidth: 560 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 14, maxWidth: 560 }}>
+            <div
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: 11,
+                background: "var(--paper)",
+                border: "1px solid var(--line)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-dark)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 10c0 5-6 11-6 11s-6-6-6-11a6 6 0 0 1 12 0z" />
+                <circle cx="12" cy="10" r="4.2" />
+                <path d="M20.5 20.5l-3-3" />
+              </svg>
+            </div>
             <span
               style={{
                 fontSize: 13,

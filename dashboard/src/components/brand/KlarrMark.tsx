@@ -10,7 +10,16 @@ const instrumentSerif = Instrument_Serif({
 // petit éclat au bout de la diagonale orange. Recréée en vectoriel à
 // partir du logo fourni (image non récupérable en fichier), même esprit
 // : marine + orange, pas une reproduction pixel pour pixel.
-export function KlarrMark({ size = 32 }: { size?: number }) {
+export function KlarrMark({
+  size = 32,
+  variant = "navy",
+}: {
+  size?: number;
+  variant?: "navy" | "light";
+}) {
+  const gradientId = `klarr-orange-${variant}`;
+  const barColor = variant === "light" ? "#FAF7F0" : "#0F1E3D";
+
   return (
     <svg
       width={size}
@@ -21,14 +30,14 @@ export function KlarrMark({ size = 32 }: { size?: number }) {
       aria-hidden="true"
     >
       <defs>
-        <linearGradient id="klarr-orange" x1="40" y1="52" x2="76" y2="16" gradientUnits="userSpaceOnUse">
+        <linearGradient id={gradientId} x1="40" y1="52" x2="76" y2="16" gradientUnits="userSpaceOnUse">
           <stop offset="0" stopColor="#E8871E" />
           <stop offset="1" stopColor="#F7B84B" />
         </linearGradient>
       </defs>
-      <line x1="40" y1="52" x2="76" y2="88" stroke="#0F1E3D" strokeWidth="15" strokeLinecap="round" />
-      <line x1="40" y1="52" x2="76" y2="16" stroke="url(#klarr-orange)" strokeWidth="15" strokeLinecap="round" />
-      <rect x="22" y="14" width="16" height="72" rx="8" fill="#0F1E3D" />
+      <line x1="40" y1="52" x2="76" y2="88" stroke={barColor} strokeWidth="15" strokeLinecap="round" />
+      <line x1="40" y1="52" x2="76" y2="16" stroke={`url(#${gradientId})`} strokeWidth="15" strokeLinecap="round" />
+      <rect x="22" y="14" width="16" height="72" rx="8" fill={barColor} />
       <g stroke="#F0A93C" strokeWidth="3.5" strokeLinecap="round">
         <line x1="76" y1="2" x2="76" y2="9" />
         <line x1="64" y1="7" x2="69" y2="11" />
