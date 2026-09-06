@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 type FacebookLoginResponse = {
-  authResponse?: { code?: string };
+  authResponse?: { accessToken?: string };
 };
 
 declare global {
@@ -63,12 +63,11 @@ export function FacebookConnectButton({ restaurantId }: { restaurantId: string }
     }
 
     setLoading(true);
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://localhost:3000";
 
     window.FB.login(
       (response) => {
-        const code = response.authResponse?.code;
-        if (!code) {
+        const accessToken = response.authResponse?.accessToken;
+        if (!accessToken) {
           setLoading(false);
           setError("Connexion annulée ou refusée.");
           return;
@@ -77,7 +76,7 @@ export function FacebookConnectButton({ restaurantId }: { restaurantId: string }
         fetch("/api/facebook/exchange", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ code, restaurantId }),
+          body: JSON.stringify({ accessToken, restaurantId }),
         })
           .then((res) => res.json())
           .then((data: { ok?: boolean; error?: string }) => {
@@ -94,12 +93,7 @@ export function FacebookConnectButton({ restaurantId }: { restaurantId: string }
             setError("La connexion a échoué. Réessaie.");
           });
       },
-      {
-        config_id: configId,
-        response_type: "code",
-        override_default_response_type: true,
-        redirect_uri: `${siteUrl}/api/facebook/callback`,
-      },
+      { config_id: configId },
     );
   }
 

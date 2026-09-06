@@ -3,33 +3,15 @@
 // de connexion via une simple redirection (`/dialog/oauth`) vers un flux de
 // sélection de portefeuille business qui échoue silencieusement
 // (`selected_business_id` vide) : Meta documente le SDK JavaScript
-// (`FB.login({ config_id, response_type: "code" })`) comme seule méthode
-// fiable pour ce produit. C'est donc le composant client
-// `FacebookConnectButton` qui initie la connexion ; ce module ne fait que
-// l'échange de code et les appels Graph API côté serveur.
+// (`FB.login({ config_id })`) comme seule méthode fiable pour ce produit.
+// C'est le composant client `FacebookConnectButton` qui initie la
+// connexion et récupère directement un token utilisateur (flux implicite,
+// pas d'échange de code — le "code" du flux serveur suppose un redirect_uri
+// que le relais interne du SDK ne respecte pas, ce qui fait échouer
+// l'échange) ; ce module se charge de l'échange en token longue durée et
+// des appels Graph API, côté serveur.
 const GRAPH_VERSION = "v21.0";
 const GRAPH_BASE_URL = `https://graph.facebook.com/${GRAPH_VERSION}`;
-
-function getRedirectUri() {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://localhost:3000";
-  return `${siteUrl}/api/facebook/callback`;
-}
-
-export async function exchangeCodeForToken(code: string): Promise<string> {
-  const url = new URL(`${GRAPH_BASE_URL}/oauth/access_token`);
-  url.searchParams.set("client_id", process.env.FACEBOOK_APP_ID!);
-  url.searchParams.set("client_secret", process.env.FACEBOOK_APP_SECRET!);
-  url.searchParams.set("redirect_uri", getRedirectUri());
-  url.searchParams.set("code", code);
-
-  const res = await fetch(url);
-  if (!res.ok) {
-    throw new Error(`Facebook token exchange a échoué : ${res.status} ${await res.text()}`);
-  }
-
-  const data = (await res.json()) as { access_token: string };
-  return data.access_token;
-}
 
 // Un token utilisateur "court" (1-2h) est échangé contre un token "long"
 // (~60 jours) pour éviter de redemander la connexion trop souvent.

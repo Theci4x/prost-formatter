@@ -1,23 +1,22 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import {
-  exchangeCodeForToken,
   exchangeForLongLivedToken,
   getUserPages,
   getPageDetails,
 } from "@/lib/facebook/oauth";
 
 // Appelé côté client une fois que FB.login() (SDK JavaScript, "Facebook
-// Login for Business") a renvoyé un code d'autorisation. Le secret d'app
-// ne pouvant pas vivre côté navigateur, l'échange du code contre un token
-// et les appels Graph API se font ici, côté serveur.
+// Login for Business") a renvoyé un token utilisateur (flux implicite).
+// Le secret d'app ne pouvant pas vivre côté navigateur, l'échange en token
+// longue durée et les appels Graph API se font ici, côté serveur.
 export async function POST(request: Request) {
-  const { code, restaurantId } = (await request.json()) as {
-    code?: string;
+  const { accessToken, restaurantId } = (await request.json()) as {
+    accessToken?: string;
     restaurantId?: string;
   };
 
-  if (!code || !restaurantId) {
+  if (!accessToken || !restaurantId) {
     return NextResponse.json({ error: "Paramètres manquants" }, { status: 400 });
   }
 
@@ -39,8 +38,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const shortLivedToken = await exchangeCodeForToken(code);
-    const userToken = await exchangeForLongLivedToken(shortLivedToken);
+    const userToken = await exchangeForLongLivedToken(accessToken);
 
     const pages = await getUserPages(userToken);
     const page = pages[0];
@@ -67,9 +65,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("[facebook/exchange]", err);
-    return NextResponse.json(
-      { error: "La connexion a échoué. Réessaie." },
-      { status: 500 },
-    );
+    const message = err instanceof Error ? err.message : "La connexion a échoué. Réessaie.";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
