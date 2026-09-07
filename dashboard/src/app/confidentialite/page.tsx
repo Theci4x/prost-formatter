@@ -15,10 +15,11 @@ export default function ConfidentialitePage() {
     >
       <LegalSection n="01" title="Responsable du traitement">
         <p>
-          Klarr est actuellement développé et exploité par Michael Fink, en
-          nom propre, dans l&apos;attente de la création de la structure
-          juridique dédiée (société). Pour toute question relative à vos
-          données personnelles, contactez{" "}
+          Klarr est édité par Yuan Yuquan, entrepreneur individuel, immatriculé
+          au répertoire SIRENE sous le numéro SIREN 104 891 486, dont
+          l&apos;établissement est situé 3 Place de la Levrière, 94000
+          Créteil. Pour toute question relative à vos données personnelles,
+          contactez{" "}
           <a href="mailto:michael.fink75@gmail.com">
             michael.fink75@gmail.com
           </a>
