@@ -20,8 +20,8 @@ export default function ConfidentialitePage() {
           l&apos;établissement est situé 3 Place de la Levrière, 94000
           Créteil. Pour toute question relative à vos données personnelles,
           contactez{" "}
-          <a href="mailto:michael.fink75@gmail.com">
-            michael.fink75@gmail.com
+          <a href="mailto:contact@klarr.biz">
+            contact@klarr.biz
           </a>
           .
         </p>
@@ -180,8 +180,8 @@ export default function ConfidentialitePage() {
       <LegalSection n="10" title="Contact et réclamation">
         <p>
           Pour toute question sur cette politique ou vos données :{" "}
-          <a href="mailto:michael.fink75@gmail.com">
-            michael.fink75@gmail.com
+          <a href="mailto:contact@klarr.biz">
+            contact@klarr.biz
           </a>
           .
         </p>

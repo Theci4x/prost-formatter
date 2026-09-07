@@ -28,8 +28,8 @@ export default function CguPage() {
           au répertoire SIRENE sous le numéro SIREN 104 891 486, dont
           l&apos;établissement est situé 3 Place de la Levrière, 94000
           Créteil. Contact :{" "}
-          <a href="mailto:michael.fink75@gmail.com">
-            michael.fink75@gmail.com
+          <a href="mailto:contact@klarr.biz">
+            contact@klarr.biz
           </a>
           .
         </p>
@@ -113,8 +113,8 @@ export default function CguPage() {
       <LegalSection n="10" title="Contact">
         <p>
           Pour toute question relative à ces conditions :{" "}
-          <a href="mailto:michael.fink75@gmail.com">
-            michael.fink75@gmail.com
+          <a href="mailto:contact@klarr.biz">
+            contact@klarr.biz
           </a>
           .
         </p>
