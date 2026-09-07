@@ -41,7 +41,10 @@ export async function GET(request: NextRequest) {
 
   const session = await getStripe().checkout.sessions.create({
     mode: "subscription",
-    payment_method_types: ["card", "sepa_debit"],
+    // Pas de payment_method_types explicite : "Managed Payments" (activé
+    // par défaut sur les comptes Stripe récents) choisit automatiquement
+    // les moyens de paiement disponibles (carte, SEPA...) selon le pays et
+    // la devise du client.
     line_items: [{ price: process.env.STRIPE_PRICE_ID!, quantity: 1 }],
     customer_email: user.email,
     client_reference_id: restaurantId,
