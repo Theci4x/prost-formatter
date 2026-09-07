@@ -100,17 +100,14 @@ Réalité vérifiée : la plupart nécessitent un partenariat commercial
       usage public par tout restaurateur
 - [ ] Publication de posts Facebook/Instagram/TikTok — permissions plus
       lourdes côté Meta/TikTok, à faire une fois les revues obtenues
-- [ ] Bing Places, Apple Business Connect — **bloqué** : vérifié début
-      septembre 2026, ce ne sont *pas* des API self-service (hypothèse
-      initiale erronée). Bing exige un certificat client obtenu après
-      demande directe à Microsoft (compte "vérifié"/chaîne) ; Apple exige
-      d'être approuvé comme "Third-Party Partner" + un compte
-      Organization Administrator. Les deux supposent en pratique une
-      société établie, comme Stripe
+- [ ] Bing Places, Apple Business Connect — société créée (voir Étape 7),
+      démarche de candidature à faire : Bing exige un certificat client
+      obtenu après demande directe à Microsoft (compte "vérifié"/chaîne) ;
+      Apple exige d'être approuvé comme "Third-Party Partner" + un compte
+      Organization Administrator
 - [ ] Uber Eats, Deliveroo, DoorDash, TheFork, OpenTable, Resy, Zenchef,
-      Zelty — **bloqué** : programmes partenaires fermés, nécessitent
-      une société établie + dossier de candidature (même blocage que
-      Stripe)
+      Zelty — société créée (voir Étape 7), dossiers de candidature
+      partenaire à déposer un par un
 - [ ] ~40 petits annuaires locaux (Herold, Das Örtliche, Krak, etc.) —
       **bloqué** : pas d'API publique pour la plupart, nécessiterait un
       agrégateur de données tiers payant (type Uberall/Yext)
@@ -131,5 +128,18 @@ Réalité vérifiée : la plupart nécessitent un partenariat commercial
 - [x] Photos par restaurant (façade, plats, ambiance) — Supabase
       Storage (bucket public `restaurant-photos`, migration `0010`),
       `dashboard/[id]/photos`
-- [ ] Paiement (Stripe : carte bancaire + prélèvement SEPA, abonnement) —
-      en attente de la création de la société
+- [x] Entreprise individuelle créée (SIREN 104 891 486) — débloque
+      Stripe, Bing Places, Apple Business Connect et les partenariats
+      livraison/réservation
+- [x] Déploiement en ligne sur Vercel (`https://klarr-psi.vercel.app`),
+      nécessaire pour la vérification de domaine exigée par TikTok
+      (et à terme Google/Facebook) sur les CGU/confidentialité
+- [x] Pages légales publiques `/cgu` et `/confidentialite`
+      (`src/components/legal/LegalLayout.tsx`), avec vérification de
+      domaine TikTok générique (`/cgu/[...slug]`,
+      `/confidentialite/[...slug]`, répond à n'importe quel token
+      `tiktok<token>.txt` sans intervention à chaque tentative)
+- [x] Paiement (Stripe : carte bancaire + prélèvement SEPA, abonnement
+      par restaurant) — `dashboard/[id]/abonnement`, migration `0011` ;
+      configuration Stripe (compte, produit/prix, webhook) à finaliser
+      côté utilisateur
