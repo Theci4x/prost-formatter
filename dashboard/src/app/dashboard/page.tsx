@@ -12,6 +12,7 @@ const FEATURE_LINKS = [
   { href: "google", label: "Google", icon: dashboardIcons.google },
   { href: "social", label: "Réseaux sociaux", icon: dashboardIcons.social },
   { href: "tiktok", label: "TikTok", icon: dashboardIcons.tiktok },
+  { href: "abonnement", label: "Abonnement", icon: dashboardIcons.abonnement },
 ] as const;
 
 export default async function DashboardPage() {

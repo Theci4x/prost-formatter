@@ -84,4 +84,11 @@ export const dashboardIcons = {
       <circle cx="12" cy="13" r="4" />
     </svg>
   ),
+  abonnement: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="5" width="20" height="14" rx="2" />
+      <line x1="2" y1="9" x2="22" y2="9" />
+      <line x1="6" y1="14" x2="10" y2="14" />
+    </svg>
+  ),
 };
