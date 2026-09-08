@@ -24,6 +24,28 @@ body {
   color: var(--foreground);
 }
 
+/* Bandeau de logos clients (landing) : deux copies de la liste se
+   suivent, translater de -50% boucle donc sans saut visible. */
+@keyframes klarr-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+.klarr-marquee-track {
+  animation: klarr-marquee 38s linear infinite;
+}
+.klarr-marquee:hover .klarr-marquee-track {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .klarr-marquee-track {
+    animation: none;
+  }
+}
+
 /* Landing page (/) only — scoped so it never leaks into the dashboard. */
 .klarr-landing a {
   color: inherit;

@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { Instrument_Serif, Manrope } from "next/font/google";
 import { createClient } from "@/lib/supabase/server";
 import { KlarrMark } from "@/components/brand/KlarrMark";
+import { ClientLogos } from "@/components/landing/ClientLogos";
+import { Comparison } from "@/components/landing/Comparison";
 
 const instrumentSerif = Instrument_Serif({
   weight: "400",
@@ -441,6 +443,8 @@ export default async function Home() {
         </div>
       </div>
 
+      <ClientLogos />
+
       {/* BENEFITS */}
       <div id="benefices" style={{ background: "var(--bg-alt)", padding: "100px 32px" }}>
         <div style={{ maxWidth: 1180, margin: "0 auto" }}>
@@ -612,6 +616,8 @@ export default async function Home() {
           </div>
         </div>
       </div>
+
+      <Comparison />
 
       {/* FREE GOOGLE PRESENCE TEST */}
       <div id="test-presence" style={{ maxWidth: 1180, margin: "0 auto", padding: "90px 32px" }}>
