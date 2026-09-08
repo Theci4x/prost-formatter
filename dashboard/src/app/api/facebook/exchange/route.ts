@@ -11,9 +11,10 @@ import {
 // Le secret d'app ne pouvant pas vivre côté navigateur, l'échange en token
 // longue durée et les appels Graph API se font ici, côté serveur.
 export async function POST(request: Request) {
-  const { accessToken, restaurantId } = (await request.json()) as {
+  const { accessToken, restaurantId, pageId } = (await request.json()) as {
     accessToken?: string;
     restaurantId?: string;
+    pageId?: string;
   };
 
   if (!accessToken || !restaurantId) {
@@ -41,9 +42,26 @@ export async function POST(request: Request) {
     const userToken = await exchangeForLongLivedToken(accessToken);
 
     const pages = await getUserPages(userToken);
-    const page = pages[0];
-    if (!page) {
+    if (pages.length === 0) {
       throw new Error("Aucune page Facebook trouvée pour cet utilisateur");
+    }
+
+    // Plusieurs Pages disponibles et aucune n'a encore été choisie : on
+    // renvoie la liste pour que l'utilisateur sélectionne la bonne, plutôt
+    // que de connecter arbitrairement la première (peu fiable dès qu'un
+    // restaurateur gère plus d'une Page).
+    let page = pages[0];
+    if (pages.length > 1) {
+      if (!pageId) {
+        return NextResponse.json({
+          pages: pages.map((p) => ({ id: p.id, name: p.name })),
+        });
+      }
+      const selected = pages.find((p) => p.id === pageId);
+      if (!selected) {
+        return NextResponse.json({ error: "Page introuvable" }, { status: 400 });
+      }
+      page = selected;
     }
 
     const details = await getPageDetails(page.id, page.accessToken);

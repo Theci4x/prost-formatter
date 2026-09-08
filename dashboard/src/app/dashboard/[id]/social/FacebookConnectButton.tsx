@@ -36,10 +36,20 @@ function loadFacebookSdk(appId: string) {
   document.body.appendChild(script);
 }
 
+type FacebookPageOption = { id: string; name: string };
+
+type ExchangeResponse = {
+  ok?: boolean;
+  error?: string;
+  pages?: FacebookPageOption[];
+};
+
 export function FacebookConnectButton({ restaurantId }: { restaurantId: string }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [pageOptions, setPageOptions] = useState<FacebookPageOption[] | null>(null);
 
   const appId = process.env.NEXT_PUBLIC_FACEBOOK_APP_ID;
   const configId = process.env.NEXT_PUBLIC_FACEBOOK_LOGIN_CONFIG_ID;
@@ -48,8 +58,42 @@ export function FacebookConnectButton({ restaurantId }: { restaurantId: string }
     if (appId) loadFacebookSdk(appId);
   }, [appId]);
 
+  function exchange(token: string, pageId?: string) {
+    setLoading(true);
+    setError(null);
+
+    fetch("/api/facebook/exchange", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ accessToken: token, restaurantId, pageId }),
+    })
+      .then((res) => res.json())
+      .then((data: ExchangeResponse) => {
+        if (data.ok) {
+          router.push(`/dashboard/${restaurantId}/social?connected=1`);
+          router.refresh();
+          return;
+        }
+        if (data.pages) {
+          // Plusieurs Pages Facebook disponibles : on garde le token pour
+          // finaliser la connexion une fois que l'utilisateur a choisi.
+          setAccessToken(token);
+          setPageOptions(data.pages);
+          setLoading(false);
+          return;
+        }
+        setLoading(false);
+        setError(data.error ?? "La connexion a échoué. Réessaie.");
+      })
+      .catch(() => {
+        setLoading(false);
+        setError("La connexion a échoué. Réessaie.");
+      });
+  }
+
   function handleClick() {
     setError(null);
+    setPageOptions(null);
 
     if (!appId || !configId) {
       setError(
@@ -62,38 +106,41 @@ export function FacebookConnectButton({ restaurantId }: { restaurantId: string }
       return;
     }
 
-    setLoading(true);
-
     window.FB.login(
       (response) => {
-        const accessToken = response.authResponse?.accessToken;
-        if (!accessToken) {
-          setLoading(false);
+        const token = response.authResponse?.accessToken;
+        if (!token) {
           setError("Connexion annulée ou refusée.");
           return;
         }
-
-        fetch("/api/facebook/exchange", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ accessToken, restaurantId }),
-        })
-          .then((res) => res.json())
-          .then((data: { ok?: boolean; error?: string }) => {
-            if (data.ok) {
-              router.push(`/dashboard/${restaurantId}/social?connected=1`);
-              router.refresh();
-            } else {
-              setLoading(false);
-              setError(data.error ?? "La connexion a échoué. Réessaie.");
-            }
-          })
-          .catch(() => {
-            setLoading(false);
-            setError("La connexion a échoué. Réessaie.");
-          });
+        exchange(token);
       },
       { config_id: configId },
+    );
+  }
+
+  if (pageOptions && accessToken) {
+    return (
+      <div className="flex flex-col gap-3">
+        <p className="text-sm text-zinc-600">
+          Plusieurs Pages Facebook sont associées à ton compte. Laquelle
+          correspond à ce restaurant ?
+        </p>
+        <div className="flex flex-col gap-2">
+          {pageOptions.map((page) => (
+            <button
+              key={page.id}
+              type="button"
+              disabled={loading}
+              onClick={() => exchange(accessToken, page.id)}
+              className="rounded-md border border-zinc-200 px-4 py-2 text-left text-sm font-medium text-zinc-900 transition-colors hover:border-brand-navy hover:text-brand-navy disabled:opacity-50"
+            >
+              {page.name}
+            </button>
+          ))}
+        </div>
+        {error && <p className="text-sm text-red-600">{error}</p>}
+      </div>
     );
   }
 
