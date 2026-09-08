@@ -6,6 +6,8 @@ import { KlarrMark } from "@/components/brand/KlarrMark";
 import { ClientLogos } from "@/components/landing/ClientLogos";
 import { Comparison } from "@/components/landing/Comparison";
 import { Founder, Problem } from "@/components/landing/Manifesto";
+import { HeroBackdrop } from "@/components/landing/HeroBackdrop";
+import { FloatingChip, Tilt } from "@/components/landing/Tilt";
 
 const instrumentSerif = Instrument_Serif({
   weight: "400",
@@ -140,17 +142,20 @@ export default async function Home() {
       </div>
 
       {/* HERO */}
-      <div
-        className="flex-col sm:flex-row"
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 64,
-          maxWidth: 1180,
-          margin: "0 auto",
-          padding: "56px 32px 100px",
-        }}
-      >
+      <div style={{ position: "relative" }}>
+        <HeroBackdrop />
+        <div
+          className="flex-col sm:flex-row"
+          style={{
+            position: "relative",
+            display: "flex",
+            alignItems: "center",
+            gap: 64,
+            maxWidth: 1180,
+            margin: "0 auto",
+            padding: "56px 32px 100px",
+          }}
+        >
         <div
           style={{
             flex: "1 1 480px",
@@ -270,16 +275,32 @@ export default async function Home() {
           </div>
         </div>
 
-        <div style={{ flex: "1 1 420px", minWidth: 0, width: "100%" }}>
-          <div
-            style={{
-              background: "var(--paper)",
-              border: "1px solid var(--line)",
-              borderRadius: 16,
-              boxShadow: "0 24px 60px -20px oklch(20% 0.02 60 / 22%)",
-              overflow: "hidden",
-            }}
-          >
+        <div
+          style={{
+            flex: "1 1 420px",
+            minWidth: 0,
+            width: "100%",
+            position: "relative",
+          }}
+        >
+          <Tilt>
+            <FloatingChip depth={80} style={{ top: -18, left: -14 }}>
+              <span style={{ color: "var(--accent-dark)" }}>✓</span>
+              Cité par ChatGPT
+            </FloatingChip>
+            <FloatingChip depth={55} style={{ bottom: -20, right: -10 }}>
+              <span style={{ color: "var(--accent)" }}>★</span>
+              4,6 — 128 avis
+            </FloatingChip>
+            <div
+              style={{
+                background: "var(--paper)",
+                border: "1px solid var(--line)",
+                borderRadius: 16,
+                boxShadow: "0 40px 80px -30px oklch(20% 0.02 60 / 38%)",
+                overflow: "hidden",
+              }}
+            >
             <div
               style={{
                 display: "flex",
@@ -440,7 +461,9 @@ export default async function Home() {
                 </span>
               </div>
             </div>
-          </div>
+            </div>
+          </Tilt>
+        </div>
         </div>
       </div>
 
