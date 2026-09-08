@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import Link from "next/link";
 import { login, signup, type AuthState } from "@/app/login/actions";
 
 const initialState: AuthState = { error: null };
@@ -52,6 +53,13 @@ export function LoginForm() {
       </div>
 
       {error && <p className="text-sm text-red-600">{error}</p>}
+
+      <Link
+        href="/mot-de-passe-oublie"
+        className="w-fit text-sm text-zinc-500 hover:text-zinc-900"
+      >
+        Mot de passe oublié ?
+      </Link>
 
       <div className="mt-2 flex flex-col gap-2 sm:flex-row">
         <button
