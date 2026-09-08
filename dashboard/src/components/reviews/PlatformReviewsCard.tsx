@@ -1,11 +1,19 @@
 import type { PlatformReviews } from "@/lib/reviews/aggregate";
+import { ReviewReplyDraft } from "@/components/reviews/ReviewReplyDraft";
 
 const PLATFORM_LABELS: Record<PlatformReviews["platform"], string> = {
   yelp: "Yelp",
   tripadvisor: "Tripadvisor",
+  google: "Google",
 };
 
-export function PlatformReviewsCard({ data }: { data: PlatformReviews }) {
+export function PlatformReviewsCard({
+  data,
+  restaurantId,
+}: {
+  data: PlatformReviews;
+  restaurantId: string;
+}) {
   const label = PLATFORM_LABELS[data.platform];
 
   return (
@@ -50,9 +58,14 @@ export function PlatformReviewsCard({ data }: { data: PlatformReviews }) {
                   {review.rating}/5
                 </span>
               </div>
-              <p className="line-clamp-3 text-sm text-zinc-600">
-                {review.text}
-              </p>
+              <p className="text-sm text-zinc-600">{review.text}</p>
+              <ReviewReplyDraft
+                restaurantId={restaurantId}
+                author={review.author}
+                rating={review.rating}
+                text={review.text}
+                reviewUrl={review.url ?? data.businessUrl ?? null}
+              />
             </li>
           ))}
         </ul>

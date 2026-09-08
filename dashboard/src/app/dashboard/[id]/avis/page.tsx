@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import {
   fetchYelpPlatformReviews,
   fetchTripadvisorPlatformReviews,
+  fetchGooglePlatformReviews,
 } from "@/lib/reviews/aggregate";
 import { PlatformReviewsCard } from "@/components/reviews/PlatformReviewsCard";
 import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
@@ -28,7 +29,8 @@ export default async function AvisPage({
   }
 
   const location = restaurant.adresse ?? "";
-  const [yelp, tripadvisor] = await Promise.all([
+  const [google, yelp, tripadvisor] = await Promise.all([
+    fetchGooglePlatformReviews(restaurant.nom, location),
     fetchYelpPlatformReviews(restaurant.nom, location),
     fetchTripadvisorPlatformReviews(restaurant.nom, location),
   ]);
@@ -37,9 +39,16 @@ export default async function AvisPage({
     <div className="flex flex-1 flex-col gap-6 px-6 py-8">
       <PageHeader icon={dashboardIcons.avis} title={`Avis — ${restaurant.nom}`} />
 
-      <div className="grid max-w-3xl grid-cols-1 gap-4 sm:grid-cols-2">
-        <PlatformReviewsCard data={yelp} />
-        <PlatformReviewsCard data={tripadvisor} />
+      <p className="max-w-2xl text-sm text-zinc-600">
+        Klarr peut rédiger une réponse pour chaque avis. La publication
+        directe sur Google arrivera avec l&apos;accès à son API ; en
+        attendant, la réponse se copie en un clic.
+      </p>
+
+      <div className="grid max-w-5xl grid-cols-1 gap-4 lg:grid-cols-3">
+        <PlatformReviewsCard data={google} restaurantId={id} />
+        <PlatformReviewsCard data={yelp} restaurantId={id} />
+        <PlatformReviewsCard data={tripadvisor} restaurantId={id} />
       </div>
     </div>
   );

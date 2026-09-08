@@ -62,6 +62,51 @@ export async function searchPlace(
   };
 }
 
+export type PlaceReview = {
+  author: string;
+  rating: number;
+  text: string;
+  publishedAt: string | null;
+  url: string | null;
+};
+
+// L'API Places (New) plafonne à cinq avis, les plus pertinents selon Google.
+// Répondre aux avis demande en revanche l'API Business Profile, soumise à
+// une demande d'accès — d'où la lecture seule ici.
+export async function getPlaceReviews(placeId: string): Promise<PlaceReview[]> {
+  const res = await fetch(`${PLACES_BASE_URL}/places/${placeId}`, {
+    headers: {
+      "X-Goog-Api-Key": apiKey(),
+      "X-Goog-FieldMask": "reviews",
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error(`Places reviews a échoué : ${res.status} ${await res.text()}`);
+  }
+
+  const data = (await res.json()) as {
+    reviews?: {
+      rating?: number;
+      text?: { text?: string };
+      originalText?: { text?: string };
+      publishTime?: string;
+      googleMapsUri?: string;
+      authorAttribution?: { displayName?: string };
+    }[];
+  };
+
+  return (data.reviews ?? []).map((review) => ({
+    author: review.authorAttribution?.displayName ?? "Anonyme",
+    rating: review.rating ?? 0,
+    // "text" est la version traduite dans la langue demandée ; on retombe sur
+    // l'originale quand Google ne fournit pas de traduction.
+    text: review.text?.text ?? review.originalText?.text ?? "",
+    publishedAt: review.publishTime ?? null,
+    url: review.googleMapsUri ?? null,
+  }));
+}
+
 export async function getPlaceDetails(placeId: string): Promise<PlaceDetails> {
   const fields = [
     "displayName",

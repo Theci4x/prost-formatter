@@ -4,9 +4,14 @@ import {
   getTripadvisorDetails,
   getTripadvisorReviews,
 } from "@/lib/reviews/tripadvisor";
+import {
+  searchPlace,
+  getPlaceDetails,
+  getPlaceReviews,
+} from "@/lib/google/places";
 
 export type PlatformReviews = {
-  platform: "yelp" | "tripadvisor";
+  platform: "yelp" | "tripadvisor" | "google";
   configured: boolean;
   found: boolean;
   businessName?: string;
@@ -101,5 +106,44 @@ export async function fetchTripadvisorPlatformReviews(
       found: false,
       reviews: [],
     };
+  }
+}
+
+// Les avis Google passent par l'API Places, self-service et déjà utilisée
+// pour l'audit : contrairement à l'API Business Profile, elle ne demande
+// aucune autorisation à attendre. Lecture seule en revanche — publier une
+// réponse relève de l'autre API.
+export async function fetchGooglePlatformReviews(
+  name: string,
+  location: string,
+): Promise<PlatformReviews> {
+  if (!process.env.GOOGLE_PLACES_API_KEY) {
+    return { platform: "google", configured: false, found: false, reviews: [] };
+  }
+
+  try {
+    const place = await searchPlace(`${name} ${location}`.trim());
+    if (!place) {
+      return { platform: "google", configured: true, found: false, reviews: [] };
+    }
+
+    const [details, reviews] = await Promise.all([
+      getPlaceDetails(place.id),
+      getPlaceReviews(place.id),
+    ]);
+
+    return {
+      platform: "google",
+      configured: true,
+      found: true,
+      businessName: place.displayName,
+      businessUrl: `https://www.google.com/maps/place/?q=place_id:${place.id}`,
+      rating: details.rating,
+      reviewCount: details.userRatingCount,
+      reviews,
+    };
+  } catch (err) {
+    console.error("[fetchGooglePlatformReviews]", err);
+    return { platform: "google", configured: true, found: false, reviews: [] };
   }
 }
