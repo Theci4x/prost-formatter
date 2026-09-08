@@ -42,14 +42,21 @@ export type FacebookPage = {
 export async function getUserPages(
   userAccessToken: string,
 ): Promise<FacebookPage[]> {
-  const personalPages = await fetchAccountsPages(userAccessToken);
-  if (personalPages.length > 0) return personalPages;
-
   // Une Page créée à l'intérieur d'un portefeuille business Meta (Business
   // Manager) n'apparaît pas via /me/accounts, qui ne reflète que les rôles
-  // "classiques" (Page ajoutée hors Business Manager) : il faut lister les
-  // portefeuilles business de l'utilisateur, puis leurs Pages.
-  return fetchBusinessOwnedPages(userAccessToken);
+  // "classiques" (Page ajoutée hors Business Manager) — un utilisateur peut
+  // avoir des Pages des deux types en même temps, donc on fusionne les deux
+  // sources plutôt que de traiter la seconde comme un simple fallback.
+  const [personalPages, businessPages] = await Promise.all([
+    fetchAccountsPages(userAccessToken),
+    fetchBusinessOwnedPages(userAccessToken),
+  ]);
+
+  const pages = new Map<string, FacebookPage>();
+  for (const page of [...personalPages, ...businessPages]) {
+    pages.set(page.id, page);
+  }
+  return [...pages.values()];
 }
 
 async function fetchAccountsPages(
