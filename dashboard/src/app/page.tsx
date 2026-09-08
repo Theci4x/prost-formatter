@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { KlarrMark } from "@/components/brand/KlarrMark";
 import { ClientLogos } from "@/components/landing/ClientLogos";
 import { Comparison } from "@/components/landing/Comparison";
+import { Founder, Problem } from "@/components/landing/Manifesto";
 
 const instrumentSerif = Instrument_Serif({
   weight: "400",
@@ -102,7 +103,7 @@ export default async function Home() {
             href="#benefices"
             style={{ fontSize: 14, fontWeight: 500, color: "var(--ink-soft)" }}
           >
-            Fonctionnalités
+            Comment ça marche
           </a>
           <a
             href="#test-presence"
@@ -201,9 +202,9 @@ export default async function Home() {
               textWrap: "pretty",
             }}
           >
-            Votre présence en ligne,{" "}
+            On vous montre ce que voient vos clients.{" "}
             <em style={{ fontStyle: "italic", color: "var(--accent-dark)" }}>
-              enfin claire
+              Pas ce qui vous fait plaisir
             </em>
             .
           </h1>
@@ -216,9 +217,9 @@ export default async function Home() {
               maxWidth: 480,
             }}
           >
-            Klarr réunit votre fiche Google Business Profile et votre
-            référencement local dans un seul tableau de bord — pensé pour un
-            restaurateur, pas pour une agence marketing.
+            Klarr suit votre fiche Google, vos avis et votre visibilité dans
+            les réponses des IA. Chaque chiffre vient avec la donnée brute
+            derrière, que vous pouvez vérifier vous-même.
           </p>
           <div
             style={{
@@ -229,7 +230,7 @@ export default async function Home() {
             }}
           >
             <Link
-              href="/login"
+              href="/test-presence-google"
               style={{
                 background: "var(--ink)",
                 color: "var(--paper)",
@@ -239,7 +240,7 @@ export default async function Home() {
                 borderRadius: 9,
               }}
             >
-              Essayer gratuitement
+              Voir ma fiche
             </Link>
             <a
               href="#benefices"
@@ -445,6 +446,8 @@ export default async function Home() {
 
       <ClientLogos />
 
+      <Problem />
+
       {/* BENEFITS */}
       <div id="benefices" style={{ background: "var(--bg-alt)", padding: "100px 32px" }}>
         <div style={{ maxWidth: 1180, margin: "0 auto" }}>
@@ -466,7 +469,7 @@ export default async function Home() {
                 color: "var(--accent-dark)",
               }}
             >
-              Fonctionnalités
+              Comment ça marche
             </span>
             <h2
               style={{
@@ -477,7 +480,7 @@ export default async function Home() {
                 lineHeight: 1.2,
               }}
             >
-              Trois choses à faire. Rien à apprendre.
+              La donnée brute, l&apos;historique, et ce qui cloche.
             </h2>
           </div>
           <div
@@ -519,11 +522,13 @@ export default async function Home() {
                   margin: 0,
                 }}
               >
-                Votre fiche Google, sous contrôle
+                1. La donnée brute
               </h3>
               <p style={{ margin: 0, fontSize: 15, lineHeight: 1.65, color: "var(--ink-soft)" }}>
-                Connectez votre compte Google Business Profile en un clic et
-                gardez la main sur votre présence, restaurant par restaurant.
+                Votre fiche Google telle qu&apos;elle est, vos avis tels
+                qu&apos;ils sont écrits, et la réponse exacte que donne une IA
+                quand un client demande où manger. Vous pouvez reposer la même
+                question de votre côté et retomber sur la même chose.
               </p>
             </div>
             <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16 }}>
@@ -561,12 +566,12 @@ export default async function Home() {
                   margin: 0,
                 }}
               >
-                Un SEO qui avance vraiment
+                2. L&apos;historique, pas le pipeau
               </h3>
               <p style={{ margin: 0, fontSize: 15, lineHeight: 1.65, color: "var(--ink-soft)" }}>
-                Ciblez vos mots-clés locaux et laissez Claude, l&apos;IA
-                d&apos;Anthropic, en évaluer la pertinence et vous en suggérer
-                de nouveaux.
+                Chaque analyse est horodatée et conservée. Même quand
+                c&apos;est mauvais. Surtout quand c&apos;est mauvais — vous
+                voyez si vous montez ou si vous descendez.
               </p>
             </div>
             <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16 }}>
@@ -606,11 +611,12 @@ export default async function Home() {
                   margin: 0,
                 }}
               >
-                Tout centralisé, zéro prise de tête
+                3. Ce qui cloche, pas la tape dans le dos
               </h3>
               <p style={{ margin: 0, fontSize: 15, lineHeight: 1.65, color: "var(--ink-soft)" }}>
-                Un espace unique pour tous vos restaurants, sans jongler entre
-                dix outils et dix mots de passe différents.
+                On ne vous félicite pas. On vous montre les questions où vous
+                n&apos;apparaissez pas, et ce qui manque sur votre fiche.
+                Utile plutôt qu&apos;agréable.
               </p>
             </div>
           </div>
@@ -618,6 +624,8 @@ export default async function Home() {
       </div>
 
       <Comparison />
+
+      <Founder />
 
       {/* FREE GOOGLE PRESENCE TEST */}
       <div id="test-presence" style={{ maxWidth: 1180, margin: "0 auto", padding: "90px 32px" }}>
@@ -774,6 +782,19 @@ export default async function Home() {
             >
               Statistiques de vues
             </span>
+            <span
+              style={{
+                fontSize: 13,
+                fontWeight: 600,
+                color: "var(--ink-soft)",
+                background: "var(--bg-alt)",
+                border: "1px solid var(--line)",
+                borderRadius: 100,
+                padding: "8px 16px",
+              }}
+            >
+              Suivi de position sur Google
+            </span>
           </div>
         </div>
       </div>
@@ -801,11 +822,10 @@ export default async function Home() {
               color: "var(--paper)",
             }}
           >
-            Prêt à y voir plus clair ?
+            Votre fiche Google, sans filtre marketing.
           </h2>
           <p style={{ margin: 0, fontSize: 16, lineHeight: 1.6, color: "oklch(80% 0.01 60)" }}>
-            Créez votre compte et connectez votre premier restaurant en moins
-            de cinq minutes.
+            Pas de carte bancaire. Pas d&apos;engagement. Pas de discours.
           </p>
           <Link
             href="/login"
@@ -818,7 +838,7 @@ export default async function Home() {
               borderRadius: 9,
             }}
           >
-            Essayer gratuitement
+            Vérifier ma visibilité — gratuit, 2 minutes
           </Link>
         </div>
       </div>
