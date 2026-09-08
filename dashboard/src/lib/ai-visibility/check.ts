@@ -1,21 +1,14 @@
 import Anthropic from "@anthropic-ai/sdk";
-
-export const VISIBILITY_MODEL = "claude-opus-5";
+import { configuredProviders, type ProviderId } from "./providers";
 
 export type VisibilityResult = {
+  fournisseur: ProviderId;
+  modele: string;
   reponse: string;
   estCite: boolean;
   rang: number | null;
   concurrents: string[];
 };
-
-function collectText(content: Anthropic.ContentBlock[]): string {
-  return content
-    .filter((block): block is Anthropic.TextBlock => block.type === "text")
-    .map((block) => block.text)
-    .join("\n")
-    .trim();
-}
 
 // "Le Petit Marcel" et "le petit marcel." doivent correspondre.
 function normalize(value: string): string {
@@ -49,32 +42,12 @@ function parseNameList(raw: string): string[] {
   }
 }
 
-// Deux appels : le premier mesure la réponse spontanée de l'IA (aucune mention
-// du restaurant analysé, sinon le résultat n'aurait aucune valeur), le second
-// ne fait qu'extraire mécaniquement les établissements cités et leur ordre.
-export async function runVisibilityCheck({
-  question,
-  restaurantName,
-}: {
-  question: string;
-  restaurantName: string;
-}): Promise<VisibilityResult> {
+// L'extraction passe toujours par Claude, quel que soit l'assistant mesuré :
+// c'est de l'outillage interne, pas la mesure elle-même.
+async function extractNames(reponse: string): Promise<string[]> {
   const client = new Anthropic();
-
-  const answer = await client.messages.create({
-    model: VISIBILITY_MODEL,
-    max_tokens: 1500,
-    system:
-      "Tu réponds comme un assistant grand public à qui quelqu'un demande " +
-      "une recommandation de restaurant. Cite des établissements précis " +
-      "quand tu en connais, et n'invente pas d'adresses.",
-    messages: [{ role: "user", content: question }],
-  });
-
-  const reponse = collectText(answer.content);
-
   const extraction = await client.messages.create({
-    model: VISIBILITY_MODEL,
+    model: "claude-opus-5",
     max_tokens: 500,
     output_config: { effort: "low" },
     system:
@@ -92,22 +65,60 @@ export async function runVisibilityCheck({
     ],
   });
 
-  const names = parseNameList(collectText(extraction.content));
-  const matchIndex = names.findIndex((name) =>
-    matchesRestaurant(name, restaurantName),
+  return parseNameList(
+    extraction.content
+      .filter((block): block is Anthropic.TextBlock => block.type === "text")
+      .map((block) => block.text)
+      .join("\n"),
+  );
+}
+
+// Interroge chaque assistant configuré. La question ne mentionne jamais le
+// restaurant analysé, sinon la mesure n'aurait aucune valeur.
+export async function runVisibilityChecks({
+  question,
+  restaurantName,
+}: {
+  question: string;
+  restaurantName: string;
+}): Promise<VisibilityResult[]> {
+  const providers = configuredProviders();
+
+  const results = await Promise.all(
+    providers.map(async (provider): Promise<VisibilityResult | null> => {
+      try {
+        const reponse = await provider.ask(question);
+        if (!reponse) return null;
+
+        const names = await extractNames(reponse);
+        const matchIndex = names.findIndex((name) =>
+          matchesRestaurant(name, restaurantName),
+        );
+
+        // Filet de sécurité si l'extraction échoue : on cherche le nom
+        // directement dans la réponse, quitte à ne pas connaître le rang.
+        const estCite =
+          matchIndex !== -1 ||
+          normalize(reponse).includes(normalize(restaurantName));
+
+        return {
+          fournisseur: provider.id,
+          modele: provider.label,
+          reponse,
+          estCite,
+          rang: matchIndex === -1 ? null : matchIndex + 1,
+          concurrents: names.filter(
+            (name) => !matchesRestaurant(name, restaurantName),
+          ),
+        };
+      } catch (err) {
+        // Un assistant en échec (clé invalide, quota, modèle renommé) ne doit
+        // pas faire tomber l'analyse des autres.
+        console.error(`[visibilite-ia] ${provider.id}`, err);
+        return null;
+      }
+    }),
   );
 
-  // Filet de sécurité si l'extraction échoue : on cherche le nom directement
-  // dans la réponse, quitte à ne pas connaître le rang.
-  const estCite =
-    matchIndex !== -1 || normalize(reponse).includes(normalize(restaurantName));
-
-  return {
-    reponse,
-    estCite,
-    rang: matchIndex === -1 ? null : matchIndex + 1,
-    concurrents: names.filter(
-      (name) => !matchesRestaurant(name, restaurantName),
-    ),
-  };
+  return results.filter((result): result is VisibilityResult => result !== null);
 }

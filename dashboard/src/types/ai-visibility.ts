@@ -9,6 +9,7 @@ export type AiVisibilityCheck = {
   id: string;
   question_id: string;
   restaurant_id: string;
+  fournisseur: string;
   modele: string;
   est_cite: boolean;
   rang: number | null;

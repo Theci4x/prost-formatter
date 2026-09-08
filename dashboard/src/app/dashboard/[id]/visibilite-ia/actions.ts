@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@/lib/supabase/server";
-import { runVisibilityCheck, VISIBILITY_MODEL } from "@/lib/ai-visibility/check";
+import { runVisibilityChecks } from "@/lib/ai-visibility/check";
 
 async function getOwnedRestaurant(restaurantId: string) {
   const supabase = await createClient();
@@ -66,20 +66,25 @@ export async function analyzeQuestion(formData: FormData) {
   if (!questionRow) return;
 
   try {
-    const result = await runVisibilityCheck({
+    const results = await runVisibilityChecks({
       question: questionRow.question,
       restaurantName: restaurant.nom,
     });
 
-    await supabase.from("ai_visibility_checks").insert({
-      question_id: questionRow.id,
-      restaurant_id: restaurantId,
-      modele: VISIBILITY_MODEL,
-      est_cite: result.estCite,
-      rang: result.rang,
-      concurrents: result.concurrents,
-      reponse: result.reponse,
-    });
+    if (results.length > 0) {
+      await supabase.from("ai_visibility_checks").insert(
+        results.map((result) => ({
+          question_id: questionRow.id,
+          restaurant_id: restaurantId,
+          fournisseur: result.fournisseur,
+          modele: result.modele,
+          est_cite: result.estCite,
+          rang: result.rang,
+          concurrents: result.concurrents,
+          reponse: result.reponse,
+        })),
+      );
+    }
   } catch (err) {
     console.error("[analyzeQuestion]", err);
   }
@@ -108,7 +113,7 @@ export async function suggestQuestions(formData: FormData) {
   try {
     const client = new Anthropic();
     const response = await client.messages.create({
-      model: VISIBILITY_MODEL,
+      model: "claude-opus-5",
       max_tokens: 700,
       system:
         "Tu génères des questions telles qu'un client les poserait à une IA " +

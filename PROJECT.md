@@ -69,10 +69,16 @@ ouvrés.
       migration `0012` : le restaurateur suit des questions de clients
       ("meilleur coréen dans le 13e"), Klarr les pose à l'IA et note s'il
       est cité, à quel rang, et face à quels concurrents
-- [ ] Étendre la visibilité IA aux autres assistants : ChatGPT, Gemini et
-      Perplexity ont des API self-service (une clé par fournisseur) ;
-      Copilot, AI Mode et AI Overviews n'en ont pas et demanderaient un
-      fournisseur SERP tiers
+- [x] Visibilité IA multi-assistants : le code interroge Claude, ChatGPT,
+      Gemini et Perplexity (`src/lib/ai-visibility/providers.ts`). Chaque
+      assistant est facultatif — sans sa clé il est ignoré, et il s'active
+      sans changement de code dès qu'elle est renseignée. Seule la clé
+      Anthropic est en place aujourd'hui (phase de développement)
+- [ ] Copilot, AI Mode, AI Overviews et ChatGPT en navigation web : pas
+      d'API publique. Les outils du marché scrapent l'interface réelle
+      derrière un proxy géolocalisé ; en pratique il faudrait passer par
+      un fournisseur tiers (DataForSEO ~4 $/1000 réponses, SearchApi),
+      soit moins de 10 $/mois pour 20 restaurants suivis chaque semaine
 
 ### Étape 5 — Acquisition (terminée pour la V1)
 

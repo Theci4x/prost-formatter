@@ -7,6 +7,7 @@ import {
   removeQuestion,
   suggestQuestions,
 } from "./actions";
+import { configuredProviders } from "@/lib/ai-visibility/providers";
 import type { Restaurant } from "@/types/restaurant";
 import type {
   AiVisibilityCheck,
@@ -50,18 +51,23 @@ export default async function VisibiliteIaPage({
   const checks = (checksData ?? []) as AiVisibilityCheck[];
 
   // Les analyses arrivent triées de la plus récente à la plus ancienne : la
-  // première rencontrée pour une question est donc la dernière en date.
-  const latestByQuestion = new Map<string, AiVisibilityCheck>();
+  // première rencontrée pour un couple (question, assistant) est donc la
+  // dernière en date.
+  const latestByQuestion = new Map<string, AiVisibilityCheck[]>();
+  const seen = new Set<string>();
   for (const check of checks) {
-    if (!latestByQuestion.has(check.question_id)) {
-      latestByQuestion.set(check.question_id, check);
-    }
+    const key = `${check.question_id}:${check.fournisseur}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const list = latestByQuestion.get(check.question_id) ?? [];
+    list.push(check);
+    latestByQuestion.set(check.question_id, list);
   }
 
-  const analysed = questions.filter((q) => latestByQuestion.has(q.id));
-  const citedCount = analysed.filter(
-    (q) => latestByQuestion.get(q.id)?.est_cite,
-  ).length;
+  const actifs = configuredProviders().map((provider) => provider.label);
+
+  const analysedChecks = [...latestByQuestion.values()].flat();
+  const citedCount = analysedChecks.filter((check) => check.est_cite).length;
 
   return (
     <div className="flex flex-1 flex-col gap-6 px-6 py-8">
@@ -77,13 +83,15 @@ export default async function VisibiliteIaPage({
         concurrents.
       </p>
 
-      {analysed.length > 0 && (
+      {analysedChecks.length > 0 && (
         <div className="flex max-w-xl items-center gap-6 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm">
           <div>
             <p className="text-2xl font-semibold text-brand-navy">
-              {citedCount}/{analysed.length}
+              {citedCount}/{analysedChecks.length}
             </p>
-            <p className="text-sm text-zinc-500">questions où tu es cité</p>
+            <p className="text-sm text-zinc-500">
+              réponses où tu es cité (toutes questions et assistants confondus)
+            </p>
           </div>
         </div>
       )}
@@ -129,7 +137,7 @@ export default async function VisibiliteIaPage({
       ) : (
         <ul className="flex max-w-2xl flex-col gap-3">
           {questions.map((question) => {
-            const check = latestByQuestion.get(question.id);
+            const results = latestByQuestion.get(question.id) ?? [];
             return (
               <li
                 key={question.id}
@@ -152,42 +160,54 @@ export default async function VisibiliteIaPage({
                   </form>
                 </div>
 
-                {check ? (
-                  <div className="flex flex-col gap-2">
-                    <div className="flex flex-wrap items-center gap-3">
-                      <span
-                        className={`rounded-full px-3 py-1 text-xs font-medium ${
-                          check.est_cite
-                            ? "bg-green-50 text-green-700"
-                            : "bg-orange-50 text-orange-700"
-                        }`}
+                {results.length > 0 ? (
+                  <div className="flex flex-col gap-3">
+                    {results.map((check) => (
+                      <div
+                        key={check.id}
+                        className="flex flex-col gap-2 border-t border-zinc-100 pt-3 first:border-0 first:pt-0"
                       >
-                        {check.est_cite ? "Cité" : "Non cité"}
-                      </span>
-                      {check.rang && (
-                        <span className="text-xs text-zinc-500">
-                          Position {check.rang}
-                        </span>
-                      )}
-                      <span className="text-xs text-zinc-400">
-                        {new Date(check.created_at).toLocaleDateString("fr-FR")}
-                      </span>
-                    </div>
+                        <div className="flex flex-wrap items-center gap-3">
+                          <span className="text-sm font-medium text-zinc-900">
+                            {check.modele}
+                          </span>
+                          <span
+                            className={`rounded-full px-3 py-1 text-xs font-medium ${
+                              check.est_cite
+                                ? "bg-green-50 text-green-700"
+                                : "bg-orange-50 text-orange-700"
+                            }`}
+                          >
+                            {check.est_cite ? "Cité" : "Non cité"}
+                          </span>
+                          {check.rang && (
+                            <span className="text-xs text-zinc-500">
+                              Position {check.rang}
+                            </span>
+                          )}
+                          <span className="text-xs text-zinc-400">
+                            {new Date(check.created_at).toLocaleDateString(
+                              "fr-FR",
+                            )}
+                          </span>
+                        </div>
 
-                    {check.concurrents.length > 0 && (
-                      <p className="text-sm text-zinc-600">
-                        Également cités : {check.concurrents.join(", ")}
-                      </p>
-                    )}
+                        {check.concurrents.length > 0 && (
+                          <p className="text-sm text-zinc-600">
+                            Également cités : {check.concurrents.join(", ")}
+                          </p>
+                        )}
 
-                    <details className="text-sm text-zinc-600">
-                      <summary className="cursor-pointer text-zinc-500 hover:text-zinc-900">
-                        Voir la réponse de l&apos;IA
-                      </summary>
-                      <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed">
-                        {check.reponse}
-                      </p>
-                    </details>
+                        <details className="text-sm text-zinc-600">
+                          <summary className="cursor-pointer text-zinc-500 hover:text-zinc-900">
+                            Voir la réponse
+                          </summary>
+                          <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed">
+                            {check.reponse}
+                          </p>
+                        </details>
+                      </div>
+                    ))}
                   </div>
                 ) : (
                   <p className="text-sm text-zinc-500">Pas encore analysée.</p>
@@ -200,7 +220,7 @@ export default async function VisibiliteIaPage({
                     type="submit"
                     className="w-fit rounded-md border border-zinc-200 px-3 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
                   >
-                    {check ? "Relancer l'analyse" : "Analyser"}
+                    {results.length > 0 ? "Relancer l'analyse" : "Analyser"}
                   </button>
                 </form>
               </li>
@@ -210,10 +230,13 @@ export default async function VisibiliteIaPage({
       )}
 
       <p className="max-w-2xl text-xs leading-relaxed text-zinc-400">
-        Les analyses interrogent aujourd&apos;hui Claude (Opus 5), sur ses
-        connaissances propres. Les autres assistants (ChatGPT, Gemini,
-        Perplexity, Copilot, AI Overviews) demandent chacun un accès dédié, à
-        brancher au fur et à mesure.
+        Assistants interrogés aujourd&apos;hui :{" "}
+        {actifs.length > 0 ? actifs.join(", ") : "aucun"}. Les autres
+        s&apos;activeront automatiquement dès que leur clé d&apos;API sera
+        renseignée. Les analyses portent sur les connaissances propres de
+        chaque assistant ; les réponses affichées dans les applications grand
+        public (qui vont chercher sur le web en direct) demanderaient un accès
+        supplémentaire.
       </p>
     </div>
   );
