@@ -8,6 +8,7 @@ import { Comparison } from "@/components/landing/Comparison";
 import { Founder, Problem } from "@/components/landing/Manifesto";
 import { HeroBackdrop } from "@/components/landing/HeroBackdrop";
 import { FloatingChip, Tilt } from "@/components/landing/Tilt";
+import { Reveal } from "@/components/landing/Reveal";
 
 const instrumentSerif = Instrument_Serif({
   weight: "400",
@@ -36,7 +37,7 @@ export default async function Home() {
 
   return (
     <div
-      className={`${instrumentSerif.variable} ${manrope.variable}`}
+      className={`klarr-grain ${instrumentSerif.variable} ${manrope.variable}`}
       style={{
         // @ts-expect-error -- CSS custom properties aren't in React's style typings.
         "--bg": "oklch(98% 0.006 80)",
@@ -467,9 +468,13 @@ export default async function Home() {
         </div>
       </div>
 
-      <ClientLogos />
+      <Reveal>
+        <ClientLogos />
+      </Reveal>
 
-      <Problem />
+      <Reveal>
+        <Problem />
+      </Reveal>
 
       {/* BENEFITS */}
       <div id="benefices" style={{ background: "var(--bg-alt)", padding: "100px 32px" }}>
@@ -646,9 +651,13 @@ export default async function Home() {
         </div>
       </div>
 
-      <Comparison />
+      <Reveal>
+        <Comparison />
+      </Reveal>
 
-      <Founder />
+      <Reveal>
+        <Founder />
+      </Reveal>
 
       {/* FREE GOOGLE PRESENCE TEST */}
       <div id="test-presence" style={{ maxWidth: 1180, margin: "0 auto", padding: "90px 32px" }}>
@@ -823,6 +832,7 @@ export default async function Home() {
       </div>
 
       {/* CTA BAND */}
+      <Reveal>
       <div id="cta" style={{ background: "var(--ink)", padding: "90px 32px" }}>
         <div
           style={{
@@ -865,6 +875,7 @@ export default async function Home() {
           </Link>
         </div>
       </div>
+      </Reveal>
 
       {/* FOOTER */}
       <div
