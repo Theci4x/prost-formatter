@@ -8,6 +8,11 @@ const FEATURE_LINKS = [
   { href: "photos", label: "Photos", icon: dashboardIcons.photos },
   { href: "menu", label: "Menu", icon: dashboardIcons.menu },
   { href: "seo", label: "SEO", icon: dashboardIcons.seo },
+  {
+    href: "visibilite-ia",
+    label: "Visibilité IA",
+    icon: dashboardIcons.visibiliteIa,
+  },
   { href: "avis", label: "Avis", icon: dashboardIcons.avis },
   { href: "google", label: "Google", icon: dashboardIcons.google },
   { href: "social", label: "Réseaux sociaux", icon: dashboardIcons.social },

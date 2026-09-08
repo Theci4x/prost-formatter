@@ -65,6 +65,14 @@ ouvrés.
       pertinence) — `dashboard/src/app/dashboard/[id]/seo/`
 - [ ] Suivi de positionnement / analyse concurrentielle (nécessite un
       fournisseur tiers payant, l'API Google ne fournit pas ces données)
+- [x] Visibilité IA (inspiré de nimt.ai) — `dashboard/[id]/visibilite-ia`,
+      migration `0012` : le restaurateur suit des questions de clients
+      ("meilleur coréen dans le 13e"), Klarr les pose à l'IA et note s'il
+      est cité, à quel rang, et face à quels concurrents
+- [ ] Étendre la visibilité IA aux autres assistants : ChatGPT, Gemini et
+      Perplexity ont des API self-service (une clé par fournisseur) ;
+      Copilot, AI Mode et AI Overviews n'en ont pas et demanderaient un
+      fournisseur SERP tiers
 
 ### Étape 5 — Acquisition (terminée pour la V1)
 

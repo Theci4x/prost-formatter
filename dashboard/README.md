@@ -122,6 +122,14 @@ Dashboard de gestion des restaurants. Next.js (App Router) + Supabase.
     `restaurant_photos`. Aucune configuration Supabase manuelle
     supplémentaire n'est nécessaire (le bucket est créé par la
     migration elle-même).
+20. Appliquer `supabase/migrations/0011_restaurant_subscriptions.sql` dans
+    le SQL editor Supabase (abonnement Stripe par restaurant), puis
+    renseigner `SUPABASE_SERVICE_ROLE_KEY`, `STRIPE_SECRET_KEY`,
+    `STRIPE_WEBHOOK_SECRET` et `STRIPE_PRICE_ID`.
+21. Appliquer `supabase/migrations/0012_ai_visibility.sql` dans le SQL
+    editor Supabase — tables `ai_visibility_questions` et
+    `ai_visibility_checks` (suivi de la visibilité dans les réponses des
+    IA). Réutilise `ANTHROPIC_API_KEY`, aucune clé supplémentaire.
 
 ## Développement
 
