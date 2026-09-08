@@ -83,6 +83,20 @@ export default async function VisibiliteIaPage({
         concurrents.
       </p>
 
+      {actifs.length === 0 && (
+        <div className="max-w-2xl rounded-2xl border border-orange-200 bg-orange-50 p-5">
+          <p className="text-sm font-medium text-orange-900">
+            Aucun assistant n&apos;est configuré.
+          </p>
+          <p className="mt-1 text-sm text-orange-800">
+            Les analyses ne peuvent pas être lancées tant qu&apos;aucune clé
+            d&apos;API n&apos;est renseignée. Vous pouvez déjà enregistrer vos
+            questions : elles seront analysables dès qu&apos;une clé sera en
+            place.
+          </p>
+        </div>
+      )}
+
       {analysedChecks.length > 0 && (
         <div className="flex max-w-xl items-center gap-6 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm">
           <div>
@@ -218,7 +232,8 @@ export default async function VisibiliteIaPage({
                   <input type="hidden" name="question_id" value={question.id} />
                   <button
                     type="submit"
-                    className="w-fit rounded-md border border-zinc-200 px-3 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
+                    disabled={actifs.length === 0}
+                    className="w-fit rounded-md border border-zinc-200 px-3 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-zinc-200 disabled:hover:text-zinc-700"
                   >
                     {results.length > 0 ? "Relancer l'analyse" : "Analyser"}
                   </button>

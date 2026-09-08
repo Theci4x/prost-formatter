@@ -27,12 +27,17 @@ export async function addQuestion(formData: FormData) {
   if (!question) return;
 
   const supabase = await createClient();
-  await supabase
+  // ignoreDuplicates génère un ON CONFLICT DO NOTHING : sans lui, PostgREST
+  // produit un DO UPDATE, qui exige en plus une policy UPDATE que la table
+  // n'a pas — l'ajout échouait alors silencieusement.
+  const { error } = await supabase
     .from("ai_visibility_questions")
     .upsert(
       { restaurant_id: restaurantId, question },
-      { onConflict: "restaurant_id,question" },
+      { onConflict: "restaurant_id,question", ignoreDuplicates: true },
     );
+
+  if (error) console.error("[addQuestion]", error);
 
   revalidatePath(`/dashboard/${restaurantId}/visibilite-ia`);
 }
@@ -42,7 +47,12 @@ export async function removeQuestion(formData: FormData) {
   const questionId = formData.get("question_id") as string;
 
   const supabase = await createClient();
-  await supabase.from("ai_visibility_questions").delete().eq("id", questionId);
+  const { error } = await supabase
+    .from("ai_visibility_questions")
+    .delete()
+    .eq("id", questionId);
+
+  if (error) console.error("[removeQuestion]", error);
 
   revalidatePath(`/dashboard/${restaurantId}/visibilite-ia`);
 }
@@ -72,7 +82,7 @@ export async function analyzeQuestion(formData: FormData) {
     });
 
     if (results.length > 0) {
-      await supabase.from("ai_visibility_checks").insert(
+      const { error } = await supabase.from("ai_visibility_checks").insert(
         results.map((result) => ({
           question_id: questionRow.id,
           restaurant_id: restaurantId,
@@ -84,6 +94,7 @@ export async function analyzeQuestion(formData: FormData) {
           reponse: result.reponse,
         })),
       );
+      if (error) console.error("[analyzeQuestion] insertion", error);
     }
   } catch (err) {
     console.error("[analyzeQuestion]", err);
@@ -152,9 +163,13 @@ export async function suggestQuestions(formData: FormData) {
       .map((question) => ({ restaurant_id: restaurantId, question }));
 
     if (questions.length > 0) {
-      await supabase
+      const { error } = await supabase
         .from("ai_visibility_questions")
-        .upsert(questions, { onConflict: "restaurant_id,question" });
+        .upsert(questions, {
+          onConflict: "restaurant_id,question",
+          ignoreDuplicates: true,
+        });
+      if (error) console.error("[suggestQuestions] insertion", error);
     }
   } catch (err) {
     console.error("[suggestQuestions]", err);
