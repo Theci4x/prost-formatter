@@ -14,9 +14,9 @@ const FEATURE_LINKS = [
     icon: dashboardIcons.visibiliteIa,
   },
   { href: "avis", label: "Avis", icon: dashboardIcons.avis },
-  { href: "google", label: "Google", icon: dashboardIcons.google },
-  { href: "social", label: "Réseaux sociaux", icon: dashboardIcons.social },
-  { href: "tiktok", label: "TikTok", icon: dashboardIcons.tiktok },
+  // Google, Facebook, Instagram et TikTok sont regroupés derrière une seule
+  // entrée : le restaurateur relie ses comptes une fois, au même endroit.
+  { href: "connexions", label: "Connexions", icon: dashboardIcons.connexions },
   { href: "abonnement", label: "Abonnement", icon: dashboardIcons.abonnement },
 ] as const;
 

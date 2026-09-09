@@ -44,7 +44,17 @@ type ExchangeResponse = {
   pages?: FacebookPageOption[];
 };
 
-export function FacebookConnectButton({ restaurantId }: { restaurantId: string }) {
+export function FacebookConnectButton({
+  restaurantId,
+  // Page sur laquelle revenir une fois la connexion faite : le bouton est
+  // affiche depuis "Connexions" comme depuis "Reseaux sociaux".
+  returnTo = "social",
+  label = "Connecter Facebook / Instagram",
+}: {
+  restaurantId: string;
+  returnTo?: string;
+  label?: string;
+}) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -70,7 +80,7 @@ export function FacebookConnectButton({ restaurantId }: { restaurantId: string }
       .then((res) => res.json())
       .then((data: ExchangeResponse) => {
         if (data.ok) {
-          router.push(`/dashboard/${restaurantId}/social?connected=1`);
+          router.push(`/dashboard/${restaurantId}/${returnTo}?connected=1`);
           router.refresh();
           return;
         }
@@ -152,7 +162,7 @@ export function FacebookConnectButton({ restaurantId }: { restaurantId: string }
         disabled={loading}
         className="rounded-md bg-brand-navy px-4 py-2 text-center text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover disabled:opacity-50"
       >
-        {loading ? "Connexion..." : "Connecter Facebook / Instagram"}
+        {loading ? "Connexion..." : label}
       </button>
       {error && <p className="text-sm text-red-600">{error}</p>}
     </div>

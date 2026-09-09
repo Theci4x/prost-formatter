@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getPageDetails, type PageDetails } from "@/lib/facebook/oauth";
 import { disconnectSocial } from "./actions";
-import { FacebookConnectButton } from "./FacebookConnectButton";
+import { FacebookConnectButton } from "@/components/connections/FacebookConnectButton";
 import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
 import type { Restaurant } from "@/types/restaurant";
 
@@ -60,6 +60,7 @@ export default async function SocialPage({
       <PageHeader
         icon={dashboardIcons.social}
         title={`Réseaux sociaux — ${restaurant.nom}`}
+        backHref={`/dashboard/${id}/connexions`}
       />
 
       {connected && (

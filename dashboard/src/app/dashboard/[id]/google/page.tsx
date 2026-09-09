@@ -67,6 +67,7 @@ export default async function GoogleConnectionPage({
       <PageHeader
         icon={dashboardIcons.google}
         title={`Google Business Profile — ${restaurant.nom}`}
+        backHref={`/dashboard/${id}/connexions`}
       />
 
       {connected && (

@@ -63,7 +63,11 @@ export default async function TikTokPage({
 
   return (
     <div className="flex flex-1 flex-col gap-6 px-6 py-8">
-      <PageHeader icon={dashboardIcons.tiktok} title={`TikTok — ${restaurant.nom}`} />
+      <PageHeader
+        icon={dashboardIcons.tiktok}
+        title={`TikTok — ${restaurant.nom}`}
+        backHref={`/dashboard/${id}/connexions`}
+      />
 
       {connected && (
         <p className="max-w-md rounded-md bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
