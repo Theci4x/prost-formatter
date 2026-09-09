@@ -10,8 +10,7 @@ export default function ConfidentialitePage() {
     <LegalLayout
       title="Politique de confidentialité"
       version="1.0"
-      otherPageHref="/cgu"
-      otherPageLabel="Conditions d'utilisation"
+      current="confidentialite"
     >
       <LegalSection n="01" title="Responsable du traitement">
         <p>

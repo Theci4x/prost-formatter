@@ -896,9 +896,30 @@ export default async function Home() {
             Klarr
           </span>
         </div>
-        <span style={{ fontSize: 13, color: "var(--ink-soft)" }}>
-          © Klarr — fait pour les restaurateurs indépendants et petits groupes.
-        </span>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: 18,
+            fontSize: 13,
+            color: "var(--ink-soft)",
+          }}
+        >
+          <Link href="/cgu" style={{ color: "inherit" }}>
+            Conditions d&apos;utilisation
+          </Link>
+          <Link href="/confidentialite" style={{ color: "inherit" }}>
+            Confidentialité
+          </Link>
+          <Link href="/suppression-donnees" style={{ color: "inherit" }}>
+            Suppression des données
+          </Link>
+          <a href="mailto:contact@klarr.biz" style={{ color: "inherit" }}>
+            contact@klarr.biz
+          </a>
+          <span>© Klarr — fait pour les restaurateurs indépendants.</span>
+        </div>
       </div>
     </div>
   );

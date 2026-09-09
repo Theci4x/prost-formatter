@@ -4,17 +4,33 @@ import { KlarrMark, KlarrWordmark } from "@/components/brand/KlarrMark";
 
 const instrumentSerif = Instrument_Serif({ weight: "400", subsets: ["latin"] });
 
+// Les trois documents se citent mutuellement : un lecteur (ou un
+// examinateur Meta) arrivé sur l'un doit pouvoir atteindre les autres.
+const LEGAL_PAGES = [
+  { slug: "cgu", href: "/cgu", label: "Conditions d'utilisation" },
+  {
+    slug: "confidentialite",
+    href: "/confidentialite",
+    label: "Politique de confidentialité",
+  },
+  {
+    slug: "suppression-donnees",
+    href: "/suppression-donnees",
+    label: "Suppression des données",
+  },
+] as const;
+
+export type LegalPageSlug = (typeof LEGAL_PAGES)[number]["slug"];
+
 export function LegalLayout({
   title,
   version,
-  otherPageHref,
-  otherPageLabel,
+  current,
   children,
 }: {
   title: string;
   version: string;
-  otherPageHref: string;
-  otherPageLabel: string;
+  current: LegalPageSlug;
   children: React.ReactNode;
 }) {
   return (
@@ -47,9 +63,15 @@ export function LegalLayout({
 
           <footer className="mt-12 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-zinc-200 pt-6 text-sm text-zinc-500">
             <span>© 2026 Klarr</span>
-            <Link href={otherPageHref} className="underline hover:text-brand-navy">
-              {otherPageLabel}
-            </Link>
+            {LEGAL_PAGES.filter((page) => page.slug !== current).map((page) => (
+              <Link
+                key={page.slug}
+                href={page.href}
+                className="underline hover:text-brand-navy"
+              >
+                {page.label}
+              </Link>
+            ))}
             <Link href="/" className="underline hover:text-brand-navy">
               Retour à l&apos;accueil
             </Link>

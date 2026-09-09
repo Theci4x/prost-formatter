@@ -10,8 +10,7 @@ export default function CguPage() {
     <LegalLayout
       title="Conditions générales d'utilisation"
       version="1.0"
-      otherPageHref="/confidentialite"
-      otherPageLabel="Politique de confidentialité"
+      current="cgu"
     >
       <LegalSection n="01" title="Objet">
         <p>
