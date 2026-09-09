@@ -2,6 +2,8 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { DeleteRestaurantButton } from "@/components/restaurants/DeleteRestaurantButton";
 import { dashboardIcons } from "@/components/dashboard/PageHeader";
+import { AlertsPanel } from "@/components/dashboard/AlertsPanel";
+import { fetchAlerts } from "@/lib/reputation/alerts";
 import type { Restaurant } from "@/types/restaurant";
 
 const FEATURE_LINKS = [
@@ -29,6 +31,9 @@ export default async function DashboardPage() {
 
   const restaurants = (data ?? []) as Restaurant[];
 
+  const { alerts, surveillanceActive } = await fetchAlerts(supabase);
+  const restaurantNames = new Map(restaurants.map((r) => [r.id, r.nom]));
+
   return (
     <div className="flex flex-1 flex-col gap-6 px-6 py-8">
       <div className="flex items-center justify-between">
@@ -47,6 +52,14 @@ export default async function DashboardPage() {
           Ajouter un restaurant
         </Link>
       </div>
+
+      {restaurants.length > 0 && (
+        <AlertsPanel
+          alerts={alerts}
+          restaurantNames={restaurantNames}
+          surveillanceActive={surveillanceActive}
+        />
+      )}
 
       {restaurants.length === 0 ? (
         <div className="flex max-w-md flex-col items-center gap-4 rounded-2xl border border-dashed border-zinc-300 bg-white px-6 py-16 text-center shadow-sm">
