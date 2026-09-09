@@ -48,6 +48,18 @@ export async function GET(request: Request) {
       fetchTripadvisorPlatformReviews(restaurant.nom, location),
     ]);
 
+    // Tracé dans les logs : sans ça, une tâche qui n'enregistre rien est
+    // indiscernable d'une tâche qui n'a pas tourné.
+    console.log(
+      `[cron/reputation] ${restaurant.nom} :`,
+      platforms
+        .map(
+          (p) =>
+            `${p.platform}=${!p.configured ? "clé absente" : p.found ? `${p.rating}/${p.reviewCount}` : "introuvable"}`,
+        )
+        .join(", "),
+    );
+
     const rows = platforms
       // Un établissement introuvable n'est pas un établissement à zéro
       // avis : ne rien enregistrer vaut mieux qu'enregistrer un faux
@@ -72,6 +84,10 @@ export async function GET(request: Request) {
     }
     releves += rows.length;
   }
+
+  console.log(
+    `[cron/reputation] terminé : ${restaurants.length} établissement(s), ${releves} relevé(s)`,
+  );
 
   return NextResponse.json({
     restaurants: restaurants.length,
