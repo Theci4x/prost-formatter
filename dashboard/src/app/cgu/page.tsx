@@ -9,7 +9,8 @@ export default function CguPage() {
   return (
     <LegalLayout
       title="Conditions générales d'utilisation"
-      version="1.0"
+      version="1.1"
+      date="10 septembre 2026"
       current="cgu"
     >
       <LegalSection n="01" title="Objet">
@@ -23,14 +24,19 @@ export default function CguPage() {
 
       <LegalSection n="02" title="Éditeur du service">
         <p>
-          Klarr est édité par Yuan Yuquan, entrepreneur individuel, immatriculé
-          au répertoire SIRENE sous le numéro SIREN 104 891 486, dont
-          l&apos;établissement est situé 3 Place de la Levrière, 94000
-          Créteil. Contact :{" "}
-          <a href="mailto:contact@klarr.biz">
-            contact@klarr.biz
-          </a>
-          .
+          Klarr est édité par <strong>EDIREF</strong>, société à responsabilité
+          limitée au capital de 1 000 euros, immatriculée au registre du
+          commerce et des sociétés de Paris sous le numéro 503 428 369, dont
+          le siège social est situé 10 rue de Penthièvre, 75008 Paris.
+        </p>
+        <p>
+          Directeur de la publication : Thomas Bavoil, gérant. Contact :{" "}
+          <a href="mailto:contact@klarr.biz">contact@klarr.biz</a>.
+        </p>
+        <p>
+          Le service est hébergé par Vercel Inc., 340 S Lemon Ave #4133,
+          Walnut, CA 91789, États-Unis, et les données sont stockées par
+          Supabase au sein de l&apos;Union européenne.
         </p>
       </LegalSection>
 

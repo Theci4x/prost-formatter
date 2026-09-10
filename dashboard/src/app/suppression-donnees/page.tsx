@@ -10,6 +10,7 @@ export default function SuppressionDonneesPage() {
     <LegalLayout
       title="Suppression des données"
       version="1.0"
+      date="9 septembre 2026"
       current="suppression-donnees"
     >
       <LegalSection n="01" title="Ce que Klarr conserve">

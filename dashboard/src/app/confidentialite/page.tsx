@@ -9,20 +9,19 @@ export default function ConfidentialitePage() {
   return (
     <LegalLayout
       title="Politique de confidentialité"
-      version="1.0"
+      version="1.1"
+      date="10 septembre 2026"
       current="confidentialite"
     >
       <LegalSection n="01" title="Responsable du traitement">
         <p>
-          Klarr est édité par Yuan Yuquan, entrepreneur individuel, immatriculé
-          au répertoire SIRENE sous le numéro SIREN 104 891 486, dont
-          l&apos;établissement est situé 3 Place de la Levrière, 94000
-          Créteil. Pour toute question relative à vos données personnelles,
-          contactez{" "}
-          <a href="mailto:contact@klarr.biz">
-            contact@klarr.biz
-          </a>
-          .
+          Le responsable du traitement est <strong>EDIREF</strong>, société à
+          responsabilité limitée au capital de 1 000 euros, immatriculée au
+          registre du commerce et des sociétés de Paris sous le numéro
+          503 428 369, dont le siège social est situé 10 rue de Penthièvre,
+          75008 Paris. Pour toute question relative à vos données
+          personnelles, contactez{" "}
+          <a href="mailto:contact@klarr.biz">contact@klarr.biz</a>.
         </p>
       </LegalSection>
 

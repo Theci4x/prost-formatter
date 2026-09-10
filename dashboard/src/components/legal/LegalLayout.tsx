@@ -25,11 +25,15 @@ export type LegalPageSlug = (typeof LEGAL_PAGES)[number]["slug"];
 export function LegalLayout({
   title,
   version,
+  date,
   current,
   children,
 }: {
   title: string;
   version: string;
+  // Date d'entrée en vigueur, propre à chaque document : ils ne changent
+  // pas ensemble.
+  date: string;
   current: LegalPageSlug;
   children: React.ReactNode;
 }) {
@@ -54,9 +58,7 @@ export function LegalLayout({
           </h1>
           <p className="mt-2 text-sm text-zinc-500">
             Version {version} — en vigueur depuis le{" "}
-            <strong className="font-semibold text-zinc-700">
-              6 septembre 2026
-            </strong>
+            <strong className="font-semibold text-zinc-700">{date}</strong>
           </p>
 
           <div className="mt-10 flex flex-col gap-10">{children}</div>
