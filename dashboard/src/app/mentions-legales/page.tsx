@@ -34,7 +34,7 @@ export default function MentionsLegalesPage() {
             <strong>Immatriculation</strong> — RCS Paris 503 428 369
           </li>
           <li>
-            <strong>Numéro de TVA intracommunautaire</strong> — FR66 503 428 369
+            <strong>Numéro de TVA intracommunautaire</strong> — FR 66 503 428 369
           </li>
           <li>
             <strong>Contact</strong> —{" "}
