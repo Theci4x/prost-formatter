@@ -926,7 +926,7 @@ export default async function Home() {
           <a href="mailto:contact@klarr.biz" style={{ color: "inherit" }}>
             contact@klarr.biz
           </a>
-          <span>© Klarr — fait pour les restaurateurs indépendants.</span>
+          <span>© 2026 Klarr — édité par EDIREF.</span>
         </div>
       </div>
     </div>
