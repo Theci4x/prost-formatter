@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
+import { slugDisponible, slugifier } from "@/lib/reservations/slug";
 import {
   ESPACE_VIDE,
   SERVICE_VIDE,
@@ -172,5 +174,50 @@ export async function removeService(formData: FormData) {
     .eq("id", id);
 
   if (error) console.error("[removeService]", error);
+  revalidatePath(`/dashboard/${restaurantId}/reservations`);
+}
+
+/**
+ * Donne au restaurant une adresse publique de réservation. Le slug est
+ * dérivé du nom et suffixé tant qu'il est pris — deux « Le Bistrot » peuvent
+ * coexister dans deux villes.
+ */
+export async function activerPageReservation(formData: FormData) {
+  const restaurantId = formData.get("restaurant_id") as string;
+
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("restaurants")
+    .select("nom, slug_reservation")
+    .eq("id", restaurantId)
+    .maybeSingle();
+
+  const restaurant = data as { nom: string; slug_reservation: string | null } | null;
+  if (!restaurant || restaurant.slug_reservation) return;
+
+  // On lit les slugs déjà pris avec la clé de service : la RLS masquerait
+  // ceux des autres restaurateurs, et on créerait des doublons.
+  const service = createServiceClient();
+  const { data: pris } = await service
+    .from("restaurants")
+    .select("slug_reservation")
+    .not("slug_reservation", "is", null);
+
+  const dejaPris = new Set(
+    ((pris ?? []) as { slug_reservation: string }[]).map(
+      (ligne) => ligne.slug_reservation,
+    ),
+  );
+
+  const slug = slugDisponible(slugifier(restaurant.nom), (candidat) =>
+    dejaPris.has(candidat),
+  );
+
+  const { error } = await supabase
+    .from("restaurants")
+    .update({ slug_reservation: slug })
+    .eq("id", restaurantId);
+
+  if (error) console.error("[activerPageReservation]", error);
   revalidatePath(`/dashboard/${restaurantId}/reservations`);
 }

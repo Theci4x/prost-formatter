@@ -3,7 +3,11 @@ import { createClient } from "@/lib/supabase/server";
 import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
 import { EspaceForm } from "@/components/reservations/EspaceForm";
 import { ServiceForm } from "@/components/reservations/ServiceForm";
-import { removeEspace, removeService } from "./actions";
+import {
+  activerPageReservation,
+  removeEspace,
+  removeService,
+} from "./actions";
 import {
   formatHeure,
   formatJours,
@@ -74,6 +78,9 @@ export default async function ReservationsPage({
 
   const espaces = (espacesResult.data ?? []) as Espace[];
   const services = (servicesResult.data ?? []) as Service[];
+  const slug = (restaurant as Restaurant & { slug_reservation?: string | null })
+    .slug_reservation;
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "";
 
   return (
     <div className="flex flex-1 flex-col gap-10 px-6 py-8">
@@ -188,13 +195,56 @@ export default async function ReservationsPage({
         <ServiceForm restaurantId={id} />
       </section>
 
-      {espaces.length > 0 && services.length > 0 && (
-        <p className="max-w-2xl rounded-xl bg-brand-orange-soft px-4 py-3 text-sm text-brand-navy">
-          Tes espaces et tes services sont en place. La page de réservation
-          publique et le suivi des demandes arrivent ensuite — c&apos;est la
-          suite du lot 1.
-        </p>
-      )}
+      <section className="flex flex-col gap-4">
+        <div className="flex flex-col gap-1">
+          <h2 className="text-base font-semibold text-zinc-900">
+            Ta page de réservation
+          </h2>
+          <p className="text-sm text-zinc-500">
+            L&apos;adresse à partager sur ta fiche Google, ton Instagram et ta
+            page Facebook. Tes clients y voient uniquement ce qui est
+            réellement disponible.
+          </p>
+        </div>
+
+        <div className="flex flex-col gap-3 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm">
+          {espaces.length === 0 || services.length === 0 ? (
+            <p className="text-sm text-zinc-500">
+              Ajoute au moins un espace et un service : sans eux, la page
+              n&apos;aurait rien à proposer.
+            </p>
+          ) : slug ? (
+            <>
+              <a
+                href={`/reserver/${slug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-fit break-all font-medium text-brand-orange hover:underline"
+              >
+                {siteUrl}/reserver/{slug}
+              </a>
+              <p className="text-sm text-zinc-500">
+                Elle est en ligne. Ouvre-la pour vérifier ce que voient tes
+                clients.
+              </p>
+            </>
+          ) : (
+            <form action={activerPageReservation} className="flex flex-col gap-3">
+              <input type="hidden" name="restaurant_id" value={id} />
+              <p className="text-sm text-zinc-500">
+                Ta page n&apos;est pas encore ouverte. Elle recevra une adresse
+                dérivée du nom de ton établissement.
+              </p>
+              <button
+                type="submit"
+                className="w-fit rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover"
+              >
+                Ouvrir ma page de réservation
+              </button>
+            </form>
+          )}
+        </div>
+      </section>
     </div>
   );
 }
