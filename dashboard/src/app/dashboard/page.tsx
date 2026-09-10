@@ -18,6 +18,7 @@ const FEATURE_LINKS = [
   { href: "avis", label: "Avis", icon: dashboardIcons.avis },
   // Google, Facebook, Instagram et TikTok sont regroupés derrière une seule
   // entrée : le restaurateur relie ses comptes une fois, au même endroit.
+  { href: "reservations", label: "Réservations", icon: dashboardIcons.reservations },
   { href: "connexions", label: "Connexions", icon: dashboardIcons.connexions },
   { href: "abonnement", label: "Abonnement", icon: dashboardIcons.abonnement },
 ] as const;
