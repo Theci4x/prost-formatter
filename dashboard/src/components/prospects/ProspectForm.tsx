@@ -125,6 +125,21 @@ export function ProspectForm({
         </p>
       )}
 
+      {/* Information au moment de la collecte : le RGPD l'exige là où la
+          donnée est saisie, pas seulement dans une page à part. */}
+      <p className="max-w-prose text-xs leading-relaxed text-stone-500">
+        {t.privacyNotice}{" "}
+        <a
+          href="/confidentialite"
+          target="_blank"
+          rel="noopener"
+          className="underline hover:text-stone-800"
+        >
+          {t.privacyLink}
+        </a>
+        .
+      </p>
+
       <button
         type="submit"
         disabled={pending}

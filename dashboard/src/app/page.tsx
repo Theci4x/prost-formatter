@@ -6,6 +6,7 @@ import { KlarrMark } from "@/components/brand/KlarrMark";
 import { ClientLogos } from "@/components/landing/ClientLogos";
 import { Comparison } from "@/components/landing/Comparison";
 import { Founder, Problem } from "@/components/landing/Manifesto";
+import { Partner } from "@/components/landing/Partner";
 import { HeroBackdrop } from "@/components/landing/HeroBackdrop";
 import { FloatingChip, Tilt } from "@/components/landing/Tilt";
 import { Reveal } from "@/components/landing/Reveal";
@@ -659,6 +660,10 @@ export default async function Home() {
         <Founder />
       </Reveal>
 
+      <Reveal>
+        <Partner />
+      </Reveal>
+
       {/* FREE GOOGLE PRESENCE TEST */}
       <div id="test-presence" style={{ maxWidth: 1180, margin: "0 auto", padding: "90px 32px" }}>
         <div
@@ -906,6 +911,9 @@ export default async function Home() {
             color: "var(--ink-soft)",
           }}
         >
+          <Link href="/mentions-legales" style={{ color: "inherit" }}>
+            Mentions légales
+          </Link>
           <Link href="/cgu" style={{ color: "inherit" }}>
             Conditions d&apos;utilisation
           </Link>

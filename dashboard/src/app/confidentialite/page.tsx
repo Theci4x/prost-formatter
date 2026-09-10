@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { LegalLayout, LegalSection } from "@/components/legal/LegalLayout";
 
 export const metadata: Metadata = {
@@ -124,26 +125,69 @@ export default function ConfidentialitePage() {
       </LegalSection>
 
       <LegalSection n="05" title="Hébergement et sous-traitants">
+        <p>Klarr fait appel aux sous-traitants suivants :</p>
+        <ul>
+          <li>
+            <strong>Supabase</strong> — base de données et stockage de
+            fichiers, hébergés au sein de l&apos;Union européenne.
+          </li>
+          <li>
+            <strong>Vercel</strong> — hébergement de l&apos;application.
+          </li>
+          <li>
+            <strong>Anthropic (Claude)</strong> — génération des analyses de
+            visibilité, des suggestions SEO et des propositions de réponse
+            aux avis, à votre demande.
+          </li>
+          <li>
+            <strong>Stripe</strong> — traitement des paiements
+            d&apos;abonnement et facturation. Vos données de carte sont
+            saisies chez Stripe et ne transitent jamais par Klarr.
+          </li>
+        </ul>
         <p>
-          Les données de compte et d&apos;établissement sont hébergées par{" "}
-          <strong>Supabase</strong> (base de données et stockage de
-          fichiers). Les analyses de visibilité et suggestions SEO sont
-          générées via l&apos;API d&apos;<strong>Anthropic (Claude)</strong>,
-          sans revente ni partage à des fins publicitaires. Aucune donnée
-          n&apos;est vendue à des tiers.
+          Aucune donnée n&apos;est vendue, louée ou partagée à des fins
+          publicitaires.
         </p>
       </LegalSection>
 
-      <LegalSection n="06" title="Durée de conservation">
+      <LegalSection n="06" title="Transferts hors de l'Union européenne">
         <p>
-          Vos données sont conservées tant que votre compte est actif. Vous
-          pouvez demander la suppression de votre compte et de l&apos;ensemble
-          des données associées à tout moment en écrivant à l&apos;adresse de
-          contact ci-dessous ; la suppression est effectuée sous 30 jours.
+          Vercel, Anthropic et Stripe sont établis aux États-Unis&nbsp;:
+          l&apos;usage de Klarr implique donc un transfert de certaines
+          données hors de l&apos;Union européenne. Ces transferts sont
+          encadrés par les clauses contractuelles types de la Commission
+          européenne, et le cas échéant par le Data Privacy Framework
+          lorsque le sous-traitant y est certifié.
+        </p>
+        <p>
+          Lorsque vous reliez un compte Google, Facebook, Instagram ou
+          TikTok, les requêtes adressées à ces plateformes sont soumises à
+          leurs propres politiques de confidentialité, sur lesquelles EDIREF
+          n&apos;a pas la main.
         </p>
       </LegalSection>
 
-      <LegalSection n="07" title="Cookies">
+      <LegalSection n="07" title="Durée de conservation">
+        <p>
+          Les données de compte et d&apos;établissement sont conservées tant
+          que votre compte est actif, puis effacées selon les modalités
+          décrites dans la page{" "}
+          <Link href="/suppression-donnees">suppression des données</Link>.
+        </p>
+        <p>
+          Les coordonnées laissées dans le formulaire public « test de
+          présence Google » sont conservées trois ans à compter du dernier
+          contact, puis supprimées. Vous pouvez en demander l&apos;effacement
+          à tout moment.
+        </p>
+        <p>
+          Les factures d&apos;abonnement sont conservées dix ans, durée
+          imposée par les obligations comptables.
+        </p>
+      </LegalSection>
+
+      <LegalSection n="08" title="Cookies">
         <p>
           Klarr utilise uniquement des cookies fonctionnels : maintien de
           votre session de connexion, et cookies techniques temporaires liés
@@ -152,12 +196,12 @@ export default function ConfidentialitePage() {
         </p>
       </LegalSection>
 
-      <LegalSection n="08" title="Vos droits">
+      <LegalSection n="09" title="Vos droits">
         <p>
           Conformément au RGPD, vous disposez d&apos;un droit d&apos;accès,
           de rectification, d&apos;effacement, de portabilité et
           d&apos;opposition sur vos données. Pour l&apos;exercer, écrivez à
-          l&apos;adresse indiquée en section 10. Vous disposez également du
+          l&apos;adresse de contact indiquée en fin de page. Vous disposez également du
           droit d&apos;introduire une réclamation auprès de la{" "}
           <a href="https://www.cnil.fr" target="_blank" rel="noopener">
             CNIL
@@ -166,7 +210,7 @@ export default function ConfidentialitePage() {
         </p>
       </LegalSection>
 
-      <LegalSection n="09" title="Sécurité">
+      <LegalSection n="10" title="Sécurité">
         <p>
           Les échanges avec Klarr sont chiffrés (HTTPS). L&apos;accès aux
           données de chaque restaurant est restreint à son propriétaire par
@@ -175,7 +219,7 @@ export default function ConfidentialitePage() {
         </p>
       </LegalSection>
 
-      <LegalSection n="10" title="Contact et réclamation">
+      <LegalSection n="11" title="Contact et réclamation">
         <p>
           Pour toute question sur cette politique ou vos données :{" "}
           <a href="mailto:contact@klarr.biz">

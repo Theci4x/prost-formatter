@@ -19,6 +19,9 @@ export const translations = {
       ville: "Ville",
       email: "Email",
       telephone: "Téléphone",
+      privacyNotice:
+        "Vos coordonnées servent uniquement à vous transmettre ce test et à vous recontacter à ce sujet. Elles ne sont ni revendues ni utilisées à des fins publicitaires. Vous pouvez en demander l'effacement à tout moment — voir notre",
+      privacyLink: "politique de confidentialité",
       submit: "Demander mon test gratuit",
       submitting: "Analyse en cours...",
       missingFields: "Merci de remplir tous les champs.",
@@ -76,6 +79,9 @@ export const translations = {
       ville: "City",
       email: "Email",
       telephone: "Phone",
+      privacyNotice:
+        "Your details are used only to send you this review and to follow up about it. They are never sold or used for advertising. You can ask for them to be deleted at any time — see our",
+      privacyLink: "privacy policy",
       submit: "Request my free review",
       submitting: "Analyzing...",
       missingFields: "Please fill in all fields.",
@@ -132,6 +138,9 @@ export const translations = {
       ville: "城市",
       email: "电子邮箱",
       telephone: "电话",
+      privacyNotice:
+        "您的联系方式仅用于向您发送本次测评并就此与您联系，绝不出售，也不用于广告。您可随时要求删除 — 详见我们的",
+      privacyLink: "隐私政策",
       submit: "申请免费测评",
       submitting: "分析中...",
       missingFields: "请填写所有字段。",

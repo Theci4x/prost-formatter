@@ -7,6 +7,7 @@ const instrumentSerif = Instrument_Serif({ weight: "400", subsets: ["latin"] });
 // Les trois documents se citent mutuellement : un lecteur (ou un
 // examinateur Meta) arrivé sur l'un doit pouvoir atteindre les autres.
 const LEGAL_PAGES = [
+  { slug: "mentions-legales", href: "/mentions-legales", label: "Mentions légales" },
   { slug: "cgu", href: "/cgu", label: "Conditions d'utilisation" },
   {
     slug: "confidentialite",
