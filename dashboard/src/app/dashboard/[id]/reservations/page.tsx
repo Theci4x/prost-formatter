@@ -18,7 +18,7 @@ type Demande = {
   date_reservation: string;
   couverts: number;
   type: "table" | "privatisation";
-  statut: "demande" | "confirmee" | "refusee" | "annulee";
+  statut: "demande" | "confirmee" | "refusee" | "annulee" | "expiree";
   client_nom: string;
   client_email: string;
   client_telephone: string | null;
@@ -34,6 +34,7 @@ const STATUT_STYLES: Record<Demande["statut"], string> = {
   confirmee: "bg-emerald-50 text-emerald-700",
   refusee: "bg-zinc-100 text-zinc-500",
   annulee: "bg-zinc-100 text-zinc-500",
+  expiree: "bg-zinc-100 text-zinc-500",
 };
 
 const STATUT_LABELS: Record<Demande["statut"], string> = {
@@ -41,6 +42,7 @@ const STATUT_LABELS: Record<Demande["statut"], string> = {
   confirmee: "Confirmée",
   refusee: "Refusée",
   annulee: "Annulée",
+  expiree: "Option expirée",
 };
 
 function formatDate(date: string): string {
@@ -73,7 +75,10 @@ function Ligne({
   service: Service | undefined;
 }) {
   const restant = delaiRestant(demande.option_expire_le);
-  const enCours = demande.statut === "demande";
+  // Une option échue reste décidable : le restaurateur rappelle le client
+  // plutôt que de le perdre, et l'acceptation revérifie la disponibilité.
+  const enCours =
+    demande.statut === "demande" || demande.statut === "expiree";
 
   return (
     <li className="flex flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm">

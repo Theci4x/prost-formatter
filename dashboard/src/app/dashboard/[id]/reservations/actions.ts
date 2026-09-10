@@ -248,7 +248,7 @@ type ReservationComplete = {
   date_reservation: string;
   couverts: number;
   type: "table" | "privatisation";
-  statut: "demande" | "confirmee" | "refusee" | "annulee";
+  statut: "demande" | "confirmee" | "refusee" | "annulee" | "expiree";
   option_expire_le: string | null;
 };
 
@@ -267,7 +267,7 @@ export async function accepterDemande(
   const { supabase, reservation } = await chargerPourDecision(reservationId);
 
   if (!reservation) return { error: "Demande introuvable." };
-  if (reservation.statut !== "demande") {
+  if (reservation.statut !== "demande" && reservation.statut !== "expiree") {
     return { error: "Cette demande a déjà été traitée." };
   }
 

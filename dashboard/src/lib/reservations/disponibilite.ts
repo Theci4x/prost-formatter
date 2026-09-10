@@ -7,7 +7,7 @@ export type Reservation = {
   date_reservation: string;
   couverts: number;
   type: "table" | "privatisation";
-  statut: "demande" | "confirmee" | "refusee" | "annulee";
+  statut: "demande" | "confirmee" | "refusee" | "annulee" | "expiree";
   option_expire_le: string | null;
 };
 
