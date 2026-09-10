@@ -5,9 +5,15 @@ import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { slugDisponible, slugifier } from "@/lib/reservations/slug";
 import {
+  disponibiliteEspace,
+  type Reservation,
+} from "@/lib/reservations/disponibilite";
+import {
   ESPACE_VIDE,
   SERVICE_VIDE,
+  type Espace,
   type EspaceValeurs,
+  type Service,
   type ServiceValeurs,
 } from "@/types/reservation";
 
@@ -219,5 +225,157 @@ export async function activerPageReservation(formData: FormData) {
     .eq("id", restaurantId);
 
   if (error) console.error("[activerPageReservation]", error);
+  revalidatePath(`/dashboard/${restaurantId}/reservations`);
+}
+
+// — Suivi des demandes —
+
+async function chargerPourDecision(reservationId: string) {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("restaurant_reservations")
+    .select("*")
+    .eq("id", reservationId)
+    .maybeSingle();
+  return { supabase, reservation: data as ReservationComplete | null };
+}
+
+type ReservationComplete = {
+  id: string;
+  restaurant_id: string;
+  espace_id: string;
+  service_id: string | null;
+  date_reservation: string;
+  couverts: number;
+  type: "table" | "privatisation";
+  statut: "demande" | "confirmee" | "refusee" | "annulee";
+  option_expire_le: string | null;
+};
+
+export type DecisionState = { error: string | null };
+
+/**
+ * Confirme une demande après avoir revérifié la disponibilité. Entre le
+ * moment où la demande est arrivée et celui où le restaurateur clique, une
+ * autre réservation a pu être confirmée sur le même créneau.
+ */
+export async function accepterDemande(
+  _prevState: DecisionState,
+  formData: FormData,
+): Promise<DecisionState> {
+  const reservationId = formData.get("reservation_id") as string;
+  const { supabase, reservation } = await chargerPourDecision(reservationId);
+
+  if (!reservation) return { error: "Demande introuvable." };
+  if (reservation.statut !== "demande") {
+    return { error: "Cette demande a déjà été traitée." };
+  }
+
+  const [espaceResult, serviceResult, voisinesResult] = await Promise.all([
+    supabase
+      .from("restaurant_espaces")
+      .select("*")
+      .eq("id", reservation.espace_id)
+      .maybeSingle(),
+    supabase
+      .from("restaurant_services")
+      .select("*")
+      .eq("id", reservation.service_id ?? "")
+      .maybeSingle(),
+    supabase
+      .from("restaurant_reservations")
+      .select(
+        "id, espace_id, service_id, date_reservation, couverts, type, statut, option_expire_le",
+      )
+      .eq("restaurant_id", reservation.restaurant_id)
+      .eq("date_reservation", reservation.date_reservation),
+  ]);
+
+  const espace = espaceResult.data as Espace | null;
+  const service = serviceResult.data as Service | null;
+  if (!espace || !service) {
+    return { error: "L'espace ou le service de cette demande a été supprimé." };
+  }
+
+  // La demande en cours d'acceptation ne doit pas se compter elle-même.
+  const voisines = ((voisinesResult.data ?? []) as Reservation[]).filter(
+    (autre) => autre.id !== reservation.id,
+  );
+
+  const dispo = disponibiliteEspace({
+    espace,
+    service,
+    date: reservation.date_reservation,
+    couverts: reservation.couverts,
+    reservations: voisines,
+    maintenant: new Date(),
+  });
+
+  const possible =
+    reservation.type === "table"
+      ? dispo.peutRecevoirTable
+      : dispo.peutEtrePrivatise;
+
+  if (!possible) {
+    return {
+      error:
+        dispo.raison ??
+        "Ce créneau n'est plus disponible : une autre réservation a été confirmée entre-temps.",
+    };
+  }
+
+  const { error } = await supabase
+    .from("restaurant_reservations")
+    // L'option n'a plus lieu d'être une fois la réservation ferme.
+    .update({ statut: "confirmee", option_expire_le: null })
+    .eq("id", reservation.id);
+
+  if (error) {
+    console.error("[accepterDemande]", error);
+    return { error: "L'enregistrement a échoué. Réessaie dans un instant." };
+  }
+
+  revalidatePath(`/dashboard/${reservation.restaurant_id}/reservations`);
+  return { error: null };
+}
+
+async function changerStatut(
+  formData: FormData,
+  statut: "refusee" | "annulee",
+) {
+  const reservationId = formData.get("reservation_id") as string;
+  const restaurantId = formData.get("restaurant_id") as string;
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("restaurant_reservations")
+    .update({ statut, option_expire_le: null })
+    .eq("id", reservationId);
+
+  if (error) console.error("[changerStatut]", statut, error);
+  revalidatePath(`/dashboard/${restaurantId}/reservations`);
+}
+
+export async function refuserDemande(formData: FormData) {
+  await changerStatut(formData, "refusee");
+}
+
+export async function annulerReservation(formData: FormData) {
+  await changerStatut(formData, "annulee");
+}
+
+/** Note privée du restaurateur, jamais montrée au client. */
+export async function enregistrerNote(formData: FormData) {
+  const reservationId = formData.get("reservation_id") as string;
+  const restaurantId = formData.get("restaurant_id") as string;
+  const note = ((formData.get("note_interne") as string) ?? "").trim();
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("restaurant_reservations")
+    .update({ note_interne: note || null })
+    .eq("id", reservationId);
+
+  if (error) console.error("[enregistrerNote]", error);
   revalidatePath(`/dashboard/${restaurantId}/reservations`);
 }

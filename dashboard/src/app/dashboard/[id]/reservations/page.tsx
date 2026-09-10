@@ -1,247 +1,350 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
-import { EspaceForm } from "@/components/reservations/EspaceForm";
-import { ServiceForm } from "@/components/reservations/ServiceForm";
+import { DecisionDemande } from "@/components/reservations/DecisionDemande";
 import {
-  activerPageReservation,
-  removeEspace,
-  removeService,
-} from "./actions";
-import {
-  formatHeure,
-  formatJours,
-  type Espace,
-  type Service,
-} from "@/types/reservation";
+  CalendrierMois,
+  type JourCharge,
+} from "@/components/reservations/CalendrierMois";
+import { annulerReservation, enregistrerNote } from "./actions";
+import { formatHeure, type Espace, type Service } from "@/types/reservation";
 import type { Restaurant } from "@/types/restaurant";
 
-function Supprimer({
-  id,
-  restaurantId,
-  action,
-}: {
+type Demande = {
   id: string;
-  restaurantId: string;
-  action: (formData: FormData) => Promise<void>;
-}) {
-  return (
-    <form action={action}>
-      <input type="hidden" name="id" value={id} />
-      <input type="hidden" name="restaurant_id" value={restaurantId} />
-      <button
-        type="submit"
-        className="text-sm font-medium text-red-600 hover:text-red-800"
-      >
-        Supprimer
-      </button>
-    </form>
-  );
+  espace_id: string;
+  service_id: string | null;
+  date_reservation: string;
+  couverts: number;
+  type: "table" | "privatisation";
+  statut: "demande" | "confirmee" | "refusee" | "annulee";
+  client_nom: string;
+  client_email: string;
+  client_telephone: string | null;
+  occasion: string | null;
+  message: string | null;
+  option_expire_le: string | null;
+  note_interne: string | null;
+  created_at: string;
+};
+
+const STATUT_STYLES: Record<Demande["statut"], string> = {
+  demande: "bg-brand-orange-soft text-brand-navy",
+  confirmee: "bg-emerald-50 text-emerald-700",
+  refusee: "bg-zinc-100 text-zinc-500",
+  annulee: "bg-zinc-100 text-zinc-500",
+};
+
+const STATUT_LABELS: Record<Demande["statut"], string> = {
+  demande: "En attente",
+  confirmee: "Confirmée",
+  refusee: "Refusée",
+  annulee: "Annulée",
+};
+
+function formatDate(date: string): string {
+  return new Date(`${date}T12:00:00`).toLocaleDateString("fr-FR", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
 }
 
-function Puce({ children }: { children: React.ReactNode }) {
+function delaiRestant(expiration: string | null): string | null {
+  if (!expiration) return null;
+  const heures = Math.round(
+    (new Date(expiration).getTime() - Date.now()) / 3_600_000,
+  );
+  if (heures <= 0) return "Option expirée";
+  if (heures < 24) return `Option : ${heures} h restantes`;
+  return `Option : ${Math.round(heures / 24)} j restants`;
+}
+
+function Ligne({
+  demande,
+  restaurantId,
+  espace,
+  service,
+}: {
+  demande: Demande;
+  restaurantId: string;
+  espace: Espace | undefined;
+  service: Service | undefined;
+}) {
+  const restant = delaiRestant(demande.option_expire_le);
+  const enCours = demande.statut === "demande";
+
   return (
-    <span className="rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-medium text-zinc-600">
-      {children}
-    </span>
+    <li className="flex flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex min-w-0 flex-col gap-1">
+          <span className="font-medium text-zinc-900">
+            {demande.client_nom}
+            <span className="ml-2 font-normal text-zinc-500">
+              {demande.couverts} couvert{demande.couverts > 1 ? "s" : ""}
+            </span>
+          </span>
+          <span className="text-sm text-zinc-500 first-letter:capitalize">
+            {formatDate(demande.date_reservation)}
+            {service && ` · ${service.nom} ${formatHeure(service.heure_debut)}`}
+            {espace && ` · ${espace.nom}`}
+            {demande.type === "privatisation" && " · privatisation"}
+          </span>
+        </div>
+        <div className="flex flex-col items-end gap-1">
+          <span
+            className={`rounded-full px-2.5 py-1 text-xs font-medium ${STATUT_STYLES[demande.statut]}`}
+          >
+            {STATUT_LABELS[demande.statut]}
+          </span>
+          {enCours && restant && (
+            <span className="text-xs text-zinc-400">{restant}</span>
+          )}
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm text-zinc-600">
+        <a
+          href={`mailto:${demande.client_email}`}
+          className="text-brand-orange hover:underline"
+        >
+          {demande.client_email}
+        </a>
+        {demande.client_telephone && (
+          <a
+            href={`tel:${demande.client_telephone}`}
+            className="hover:underline"
+          >
+            {demande.client_telephone}
+          </a>
+        )}
+        {demande.occasion && <span>{demande.occasion}</span>}
+      </div>
+
+      {demande.message && (
+        <p className="rounded-xl bg-zinc-50 px-4 py-3 text-sm text-zinc-600">
+          {demande.message}
+        </p>
+      )}
+
+      {enCours ? (
+        <DecisionDemande
+          reservationId={demande.id}
+          restaurantId={restaurantId}
+        />
+      ) : (
+        demande.statut === "confirmee" && (
+          <form action={annulerReservation} className="w-fit">
+            <input type="hidden" name="reservation_id" value={demande.id} />
+            <input type="hidden" name="restaurant_id" value={restaurantId} />
+            <button
+              type="submit"
+              className="text-sm font-medium text-red-600 hover:text-red-800"
+            >
+              Annuler cette réservation
+            </button>
+          </form>
+        )
+      )}
+
+      <form
+        action={enregistrerNote}
+        className="flex flex-wrap items-end gap-3 border-t border-zinc-100 pt-4"
+      >
+        <input type="hidden" name="reservation_id" value={demande.id} />
+        <input type="hidden" name="restaurant_id" value={restaurantId} />
+        <label
+          className="flex min-w-60 flex-1 flex-col gap-1 text-sm font-medium text-zinc-700"
+          htmlFor={`note-${demande.id}`}
+        >
+          Note interne{" "}
+          <span className="font-normal text-zinc-400">
+            (jamais visible du client)
+          </span>
+          <input
+            id={`note-${demande.id}`}
+            name="note_interne"
+            defaultValue={demande.note_interne ?? ""}
+            placeholder="Allergie aux fruits de mer, arrive à 19h30…"
+            className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-brand-navy"
+          />
+        </label>
+        <button
+          type="submit"
+          className="rounded-md border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
+        >
+          Enregistrer
+        </button>
+      </form>
+    </li>
   );
 }
 
 export default async function ReservationsPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ mois?: string; jour?: string }>;
 }) {
   const { id } = await params;
+  const query = await searchParams;
   const supabase = await createClient();
 
-  const [restaurantResult, espacesResult, servicesResult] = await Promise.all([
-    supabase.from("restaurants").select("*").eq("id", id).maybeSingle(),
-    supabase
-      .from("restaurant_espaces")
-      .select("*")
-      .eq("restaurant_id", id)
-      .order("ordre")
-      .order("created_at"),
-    supabase
-      .from("restaurant_services")
-      .select("*")
-      .eq("restaurant_id", id)
-      .order("ordre")
-      .order("heure_debut"),
-  ]);
+  const [restaurantResult, espacesResult, servicesResult, reservationsResult] =
+    await Promise.all([
+      supabase.from("restaurants").select("*").eq("id", id).maybeSingle(),
+      supabase.from("restaurant_espaces").select("*").eq("restaurant_id", id),
+      supabase.from("restaurant_services").select("*").eq("restaurant_id", id),
+      supabase
+        .from("restaurant_reservations")
+        .select("*")
+        .eq("restaurant_id", id)
+        .order("date_reservation"),
+    ]);
 
   const restaurant = restaurantResult.data as Restaurant | null;
-  if (!restaurant) {
-    notFound();
-  }
+  if (!restaurant) notFound();
 
   const espaces = (espacesResult.data ?? []) as Espace[];
   const services = (servicesResult.data ?? []) as Service[];
-  const slug = (restaurant as Restaurant & { slug_reservation?: string | null })
-    .slug_reservation;
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "";
+  const reservations = (reservationsResult.data ?? []) as Demande[];
+
+  const parEspace = new Map(espaces.map((espace) => [espace.id, espace]));
+  const parService = new Map(services.map((service) => [service.id, service]));
+
+  const mois =
+    query.mois && /^\d{4}-\d{2}$/.test(query.mois)
+      ? query.mois
+      : (query.jour ?? new Date().toISOString().slice(0, 10)).slice(0, 7);
+  const jour =
+    query.jour && /^\d{4}-\d{2}-\d{2}$/.test(query.jour) ? query.jour : null;
+
+  const charges = new Map<string, JourCharge>();
+  for (const reservation of reservations) {
+    if (reservation.statut === "refusee" || reservation.statut === "annulee") {
+      continue;
+    }
+    const charge = charges.get(reservation.date_reservation) ?? {
+      date: reservation.date_reservation,
+      demandes: 0,
+      confirmees: 0,
+    };
+    if (reservation.statut === "confirmee") charge.confirmees += 1;
+    else charge.demandes += 1;
+    charges.set(reservation.date_reservation, charge);
+  }
+
+  const aujourdhui = new Date().toISOString().slice(0, 10);
+  // À traiter : ce sur quoi le restaurateur doit se prononcer, les créneaux
+  // passés exclus — les trancher n'aurait plus d'objet.
+  const aTraiter = reservations.filter(
+    (reservation) =>
+      reservation.statut === "demande" &&
+      reservation.date_reservation >= aujourdhui,
+  );
+  const duJour = jour
+    ? reservations.filter(
+        (reservation) => reservation.date_reservation === jour,
+      )
+    : [];
 
   return (
-    <div className="flex flex-1 flex-col gap-10 px-6 py-8">
+    <div className="flex flex-1 flex-col gap-8 px-6 py-8">
       <PageHeader
         icon={dashboardIcons.reservations}
         title={`Réservations — ${restaurant.nom}`}
       />
 
-      <p className="max-w-2xl text-sm text-zinc-500">
-        Décris tes espaces et tes services : Klarr s&apos;en sert pour calculer
-        ce qui reste disponible et pour empêcher qu&apos;une salle soit promise
-        deux fois. Un espace peut accueillir des tables classiques, se
-        privatiser en entier, ou les deux.
-      </p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="max-w-xl text-sm text-zinc-500">
+          Les demandes arrivent ici. Tant qu&apos;elles ne sont pas tranchées,
+          elles bloquent le créneau — jusqu&apos;à l&apos;expiration de leur
+          option.
+        </p>
+        <Link
+          href={`/dashboard/${id}/reservations/configuration`}
+          className="rounded-md border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
+        >
+          Espaces, services et page publique
+        </Link>
+      </div>
 
       <section className="flex flex-col gap-4">
-        <div className="flex flex-col gap-1">
-          <h2 className="text-base font-semibold text-zinc-900">Tes espaces</h2>
-          <p className="text-sm text-zinc-500">
-            La salle principale, la terrasse, la cave — tout ce qui peut
-            accueillir un groupe.
-          </p>
-        </div>
+        <h2 className="text-base font-semibold text-zinc-900">
+          À traiter
+          {aTraiter.length > 0 && (
+            <span className="ml-2 rounded-full bg-brand-orange px-2 py-0.5 text-xs font-semibold text-white">
+              {aTraiter.length}
+            </span>
+          )}
+        </h2>
 
-        {espaces.length > 0 && (
+        {aTraiter.length === 0 ? (
+          <p className="rounded-2xl border border-zinc-200/70 bg-white p-5 text-sm text-zinc-500 shadow-sm">
+            Aucune demande en attente.
+          </p>
+        ) : (
           <ul className="flex flex-col gap-3">
-            {espaces.map((espace) => (
-              <li
-                key={espace.id}
-                className="flex flex-wrap items-start justify-between gap-4 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm"
-              >
-                <div className="flex min-w-0 flex-col gap-2">
-                  <span className="font-medium text-zinc-900">
-                    {espace.nom}
-                  </span>
-                  {espace.description && (
-                    <span className="text-sm text-zinc-500">
-                      {espace.description}
-                    </span>
-                  )}
-                  <div className="flex flex-wrap gap-2">
-                    <Puce>{espace.capacite} couverts</Puce>
-                    {espace.accepte_table && <Puce>Tables classiques</Puce>}
-                    {espace.privatisation_minimum !== null && (
-                      <Puce>
-                        Privatisation dès {espace.privatisation_minimum}
-                      </Puce>
-                    )}
-                  </div>
-                </div>
-                <Supprimer
-                  id={espace.id}
-                  restaurantId={id}
-                  action={removeEspace}
-                />
-              </li>
+            {aTraiter.map((demande) => (
+              <Ligne
+                key={demande.id}
+                demande={demande}
+                restaurantId={id}
+                espace={parEspace.get(demande.espace_id)}
+                service={
+                  demande.service_id
+                    ? parService.get(demande.service_id)
+                    : undefined
+                }
+              />
             ))}
           </ul>
         )}
-
-        <EspaceForm restaurantId={id} />
       </section>
 
-      <section className="flex flex-col gap-4">
-        <div className="flex flex-col gap-1">
-          <h2 className="text-base font-semibold text-zinc-900">
-            Tes services
-          </h2>
-          <p className="text-sm text-zinc-500">
-            Les créneaux pendant lesquels tu prends des réservations. Un
-            déjeuner et un dîner comptent séparément : une salle privatisée à
-            midi reste libre le soir.
-          </p>
+      <section className="grid gap-6 lg:grid-cols-[320px_1fr]">
+        <div className="flex flex-col gap-4">
+          <h2 className="text-base font-semibold text-zinc-900">Calendrier</h2>
+          <CalendrierMois
+            mois={mois}
+            jourSelectionne={jour}
+            charges={[...charges.values()]}
+            lienBase={`/dashboard/${id}/reservations`}
+          />
         </div>
 
-        {services.length > 0 && (
-          <ul className="flex flex-col gap-3">
-            {services.map((service) => (
-              <li
-                key={service.id}
-                className="flex flex-wrap items-start justify-between gap-4 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm"
-              >
-                <div className="flex min-w-0 flex-col gap-2">
-                  <span className="font-medium text-zinc-900">
-                    {service.nom}{" "}
-                    <span className="font-normal text-zinc-500">
-                      {formatHeure(service.heure_debut)} –{" "}
-                      {formatHeure(service.heure_fin)}
-                    </span>
-                  </span>
-                  <span className="text-sm text-zinc-500 first-letter:capitalize">
-                    {formatJours(service.jours)}
-                  </span>
-                  <div className="flex flex-wrap gap-2">
-                    <Puce>
-                      {service.delai_heures === 0
-                        ? "Dernière minute acceptée"
-                        : `Prévenance ${service.delai_heures} h`}
-                    </Puce>
-                  </div>
-                </div>
-                <Supprimer
-                  id={service.id}
-                  restaurantId={id}
-                  action={removeService}
-                />
-              </li>
-            ))}
-          </ul>
-        )}
-
-        <ServiceForm restaurantId={id} />
-      </section>
-
-      <section className="flex flex-col gap-4">
-        <div className="flex flex-col gap-1">
-          <h2 className="text-base font-semibold text-zinc-900">
-            Ta page de réservation
+        <div className="flex flex-col gap-4">
+          <h2 className="text-base font-semibold text-zinc-900 first-letter:capitalize">
+            {jour ? formatDate(jour) : "Choisis un jour"}
           </h2>
-          <p className="text-sm text-zinc-500">
-            L&apos;adresse à partager sur ta fiche Google, ton Instagram et ta
-            page Facebook. Tes clients y voient uniquement ce qui est
-            réellement disponible.
-          </p>
-        </div>
 
-        <div className="flex flex-col gap-3 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm">
-          {espaces.length === 0 || services.length === 0 ? (
-            <p className="text-sm text-zinc-500">
-              Ajoute au moins un espace et un service : sans eux, la page
-              n&apos;aurait rien à proposer.
+          {!jour ? (
+            <p className="rounded-2xl border border-zinc-200/70 bg-white p-5 text-sm text-zinc-500 shadow-sm">
+              Clique sur une date du calendrier pour voir ce qui est prévu ce
+              jour-là.
             </p>
-          ) : slug ? (
-            <>
-              <a
-                href={`/reserver/${slug}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-fit break-all font-medium text-brand-orange hover:underline"
-              >
-                {siteUrl}/reserver/{slug}
-              </a>
-              <p className="text-sm text-zinc-500">
-                Elle est en ligne. Ouvre-la pour vérifier ce que voient tes
-                clients.
-              </p>
-            </>
+          ) : duJour.length === 0 ? (
+            <p className="rounded-2xl border border-zinc-200/70 bg-white p-5 text-sm text-zinc-500 shadow-sm">
+              Rien de prévu ce jour-là.
+            </p>
           ) : (
-            <form action={activerPageReservation} className="flex flex-col gap-3">
-              <input type="hidden" name="restaurant_id" value={id} />
-              <p className="text-sm text-zinc-500">
-                Ta page n&apos;est pas encore ouverte. Elle recevra une adresse
-                dérivée du nom de ton établissement.
-              </p>
-              <button
-                type="submit"
-                className="w-fit rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover"
-              >
-                Ouvrir ma page de réservation
-              </button>
-            </form>
+            <ul className="flex flex-col gap-3">
+              {duJour.map((demande) => (
+                <Ligne
+                  key={demande.id}
+                  demande={demande}
+                  restaurantId={id}
+                  espace={parEspace.get(demande.espace_id)}
+                  service={
+                    demande.service_id
+                      ? parService.get(demande.service_id)
+                      : undefined
+                  }
+                />
+              ))}
+            </ul>
           )}
         </div>
       </section>
