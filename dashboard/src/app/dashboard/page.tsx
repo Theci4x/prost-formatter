@@ -18,7 +18,14 @@ const FEATURE_LINKS = [
   { href: "avis", label: "Avis", icon: dashboardIcons.avis },
   // Google, Facebook, Instagram et TikTok sont regroupés derrière une seule
   // entrée : le restaurateur relie ses comptes une fois, au même endroit.
-  { href: "reservations", label: "Réservations", icon: dashboardIcons.reservations },
+  {
+    href: "reservations",
+    label: "Réservations",
+    icon: dashboardIcons.reservations,
+  },
+  // Raccourci assumé : en plein service, personne n'a le temps de passer par
+  // le carnet pour arriver à l'écran de salle.
+  { href: "service", label: "Service", icon: dashboardIcons.service },
   { href: "connexions", label: "Connexions", icon: dashboardIcons.connexions },
   { href: "abonnement", label: "Abonnement", icon: dashboardIcons.abonnement },
 ] as const;

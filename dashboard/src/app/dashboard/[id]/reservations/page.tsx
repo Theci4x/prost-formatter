@@ -8,6 +8,12 @@ import {
   CalendrierMois,
   type JourCharge,
 } from "@/components/reservations/CalendrierMois";
+import { Statistiques } from "@/components/reservations/Statistiques";
+import {
+  computeStatistiques,
+  periode,
+  type LigneStat,
+} from "@/lib/reservations/statistiques";
 import { annulerReservation, enregistrerNote } from "./actions";
 import { formatHeure, type Espace, type Service } from "@/types/reservation";
 import type { Restaurant } from "@/types/restaurant";
@@ -200,7 +206,7 @@ export default async function ReservationsPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ mois?: string; jour?: string }>;
+  searchParams: Promise<{ mois?: string; jour?: string; jours?: string }>;
 }) {
   const { id } = await params;
   const query = await searchParams;
@@ -234,6 +240,25 @@ export default async function ReservationsPage({
       : (query.jour ?? new Date().toISOString().slice(0, 10)).slice(0, 7);
   const jour =
     query.jour && /^\d{4}-\d{2}-\d{2}$/.test(query.jour) ? query.jour : null;
+
+  // Périodes proposées par le sélecteur ; toute autre valeur retombe sur 30
+  // jours plutôt que d'inventer une fenêtre que personne n'a demandée.
+  const jours = [30, 90, 365].includes(Number(query.jours))
+    ? Number(query.jours)
+    : 30;
+  const bornes = periode(jours);
+  const stats = computeStatistiques(
+    reservations as LigneStat[],
+    bornes.depuis,
+    bornes.jusqua,
+  );
+  const lienPeriode = (option: number) => {
+    const params = new URLSearchParams();
+    if (query.mois) params.set("mois", mois);
+    if (jour) params.set("jour", jour);
+    params.set("jours", String(option));
+    return `/dashboard/${id}/reservations?${params}#statistiques`;
+  };
 
   const charges = new Map<string, JourCharge>();
   for (const reservation of reservations) {
@@ -277,12 +302,20 @@ export default async function ReservationsPage({
           elles bloquent le créneau — jusqu&apos;à l&apos;expiration de leur
           option.
         </p>
-        <Link
-          href={`/dashboard/${id}/reservations/configuration`}
-          className="rounded-md border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
-        >
-          Espaces, services et page publique
-        </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href={`/dashboard/${id}/service`}
+            className="rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover"
+          >
+            Écran de service
+          </Link>
+          <Link
+            href={`/dashboard/${id}/reservations/configuration`}
+            className="rounded-md border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
+          >
+            Espaces, services et page publique
+          </Link>
+        </div>
       </div>
 
       <SaisieReservation
@@ -368,6 +401,13 @@ export default async function ReservationsPage({
           )}
         </div>
       </section>
+
+      <Statistiques
+        stats={stats}
+        espaces={espaces}
+        jours={jours}
+        lienPeriode={lienPeriode}
+      />
     </div>
   );
 }

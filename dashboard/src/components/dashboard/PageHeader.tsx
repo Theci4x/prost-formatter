@@ -100,6 +100,15 @@ export const dashboardIcons = {
       <path d="M8 14h4" />
     </svg>
   ),
+  // Une cloche de passe : ce que le serveur voit en salle, pas un agenda.
+  service: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 17h18" />
+      <path d="M4.5 17a7.5 7.5 0 0 1 15 0" />
+      <path d="M12 6.5V5" />
+      <circle cx="12" cy="4" r="1" />
+    </svg>
+  ),
   connexions: (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <path d="M10.5 13.5a4 4 0 0 0 5.7 0l2.6-2.6a4 4 0 0 0-5.7-5.7l-1.5 1.5" />
