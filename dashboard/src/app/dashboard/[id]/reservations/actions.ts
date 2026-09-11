@@ -1,5 +1,6 @@
 "use server";
 
+import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
@@ -13,8 +14,10 @@ import {
   SERVICE_VIDE,
   type Espace,
   type EspaceValeurs,
+  type SaisieValeurs,
   type Service,
   type ServiceValeurs,
+  SAISIE_VIDE,
 } from "@/types/reservation";
 
 // « rendu » s'incrémente à chaque tentative : le formulaire s'en sert comme
@@ -381,4 +384,190 @@ export async function enregistrerNote(formData: FormData) {
 
   if (error) console.error("[enregistrerNote]", error);
   revalidatePath(`/dashboard/${restaurantId}/reservations`);
+}
+
+// — Réservation saisie par le restaurateur —
+
+export type SaisieState = {
+  error: string | null;
+  rendu: number;
+  valeurs: SaisieValeurs;
+};
+
+/**
+ * Enregistre une réservation prise au téléphone ou au comptoir. Elle est
+ * confirmée d'emblée : le restaurateur n'a pas à s'accorder l'autorisation
+ * à lui-même. La disponibilité est vérifiée, mais il peut passer outre —
+ * il voit sa salle, nous non.
+ */
+export async function ajouterReservation(
+  prevState: SaisieState,
+  formData: FormData,
+): Promise<SaisieState> {
+  const restaurantId = formData.get("restaurant_id") as string;
+  const espaceId = texte(formData.get("espace_id"));
+  const serviceId = texte(formData.get("service_id"));
+  const date = texte(formData.get("date_reservation"));
+  const couverts = entierPositif(texte(formData.get("couverts")));
+  const type = texte(formData.get("type"));
+  const nom = texte(formData.get("client_nom"));
+  const telephone = texte(formData.get("client_telephone"));
+  const note = texte(formData.get("note_interne"));
+  const forcer = formData.get("forcer") === "on";
+
+  const rendu = prevState.rendu + 1;
+  // Comme les autres formulaires : React vide le champ après l'action, on
+  // lui rend la saisie pour qu'une erreur ne coûte pas tout à retaper.
+  const valeurs: SaisieValeurs = {
+    nom,
+    telephone,
+    date,
+    couverts: texte(formData.get("couverts")),
+    serviceId,
+    espaceId,
+    type,
+    note,
+    forcer,
+  };
+  const echec = (error: string): SaisieState => ({ error, rendu, valeurs });
+
+  if (!nom) return echec("Indique au moins le nom du client.");
+  if (!espaceId || !serviceId) return echec("Choisis un espace et un service.");
+  if (!date) return echec("Choisis une date.");
+  if (!couverts) return echec("Indique le nombre de couverts.");
+  if (type !== "table" && type !== "privatisation") {
+    return echec("Type de réservation inconnu.");
+  }
+
+  const supabase = await createClient();
+  const [espaceResult, serviceResult, voisinesResult] = await Promise.all([
+    supabase
+      .from("restaurant_espaces")
+      .select("*")
+      .eq("id", espaceId)
+      .eq("restaurant_id", restaurantId)
+      .maybeSingle(),
+    supabase
+      .from("restaurant_services")
+      .select("*")
+      .eq("id", serviceId)
+      .eq("restaurant_id", restaurantId)
+      .maybeSingle(),
+    supabase
+      .from("restaurant_reservations")
+      .select(
+        "id, espace_id, service_id, date_reservation, couverts, type, statut, option_expire_le",
+      )
+      .eq("restaurant_id", restaurantId)
+      .eq("date_reservation", date),
+  ]);
+
+  const espace = espaceResult.data as Espace | null;
+  const service = serviceResult.data as Service | null;
+  if (!espace || !service) {
+    return echec("Cet espace ou ce service n'existe plus.");
+  }
+
+  if (!forcer) {
+    const dispo = disponibiliteEspace({
+      espace,
+      service,
+      date,
+      couverts,
+      reservations: (voisinesResult.data ?? []) as Reservation[],
+      maintenant: new Date(),
+    });
+    const possible =
+      type === "table" ? dispo.peutRecevoirTable : dispo.peutEtrePrivatise;
+    if (!possible) {
+      return echec(
+        `${dispo.raison ?? "Ce créneau n'est pas disponible."} Coche « forcer » si tu sais que ça passe.`,
+      );
+    }
+  }
+
+  const { error } = await supabase.from("restaurant_reservations").insert({
+    restaurant_id: restaurantId,
+    espace_id: espaceId,
+    service_id: serviceId,
+    date_reservation: date,
+    couverts,
+    type,
+    statut: "confirmee",
+    origine: "restaurateur",
+    client_nom: nom,
+    // Une réservation téléphonique n'a pas toujours d'e-mail ; la colonne
+    // ne peut pas être vide, on y met une marque explicite plutôt qu'une
+    // adresse inventée.
+    client_email: texte(formData.get("client_email")) || "—",
+    client_telephone: telephone || null,
+    note_interne: note || null,
+  });
+
+  if (error) {
+    console.error("[ajouterReservation]", error);
+    return echec("L'enregistrement a échoué. Réessaie dans un instant.");
+  }
+
+  revalidatePath(`/dashboard/${restaurantId}/reservations`);
+  return { error: null, rendu, valeurs: SAISIE_VIDE };
+}
+
+/** Logo et mentions légales affichés sur la page publique. */
+export async function enregistrerIdentitePublique(formData: FormData) {
+  const restaurantId = formData.get("restaurant_id") as string;
+  const mentions = texte(formData.get("mentions_legales"));
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("restaurants")
+    .update({ mentions_legales: mentions || null })
+    .eq("id", restaurantId);
+
+  if (error) console.error("[enregistrerIdentitePublique]", error);
+  revalidatePath(`/dashboard/${restaurantId}/reservations/configuration`);
+}
+
+export async function televerserLogo(formData: FormData) {
+  const restaurantId = formData.get("restaurant_id") as string;
+  const file = formData.get("logo") as File | null;
+  if (!file || file.size === 0) return;
+
+  const supabase = await createClient();
+  const { data: actuel } = await supabase
+    .from("restaurants")
+    .select("logo_storage_path")
+    .eq("id", restaurantId)
+    .maybeSingle();
+
+  const ext = file.name.split(".").pop() || "png";
+  const path = `${restaurantId}/logo-${randomUUID()}.${ext}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from("restaurant-photos")
+    .upload(path, file, { contentType: file.type });
+
+  if (uploadError) {
+    console.error("[televerserLogo]", uploadError);
+    return;
+  }
+
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from("restaurant-photos").getPublicUrl(path);
+
+  await supabase
+    .from("restaurants")
+    .update({ logo_url: publicUrl, logo_storage_path: path })
+    .eq("id", restaurantId);
+
+  // L'ancien fichier n'a plus de référence : le laisser encombrerait le
+  // stockage sans que personne puisse le retrouver.
+  const ancien = (actuel as { logo_storage_path: string | null } | null)
+    ?.logo_storage_path;
+  if (ancien) {
+    await supabase.storage.from("restaurant-photos").remove([ancien]);
+  }
+
+  revalidatePath(`/dashboard/${restaurantId}/reservations/configuration`);
 }

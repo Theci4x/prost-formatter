@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { KlarrMark, KlarrWordmark } from "@/components/brand/KlarrMark";
 import { LoginIllustration } from "@/components/brand/LoginIllustration";
@@ -40,6 +41,15 @@ export default async function LoginPage({
         )}
 
         <LoginForm />
+
+        {/* Sans ce lien, le visiteur arrivé sur la connexion n'a aucun chemin
+            de retour vers la page qui explique ce qu'est Klarr. */}
+        <Link
+          href="/"
+          className="text-sm text-zinc-500 transition-colors hover:text-zinc-900"
+        >
+          ← Retour au site
+        </Link>
       </div>
     </div>
   );

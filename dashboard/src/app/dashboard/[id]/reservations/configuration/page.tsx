@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
 import { EspaceForm } from "@/components/reservations/EspaceForm";
 import { PhotosEspace } from "@/components/reservations/PhotosEspace";
+import { IdentitePublique } from "@/components/reservations/IdentitePublique";
 import { ServiceForm } from "@/components/reservations/ServiceForm";
 import {
   activerPageReservation,
@@ -95,8 +96,12 @@ export default async function ConfigurationReservationsPage({
     liste.push(photo);
     photosParEspace.set(photo.espace_id, liste);
   }
-  const slug = (restaurant as Restaurant & { slug_reservation?: string | null })
-    .slug_reservation;
+  const publique = restaurant as Restaurant & {
+    slug_reservation?: string | null;
+    logo_url?: string | null;
+    mentions_legales?: string | null;
+  };
+  const slug = publique.slug_reservation;
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "";
 
   return (
@@ -237,6 +242,12 @@ export default async function ConfigurationReservationsPage({
             réellement disponible.
           </p>
         </div>
+
+        <IdentitePublique
+          restaurantId={id}
+          logoUrl={publique.logo_url ?? null}
+          mentions={publique.mentions_legales ?? null}
+        />
 
         <div className="flex flex-col gap-3 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm">
           {espaces.length === 0 || services.length === 0 ? (

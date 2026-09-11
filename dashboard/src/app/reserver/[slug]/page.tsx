@@ -19,7 +19,7 @@ async function chargerRestaurant(slug: string) {
   const { data } = await supabase
     .from("restaurants")
     // Page publique : on ne lit que ce qui doit s'y afficher.
-    .select("id, nom, adresse, description")
+    .select("id, nom, adresse, description, logo_url, mentions_legales")
     .eq("slug_reservation", slug)
     .maybeSingle();
 
@@ -28,6 +28,8 @@ async function chargerRestaurant(slug: string) {
     nom: string;
     adresse: string | null;
     description: string | null;
+    logo_url: string | null;
+    mentions_legales: string | null;
   } | null;
 }
 
@@ -131,8 +133,21 @@ export default async function ReserverPage({
     <div className="flex min-h-screen flex-col bg-[#FAF7F0]">
       <header className="border-b border-zinc-200/70 bg-white/90 px-6 py-4">
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-4">
-          <span className="text-lg font-semibold text-zinc-900">
-            {restaurant.nom}
+          <span className="flex items-center gap-3">
+            {restaurant.logo_url && (
+              <span className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg">
+                <Image
+                  src={restaurant.logo_url}
+                  alt=""
+                  fill
+                  sizes="40px"
+                  className="object-contain"
+                />
+              </span>
+            )}
+            <span className="text-lg font-semibold text-zinc-900">
+              {restaurant.nom}
+            </span>
           </span>
           {restaurant.adresse && (
             <span className="text-sm text-zinc-500">{restaurant.adresse}</span>
@@ -286,6 +301,7 @@ export default async function ReserverPage({
                               couverts={couverts}
                               peutRecevoirTable={dispo.peutRecevoirTable}
                               peutEtrePrivatise={dispo.peutEtrePrivatise}
+                              restaurantNom={restaurant.nom}
                             />
                           ) : (
                             <p className="mt-2 text-sm text-zinc-400">
@@ -304,6 +320,16 @@ export default async function ReserverPage({
       </main>
 
       <footer className="border-t border-zinc-200/70 px-6 py-6">
+        {restaurant.mentions_legales && (
+          <div className="mx-auto mb-5 max-w-3xl">
+            {/* Mentions du restaurant, pas de Klarr : c'est lui qui contracte
+                avec le client. whitespace-pre-line respecte ses retours à la
+                ligne sans lui demander d'écrire du HTML. */}
+            <p className="whitespace-pre-line text-xs leading-relaxed text-zinc-500">
+              {restaurant.mentions_legales}
+            </p>
+          </div>
+        )}
         <div className="mx-auto flex max-w-3xl items-center gap-2 text-sm text-zinc-400">
           <KlarrMark size={16} />
           <span>

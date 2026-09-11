@@ -42,6 +42,7 @@ export async function demanderReservation(
   const telephone = texte(formData.get("client_telephone"));
   const occasion = texte(formData.get("occasion"));
   const message = texte(formData.get("message"));
+  const accepteCommunications = formData.get("accepte_communications") === "on";
 
   if (!nom || !email) {
     return { error: "Indique ton nom et ton adresse e-mail." };
@@ -141,11 +142,16 @@ export async function demanderReservation(
     couverts,
     type,
     statut: "demande",
+    // Écrit explicitement plutôt que laissé au défaut de la base : la
+    // provenance se lit dans le tableau de bord, elle ne doit pas dépendre
+    // d'un réglage de schéma.
+    origine: "client",
     client_nom: nom,
     client_email: email,
     client_telephone: telephone || null,
     occasion: occasion || null,
     message: message || null,
+    accepte_communications: accepteCommunications,
     option_expire_le: expiration.toISOString(),
   });
 

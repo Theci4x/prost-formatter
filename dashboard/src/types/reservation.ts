@@ -96,3 +96,27 @@ export const SERVICE_VIDE: ServiceValeurs = {
   delai: "72",
   jours: [],
 };
+
+export type SaisieValeurs = {
+  nom: string;
+  telephone: string;
+  date: string;
+  couverts: string;
+  serviceId: string;
+  espaceId: string;
+  type: string;
+  note: string;
+  forcer: boolean;
+};
+
+export const SAISIE_VIDE: SaisieValeurs = {
+  nom: "",
+  telephone: "",
+  date: "",
+  couverts: "2",
+  serviceId: "",
+  espaceId: "",
+  type: "table",
+  note: "",
+  forcer: false,
+};

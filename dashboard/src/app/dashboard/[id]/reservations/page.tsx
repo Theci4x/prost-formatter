@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
 import { DecisionDemande } from "@/components/reservations/DecisionDemande";
+import { SaisieReservation } from "@/components/reservations/SaisieReservation";
 import {
   CalendrierMois,
   type JourCharge,
@@ -26,6 +27,8 @@ type Demande = {
   message: string | null;
   option_expire_le: string | null;
   note_interne: string | null;
+  origine: "client" | "restaurateur";
+  accepte_communications: boolean;
   created_at: string;
 };
 
@@ -95,6 +98,7 @@ function Ligne({
             {service && ` · ${service.nom} ${formatHeure(service.heure_debut)}`}
             {espace && ` · ${espace.nom}`}
             {demande.type === "privatisation" && " · privatisation"}
+            {demande.origine === "restaurateur" && " · prise au téléphone"}
           </span>
         </div>
         <div className="flex flex-col items-end gap-1">
@@ -125,6 +129,11 @@ function Ligne({
           </a>
         )}
         {demande.occasion && <span>{demande.occasion}</span>}
+        {demande.accepte_communications && (
+          <span className="text-emerald-700">
+            Accepte d&apos;être recontacté
+          </span>
+        )}
       </div>
 
       {demande.message && (
@@ -275,6 +284,12 @@ export default async function ReservationsPage({
           Espaces, services et page publique
         </Link>
       </div>
+
+      <SaisieReservation
+        restaurantId={id}
+        espaces={espaces}
+        services={services}
+      />
 
       <section className="flex flex-col gap-4">
         <h2 className="text-base font-semibold text-zinc-900">

@@ -21,6 +21,7 @@ export function DemandeForm({
   couverts,
   peutRecevoirTable,
   peutEtrePrivatise,
+  restaurantNom,
 }: {
   slug: string;
   espaceId: string;
@@ -30,6 +31,7 @@ export function DemandeForm({
   couverts: number;
   peutRecevoirTable: boolean;
   peutEtrePrivatise: boolean;
+  restaurantNom: string;
 }) {
   const [state, action, pending] = useActionState(
     demanderReservation,
@@ -132,6 +134,21 @@ export function DemandeForm({
           rows={3}
           className={champ}
         />
+      </label>
+
+      {/* Décochée par défaut : le RGPD interdit de déduire un consentement
+          commercial d'une réservation, et une case pré-cochée ne vaut pas
+          consentement. */}
+      <label className="flex items-start gap-2.5 text-sm text-zinc-600">
+        <input
+          type="checkbox"
+          name="accepte_communications"
+          className="mt-0.5"
+        />
+        <span>
+          J&apos;accepte de recevoir les actualités et offres de{" "}
+          {restaurantNom} par e-mail. Je peux me désinscrire à tout moment.
+        </span>
       </label>
 
       {state.error && <p className="text-sm text-red-600">{state.error}</p>}
