@@ -7,6 +7,8 @@ import { ClientLogos } from "@/components/landing/ClientLogos";
 import { Comparison } from "@/components/landing/Comparison";
 import { Founder, Problem } from "@/components/landing/Manifesto";
 import { Partner } from "@/components/landing/Partner";
+import { Reservation } from "@/components/landing/Reservation";
+import { Tarifs } from "@/components/landing/Tarifs";
 import { HeroBackdrop } from "@/components/landing/HeroBackdrop";
 import { FloatingChip, Tilt } from "@/components/landing/Tilt";
 import { Reveal } from "@/components/landing/Reveal";
@@ -654,6 +656,14 @@ export default async function Home() {
 
       <Reveal>
         <Comparison />
+      </Reveal>
+
+      <Reveal>
+        <Reservation />
+      </Reveal>
+
+      <Reveal>
+        <Tarifs />
       </Reveal>
 
       <Reveal>
