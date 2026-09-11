@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { createServiceClient } from "@/lib/supabase/service";
+import { GalerieRestaurant } from "@/components/reservations/GalerieRestaurant";
+import { ResumeEtablissement } from "@/components/reservations/ResumeEtablissement";
+import { resumeEtablissement } from "@/lib/reservations/resume";
 import { chargerFermetures } from "@/lib/reservations/fermetures";
 import {
   creneauxDuJour,
@@ -89,6 +92,7 @@ export default async function ReserverPage({
     reservationsResult,
     photosResult,
     fermetures,
+    reputationResult,
   ] = await Promise.all([
     supabase
       .from("restaurant_espaces")
@@ -107,21 +111,41 @@ export default async function ReserverPage({
       )
       .eq("restaurant_id", restaurant.id)
       .eq("date_reservation", date),
+    // Toutes les photos d'un coup : celles des espaces pour les créneaux,
+    // celles sans espace pour le bandeau d'en-tête.
     supabase
       .from("restaurant_photos")
-      .select("id, espace_id, url")
+      .select("id, restaurant_id, espace_id, url, storage_path, ordre, created_at")
       .eq("restaurant_id", restaurant.id)
-      .not("espace_id", "is", null)
+      .order("ordre")
       .order("created_at"),
     chargerFermetures(supabase, restaurant.id, date),
+    // Le dernier relevé Google, s'il existe : une note affichée vaut mieux
+    // qu'une case vide, mais on n'en fabrique pas une.
+    supabase
+      .from("restaurant_reputation_snapshots")
+      .select("note, nombre_avis")
+      .eq("restaurant_id", restaurant.id)
+      .eq("plateforme", "google")
+      .order("releve_le", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
   ]);
 
   const espaces = (espacesResult.data ?? []) as Espace[];
   const services = (servicesResult.data ?? []) as Service[];
   const reservations = (reservationsResult.data ?? []) as Reservation[];
 
+  const reputation = reputationResult.data as {
+    note: number | null;
+    nombre_avis: number | null;
+  } | null;
+
+  const toutesPhotos = (photosResult.data ?? []) as RestaurantPhoto[];
+  const photosEtablissement = toutesPhotos.filter((photo) => !photo.espace_id);
+
   const photosParEspace = new Map<string, RestaurantPhoto[]>();
-  for (const photo of (photosResult.data ?? []) as RestaurantPhoto[]) {
+  for (const photo of toutesPhotos) {
     if (!photo.espace_id) continue;
     const liste = photosParEspace.get(photo.espace_id) ?? [];
     liste.push(photo);
@@ -165,16 +189,27 @@ export default async function ReserverPage({
       </header>
 
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-6 py-10">
+        <GalerieRestaurant photos={photosEtablissement} nom={restaurant.nom} />
+
         <div className="flex flex-col gap-2">
           <h1 className="text-2xl font-semibold text-zinc-900">
-            Réserver une table ou privatiser un espace
+            {restaurant.nom}
           </h1>
+          {restaurant.adresse && (
+            <p className="text-sm text-zinc-500">{restaurant.adresse}</p>
+          )}
           <p className="text-sm text-zinc-500">
             Choisis une date et un nombre de convives : nous n&apos;affichons
             que ce qui est réellement disponible. Ta demande est confirmée par
             l&apos;établissement.
           </p>
         </div>
+
+        <ResumeEtablissement
+          resume={resumeEtablissement(espaces, services)}
+          note={reputation?.note ? Number(reputation.note) : null}
+          nombreAvis={reputation?.nombre_avis ?? null}
+        />
 
         {/* Formulaire de recherche : une simple navigation, pour que la page
             fonctionne même sans JavaScript. */}

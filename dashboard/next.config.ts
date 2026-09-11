@@ -21,6 +21,14 @@ const supabaseImagePattern = supabaseUrl
 const nextConfig: NextConfig = {
   images: {
     remotePatterns: supabaseImagePattern,
+    // next/image refuse d'aller chercher une image sur une IP privée, pour
+    // qu'une URL hostile ne fasse pas sonder le réseau interne du serveur.
+    // La garde est juste, mais elle rend les photos intestables en local,
+    // où la fausse base Supabase tourne sur 127.0.0.1. Cette variable n'est
+    // définie que sur la machine de test : en production elle est absente,
+    // la garde reste donc active — et de toute façon `remotePatterns`
+    // n'autorise déjà que le domaine Supabase du projet.
+    dangerouslyAllowLocalIP: process.env.KLARR_IMAGES_LOCALES === "1",
   },
 
   // Empêche la redirection 308 automatique de Next sur les URLs avec un
