@@ -143,8 +143,11 @@ export async function addService(
   if (!valeurs.heureDebut || !valeurs.heureFin) {
     return echec("Indique l'heure de début et l'heure de fin.");
   }
-  if (valeurs.heureFin <= valeurs.heureDebut) {
-    return echec("L'heure de fin doit être après l'heure de début.");
+  // Une fin antérieure au début signifie « le lendemain » : c'est ainsi
+  // qu'on saisit un service de 17h30 à 2h du matin. Seule l'égalité reste
+  // refusée, faute de savoir s'il s'agit d'un service vide ou de 24 h.
+  if (valeurs.heureFin === valeurs.heureDebut) {
+    return echec("L'heure de fin doit être différente de l'heure de début.");
   }
   if (!Number.isInteger(delai) || delai < 0) {
     return echec("Le délai de prévenance doit être un nombre d'heures.");

@@ -6,7 +6,7 @@ import {
   type Reservation,
 } from "@/lib/reservations/disponibilite";
 import { DemandeForm } from "@/components/reservations/DemandeForm";
-import { formatHeure, type Espace, type Service } from "@/types/reservation";
+import { formatCreneau, type Espace, type Service } from "@/types/reservation";
 import { KlarrMark, KlarrWordmark } from "@/components/brand/KlarrMark";
 
 type Params = { slug: string };
@@ -192,8 +192,10 @@ export default async function ReserverPage({
                   <span className="font-medium text-zinc-900">
                     {creneau.service.nom}{" "}
                     <span className="font-normal text-zinc-500">
-                      {formatHeure(creneau.service.heure_debut)} –{" "}
-                      {formatHeure(creneau.service.heure_fin)}
+                      {formatCreneau(
+                        creneau.service.heure_debut,
+                        creneau.service.heure_fin,
+                      )}
                     </span>
                   </span>
                   {!creneau.ouvert && creneau.raison && (

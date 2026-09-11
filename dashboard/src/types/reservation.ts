@@ -38,6 +38,18 @@ export function formatHeure(heure: string): string {
   return m === "00" ? `${Number(h)}h` : `${Number(h)}h${m}`;
 }
 
+// Un service peut finir après minuit (17h30 – 2h). Il reste rattaché au jour
+// où il commence, mais l'affichage doit le dire, sans quoi « 17h30 – 2h » se
+// lit comme une erreur de saisie.
+export function finLeLendemain(debut: string, fin: string): boolean {
+  return fin < debut;
+}
+
+export function formatCreneau(debut: string, fin: string): string {
+  const plage = `${formatHeure(debut)} – ${formatHeure(fin)}`;
+  return finLeLendemain(debut, fin) ? `${plage} le lendemain` : plage;
+}
+
 export function formatJours(jours: number[]): string {
   if (jours.length === 7) return "tous les jours";
   return JOURS_ISO.filter((jour) => jours.includes(jour.valeur))

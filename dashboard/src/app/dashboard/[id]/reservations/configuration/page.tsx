@@ -9,7 +9,7 @@ import {
   removeService,
 } from "../actions";
 import {
-  formatHeure,
+  formatCreneau,
   formatJours,
   type Espace,
   type Service,
@@ -168,8 +168,7 @@ export default async function ConfigurationReservationsPage({
                   <span className="font-medium text-zinc-900">
                     {service.nom}{" "}
                     <span className="font-normal text-zinc-500">
-                      {formatHeure(service.heure_debut)} –{" "}
-                      {formatHeure(service.heure_fin)}
+                      {formatCreneau(service.heure_debut, service.heure_fin)}
                     </span>
                   </span>
                   <span className="text-sm text-zinc-500 first-letter:capitalize">

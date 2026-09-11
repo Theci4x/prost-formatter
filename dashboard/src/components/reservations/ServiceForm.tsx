@@ -68,6 +68,11 @@ function Champs({
         </label>
       </div>
 
+      <p className="-mt-2 text-xs text-zinc-500">
+        Un service peut finir après minuit : saisis simplement 17h30 – 2h. Il
+        restera rattaché au jour où il commence.
+      </p>
+
       <fieldset className="flex flex-col gap-2">
         <legend className="text-sm font-medium text-zinc-700">
           Jours concernés
@@ -101,8 +106,8 @@ function Champs({
           className={`${champ} max-w-32`}
         />
         <span className="text-xs font-normal text-zinc-500">
-          Aucune demande ne sera acceptée moins de 72 h à l&apos;avance. Mets 0
-          pour accepter les demandes de dernière minute.
+          Aucune demande ne sera acceptée en deçà de ce délai. Mets 0 pour
+          accepter les demandes de dernière minute.
         </span>
       </label>
     </>
