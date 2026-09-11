@@ -64,25 +64,37 @@ export function DemandeForm({
       <input type="hidden" name="type" value={type} />
 
       {peutRecevoirTable && peutEtrePrivatise && (
-        <fieldset className="flex flex-wrap gap-2">
+        <fieldset className="flex flex-col gap-2">
           <legend className="mb-1 text-sm font-medium text-zinc-700">
-            Que souhaites-tu ?
+            Que souhaitez-vous ?
           </legend>
           {[
-            { valeur: "table", texte: "Une table" },
-            { valeur: "privatisation", texte: "Privatiser l'espace" },
+            {
+              valeur: "table",
+              texte: "Réservation individuelle",
+              aide: "Vous partagez la salle avec les autres clients.",
+            },
+            {
+              valeur: "privatisation",
+              texte: "Privatiser l'espace",
+              aide: "L'espace est à vous seul sur le créneau.",
+            },
           ].map((choix) => (
             <button
               key={choix.valeur}
               type="button"
               onClick={() => setType(choix.valeur)}
-              className={`rounded-md border px-3 py-1.5 text-sm transition-colors ${
+              className={`flex flex-col items-start gap-0.5 rounded-md border px-4 py-2.5 text-left text-sm transition-colors ${
                 type === choix.valeur
-                  ? "border-brand-navy bg-brand-orange-soft font-medium text-brand-navy"
+                  ? "border-brand-navy bg-brand-orange-soft text-brand-navy"
                   : "border-zinc-200 text-zinc-600 hover:border-zinc-400"
               }`}
             >
-              {choix.texte}
+              <span className="font-medium">{choix.texte}</span>
+              {/* Sans cette phrase, « réservation individuelle » et
+                  « privatisation » se ressemblent pour qui n'a jamais
+                  privatisé une salle. */}
+              <span className="text-xs opacity-80">{choix.aide}</span>
             </button>
           ))}
         </fieldset>

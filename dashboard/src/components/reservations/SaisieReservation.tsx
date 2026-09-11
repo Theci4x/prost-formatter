@@ -134,10 +134,10 @@ function Champs({
             className={champ}
           >
             {espace?.accepte_table !== false && (
-              <option value="table">Table</option>
+              <option value="table">Réservation individuelle</option>
             )}
             {espace?.privatisation_minimum !== null && (
-              <option value="privatisation">Privatisation</option>
+              <option value="privatisation">Privatisation de l&apos;espace</option>
             )}
           </select>
         </label>

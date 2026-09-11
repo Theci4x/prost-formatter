@@ -146,7 +146,7 @@ export default async function ConfigurationReservationsPage({
                   )}
                   <div className="flex flex-wrap gap-2">
                     <Puce>{espace.capacite} couverts</Puce>
-                    {espace.accepte_table && <Puce>Tables classiques</Puce>}
+                    {espace.accepte_table && <Puce>Réservations individuelles</Puce>}
                     {espace.privatisation_minimum !== null && (
                       <Puce>
                         Privatisation dès {espace.privatisation_minimum}

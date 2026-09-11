@@ -21,7 +21,7 @@ const OFFRES = [
     resume: "Votre page de réservation, sans intermédiaire.",
     lignes: [
       "Une adresse à votre nom, à partager où vous voulez",
-      "Tables classiques et privatisation d'espaces",
+      "Réservations individuelles et privatisation d'espaces",
       "Jauges par service : jamais deux groupes dans la même salle",
       "Photos de vos espaces, vues avant de réserver",
     ],

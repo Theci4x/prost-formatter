@@ -80,9 +80,9 @@ function Champs({
             className="mt-0.5"
           />
           <span>
-            <span className="font-medium">Tables classiques</span> — plusieurs
-            groupes peuvent s&apos;y installer en même temps, dans la limite de
-            la capacité.
+            <span className="font-medium">Réservations individuelles</span> —
+            plusieurs groupes partagent l&apos;espace en même temps, dans la
+            limite de la capacité.
           </span>
         </label>
 
