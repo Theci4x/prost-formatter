@@ -5,15 +5,18 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { slugDisponible, slugifier } from "@/lib/reservations/slug";
+import { chargerFermetures } from "@/lib/reservations/fermetures";
 import {
   disponibiliteEspace,
   type Reservation,
 } from "@/lib/reservations/disponibilite";
 import {
   ESPACE_VIDE,
+  FERMETURE_VIDE,
   SERVICE_VIDE,
   type Espace,
   type EspaceValeurs,
+  type FermetureValeurs,
   type SaisieValeurs,
   type Service,
   type ServiceValeurs,
@@ -27,6 +30,12 @@ export type EspaceState = {
   error: string | null;
   rendu: number;
   valeurs: EspaceValeurs;
+};
+
+export type FermetureState = {
+  error: string | null;
+  rendu: number;
+  valeurs: FermetureValeurs;
 };
 
 export type ServiceState = {
@@ -277,25 +286,31 @@ export async function accepterDemande(
     return { error: "Cette demande a déjà été traitée." };
   }
 
-  const [espaceResult, serviceResult, voisinesResult] = await Promise.all([
-    supabase
-      .from("restaurant_espaces")
-      .select("*")
-      .eq("id", reservation.espace_id)
-      .maybeSingle(),
-    supabase
-      .from("restaurant_services")
-      .select("*")
-      .eq("id", reservation.service_id ?? "")
-      .maybeSingle(),
-    supabase
-      .from("restaurant_reservations")
-      .select(
-        "id, espace_id, service_id, date_reservation, couverts, type, statut, option_expire_le",
-      )
-      .eq("restaurant_id", reservation.restaurant_id)
-      .eq("date_reservation", reservation.date_reservation),
-  ]);
+  const [espaceResult, serviceResult, voisinesResult, fermetures] =
+    await Promise.all([
+      supabase
+        .from("restaurant_espaces")
+        .select("*")
+        .eq("id", reservation.espace_id)
+        .maybeSingle(),
+      supabase
+        .from("restaurant_services")
+        .select("*")
+        .eq("id", reservation.service_id ?? "")
+        .maybeSingle(),
+      supabase
+        .from("restaurant_reservations")
+        .select(
+          "id, espace_id, service_id, date_reservation, couverts, type, statut, option_expire_le",
+        )
+        .eq("restaurant_id", reservation.restaurant_id)
+        .eq("date_reservation", reservation.date_reservation),
+      chargerFermetures(
+        supabase,
+        reservation.restaurant_id,
+        reservation.date_reservation,
+      ),
+    ]);
 
   const espace = espaceResult.data as Espace | null;
   const service = serviceResult.data as Service | null;
@@ -314,6 +329,7 @@ export async function accepterDemande(
     date: reservation.date_reservation,
     couverts: reservation.couverts,
     reservations: voisines,
+    fermetures,
     maintenant: new Date(),
   });
 
@@ -409,7 +425,8 @@ export async function ajouterReservation(
   const serviceId = texte(formData.get("service_id"));
   const date = texte(formData.get("date_reservation"));
   const couverts = entierPositif(texte(formData.get("couverts")));
-  const type = texte(formData.get("type"));
+  const type: "table" | "privatisation" =
+    texte(formData.get("type")) === "privatisation" ? "privatisation" : "table";
   const nom = texte(formData.get("client_nom"));
   const telephone = texte(formData.get("client_telephone"));
   const note = texte(formData.get("note_interne"));
@@ -432,63 +449,96 @@ export async function ajouterReservation(
   const echec = (error: string): SaisieState => ({ error, rendu, valeurs });
 
   if (!nom) return echec("Indique au moins le nom du client.");
-  if (!espaceId || !serviceId) return echec("Choisis un espace et un service.");
+  if (!serviceId) return echec("Choisis un service.");
+  // Une privatisation désigne sa salle ; une réservation ordinaire non, et
+  // c'est à Klarr de la placer plus bas.
+  if (type === "privatisation" && !espaceId) {
+    return echec("Choisis l'espace à privatiser.");
+  }
   if (!date) return echec("Choisis une date.");
   if (!couverts) return echec("Indique le nombre de couverts.");
-  if (type !== "table" && type !== "privatisation") {
-    return echec("Type de réservation inconnu.");
-  }
 
   const supabase = await createClient();
-  const [espaceResult, serviceResult, voisinesResult] = await Promise.all([
-    supabase
-      .from("restaurant_espaces")
-      .select("*")
-      .eq("id", espaceId)
-      .eq("restaurant_id", restaurantId)
-      .maybeSingle(),
-    supabase
-      .from("restaurant_services")
-      .select("*")
-      .eq("id", serviceId)
-      .eq("restaurant_id", restaurantId)
-      .maybeSingle(),
-    supabase
-      .from("restaurant_reservations")
-      .select(
-        "id, espace_id, service_id, date_reservation, couverts, type, statut, option_expire_le",
-      )
-      .eq("restaurant_id", restaurantId)
-      .eq("date_reservation", date),
-  ]);
+  const [espacesResult, serviceResult, voisinesResult, fermetures] =
+    await Promise.all([
+      supabase
+        .from("restaurant_espaces")
+        .select("*")
+        .eq("restaurant_id", restaurantId)
+        .order("ordre")
+        .order("created_at"),
+      supabase
+        .from("restaurant_services")
+        .select("*")
+        .eq("id", serviceId)
+        .eq("restaurant_id", restaurantId)
+        .maybeSingle(),
+      supabase
+        .from("restaurant_reservations")
+        .select(
+          "id, espace_id, service_id, date_reservation, couverts, type, statut, option_expire_le",
+        )
+        .eq("restaurant_id", restaurantId)
+        .eq("date_reservation", date),
+      chargerFermetures(supabase, restaurantId, date),
+    ]);
 
-  const espace = espaceResult.data as Espace | null;
+  const espaces = (espacesResult.data ?? []) as Espace[];
   const service = serviceResult.data as Service | null;
-  if (!espace || !service) {
-    return echec("Cet espace ou ce service n'existe plus.");
-  }
+  if (!service) return echec("Ce service n'existe plus.");
 
-  if (!forcer) {
-    const dispo = disponibiliteEspace({
+  const reservations = (voisinesResult.data ?? []) as Reservation[];
+  const maintenant = new Date();
+  const dispoDe = (espace: Espace) =>
+    disponibiliteEspace({
       espace,
       service,
       date,
       couverts,
-      reservations: (voisinesResult.data ?? []) as Reservation[],
-      maintenant: new Date(),
+      reservations,
+      fermetures,
+      maintenant,
     });
-    const possible =
-      type === "table" ? dispo.peutRecevoirTable : dispo.peutEtrePrivatise;
-    if (!possible) {
-      return echec(
-        `${dispo.raison ?? "Ce créneau n'est pas disponible."} Coche « forcer » si tu sais que ça passe.`,
-      );
-    }
+
+  // Les candidats : la salle désignée pour une privatisation, sinon toutes
+  // celles qui acceptent les réservations ordinaires, dans l'ordre choisi par
+  // le restaurateur — il a rangé ses salles par préférence, on la respecte.
+  const candidats =
+    type === "privatisation"
+      ? espaces.filter((espace) => espace.id === espaceId)
+      : espaces.filter((espace) => espace.accepte_table);
+
+  if (candidats.length === 0) {
+    return echec(
+      type === "privatisation"
+        ? "Cet espace n'existe plus."
+        : "Aucun espace n'accepte les réservations individuelles.",
+    );
+  }
+
+  const retenu = candidats.find((espace) => {
+    const dispo = dispoDe(espace);
+    return type === "table" ? dispo.peutRecevoirTable : dispo.peutEtrePrivatise;
+  });
+
+  // Forcer passe outre la jauge, mais il faut tout de même une salle où
+  // écrire : à défaut de place, on prend la première proposée.
+  const espace = retenu ?? (forcer ? candidats[0] : null);
+  if (!espace) {
+    const raisons = candidats
+      .map((candidat) => {
+        const dispo = dispoDe(candidat);
+        return dispo.raison ? `${candidat.nom} : ${dispo.raison}` : null;
+      })
+      .filter(Boolean);
+    return echec(
+      `${raisons.join(" ") || "Ce créneau n'est pas disponible."} Coche « forcer » si tu sais que ça passe.`,
+    );
   }
 
   const { error } = await supabase.from("restaurant_reservations").insert({
     restaurant_id: restaurantId,
-    espace_id: espaceId,
+    espace_id: espace.id,
     service_id: serviceId,
     date_reservation: date,
     couverts,
@@ -570,4 +620,77 @@ export async function televerserLogo(formData: FormData) {
   }
 
   revalidatePath(`/dashboard/${restaurantId}/reservations/configuration`);
+}
+
+
+const DATE_ISO = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * Ferme une période. Le restaurateur part en vacances, un jour est férié, ou
+ * une salle est prise par un événement traité hors Klarr : dans les trois cas
+ * la page publique doit cesser d'encaisser des promesses.
+ */
+export async function ajouterFermeture(
+  prevState: FermetureState,
+  formData: FormData,
+): Promise<FermetureState> {
+  const restaurantId = formData.get("restaurant_id") as string;
+  const valeurs: FermetureValeurs = {
+    dateDebut: texte(formData.get("date_debut")),
+    dateFin: texte(formData.get("date_fin")),
+    espaceId: texte(formData.get("espace_id")),
+    motif: texte(formData.get("motif")),
+  };
+  const echec = (message: string): FermetureState => ({
+    error: message,
+    rendu: prevState.rendu + 1,
+    valeurs,
+  });
+
+  if (!DATE_ISO.test(valeurs.dateDebut)) {
+    return echec("Choisis une date de début.");
+  }
+  // Fermer un seul jour est le cas courant : la date de fin vide vaut la date
+  // de début plutôt qu'une erreur.
+  const dateFin = DATE_ISO.test(valeurs.dateFin)
+    ? valeurs.dateFin
+    : valeurs.dateDebut;
+  if (dateFin < valeurs.dateDebut) {
+    return echec("La date de fin est antérieure à la date de début.");
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("restaurant_fermetures").insert({
+    restaurant_id: restaurantId,
+    espace_id: valeurs.espaceId || null,
+    date_debut: valeurs.dateDebut,
+    date_fin: dateFin,
+    motif: valeurs.motif || null,
+  });
+
+  if (error) {
+    console.error("[ajouterFermeture]", error);
+    return echec("La fermeture n'a pas pu être enregistrée.");
+  }
+
+  revalidatePath(`/dashboard/${restaurantId}/reservations`);
+  revalidatePath(`/dashboard/${restaurantId}/reservations/configuration`);
+  revalidatePath(`/dashboard/${restaurantId}/service`);
+  return { error: null, rendu: prevState.rendu + 1, valeurs: FERMETURE_VIDE };
+}
+
+export async function supprimerFermeture(formData: FormData) {
+  const id = formData.get("id") as string;
+  const restaurantId = formData.get("restaurant_id") as string;
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("restaurant_fermetures")
+    .delete()
+    .eq("id", id);
+
+  if (error) console.error("[supprimerFermeture]", error);
+  revalidatePath(`/dashboard/${restaurantId}/reservations`);
+  revalidatePath(`/dashboard/${restaurantId}/reservations/configuration`);
+  revalidatePath(`/dashboard/${restaurantId}/service`);
 }

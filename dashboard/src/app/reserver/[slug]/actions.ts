@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createServiceClient } from "@/lib/supabase/service";
+import { chargerFermetures } from "@/lib/reservations/fermetures";
 import {
   disponibiliteEspace,
   serviceOuvertCeJour,
@@ -68,27 +69,29 @@ export async function demanderReservation(
   const restaurant = restaurantData as { id: string } | null;
   if (!restaurant) return { error: "Établissement introuvable." };
 
-  const [espaceResult, serviceResult, reservationsResult] = await Promise.all([
-    supabase
-      .from("restaurant_espaces")
-      .select("*")
-      .eq("id", espaceId)
-      .eq("restaurant_id", restaurant.id)
-      .maybeSingle(),
-    supabase
-      .from("restaurant_services")
-      .select("*")
-      .eq("id", serviceId)
-      .eq("restaurant_id", restaurant.id)
-      .maybeSingle(),
-    supabase
-      .from("restaurant_reservations")
-      .select(
-        "id, espace_id, service_id, date_reservation, couverts, type, statut, option_expire_le",
-      )
-      .eq("restaurant_id", restaurant.id)
-      .eq("date_reservation", date),
-  ]);
+  const [espaceResult, serviceResult, reservationsResult, fermetures] =
+    await Promise.all([
+      supabase
+        .from("restaurant_espaces")
+        .select("*")
+        .eq("id", espaceId)
+        .eq("restaurant_id", restaurant.id)
+        .maybeSingle(),
+      supabase
+        .from("restaurant_services")
+        .select("*")
+        .eq("id", serviceId)
+        .eq("restaurant_id", restaurant.id)
+        .maybeSingle(),
+      supabase
+        .from("restaurant_reservations")
+        .select(
+          "id, espace_id, service_id, date_reservation, couverts, type, statut, option_expire_le",
+        )
+        .eq("restaurant_id", restaurant.id)
+        .eq("date_reservation", date),
+      chargerFermetures(supabase, restaurant.id, date),
+    ]);
 
   const espace = espaceResult.data as Espace | null;
   const service = serviceResult.data as Service | null;
@@ -117,6 +120,7 @@ export async function demanderReservation(
     date,
     couverts,
     reservations: (reservationsResult.data ?? []) as Reservation[],
+    fermetures,
     maintenant,
   });
 

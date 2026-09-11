@@ -5,15 +5,18 @@ import { EspaceForm } from "@/components/reservations/EspaceForm";
 import { PhotosEspace } from "@/components/reservations/PhotosEspace";
 import { IdentitePublique } from "@/components/reservations/IdentitePublique";
 import { ServiceForm } from "@/components/reservations/ServiceForm";
+import { FermetureForm } from "@/components/reservations/FermetureForm";
 import {
   activerPageReservation,
   removeEspace,
   removeService,
+  supprimerFermeture,
 } from "../actions";
 import {
   formatCreneau,
   formatJours,
   type Espace,
+  type Fermeture,
   type Service,
 } from "@/types/reservation";
 import type { Restaurant } from "@/types/restaurant";
@@ -50,6 +53,21 @@ function Puce({ children }: { children: React.ReactNode }) {
   );
 }
 
+function jourLisible(date: string): string {
+  return new Date(`${date}T12:00:00`).toLocaleDateString("fr-FR", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
+
+/** Un seul jour se dit « le 14 juillet », pas « du 14 au 14 ». */
+function formatPeriode(debut: string, fin: string): string {
+  return debut === fin
+    ? `Le ${jourLisible(debut)}`
+    : `Du ${jourLisible(debut)} au ${jourLisible(fin)}`;
+}
+
 export default async function ConfigurationReservationsPage({
   params,
 }: {
@@ -58,8 +76,13 @@ export default async function ConfigurationReservationsPage({
   const { id } = await params;
   const supabase = await createClient();
 
-  const [restaurantResult, espacesResult, servicesResult, photosResult] =
-    await Promise.all([
+  const [
+    restaurantResult,
+    espacesResult,
+    servicesResult,
+    photosResult,
+    fermeturesResult,
+  ] = await Promise.all([
     supabase.from("restaurants").select("*").eq("id", id).maybeSingle(),
     supabase
       .from("restaurant_espaces")
@@ -79,6 +102,14 @@ export default async function ConfigurationReservationsPage({
       .eq("restaurant_id", id)
       .not("espace_id", "is", null)
       .order("created_at"),
+    // Les fermetures passées ne servent plus à rien : on ne garde à l'écran
+    // que ce qui bloque encore quelque chose.
+    supabase
+      .from("restaurant_fermetures")
+      .select("*")
+      .eq("restaurant_id", id)
+      .gte("date_fin", new Date().toISOString().slice(0, 10))
+      .order("date_debut"),
   ]);
 
   const restaurant = restaurantResult.data as Restaurant | null;
@@ -88,6 +119,8 @@ export default async function ConfigurationReservationsPage({
 
   const espaces = (espacesResult.data ?? []) as Espace[];
   const services = (servicesResult.data ?? []) as Service[];
+  const fermetures = (fermeturesResult.data ?? []) as Fermeture[];
+  const nomEspace = new Map(espaces.map((espace) => [espace.id, espace.nom]));
 
   const photosParEspace = new Map<string, RestaurantPhoto[]>();
   for (const photo of (photosResult.data ?? []) as RestaurantPhoto[]) {
@@ -229,6 +262,54 @@ export default async function ConfigurationReservationsPage({
         )}
 
         <ServiceForm restaurantId={id} />
+      </section>
+
+      <section className="flex flex-col gap-4">
+        <div className="flex flex-col gap-1">
+          <h2 className="text-base font-semibold text-zinc-900">
+            Fermetures
+          </h2>
+          <p className="text-sm text-zinc-500">
+            Congés, jour férié, salle déjà prise : ferme la période et plus
+            rien ne s&apos;y réserve, ni en ligne ni au téléphone. Tes services
+            restent configurés, tu n&apos;as rien à défaire.
+          </p>
+        </div>
+
+        {fermetures.length > 0 && (
+          <ul className="flex flex-col gap-3">
+            {fermetures.map((fermeture) => (
+              <li
+                key={fermeture.id}
+                className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-zinc-200/70 bg-white p-4 shadow-sm"
+              >
+                <span className="flex flex-col">
+                  <span className="font-medium text-zinc-900">
+                    {formatPeriode(fermeture.date_debut, fermeture.date_fin)}
+                  </span>
+                  <span className="text-sm text-zinc-500">
+                    {fermeture.espace_id
+                      ? `${nomEspace.get(fermeture.espace_id) ?? "Espace supprimé"} seulement`
+                      : "Tout l'établissement"}
+                    {fermeture.motif && ` · ${fermeture.motif}`}
+                  </span>
+                </span>
+                <form action={supprimerFermeture}>
+                  <input type="hidden" name="id" value={fermeture.id} />
+                  <input type="hidden" name="restaurant_id" value={id} />
+                  <button
+                    type="submit"
+                    className="text-sm font-medium text-zinc-500 hover:text-red-600"
+                  >
+                    Rouvrir
+                  </button>
+                </form>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        <FermetureForm restaurantId={id} espaces={espaces} />
       </section>
 
       <section className="flex flex-col gap-4">

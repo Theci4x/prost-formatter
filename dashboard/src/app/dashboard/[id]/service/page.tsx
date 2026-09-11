@@ -5,9 +5,12 @@ import { SaisieReservation } from "@/components/reservations/SaisieReservation";
 import { DecisionDemande } from "@/components/reservations/DecisionDemande";
 import {
   disponibiliteEspace,
+  fermetureApplicable,
+  motifFermeture,
   serviceOuvertCeJour,
   type Reservation,
 } from "@/lib/reservations/disponibilite";
+import { chargerFermetures } from "@/lib/reservations/fermetures";
 import {
   formatCreneau,
   formatHeure,
@@ -54,8 +57,13 @@ export default async function ServicePage({
       ? query.jour
       : new Date().toISOString().slice(0, 10);
 
-  const [restaurantResult, espacesResult, servicesResult, reservationsResult] =
-    await Promise.all([
+  const [
+    restaurantResult,
+    espacesResult,
+    servicesResult,
+    reservationsResult,
+    fermetures,
+  ] = await Promise.all([
       supabase.from("restaurants").select("*").eq("id", id).maybeSingle(),
       supabase
         .from("restaurant_espaces")
@@ -72,6 +80,7 @@ export default async function ServicePage({
         .select("*")
         .eq("restaurant_id", id)
         .eq("date_reservation", jour),
+      chargerFermetures(supabase, id, jour),
     ]);
 
   const restaurant = restaurantResult.data as Restaurant | null;
@@ -87,6 +96,9 @@ export default async function ServicePage({
   );
   const couvertsAttendus = confirmees.reduce((t, l) => t + l.couverts, 0);
   const servicesDuJour = services.filter((s) => serviceOuvertCeJour(jour, s));
+  // Une fermeture posée après coup laisse des convives déjà attendus : le
+  // bandeau le dit, et la liste reste affichée pour qu'on sache qui rappeler.
+  const fermeture = fermetureApplicable(jour, null, fermetures);
 
   return (
     <div className="flex flex-1 flex-col gap-8 px-6 py-8">
@@ -125,6 +137,15 @@ export default async function ServicePage({
           </Link>
         </div>
       </div>
+
+      {fermeture && (
+        <p className="rounded-2xl border border-amber-300 bg-amber-50 p-5 text-sm font-medium text-amber-900">
+          {motifFermeture(fermeture)} Aucune réservation ne peut être prise ce
+          jour-là.
+          {confirmees.length > 0 &&
+            " Les convives ci-dessous étaient attendus : pense à les prévenir."}
+        </p>
+      )}
 
       {/* Le chiffre que le chef veut en arrivant : combien de couverts. */}
       <div className="flex flex-wrap items-end gap-x-10 gap-y-4 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm">
@@ -205,6 +226,7 @@ export default async function ServicePage({
                   date: jour,
                   couverts: 1,
                   reservations: lignes,
+                  fermetures,
                   maintenant: new Date(),
                 });
                 const duService = confirmees.filter(

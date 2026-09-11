@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { createServiceClient } from "@/lib/supabase/service";
+import { chargerFermetures } from "@/lib/reservations/fermetures";
 import {
   creneauxDuJour,
   type Reservation,
@@ -73,40 +74,47 @@ export default async function ReserverPage({
   const restaurant = await chargerRestaurant(slug);
   if (!restaurant) notFound();
 
-  const date = query.date && /^\d{4}-\d{2}-\d{2}$/.test(query.date)
-    ? query.date
-    : dateDuJour();
+  const date =
+    query.date && /^\d{4}-\d{2}-\d{2}$/.test(query.date)
+      ? query.date
+      : dateDuJour();
   const couvertsBrut = Number(query.couverts);
   const couverts =
     Number.isInteger(couvertsBrut) && couvertsBrut > 0 ? couvertsBrut : 2;
 
   const supabase = createServiceClient();
-  const [espacesResult, servicesResult, reservationsResult, photosResult] =
-    await Promise.all([
-      supabase
-        .from("restaurant_espaces")
-        .select("*")
-        .eq("restaurant_id", restaurant.id)
-        .order("ordre"),
-      supabase
-        .from("restaurant_services")
-        .select("*")
-        .eq("restaurant_id", restaurant.id)
-        .order("heure_debut"),
-      supabase
-        .from("restaurant_reservations")
-        .select(
-          "id, espace_id, service_id, date_reservation, couverts, type, statut, option_expire_le",
-        )
-        .eq("restaurant_id", restaurant.id)
-        .eq("date_reservation", date),
-      supabase
-        .from("restaurant_photos")
-        .select("id, espace_id, url")
-        .eq("restaurant_id", restaurant.id)
-        .not("espace_id", "is", null)
-        .order("created_at"),
-    ]);
+  const [
+    espacesResult,
+    servicesResult,
+    reservationsResult,
+    photosResult,
+    fermetures,
+  ] = await Promise.all([
+    supabase
+      .from("restaurant_espaces")
+      .select("*")
+      .eq("restaurant_id", restaurant.id)
+      .order("ordre"),
+    supabase
+      .from("restaurant_services")
+      .select("*")
+      .eq("restaurant_id", restaurant.id)
+      .order("heure_debut"),
+    supabase
+      .from("restaurant_reservations")
+      .select(
+        "id, espace_id, service_id, date_reservation, couverts, type, statut, option_expire_le",
+      )
+      .eq("restaurant_id", restaurant.id)
+      .eq("date_reservation", date),
+    supabase
+      .from("restaurant_photos")
+      .select("id, espace_id, url")
+      .eq("restaurant_id", restaurant.id)
+      .not("espace_id", "is", null)
+      .order("created_at"),
+    chargerFermetures(supabase, restaurant.id, date),
+  ]);
 
   const espaces = (espacesResult.data ?? []) as Espace[];
   const services = (servicesResult.data ?? []) as Service[];
@@ -126,6 +134,7 @@ export default async function ReserverPage({
     espaces,
     services,
     reservations,
+    fermetures,
     maintenant: new Date(),
   });
 
@@ -333,7 +342,8 @@ export default async function ReserverPage({
         <div className="mx-auto flex max-w-3xl items-center gap-2 text-sm text-zinc-400">
           <KlarrMark size={16} />
           <span>
-            Réservations propulsées par <KlarrWordmark className="text-zinc-500" />
+            Réservations propulsées par{" "}
+            <KlarrWordmark className="text-zinc-500" />
           </span>
         </div>
       </footer>

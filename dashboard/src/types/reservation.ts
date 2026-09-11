@@ -22,6 +22,19 @@ export type Service = {
   ordre: number;
 };
 
+/**
+ * Une période pendant laquelle on ne prend rien. `espace_id` à null ferme
+ * l'établissement entier ; renseigné, il ne ferme que cet espace.
+ */
+export type Fermeture = {
+  id: string;
+  restaurant_id: string;
+  espace_id: string | null;
+  date_debut: string;
+  date_fin: string;
+  motif: string | null;
+};
+
 export const JOURS_ISO = [
   { valeur: 1, court: "L", long: "lundi" },
   { valeur: 2, court: "M", long: "mardi" },
@@ -103,8 +116,9 @@ export type SaisieValeurs = {
   date: string;
   couverts: string;
   serviceId: string;
+  // Vide quand la réservation est ordinaire : c'est Klarr qui place.
   espaceId: string;
-  type: string;
+  type: "table" | "privatisation";
   note: string;
   forcer: boolean;
 };
@@ -119,4 +133,18 @@ export const SAISIE_VIDE: SaisieValeurs = {
   type: "table",
   note: "",
   forcer: false,
+};
+
+export type FermetureValeurs = {
+  dateDebut: string;
+  dateFin: string;
+  espaceId: string;
+  motif: string;
+};
+
+export const FERMETURE_VIDE: FermetureValeurs = {
+  dateDebut: "",
+  dateFin: "",
+  espaceId: "",
+  motif: "",
 };

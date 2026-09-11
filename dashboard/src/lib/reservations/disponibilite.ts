@@ -1,4 +1,4 @@
-import type { Espace, Service } from "@/types/reservation";
+import type { Espace, Fermeture, Service } from "@/types/reservation";
 
 export type Reservation = {
   id: string;
@@ -40,6 +40,37 @@ export function occupeLaJauge(
 }
 
 /**
+ * La fermeture qui couvre une date, pour l'espace visé. Une fermeture de
+ * l'établissement (espace_id null) l'emporte sur tout ; elle est donc
+ * cherchée en premier, pour que son motif soit celui qu'on affiche.
+ */
+export function fermetureApplicable(
+  date: string,
+  espaceId: string | null,
+  fermetures: Fermeture[],
+): Fermeture | null {
+  const couvre = (fermeture: Fermeture) =>
+    fermeture.date_debut <= date && date <= fermeture.date_fin;
+
+  const etablissement = fermetures.find(
+    (fermeture) => fermeture.espace_id === null && couvre(fermeture),
+  );
+  if (etablissement) return etablissement;
+  if (espaceId === null) return null;
+
+  return (
+    fermetures.find(
+      (fermeture) => fermeture.espace_id === espaceId && couvre(fermeture),
+    ) ?? null
+  );
+}
+
+/** Le motif tel qu'on le montre au client : jamais une case vide. */
+export function motifFermeture(fermeture: Fermeture): string {
+  return fermeture.motif ? `Fermé — ${fermeture.motif}` : "Fermé ce jour-là.";
+}
+
+/**
  * Instant où commence un service un jour donné, dans le fuseau du serveur.
  * Sert à comparer au délai de prévenance.
  */
@@ -77,6 +108,7 @@ export function disponibiliteEspace({
   date,
   couverts,
   reservations,
+  fermetures = [],
   maintenant,
 }: {
   espace: Espace;
@@ -84,6 +116,7 @@ export function disponibiliteEspace({
   date: string;
   couverts: number;
   reservations: Reservation[];
+  fermetures?: Fermeture[];
   maintenant: Date;
 }): Disponibilite {
   const actives = reservations.filter(
@@ -103,6 +136,19 @@ export function disponibiliteEspace({
   const restants = Math.max(0, espace.capacite - occupes);
 
   const base = { espace, occupes, restants, privatise };
+
+  // La fermeture prime sur la jauge : même à moitié vide, un espace fermé ne
+  // se vend pas. Les couverts déjà attendus restent comptés — le restaurateur
+  // qui ferme après coup doit voir qui il lui reste à prévenir.
+  const fermeture = fermetureApplicable(date, espace.id, fermetures);
+  if (fermeture) {
+    return {
+      ...base,
+      peutRecevoirTable: false,
+      peutEtrePrivatise: false,
+      raison: motifFermeture(fermeture),
+    };
+  }
 
   if (privatise) {
     return {
@@ -156,6 +202,7 @@ export function creneauxDuJour({
   espaces,
   services,
   reservations,
+  fermetures = [],
   maintenant,
 }: {
   date: string;
@@ -163,8 +210,24 @@ export function creneauxDuJour({
   espaces: Espace[];
   services: Service[];
   reservations: Reservation[];
+  fermetures?: Fermeture[];
   maintenant: Date;
 }): Creneau[] {
+  // Établissement fermé : on ne détaille pas espace par espace. Lister les
+  // services d'un jour de vacances, chacun barré de son motif, donne
+  // l'impression qu'on pourrait insister quelque part.
+  const fermeture = fermetureApplicable(date, null, fermetures);
+  if (fermeture) {
+    return services
+      .filter((service) => serviceOuvertCeJour(date, service))
+      .map((service) => ({
+        service,
+        espaces: [],
+        ouvert: false,
+        raison: motifFermeture(fermeture),
+      }));
+  }
+
   return services
     .filter((service) => serviceOuvertCeJour(date, service))
     .map((service) => {
@@ -187,6 +250,7 @@ export function creneauxDuJour({
           date,
           couverts,
           reservations,
+          fermetures,
           maintenant,
         }),
       );

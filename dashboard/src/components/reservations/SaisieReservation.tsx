@@ -34,10 +34,16 @@ function Champs({
   services: Service[];
   valeurs: SaisieValeurs;
 }) {
-  const [espaceId, setEspaceId] = useState(
-    valeurs.espaceId || espaces[0]?.id || "",
+  // Le type commande le reste : une réservation ordinaire n'a pas à choisir
+  // sa salle — c'est le travail de Klarr de la placer. Seule une
+  // privatisation désigne un espace, puisqu'elle le prend en entier.
+  const privatisables = espaces.filter(
+    (espace) => espace.privatisation_minimum !== null,
   );
-  const espace = espaces.find((e) => e.id === espaceId);
+  const ordinaires = espaces.filter((espace) => espace.accepte_table);
+  const [type, setType] = useState<"table" | "privatisation">(
+    ordinaires.length > 0 ? valeurs.type : "privatisation",
+  );
 
   return (
     <>
@@ -109,38 +115,49 @@ function Champs({
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <label className={label} htmlFor="saisie-espace">
-          Espace
-          <select
-            id="saisie-espace"
-            name="espace_id"
-            value={espaceId}
-            onChange={(event) => setEspaceId(event.target.value)}
-            className={champ}
-          >
-            {espaces.map((option) => (
-              <option key={option.id} value={option.id}>
-                {option.nom} — {option.capacite} couverts
-              </option>
-            ))}
-          </select>
-        </label>
         <label className={label} htmlFor="saisie-type">
           Type
           <select
             id="saisie-type"
             name="type"
-            defaultValue={valeurs.type}
+            value={type}
+            onChange={(event) =>
+              setType(event.target.value as "table" | "privatisation")
+            }
             className={champ}
           >
-            {espace?.accepte_table !== false && (
+            {ordinaires.length > 0 && (
               <option value="table">Réservation individuelle</option>
             )}
-            {espace?.privatisation_minimum !== null && (
-              <option value="privatisation">Privatisation de l&apos;espace</option>
+            {privatisables.length > 0 && (
+              <option value="privatisation">
+                Privatisation d&apos;un espace
+              </option>
             )}
           </select>
         </label>
+
+        {type === "privatisation" ? (
+          <label className={label} htmlFor="saisie-espace">
+            Espace à privatiser
+            <select
+              id="saisie-espace"
+              name="espace_id"
+              defaultValue={valeurs.espaceId}
+              className={champ}
+            >
+              {privatisables.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.nom} — {option.capacite} couverts
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : (
+          // Espace laissé vide : l'action place la réservation dans la
+          // première salle qui accepte les tables et qui a la place.
+          <input type="hidden" name="espace_id" value="" />
+        )}
       </div>
 
       <label className={label} htmlFor="saisie-note">
