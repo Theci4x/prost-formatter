@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { uploadPhoto, removePhoto } from "./actions";
@@ -69,11 +70,12 @@ export default async function PhotosPage({
               key={photo.id}
               className="group relative aspect-square overflow-hidden rounded-xl border border-zinc-200/70 shadow-sm"
             >
-              {/* eslint-disable-next-line @next/next/no-img-element -- URLs Supabase Storage arbitraires, pas de domaine fixe a whitelister dans next/image */}
-              <img
+              <Image
                 src={photo.url}
                 alt=""
-                className="h-full w-full object-cover"
+                fill
+                sizes="(max-width: 640px) 50vw, 240px"
+                className="object-cover"
               />
               <form
                 action={removePhoto}

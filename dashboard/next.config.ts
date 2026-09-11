@@ -1,7 +1,27 @@
 import type { NextConfig } from "next";
 
+// Les photos vivent dans Supabase Storage. next/image refuse d'optimiser un
+// domaine distant non déclaré : on le dérive de l'URL du projet plutôt que
+// de le figer, l'URL différant entre la base réelle et celle des tests.
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseImagePattern = supabaseUrl
+  ? [
+      {
+        protocol: new URL(supabaseUrl).protocol.replace(
+          ":",
+          "",
+        ) as "http" | "https",
+        hostname: new URL(supabaseUrl).hostname,
+        port: new URL(supabaseUrl).port,
+        pathname: "/storage/v1/object/public/**",
+      },
+    ]
+  : [];
+
 const nextConfig: NextConfig = {
-  /* config options here */
+  images: {
+    remotePatterns: supabaseImagePattern,
+  },
 
   // Empêche la redirection 308 automatique de Next sur les URLs avec un
   // "/" final, pour que les rewrites ci-dessous servent directement le

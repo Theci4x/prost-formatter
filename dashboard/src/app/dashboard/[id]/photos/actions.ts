@@ -8,6 +8,9 @@ const BUCKET = "restaurant-photos";
 
 export async function uploadPhoto(formData: FormData) {
   const restaurantId = formData.get("restaurant_id") as string;
+  // Rempli quand la photo illustre un espace réservable ; absent pour la
+  // galerie générale de l'établissement.
+  const espaceId = (formData.get("espace_id") as string | null) || null;
   const file = formData.get("photo") as File | null;
   if (!file || file.size === 0) return;
 
@@ -31,11 +34,13 @@ export async function uploadPhoto(formData: FormData) {
 
   await supabase.from("restaurant_photos").insert({
     restaurant_id: restaurantId,
+    espace_id: espaceId,
     storage_path: path,
     url: publicUrl,
   });
 
   revalidatePath(`/dashboard/${restaurantId}/photos`);
+  revalidatePath(`/dashboard/${restaurantId}/reservations/configuration`);
 }
 
 export async function removePhoto(formData: FormData) {
@@ -48,4 +53,5 @@ export async function removePhoto(formData: FormData) {
   await supabase.from("restaurant_photos").delete().eq("id", id);
 
   revalidatePath(`/dashboard/${restaurantId}/photos`);
+  revalidatePath(`/dashboard/${restaurantId}/reservations/configuration`);
 }

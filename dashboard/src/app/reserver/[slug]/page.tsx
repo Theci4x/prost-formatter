@@ -5,9 +5,11 @@ import {
   creneauxDuJour,
   type Reservation,
 } from "@/lib/reservations/disponibilite";
+import Image from "next/image";
 import { DemandeForm } from "@/components/reservations/DemandeForm";
 import { formatCreneau, type Espace, type Service } from "@/types/reservation";
 import { KlarrMark, KlarrWordmark } from "@/components/brand/KlarrMark";
+import type { RestaurantPhoto } from "@/types/photo";
 
 type Params = { slug: string };
 type Query = { date?: string; couverts?: string };
@@ -77,8 +79,8 @@ export default async function ReserverPage({
     Number.isInteger(couvertsBrut) && couvertsBrut > 0 ? couvertsBrut : 2;
 
   const supabase = createServiceClient();
-  const [espacesResult, servicesResult, reservationsResult] = await Promise.all(
-    [
+  const [espacesResult, servicesResult, reservationsResult, photosResult] =
+    await Promise.all([
       supabase
         .from("restaurant_espaces")
         .select("*")
@@ -96,12 +98,25 @@ export default async function ReserverPage({
         )
         .eq("restaurant_id", restaurant.id)
         .eq("date_reservation", date),
-    ],
-  );
+      supabase
+        .from("restaurant_photos")
+        .select("id, espace_id, url")
+        .eq("restaurant_id", restaurant.id)
+        .not("espace_id", "is", null)
+        .order("created_at"),
+    ]);
 
   const espaces = (espacesResult.data ?? []) as Espace[];
   const services = (servicesResult.data ?? []) as Service[];
   const reservations = (reservationsResult.data ?? []) as Reservation[];
+
+  const photosParEspace = new Map<string, RestaurantPhoto[]>();
+  for (const photo of (photosResult.data ?? []) as RestaurantPhoto[]) {
+    if (!photo.espace_id) continue;
+    const liste = photosParEspace.get(photo.espace_id) ?? [];
+    liste.push(photo);
+    photosParEspace.set(photo.espace_id, liste);
+  }
 
   const creneaux = creneauxDuJour({
     date,
@@ -234,6 +249,31 @@ export default async function ReserverPage({
                             <p className="mt-1 text-sm text-zinc-500">
                               {dispo.espace.description}
                             </p>
+                          )}
+
+                          {/* Les photos défilent horizontalement plutôt que
+                              de s'empiler : sur un téléphone, une colonne de
+                              grandes images repousse le bouton de réservation
+                              hors de l'écran. */}
+                          {(photosParEspace.get(dispo.espace.id) ?? []).length >
+                            0 && (
+                            <ul className="-mx-1 mt-3 flex gap-2 overflow-x-auto px-1 pb-1">
+                              {(photosParEspace.get(dispo.espace.id) ?? []).map(
+                                (photo) => (
+                                  <li key={photo.id} className="shrink-0">
+                                    <div className="relative h-28 w-40 overflow-hidden rounded-lg border border-zinc-200">
+                                      <Image
+                                        src={photo.url}
+                                        alt={`${dispo.espace.nom} — ${restaurant.nom}`}
+                                        fill
+                                        sizes="160px"
+                                        className="object-cover"
+                                      />
+                                    </div>
+                                  </li>
+                                ),
+                              )}
+                            </ul>
                           )}
 
                           {possible ? (

@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
 import { EspaceForm } from "@/components/reservations/EspaceForm";
+import { PhotosEspace } from "@/components/reservations/PhotosEspace";
 import { ServiceForm } from "@/components/reservations/ServiceForm";
 import {
   activerPageReservation,
@@ -15,6 +16,7 @@ import {
   type Service,
 } from "@/types/reservation";
 import type { Restaurant } from "@/types/restaurant";
+import type { RestaurantPhoto } from "@/types/photo";
 
 function Supprimer({
   id,
@@ -55,7 +57,8 @@ export default async function ConfigurationReservationsPage({
   const { id } = await params;
   const supabase = await createClient();
 
-  const [restaurantResult, espacesResult, servicesResult] = await Promise.all([
+  const [restaurantResult, espacesResult, servicesResult, photosResult] =
+    await Promise.all([
     supabase.from("restaurants").select("*").eq("id", id).maybeSingle(),
     supabase
       .from("restaurant_espaces")
@@ -69,6 +72,12 @@ export default async function ConfigurationReservationsPage({
       .eq("restaurant_id", id)
       .order("ordre")
       .order("heure_debut"),
+    supabase
+      .from("restaurant_photos")
+      .select("*")
+      .eq("restaurant_id", id)
+      .not("espace_id", "is", null)
+      .order("created_at"),
   ]);
 
   const restaurant = restaurantResult.data as Restaurant | null;
@@ -78,6 +87,14 @@ export default async function ConfigurationReservationsPage({
 
   const espaces = (espacesResult.data ?? []) as Espace[];
   const services = (servicesResult.data ?? []) as Service[];
+
+  const photosParEspace = new Map<string, RestaurantPhoto[]>();
+  for (const photo of (photosResult.data ?? []) as RestaurantPhoto[]) {
+    if (!photo.espace_id) continue;
+    const liste = photosParEspace.get(photo.espace_id) ?? [];
+    liste.push(photo);
+    photosParEspace.set(photo.espace_id, liste);
+  }
   const slug = (restaurant as Restaurant & { slug_reservation?: string | null })
     .slug_reservation;
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "";
@@ -137,6 +154,20 @@ export default async function ConfigurationReservationsPage({
                   restaurantId={id}
                   action={removeEspace}
                 />
+
+                <div className="w-full border-t border-zinc-100 pt-4">
+                  <p className="mb-3 text-sm font-medium text-zinc-700">
+                    Photos de cet espace{" "}
+                    <span className="font-normal text-zinc-400">
+                      — ce que verra le client avant de réserver
+                    </span>
+                  </p>
+                  <PhotosEspace
+                    restaurantId={id}
+                    espaceId={espace.id}
+                    photos={photosParEspace.get(espace.id) ?? []}
+                  />
+                </div>
               </li>
             ))}
           </ul>
