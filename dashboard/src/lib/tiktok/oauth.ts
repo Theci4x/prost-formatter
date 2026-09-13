@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { siteUrl } from "@/lib/site-url";
 
 // TikTok for Developers — "Login Kit". Contrairement à Google/Facebook,
 // TikTok exige PKCE (code_verifier/code_challenge) même pour ce flux
@@ -12,8 +13,7 @@ const VIDEO_LIST_URL = "https://open.tiktokapis.com/v2/video/list/";
 const SCOPES = ["user.info.basic", "user.info.stats", "video.list"].join(",");
 
 function getRedirectUri() {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://localhost:3000";
-  return `${siteUrl}/api/tiktok/callback`;
+  return `${siteUrl()}/api/tiktok/callback`;
 }
 
 export function buildCodeChallenge(codeVerifier: string) {

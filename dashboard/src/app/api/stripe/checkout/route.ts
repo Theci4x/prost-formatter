@@ -1,10 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getStripe } from "@/lib/stripe/client";
-
-function getSiteUrl() {
-  return process.env.NEXT_PUBLIC_SITE_URL ?? "https://localhost:3000";
-}
+import { siteUrl } from "@/lib/site-url";
 
 export async function GET(request: NextRequest) {
   const restaurantId = request.nextUrl.searchParams.get("restaurant_id");
@@ -37,7 +34,7 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  const siteUrl = getSiteUrl();
+  const site = siteUrl();
 
   const session = await getStripe().checkout.sessions.create({
     mode: "subscription",
@@ -51,8 +48,8 @@ export async function GET(request: NextRequest) {
     subscription_data: {
       metadata: { restaurant_id: restaurantId },
     },
-    success_url: `${siteUrl}/dashboard/${restaurantId}/abonnement?checkout=success`,
-    cancel_url: `${siteUrl}/dashboard/${restaurantId}/abonnement?checkout=cancel`,
+    success_url: `${site}/dashboard/${restaurantId}/abonnement?checkout=success`,
+    cancel_url: `${site}/dashboard/${restaurantId}/abonnement?checkout=cancel`,
   });
 
   return NextResponse.redirect(session.url!);

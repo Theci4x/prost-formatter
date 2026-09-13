@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { siteUrl } from "@/lib/site-url";
 
 export type AuthState = {
   error: string | null;
@@ -57,11 +58,11 @@ export async function requestPasswordReset(
   formData: FormData,
 ): Promise<ResetState> {
   const email = formData.get("email") as string;
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://localhost:3000";
+  const site = siteUrl();
 
   const supabase = await createClient();
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${siteUrl}/auth/callback?next=/nouveau-mot-de-passe`,
+    redirectTo: `${site}/auth/callback?next=/nouveau-mot-de-passe`,
   });
 
   if (error) {

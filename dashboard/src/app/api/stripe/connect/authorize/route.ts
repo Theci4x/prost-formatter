@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { construireEtat, urlDeConnexion } from "@/lib/stripe/connect";
+import { siteUrl } from "@/lib/site-url";
 
 export async function GET(request: NextRequest) {
   const restaurantId = request.nextUrl.searchParams.get("restaurant_id");
@@ -38,7 +39,7 @@ export async function GET(request: NextRequest) {
   const etat = construireEtat(restaurantId, randomUUID());
   const redirectUri = new URL(
     "/api/stripe/connect/callback",
-    process.env.NEXT_PUBLIC_SITE_URL ?? request.url,
+    siteUrl(),
   ).toString();
 
   let destination: string;

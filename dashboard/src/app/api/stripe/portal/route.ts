@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getStripe } from "@/lib/stripe/client";
+import { siteUrl } from "@/lib/site-url";
 
 export async function GET(request: NextRequest) {
   const restaurantId = request.nextUrl.searchParams.get("restaurant_id");
@@ -43,11 +44,11 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "aucun abonnement" }, { status: 404 });
   }
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://localhost:3000";
+  const site = siteUrl();
 
   const session = await getStripe().billingPortal.sessions.create({
     customer: subscription.stripe_customer_id,
-    return_url: `${siteUrl}/dashboard/${restaurantId}/abonnement`,
+    return_url: `${site}/dashboard/${restaurantId}/abonnement`,
   });
 
   return NextResponse.redirect(session.url);

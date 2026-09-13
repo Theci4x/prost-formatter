@@ -21,6 +21,7 @@ import {
 } from "@/types/reservation";
 import type { Restaurant } from "@/types/restaurant";
 import type { RestaurantPhoto } from "@/types/photo";
+import { siteUrl } from "@/lib/site-url";
 
 function Supprimer({
   id,
@@ -135,7 +136,7 @@ export default async function ConfigurationReservationsPage({
     mentions_legales?: string | null;
   };
   const slug = publique.slug_reservation;
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "";
+  const site = siteUrl();
 
   return (
     <div className="flex flex-1 flex-col gap-10 px-6 py-8">
@@ -344,7 +345,7 @@ export default async function ConfigurationReservationsPage({
                 rel="noopener noreferrer"
                 className="w-fit break-all font-medium text-brand-orange hover:underline"
               >
-                {siteUrl}/reserver/{slug}
+                {site}/reserver/{slug}
               </a>
               <p className="text-sm text-zinc-500">
                 Elle est en ligne. Ouvre-la pour vérifier ce que voient tes

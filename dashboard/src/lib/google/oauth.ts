@@ -1,3 +1,4 @@
+import { siteUrl } from "@/lib/site-url";
 const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 const GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v2/userinfo";
@@ -12,8 +13,7 @@ const SCOPES = [
 ].join(" ");
 
 function getRedirectUri() {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://localhost:3000";
-  return `${siteUrl}/api/google/callback`;
+  return `${siteUrl()}/api/google/callback`;
 }
 
 export function buildGoogleAuthUrl(state: string) {
