@@ -2,6 +2,8 @@ import { notFound, redirect } from "next/navigation";
 import { createServiceClient } from "@/lib/supabase/service";
 import { creerPaiementAcompte, paiementAbouti } from "@/lib/stripe/paiement";
 import { formatEuros, resumePourClient } from "@/lib/reservations/acompte";
+import { engagementClient } from "@/lib/reservations/caution";
+import { cautionEnregistree, demanderCaution } from "@/lib/stripe/caution";
 import { formatCreneau } from "@/types/reservation";
 
 export const dynamic = "force-dynamic";
@@ -18,8 +20,11 @@ type Ligne = {
   statut: string;
   acompte_centimes: number | null;
   acompte_statut: string;
+  caution_centimes: number | null;
+  caution_statut: string;
   paiement_token: string;
   stripe_session_id: string | null;
+  stripe_setup_session_id: string | null;
 };
 
 function formatDate(date: string): string {
@@ -57,13 +62,18 @@ export default async function PaiementPage({
   const { data } = await supabase
     .from("restaurant_reservations")
     .select(
-      "id, restaurant_id, espace_id, service_id, date_reservation, couverts, client_nom, client_email, statut, acompte_centimes, acompte_statut, paiement_token, stripe_session_id",
+      "id, restaurant_id, espace_id, service_id, date_reservation, couverts, client_nom, client_email, statut, acompte_centimes, acompte_statut, caution_centimes, caution_statut, paiement_token, stripe_session_id, stripe_setup_session_id",
     )
     .eq("paiement_token", token)
     .maybeSingle();
 
   const ligne = data as Ligne | null;
-  if (!ligne || !ligne.acompte_centimes) notFound();
+  // Le même lien sert l'acompte et la caution : c'est la réservation qui dit
+  // lequel des deux est attendu.
+  if (!ligne || (!ligne.acompte_centimes && !ligne.caution_centimes)) {
+    notFound();
+  }
+  const enCaution = !ligne.acompte_centimes && Boolean(ligne.caution_centimes);
 
   const [restaurantResult, espaceResult, serviceResult, connexionResult] =
     await Promise.all([
@@ -107,10 +117,36 @@ export default async function PaiementPage({
 
   if (!restaurant || !espace) notFound();
 
-  const somme = formatEuros(ligne.acompte_centimes);
+  const somme = formatEuros(
+    (enCaution ? ligne.caution_centimes : ligne.acompte_centimes) ?? 0,
+  );
+
+  // — Caution déjà enregistrée : rien de plus à demander au client.
+  if (
+    enCaution &&
+    ["enregistree", "debitee", "liberee"].includes(ligne.caution_statut)
+  ) {
+    return (
+      <Cadre>
+        <span className="text-sm font-medium text-emerald-700">
+          Carte enregistrée
+        </span>
+        <h1 className="text-xl font-semibold text-zinc-900">
+          Votre réservation chez {restaurant.nom} est confirmée.
+        </h1>
+        <p className="text-sm text-zinc-600">
+          Rien n&apos;a été prélevé. Votre carte reste en garantie jusqu&apos;à
+          {" "}
+          {somme}, et ne sera débitée qu&apos;en cas d&apos;annulation tardive
+          ou d&apos;absence. {restaurant.nom} vous attend le{" "}
+          {formatDate(ligne.date_reservation)}.
+        </p>
+      </Cadre>
+    );
+  }
 
   // — Déjà payé : on le dit, et on ne propose pas de payer deux fois.
-  if (ligne.acompte_statut === "paye") {
+  if (!enCaution && ligne.acompte_statut === "paye") {
     return (
       <Cadre>
         <span className="text-sm font-medium text-emerald-700">
@@ -143,22 +179,42 @@ export default async function PaiementPage({
   }
 
   // — Retour depuis Stripe : l'état est relu chez eux, jamais déduit de l'URL.
-  if (query.retour && connexion && ligne.stripe_session_id) {
-    const resultat = await paiementAbouti(
-      connexion.stripe_account_id,
-      ligne.stripe_session_id,
-      token,
-    );
-    if (resultat.paye) {
-      await supabase
-        .from("restaurant_reservations")
-        .update({
-          acompte_statut: "paye",
-          acompte_paye_le: new Date().toISOString(),
-          stripe_payment_intent_id: resultat.paymentIntentId,
-        })
-        .eq("id", ligne.id);
-      redirect(`/paiement/${token}`);
+  if (query.retour && connexion) {
+    if (enCaution && ligne.stripe_setup_session_id) {
+      const resultat = await cautionEnregistree(
+        connexion.stripe_account_id,
+        ligne.stripe_setup_session_id,
+        token,
+      );
+      if (resultat.enregistree) {
+        await supabase
+          .from("restaurant_reservations")
+          .update({
+            caution_statut: "enregistree",
+            caution_enregistree_le: new Date().toISOString(),
+            stripe_customer_id: resultat.customerId,
+            stripe_payment_method_id: resultat.carteId,
+          })
+          .eq("id", ligne.id);
+        redirect(`/paiement/${token}`);
+      }
+    } else if (!enCaution && ligne.stripe_session_id) {
+      const resultat = await paiementAbouti(
+        connexion.stripe_account_id,
+        ligne.stripe_session_id,
+        token,
+      );
+      if (resultat.paye) {
+        await supabase
+          .from("restaurant_reservations")
+          .update({
+            acompte_statut: "paye",
+            acompte_paye_le: new Date().toISOString(),
+            stripe_payment_intent_id: resultat.paymentIntentId,
+          })
+          .eq("id", ligne.id);
+        redirect(`/paiement/${token}`);
+      }
     }
   }
 
@@ -180,19 +236,38 @@ export default async function PaiementPage({
   let lienStripe: string | null = null;
   let echec = false;
   try {
-    const paiement = await creerPaiementAcompte({
-      compteStripe: connexion.stripe_account_id,
-      token,
-      intitule: resumePourClient(espace, ligne.couverts, ligne.acompte_centimes),
-      centimes: ligne.acompte_centimes,
-      emailClient: ligne.client_email,
-      reservationId: ligne.id,
-    });
-    lienStripe = paiement.url;
-    await supabase
-      .from("restaurant_reservations")
-      .update({ stripe_session_id: paiement.sessionId })
-      .eq("id", ligne.id);
+    if (enCaution) {
+      const demande = await demanderCaution({
+        compteStripe: connexion.stripe_account_id,
+        token,
+        nomClient: ligne.client_nom,
+        emailClient: ligne.client_email,
+        reservationId: ligne.id,
+      });
+      lienStripe = demande.url;
+      await supabase
+        .from("restaurant_reservations")
+        .update({ stripe_setup_session_id: demande.sessionId })
+        .eq("id", ligne.id);
+    } else {
+      const paiement = await creerPaiementAcompte({
+        compteStripe: connexion.stripe_account_id,
+        token,
+        intitule: resumePourClient(
+          espace,
+          ligne.couverts,
+          ligne.acompte_centimes ?? 0,
+        ),
+        centimes: ligne.acompte_centimes ?? 0,
+        emailClient: ligne.client_email,
+        reservationId: ligne.id,
+      });
+      lienStripe = paiement.url;
+      await supabase
+        .from("restaurant_reservations")
+        .update({ stripe_session_id: paiement.sessionId })
+        .eq("id", ligne.id);
+    }
   } catch (erreur) {
     console.error("[paiement]", erreur);
     echec = true;
@@ -203,9 +278,15 @@ export default async function PaiementPage({
       <div className="flex flex-col gap-1">
         <span className="text-sm text-zinc-500">{restaurant.nom}</span>
         <h1 className="text-xl font-semibold text-zinc-900">
-          Acompte de {somme}
+          {enCaution ? `Carte en garantie` : `Acompte de ${somme}`}
         </h1>
       </div>
+
+      {enCaution && (
+        <p className="rounded-xl bg-brand-orange-soft p-4 text-sm text-brand-navy">
+          {engagementClient(restaurant.nom, ligne.caution_centimes ?? 0)}
+        </p>
+      )}
 
       <dl className="flex flex-col gap-2 border-y border-zinc-100 py-4 text-sm">
         {[
@@ -246,13 +327,14 @@ export default async function PaiementPage({
           href={lienStripe}
           className="rounded-md bg-brand-navy px-4 py-3 text-center text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover"
         >
-          Payer {somme}
+          {enCaution ? "Enregistrer ma carte" : `Payer ${somme}`}
         </a>
       )}
 
       <p className="text-xs text-zinc-400">
-        Paiement traité par Stripe, directement au bénéfice de {restaurant.nom}.
-        Klarr ne perçoit aucune commission.
+        {enCaution
+          ? `Carte enregistrée par Stripe, chez ${restaurant.nom}. Aucun montant n'est prélevé aujourd'hui, et Klarr ne perçoit aucune commission.`
+          : `Paiement traité par Stripe, directement au bénéfice de ${restaurant.nom}. Klarr ne perçoit aucune commission.`}
       </p>
     </Cadre>
   );

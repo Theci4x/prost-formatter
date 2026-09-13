@@ -13,6 +13,24 @@ const initialState: EspaceState = {
   valeurs: ESPACE_VIDE,
 };
 
+const GARANTIES = [
+  {
+    valeur: "aucune" as const,
+    titre: "Aucune",
+    aide: "Le client réserve sans rien avancer.",
+  },
+  {
+    valeur: "acompte" as const,
+    titre: "Acompte",
+    aide: "Il paie une somme d'avance, encaissée sur ton compte Stripe.",
+  },
+  {
+    valeur: "caution" as const,
+    titre: "Carte en garantie",
+    aide: "Rien n'est prélevé : tu ne débites qu'en cas de défection.",
+  },
+];
+
 const champ =
   "w-full rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-brand-navy";
 const label = "flex flex-col gap-1 text-sm font-medium text-zinc-700";
@@ -27,6 +45,7 @@ function Champs({
   // Le minimum de privatisation n'a de sens que si l'espace se privatise :
   // afficher le champ en permanence ferait croire qu'il est obligatoire.
   const [privatisable, setPrivatisable] = useState(valeurs.privatisable);
+  const [garantie, setGarantie] = useState(valeurs.garantie);
 
   return (
     <>
@@ -118,38 +137,78 @@ function Champs({
               </span>
             </label>
 
-            <div className="flex flex-col gap-2 pl-7">
-              <span className="text-sm font-medium text-zinc-700">
-                Acompte{" "}
-                <span className="font-normal text-zinc-400">(facultatif)</span>
-              </span>
-              <div className="flex flex-wrap items-center gap-2">
-                <input
-                  id="espace-acompte"
-                  name="acompte"
-                  inputMode="decimal"
-                  defaultValue={valeurs.acompte}
-                  placeholder="500"
-                  aria-label="Montant de l'acompte en euros"
-                  className={`${champ} max-w-32`}
-                />
-                <span className="text-sm text-zinc-500">€</span>
-                <select
-                  name="acompte_mode"
-                  defaultValue={valeurs.acompteMode}
-                  aria-label="Mode de calcul de l'acompte"
-                  className={`${champ} max-w-56`}
+            <fieldset className="flex flex-col gap-2 pl-7">
+              <legend className="mb-1 text-sm font-medium text-zinc-700">
+                Garantie demandée au client
+              </legend>
+
+              {/* Un seul choix : réclamer un acompte ET une caution au même
+                  client serait une maladresse commerciale, pas une sécurité
+                  de plus. */}
+              {GARANTIES.map((choix) => (
+                <label
+                  key={choix.valeur}
+                  className="flex items-start gap-2.5 text-sm text-zinc-700"
                 >
-                  <option value="forfait">au total</option>
-                  <option value="par_couvert">par couvert</option>
-                </select>
-              </div>
-              <span className="text-xs text-zinc-500">
-                Demandé au client une fois que tu as accepté sa privatisation.
-                Il va directement sur ton compte Stripe. Laisse vide pour ne
-                rien demander.
-              </span>
-            </div>
+                  <input
+                    type="radio"
+                    name="garantie"
+                    value={choix.valeur}
+                    checked={garantie === choix.valeur}
+                    onChange={() => setGarantie(choix.valeur)}
+                    className="mt-1"
+                  />
+                  <span>
+                    <span className="font-medium">{choix.titre}</span>
+                    <span className="block text-xs text-zinc-500">
+                      {choix.aide}
+                    </span>
+                  </span>
+                </label>
+              ))}
+
+              {garantie === "acompte" && (
+                <div className="flex flex-wrap items-center gap-2 pl-7">
+                  <input
+                    id="espace-acompte"
+                    name="acompte"
+                    inputMode="decimal"
+                    defaultValue={valeurs.acompte}
+                    placeholder="500"
+                    aria-label="Montant de l'acompte en euros"
+                    className={`${champ} max-w-32`}
+                  />
+                  <span className="text-sm text-zinc-500">€</span>
+                  <select
+                    name="acompte_mode"
+                    defaultValue={valeurs.acompteMode}
+                    aria-label="Mode de calcul de l'acompte"
+                    className={`${champ} max-w-56`}
+                  >
+                    <option value="forfait">au total</option>
+                    <option value="par_couvert">par couvert</option>
+                  </select>
+                </div>
+              )}
+
+              {garantie === "caution" && (
+                <div className="flex flex-wrap items-center gap-2 pl-7">
+                  <input
+                    id="espace-caution"
+                    name="caution"
+                    inputMode="decimal"
+                    defaultValue={valeurs.caution}
+                    placeholder="1000"
+                    aria-label="Plafond de la caution en euros"
+                    className={`${champ} max-w-32`}
+                  />
+                  <span className="text-sm text-zinc-500">
+                    € au maximum, débitables seulement si le groupe ne vient
+                    pas
+                  </span>
+                </div>
+              )}
+            </fieldset>
           </>
         )}
       </div>

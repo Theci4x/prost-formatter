@@ -15,7 +15,9 @@ import {
   type LigneStat,
 } from "@/lib/reservations/statistiques";
 import { LienAcompte } from "@/components/reservations/LienAcompte";
+import { GestionCaution } from "@/components/reservations/GestionCaution";
 import { libelleAcompte } from "@/lib/reservations/acompte";
+import { libelleCaution } from "@/lib/reservations/caution";
 import { siteUrl } from "@/lib/site-url";
 import { annulerReservation, enregistrerNote } from "./actions";
 import { formatHeure, type Espace, type Service } from "@/types/reservation";
@@ -37,6 +39,14 @@ type Demande = {
   option_expire_le: string | null;
   acompte_centimes: number | null;
   acompte_statut: "non_requis" | "attendu" | "paye" | "rembourse";
+  caution_centimes: number | null;
+  caution_statut:
+    | "non_requise"
+    | "attendue"
+    | "enregistree"
+    | "debitee"
+    | "liberee";
+  caution_debitee_centimes: number | null;
   paiement_token: string | null;
   note_interne: string | null;
   origine: "client" | "restaurateur";
@@ -157,12 +167,23 @@ function Ligne({
       )}
 
       {(() => {
-        const libelle = libelleAcompte(
-          demande.acompte_statut,
-          demande.acompte_centimes,
-        );
+        const libelle =
+          libelleAcompte(demande.acompte_statut, demande.acompte_centimes) ??
+          libelleCaution(
+            demande.caution_statut,
+            demande.caution_centimes,
+            demande.caution_debitee_centimes,
+          );
         if (!libelle) return null;
-        const paye = demande.acompte_statut === "paye";
+        // « Réglé » au sens large : plus rien n'est attendu du client.
+        const paye =
+          demande.acompte_statut === "paye" ||
+          ["enregistree", "debitee", "liberee"].includes(
+            demande.caution_statut,
+          );
+        const attendLeClient =
+          demande.acompte_statut === "attendu" ||
+          demande.caution_statut === "attendue";
         return (
           <div
             className={`flex flex-col gap-2 rounded-xl p-4 ${
@@ -176,17 +197,27 @@ function Ligne({
             >
               {libelle}
             </span>
-            {!paye && demande.paiement_token && (
+            {attendLeClient && demande.paiement_token && (
               <>
                 <span className="text-xs text-zinc-600">
-                  Envoie ce lien à ton client : il paiera sur ton compte
-                  Stripe, sans commission.
+                  {demande.caution_statut === "attendue"
+                    ? "Envoie ce lien à ton client : il enregistrera sa carte, rien ne sera prélevé."
+                    : "Envoie ce lien à ton client : il paiera sur ton compte Stripe, sans commission."}
                 </span>
                 <LienAcompte
                   lien={`${site}/paiement/${demande.paiement_token}`}
                 />
               </>
             )}
+
+            {demande.caution_statut === "enregistree" &&
+              demande.caution_centimes && (
+                <GestionCaution
+                  reservationId={demande.id}
+                  restaurantId={restaurantId}
+                  plafond={demande.caution_centimes}
+                />
+              )}
           </div>
         );
       })()}
@@ -330,12 +361,25 @@ export default async function ReservationsPage({
   // Une privatisation acceptée quitte « à traiter » : sans cette liste, le
   // restaurateur n'aurait plus aucun endroit où retrouver le lien de paiement
   // qu'il doit envoyer, sinon en devinant la date dans le calendrier.
-  const acomptesEnAttente = reservations.filter(
+  // Toutes les réservations à venir qui portent une garantie, quel que soit
+  // son état. Les faire disparaître une fois réglées priverait le
+  // restaurateur de la seule confirmation qu'il obtient après avoir débité la
+  // carte de quelqu'un — et l'acompte encaissé mérite d'être vu, lui aussi.
+  const garanties = reservations.filter(
     (reservation) =>
-      reservation.acompte_statut === "attendu" &&
+      (reservation.acompte_statut !== "non_requis" ||
+        reservation.caution_statut !== "non_requise") &&
       reservation.statut === "confirmee" &&
       reservation.date_reservation >= aujourdhui,
   );
+  const garantiesARegler = garanties.filter(
+    (reservation) =>
+      reservation.acompte_statut === "attendu" ||
+      reservation.caution_statut === "attendue" ||
+      // Une carte enregistrée reste à trancher tant que le service n'a pas eu
+      // lieu : débiter ou libérer.
+      reservation.caution_statut === "enregistree",
+  ).length;
   const duJour = jour
     ? reservations.filter(
         (reservation) => reservation.date_reservation === jour,
@@ -411,22 +455,25 @@ export default async function ReservationsPage({
         )}
       </section>
 
-      {acomptesEnAttente.length > 0 && (
+      {garanties.length > 0 && (
         <section className="flex flex-col gap-4">
           <div className="flex flex-col gap-1">
             <h2 className="text-base font-semibold text-zinc-900">
-              Acomptes à encaisser
-              <span className="ml-2 rounded-full bg-brand-orange px-2 py-0.5 text-xs font-semibold text-white">
-                {acomptesEnAttente.length}
-              </span>
+              Acomptes et cautions
+              {garantiesARegler > 0 && (
+                <span className="ml-2 rounded-full bg-brand-orange px-2 py-0.5 text-xs font-semibold text-white">
+                  {garantiesARegler}
+                </span>
+              )}
             </h2>
             <p className="text-sm text-zinc-500">
-              Envoie le lien à ton client. Il paie sur ton compte Stripe, et la
-              ligne disparaît d&apos;ici dès que l&apos;argent est arrivé.
+              Les réservations à venir qui engagent de l&apos;argent, et où
+              elles en sont. Elles quittent cette liste une fois le service
+              passé.
             </p>
           </div>
           <ul className="flex flex-col gap-3">
-            {acomptesEnAttente.map((demande) => (
+            {garanties.map((demande) => (
               <Ligne
                 key={demande.id}
                 demande={demande}

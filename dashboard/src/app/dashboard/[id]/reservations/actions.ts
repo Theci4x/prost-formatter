@@ -7,6 +7,8 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { slugDisponible, slugifier } from "@/lib/reservations/slug";
 import { chargerFermetures } from "@/lib/reservations/fermetures";
 import { montantAcompte, OCTETS_JETON } from "@/lib/reservations/acompte";
+import { montantCaution, montantDebitable } from "@/lib/reservations/caution";
+import { debiterCaution } from "@/lib/stripe/caution";
 import {
   disponibiliteEspace,
   type Reservation,
@@ -54,6 +56,10 @@ function texte(valeur: FormDataEntryValue | null): string {
  * comme le point, et les espaces des milliers : un restaurateur écrit
  * « 1 500 » ou « 1500,50 », pas « 150050 ».
  */
+function lireGarantie(brut: string): "aucune" | "acompte" | "caution" {
+  return brut === "acompte" || brut === "caution" ? brut : "aucune";
+}
+
 function enCentimes(brut: string): number | null {
   if (!brut) return null;
   const propre = brut.replace(/[\s\u00a0\u202f€]/g, "").replace(",", ".");
@@ -85,6 +91,8 @@ export async function addEspace(
       texte(formData.get("acompte_mode")) === "par_couvert"
         ? "par_couvert"
         : "forfait",
+    caution: texte(formData.get("caution")),
+    garantie: lireGarantie(texte(formData.get("garantie"))),
   };
   const rendu = prevState.rendu + 1;
   const echec = (error: string): EspaceState => ({ error, rendu, valeurs });
@@ -114,15 +122,23 @@ export async function addEspace(
     );
   }
 
-  // L'acompte est saisi en euros et stocké en centimes : un montant à virgule
-  // en base finit toujours par produire un centime de trop ou de moins.
-  const acompteCentimes = enCentimes(valeurs.acompte);
-  if (valeurs.acompte && acompteCentimes === null) {
+  // Les montants sont saisis en euros et stockés en centimes : un montant à
+  // virgule en base finit toujours par produire un centime de trop ou de
+  // moins.
+  const veutAcompte = valeurs.garantie === "acompte";
+  const veutCaution = valeurs.garantie === "caution";
+
+  const acompteCentimes = veutAcompte ? enCentimes(valeurs.acompte) : null;
+  if (veutAcompte && acompteCentimes === null) {
     return echec("L'acompte doit être un montant en euros, par exemple 500.");
   }
-  if (acompteCentimes !== null && !valeurs.privatisable) {
+  const cautionCentimes = veutCaution ? enCentimes(valeurs.caution) : null;
+  if (veutCaution && cautionCentimes === null) {
+    return echec("La caution doit être un montant en euros, par exemple 1000.");
+  }
+  if (valeurs.garantie !== "aucune" && !valeurs.privatisable) {
     return echec(
-      "L'acompte ne s'applique qu'aux privatisations : coche « privatisation » ou laisse le montant vide.",
+      "Acompte et caution ne s'appliquent qu'aux privatisations : coche « privatisation », ou choisis « aucune garantie ».",
     );
   }
 
@@ -136,6 +152,7 @@ export async function addEspace(
     accepte_table: valeurs.accepteTable,
     acompte_centimes: valeurs.privatisable ? acompteCentimes : null,
     acompte_mode: valeurs.acompteMode,
+    caution_centimes: valeurs.privatisable ? cautionCentimes : null,
   });
 
   if (error) {
@@ -382,16 +399,16 @@ export async function accepterDemande(
   // L'acompte est figé ici, à l'acceptation : si le tarif de l'espace change
   // ensuite, la somme demandée au client ne bouge pas sous ses pieds.
   const centimes = montantAcompte(espace, reservation.type, reservation.couverts);
+  const plafond = montantCaution(espace, reservation.type);
+  // Ce jeton tient lieu d'autorisation sur la page de paiement : il est tiré
+  // au hasard, jamais dérivé de l'identifiant.
+  const jeton = { paiement_token: randomBytes(OCTETS_JETON).toString("base64url") };
   const acompte =
     centimes > 0
-      ? {
-          acompte_centimes: centimes,
-          acompte_statut: "attendu",
-          // Ce jeton tient lieu d'autorisation sur la page de paiement : il
-          // est tiré au hasard, jamais dérivé de l'identifiant.
-          paiement_token: randomBytes(OCTETS_JETON).toString("base64url"),
-        }
-      : {};
+      ? { acompte_centimes: centimes, acompte_statut: "attendu", ...jeton }
+      : plafond > 0
+        ? { caution_centimes: plafond, caution_statut: "attendue", ...jeton }
+        : {};
 
   const { error } = await supabase
     .from("restaurant_reservations")
@@ -741,4 +758,144 @@ export async function supprimerFermeture(formData: FormData) {
   revalidatePath(`/dashboard/${restaurantId}/reservations`);
   revalidatePath(`/dashboard/${restaurantId}/reservations/configuration`);
   revalidatePath(`/dashboard/${restaurantId}/service`);
+}
+
+
+// — La caution —
+
+type LigneCaution = {
+  id: string;
+  restaurant_id: string;
+  client_nom: string;
+  caution_centimes: number | null;
+  caution_statut: string;
+  stripe_customer_id: string | null;
+  stripe_payment_method_id: string | null;
+};
+
+async function chargerCaution(restaurantId: string, reservationId: string) {
+  const supabase = await createClient();
+  // RLS filtre déjà sur le propriétaire ; le restaurant est repassé en
+  // condition pour qu'un identifiant emprunté ne désigne pas la réservation
+  // d'un autre établissement.
+  const { data } = await supabase
+    .from("restaurant_reservations")
+    .select(
+      "id, restaurant_id, client_nom, caution_centimes, caution_statut, stripe_customer_id, stripe_payment_method_id",
+    )
+    .eq("id", reservationId)
+    .eq("restaurant_id", restaurantId)
+    .maybeSingle();
+  return { supabase, ligne: data as LigneCaution | null };
+}
+
+function rafraichir(restaurantId: string) {
+  revalidatePath(`/dashboard/${restaurantId}/reservations`);
+  revalidatePath(`/dashboard/${restaurantId}/service`);
+}
+
+/**
+ * Seule l'erreur est renvoyée : en cas de succès la ligne passe à « débitée »
+ * et le formulaire disparaît avec elle. Un message de confirmation ne
+ * s'afficherait jamais — c'est le nouvel état de la réservation qui confirme.
+ */
+export type DebitState = { error: string | null };
+
+/**
+ * Prélève tout ou partie de la caution. Le plafond est appliqué ici et non
+ * seulement affiché : débiter au-delà de la somme annoncée au client serait
+ * un prélèvement auquel il n'a pas consenti.
+ */
+export async function debiter(
+  _prevState: DebitState,
+  formData: FormData,
+): Promise<DebitState> {
+  const restaurantId = formData.get("restaurant_id") as string;
+  const reservationId = formData.get("reservation_id") as string;
+  const { supabase, ligne } = await chargerCaution(restaurantId, reservationId);
+
+  if (!ligne || !ligne.caution_centimes) {
+    return { error: "Cette réservation n'a pas de caution." };
+  }
+  if (ligne.caution_statut !== "enregistree") {
+    return {
+      error:
+        ligne.caution_statut === "debitee"
+          ? "Cette caution a déjà été débitée."
+          : "Aucune carte n'est enregistrée pour cette réservation.",
+    };
+  }
+  if (!ligne.stripe_customer_id || !ligne.stripe_payment_method_id) {
+    return { error: "La carte enregistrée est introuvable." };
+  }
+
+  const demande = enCentimes(texte(formData.get("montant")));
+  const { centimes, erreur } = montantDebitable(
+    demande ?? 0,
+    ligne.caution_centimes,
+  );
+  if (erreur) return { error: erreur };
+
+  const { data: connexion } = await supabase
+    .from("restaurant_stripe_connexions")
+    .select("stripe_account_id")
+    .eq("restaurant_id", restaurantId)
+    .maybeSingle();
+  const compte = (connexion as { stripe_account_id: string } | null)
+    ?.stripe_account_id;
+  if (!compte) {
+    return { error: "Ton compte Stripe n'est plus relié." };
+  }
+
+  const resultat = await debiterCaution({
+    compteStripe: compte,
+    customerId: ligne.stripe_customer_id,
+    carteId: ligne.stripe_payment_method_id,
+    centimes,
+    intitule: `Caution — ${ligne.client_nom}`,
+    reservationId: ligne.id,
+  });
+
+  if (!resultat.ok) return { error: resultat.message };
+
+  const { error } = await supabase
+    .from("restaurant_reservations")
+    .update({
+      caution_statut: "debitee",
+      caution_debitee_centimes: centimes,
+      stripe_payment_intent_id: resultat.paymentIntentId,
+    })
+    .eq("id", ligne.id);
+  if (error) {
+    console.error("[debiter]", error);
+    // L'argent est prélevé : le dire est plus utile que de laisser croire
+    // que rien ne s'est passé.
+    return {
+      error:
+        "Le prélèvement a réussi mais n'a pas pu être enregistré. Vérifie ton tableau de bord Stripe avant de recommencer.",
+    };
+  }
+
+  rafraichir(restaurantId);
+  return { error: null };
+}
+
+/**
+ * Libère la caution : rien à faire chez Stripe, puisque rien n'était bloqué.
+ * On l'inscrit tout de même, pour que le restaurateur voie qu'il a tranché et
+ * ne reste pas avec une carte « en attente » sur un service déjà passé.
+ */
+export async function libererCaution(formData: FormData) {
+  const restaurantId = formData.get("restaurant_id") as string;
+  const reservationId = formData.get("reservation_id") as string;
+  const { supabase, ligne } = await chargerCaution(restaurantId, reservationId);
+  if (!ligne || ligne.caution_statut === "debitee") return;
+
+  const { error } = await supabase
+    .from("restaurant_reservations")
+    .update({ caution_statut: "liberee" })
+    .eq("id", ligne.id);
+  if (error) console.error("[libererCaution]", error);
+
+  rafraichir(restaurantId);
 }

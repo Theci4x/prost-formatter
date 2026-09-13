@@ -12,6 +12,9 @@ export type Espace = {
   // NULL quand l'espace n'en demande pas.
   acompte_centimes: number | null;
   acompte_mode: "forfait" | "par_couvert";
+  // Plafond débitable en cas de défection. Exclusif de l'acompte : on ne
+  // réclame pas les deux au même client.
+  caution_centimes: number | null;
 };
 
 export type Service = {
@@ -91,6 +94,9 @@ export type EspaceValeurs = {
   // à l'enregistrement.
   acompte: string;
   acompteMode: "forfait" | "par_couvert";
+  caution: string;
+  // Ce que l'espace réclame : rien, un acompte, ou une carte en garantie.
+  garantie: "aucune" | "acompte" | "caution";
 };
 
 export const ESPACE_VIDE: EspaceValeurs = {
@@ -102,6 +108,8 @@ export const ESPACE_VIDE: EspaceValeurs = {
   minimum: "12",
   acompte: "",
   acompteMode: "forfait",
+  caution: "",
+  garantie: "aucune",
 };
 
 export type ServiceValeurs = {
