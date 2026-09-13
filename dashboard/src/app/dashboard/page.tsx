@@ -1,0 +1,203 @@
+import Link from "next/link";
+import { createClient } from "@/lib/supabase/server";
+import { DeleteRestaurantButton } from "@/components/restaurants/DeleteRestaurantButton";
+import { dashboardIcons } from "@/components/dashboard/PageHeader";
+import { AlertsPanel } from "@/components/dashboard/AlertsPanel";
+import { fetchAlerts } from "@/lib/reputation/alerts";
+import { peutGerer, roleSur, type Role } from "@/lib/equipe/roles";
+import type { Restaurant } from "@/types/restaurant";
+
+// Ce que chaque rôle peut ouvrir. La base refuse déjà le reste ; ceci évite
+// de proposer une porte fermée, qu'un serveur prendrait pour une panne.
+const FEATURE_LINKS: {
+  href: string;
+  label: string;
+  icon: React.ReactNode;
+  minimum?: "gerant" | "proprietaire";
+}[] = [
+  { href: "photos", label: "Photos", icon: dashboardIcons.photos, minimum: "gerant" },
+  { href: "menu", label: "Menu", icon: dashboardIcons.menu, minimum: "gerant" },
+  { href: "seo", label: "SEO", icon: dashboardIcons.seo, minimum: "gerant" },
+  {
+    href: "visibilite-ia",
+    label: "Visibilité IA",
+    icon: dashboardIcons.visibiliteIa,
+    minimum: "gerant",
+  },
+  { href: "avis", label: "Avis", icon: dashboardIcons.avis, minimum: "gerant" },
+  // Google, Facebook, Instagram et TikTok sont regroupés derrière une seule
+  // entrée : le restaurateur relie ses comptes une fois, au même endroit.
+  {
+    href: "reservations",
+    label: "Réservations",
+    icon: dashboardIcons.reservations,
+  },
+  // Raccourci assumé : en plein service, personne n'a le temps de passer par
+  // le carnet pour arriver à l'écran de salle.
+  { href: "service", label: "Service", icon: dashboardIcons.service },
+  {
+    href: "connexions",
+    label: "Connexions",
+    icon: dashboardIcons.connexions,
+    minimum: "gerant",
+  },
+  {
+    href: "paiements",
+    label: "Paiements",
+    icon: dashboardIcons.abonnement,
+    minimum: "gerant",
+  },
+  {
+    href: "equipe",
+    label: "Équipe",
+    icon: dashboardIcons.connexions,
+    minimum: "proprietaire",
+  },
+  {
+    href: "abonnement",
+    label: "Abonnement",
+    icon: dashboardIcons.abonnement,
+    minimum: "proprietaire",
+  },
+];
+
+function accessible(
+  minimum: "gerant" | "proprietaire" | undefined,
+  role: Role | null,
+): boolean {
+  if (!minimum) return true;
+  if (minimum === "proprietaire") return role === "proprietaire";
+  return peutGerer(role);
+}
+
+export default async function DashboardPage() {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("restaurants")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  const restaurants = (data ?? []) as Restaurant[];
+
+  const { alerts, surveillanceActive } = await fetchAlerts(supabase);
+  const restaurantNames = new Map(restaurants.map((r) => [r.id, r.nom]));
+
+  // Le rôle peut différer d'un établissement à l'autre : propriétaire du
+  // sien, serveur chez un confrère.
+  const roles = new Map(
+    await Promise.all(
+      restaurants.map(
+        async (restaurant) =>
+          [restaurant.id, await roleSur(restaurant.id)] as const,
+      ),
+    ),
+  );
+
+  return (
+    <div className="flex flex-1 flex-col gap-6 px-6 py-8">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-semibold text-zinc-900">
+            Mes restaurants
+          </h1>
+          <p className="text-sm text-zinc-500">
+            Gère la présence en ligne de tes établissements.
+          </p>
+        </div>
+        <Link
+          href="/dashboard/new"
+          className="rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-brand-navy-hover hover:shadow"
+        >
+          Ajouter un restaurant
+        </Link>
+      </div>
+
+      {restaurants.length > 0 && (
+        <AlertsPanel
+          alerts={alerts}
+          restaurantNames={restaurantNames}
+          surveillanceActive={surveillanceActive}
+        />
+      )}
+
+      {restaurants.length === 0 ? (
+        <div className="flex max-w-md flex-col items-center gap-4 rounded-2xl border border-dashed border-zinc-300 bg-white px-6 py-16 text-center shadow-sm">
+          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-brand-orange-soft to-white text-brand-navy shadow-sm">
+            {dashboardIcons.menu}
+          </div>
+          <div className="flex flex-col gap-1">
+            <p className="text-sm font-medium text-zinc-900">
+              Aucun restaurant pour le moment.
+            </p>
+            <p className="text-sm text-zinc-500">
+              Ajoute ton premier restaurant pour commencer à gérer sa
+              présence en ligne.
+            </p>
+          </div>
+          <Link
+            href="/dashboard/new"
+            className="rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-brand-navy-hover hover:shadow"
+          >
+            Ajouter un restaurant
+          </Link>
+        </div>
+      ) : (
+        <ul className="flex flex-col gap-4">
+          {restaurants.map((restaurant) => (
+            <li
+              key={restaurant.id}
+              className="flex flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm transition-shadow hover:shadow-md"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-navy text-sm font-semibold text-white">
+                    {restaurant.nom.slice(0, 1).toUpperCase()}
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-zinc-900">
+                      {restaurant.nom}
+                    </p>
+                    {restaurant.adresse && (
+                      <p className="text-sm text-zinc-500">
+                        {restaurant.adresse}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  {peutGerer(roles.get(restaurant.id) ?? null) && (
+                    <Link
+                      href={`/dashboard/${restaurant.id}/edit`}
+                      className="text-sm font-medium text-zinc-600 hover:text-zinc-900"
+                    >
+                      Modifier
+                    </Link>
+                  )}
+                  {roles.get(restaurant.id) === "proprietaire" && (
+                    <DeleteRestaurantButton id={restaurant.id} />
+                  )}
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {FEATURE_LINKS.filter((feature) =>
+                  accessible(feature.minimum, roles.get(restaurant.id) ?? null),
+                ).map((feature) => (
+                  <Link
+                    key={feature.href}
+                    href={`/dashboard/${restaurant.id}/${feature.href}`}
+                    className="flex items-center gap-1.5 rounded-full bg-brand-orange-soft px-3 py-1.5 text-xs font-medium text-brand-navy transition-colors hover:bg-brand-navy hover:text-white"
+                  >
+                    <span className="[&_svg]:h-3.5 [&_svg]:w-3.5">
+                      {feature.icon}
+                    </span>
+                    {feature.label}
+                  </Link>
+                ))}
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}

@@ -1,0 +1,78 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+/* Couleurs de marque Klarr — utilisées dans le dashboard interne
+   (bg-brand-navy, hover:bg-brand-navy-hover, text-brand-orange, etc.). */
+@theme {
+  --color-brand-navy: #0f1e3d;
+  --color-brand-navy-hover: #16295a;
+  --color-brand-orange: #e8871e;
+  --color-brand-orange-soft: #fdf1e2;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+/* Bandeau de logos clients (landing) : deux copies de la liste se
+   suivent, translater de -50% boucle donc sans saut visible. */
+@keyframes klarr-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+.klarr-marquee-track {
+  animation: klarr-marquee 38s linear infinite;
+}
+.klarr-marquee:hover .klarr-marquee-track {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .klarr-marquee-track {
+    animation: none;
+  }
+}
+
+/* Grain de pellicule sur la landing : casse le côté "aplat numérique" des
+   fonds unis. Fixe plutôt qu'en défilement, sinon la texture "glisse" sur le
+   contenu. pointer-events évite qu'il n'intercepte les clics. */
+.klarr-grain::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0.045;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Landing page (/) only — scoped so it never leaks into the dashboard. */
+.klarr-landing a {
+  color: inherit;
+  text-decoration: none;
+}
+.klarr-landing .nav-link:hover {
+  color: var(--accent-dark) !important;
+}
+.klarr-landing .btn-primary {
+  transition:
+    background 0.15s ease,
+    transform 0.15s ease;
+  display: inline-block;
+}
+.klarr-landing .btn-primary:hover {
+  transform: translateY(-1px);
+}
