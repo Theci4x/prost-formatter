@@ -4,18 +4,27 @@ import { DeleteRestaurantButton } from "@/components/restaurants/DeleteRestauran
 import { dashboardIcons } from "@/components/dashboard/PageHeader";
 import { AlertsPanel } from "@/components/dashboard/AlertsPanel";
 import { fetchAlerts } from "@/lib/reputation/alerts";
+import { peutGerer, roleSur, type Role } from "@/lib/equipe/roles";
 import type { Restaurant } from "@/types/restaurant";
 
-const FEATURE_LINKS = [
-  { href: "photos", label: "Photos", icon: dashboardIcons.photos },
-  { href: "menu", label: "Menu", icon: dashboardIcons.menu },
-  { href: "seo", label: "SEO", icon: dashboardIcons.seo },
+// Ce que chaque rôle peut ouvrir. La base refuse déjà le reste ; ceci évite
+// de proposer une porte fermée, qu'un serveur prendrait pour une panne.
+const FEATURE_LINKS: {
+  href: string;
+  label: string;
+  icon: React.ReactNode;
+  minimum?: "gerant" | "proprietaire";
+}[] = [
+  { href: "photos", label: "Photos", icon: dashboardIcons.photos, minimum: "gerant" },
+  { href: "menu", label: "Menu", icon: dashboardIcons.menu, minimum: "gerant" },
+  { href: "seo", label: "SEO", icon: dashboardIcons.seo, minimum: "gerant" },
   {
     href: "visibilite-ia",
     label: "Visibilité IA",
     icon: dashboardIcons.visibiliteIa,
+    minimum: "gerant",
   },
-  { href: "avis", label: "Avis", icon: dashboardIcons.avis },
+  { href: "avis", label: "Avis", icon: dashboardIcons.avis, minimum: "gerant" },
   // Google, Facebook, Instagram et TikTok sont regroupés derrière une seule
   // entrée : le restaurateur relie ses comptes une fois, au même endroit.
   {
@@ -26,10 +35,40 @@ const FEATURE_LINKS = [
   // Raccourci assumé : en plein service, personne n'a le temps de passer par
   // le carnet pour arriver à l'écran de salle.
   { href: "service", label: "Service", icon: dashboardIcons.service },
-  { href: "connexions", label: "Connexions", icon: dashboardIcons.connexions },
-  { href: "paiements", label: "Paiements", icon: dashboardIcons.abonnement },
-  { href: "abonnement", label: "Abonnement", icon: dashboardIcons.abonnement },
-] as const;
+  {
+    href: "connexions",
+    label: "Connexions",
+    icon: dashboardIcons.connexions,
+    minimum: "gerant",
+  },
+  {
+    href: "paiements",
+    label: "Paiements",
+    icon: dashboardIcons.abonnement,
+    minimum: "gerant",
+  },
+  {
+    href: "equipe",
+    label: "Équipe",
+    icon: dashboardIcons.connexions,
+    minimum: "proprietaire",
+  },
+  {
+    href: "abonnement",
+    label: "Abonnement",
+    icon: dashboardIcons.abonnement,
+    minimum: "proprietaire",
+  },
+];
+
+function accessible(
+  minimum: "gerant" | "proprietaire" | undefined,
+  role: Role | null,
+): boolean {
+  if (!minimum) return true;
+  if (minimum === "proprietaire") return role === "proprietaire";
+  return peutGerer(role);
+}
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -42,6 +81,17 @@ export default async function DashboardPage() {
 
   const { alerts, surveillanceActive } = await fetchAlerts(supabase);
   const restaurantNames = new Map(restaurants.map((r) => [r.id, r.nom]));
+
+  // Le rôle peut différer d'un établissement à l'autre : propriétaire du
+  // sien, serveur chez un confrère.
+  const roles = new Map(
+    await Promise.all(
+      restaurants.map(
+        async (restaurant) =>
+          [restaurant.id, await roleSur(restaurant.id)] as const,
+      ),
+    ),
+  );
 
   return (
     <div className="flex flex-1 flex-col gap-6 px-6 py-8">
@@ -115,17 +165,23 @@ export default async function DashboardPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
-                  <Link
-                    href={`/dashboard/${restaurant.id}/edit`}
-                    className="text-sm font-medium text-zinc-600 hover:text-zinc-900"
-                  >
-                    Modifier
-                  </Link>
-                  <DeleteRestaurantButton id={restaurant.id} />
+                  {peutGerer(roles.get(restaurant.id) ?? null) && (
+                    <Link
+                      href={`/dashboard/${restaurant.id}/edit`}
+                      className="text-sm font-medium text-zinc-600 hover:text-zinc-900"
+                    >
+                      Modifier
+                    </Link>
+                  )}
+                  {roles.get(restaurant.id) === "proprietaire" && (
+                    <DeleteRestaurantButton id={restaurant.id} />
+                  )}
                 </div>
               </div>
               <div className="flex flex-wrap gap-2">
-                {FEATURE_LINKS.map((feature) => (
+                {FEATURE_LINKS.filter((feature) =>
+                  accessible(feature.minimum, roles.get(restaurant.id) ?? null),
+                ).map((feature) => (
                   <Link
                     key={feature.href}
                     href={`/dashboard/${restaurant.id}/${feature.href}`}

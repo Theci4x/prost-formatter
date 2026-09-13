@@ -22,6 +22,7 @@ import {
 import type { Restaurant } from "@/types/restaurant";
 import type { RestaurantPhoto } from "@/types/photo";
 import { siteUrl } from "@/lib/site-url";
+import { exiger } from "@/lib/equipe/roles";
 
 function Supprimer({
   id,
@@ -75,6 +76,7 @@ export default async function ConfigurationReservationsPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  await exiger(id, "gerant");
   const supabase = await createClient();
 
   const [

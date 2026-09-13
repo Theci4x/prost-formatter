@@ -6,6 +6,7 @@ import { diagnostic, relireCompte } from "@/lib/stripe/connect";
 import { deconnecterStripe } from "./actions";
 import type { Restaurant } from "@/types/restaurant";
 import type { StripeConnexion } from "@/types/stripe";
+import { exiger } from "@/lib/equipe/roles";
 
 const MOTIFS: Record<string, string> = {
   annule: "Connexion annulée : rien n'a été relié.",
@@ -25,6 +26,7 @@ export default async function PaiementsPage({
   searchParams: Promise<{ stripe_error?: string; stripe_connecte?: string }>;
 }) {
   const { id } = await params;
+  await exiger(id, "gerant");
   const query = await searchParams;
   const supabase = await createClient();
 

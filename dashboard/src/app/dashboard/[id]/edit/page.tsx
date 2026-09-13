@@ -4,6 +4,7 @@ import { updateRestaurant } from "@/app/dashboard/actions";
 import { RestaurantForm } from "@/components/restaurants/RestaurantForm";
 import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
 import type { Restaurant } from "@/types/restaurant";
+import { exiger } from "@/lib/equipe/roles";
 
 export default async function EditRestaurantPage({
   params,
@@ -11,6 +12,7 @@ export default async function EditRestaurantPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  await exiger(id, "gerant");
 
   const supabase = await createClient();
   const { data } = await supabase

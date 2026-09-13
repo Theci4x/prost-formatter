@@ -4,6 +4,7 @@ import { addMenuItem, removeMenuItem } from "./actions";
 import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
 import type { Restaurant } from "@/types/restaurant";
 import type { MenuItem } from "@/types/menu";
+import { exiger } from "@/lib/equipe/roles";
 
 export default async function MenuPage({
   params,
@@ -11,6 +12,7 @@ export default async function MenuPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  await exiger(id, "gerant");
 
   const supabase = await createClient();
 

@@ -6,6 +6,7 @@ import { disconnectGoogle, selectGoogleLocation } from "./actions";
 import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
 import type { Restaurant } from "@/types/restaurant";
 import type { GoogleBusinessConnection } from "@/types/google";
+import { exiger } from "@/lib/equipe/roles";
 
 export default async function GoogleConnectionPage({
   params,
@@ -15,6 +16,7 @@ export default async function GoogleConnectionPage({
   searchParams: Promise<{ connected?: string; error?: string }>;
 }) {
   const { id } = await params;
+  await exiger(id, "gerant");
   const { connected, error } = await searchParams;
 
   const supabase = await createClient();

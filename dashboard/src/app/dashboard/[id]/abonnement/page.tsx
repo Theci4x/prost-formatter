@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
 import type { Restaurant } from "@/types/restaurant";
 import type { RestaurantSubscription } from "@/types/subscription";
+import { exiger } from "@/lib/equipe/roles";
 
 const STATUS_LABELS: Record<string, string> = {
   active: "Actif",
@@ -20,6 +21,7 @@ export default async function AbonnementPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  await exiger(id, "proprietaire");
 
   const supabase = await createClient();
 

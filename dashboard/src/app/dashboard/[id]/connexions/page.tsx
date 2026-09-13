@@ -5,6 +5,7 @@ import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
 import { FacebookConnectButton } from "@/components/connections/FacebookConnectButton";
 import { platformIcons } from "@/components/connections/platformIcons";
 import type { Restaurant } from "@/types/restaurant";
+import { exiger } from "@/lib/equipe/roles";
 
 type Platform = {
   key: string;
@@ -92,6 +93,7 @@ export default async function ConnexionsPage({
   searchParams: Promise<{ connected?: string; stripe_error?: string }>;
 }) {
   const { id } = await params;
+  await exiger(id, "gerant");
   const { connected, stripe_error: stripeError } = await searchParams;
   const supabase = await createClient();
 

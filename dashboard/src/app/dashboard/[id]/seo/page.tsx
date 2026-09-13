@@ -5,6 +5,7 @@ import { KeywordAnalysis } from "@/components/seo/KeywordAnalysis";
 import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
 import type { Restaurant } from "@/types/restaurant";
 import type { RestaurantKeyword } from "@/types/keyword";
+import { exiger } from "@/lib/equipe/roles";
 
 export default async function SeoPage({
   params,
@@ -12,6 +13,7 @@ export default async function SeoPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  await exiger(id, "gerant");
 
   const supabase = await createClient();
 

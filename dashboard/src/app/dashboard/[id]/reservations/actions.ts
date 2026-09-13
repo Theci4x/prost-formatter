@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { slugDisponible, slugifier } from "@/lib/reservations/slug";
 import { chargerFermetures } from "@/lib/reservations/fermetures";
+import { peutGerer, roleSur } from "@/lib/equipe/roles";
 import { montantAcompte, OCTETS_JETON } from "@/lib/reservations/acompte";
 import { montantCaution, montantDebitable } from "@/lib/reservations/caution";
 import { debiterCaution } from "@/lib/stripe/caution";
@@ -812,6 +813,16 @@ export async function debiter(
 ): Promise<DebitState> {
   const restaurantId = formData.get("restaurant_id") as string;
   const reservationId = formData.get("reservation_id") as string;
+
+  // RLS laisse le service écrire sur les réservations — il en a besoin pour
+  // accepter, refuser et noter. Prélever la carte d'un client n'en fait pas
+  // partie : ce contrôle-là se fait ici, faute de pouvoir distinguer les
+  // colonnes dans une politique.
+  if (!peutGerer(await roleSur(restaurantId))) {
+    return {
+      error: "Seul le gérant ou le propriétaire peut débiter une caution.",
+    };
+  }
   const { supabase, ligne } = await chargerCaution(restaurantId, reservationId);
 
   if (!ligne || !ligne.caution_centimes) {
@@ -888,6 +899,7 @@ export async function debiter(
 export async function libererCaution(formData: FormData) {
   const restaurantId = formData.get("restaurant_id") as string;
   const reservationId = formData.get("reservation_id") as string;
+  if (!peutGerer(await roleSur(restaurantId))) return;
   const { supabase, ligne } = await chargerCaution(restaurantId, reservationId);
   if (!ligne || ligne.caution_statut === "debitee") return;
 
