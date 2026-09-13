@@ -244,12 +244,22 @@ create policy "membres_delete" on public.restaurant_membres
 
 -- Le stockage des photos suivait la seule propriété : un gérant ne pouvait
 -- pas téléverser. On aligne sur les mêmes règles que la table des photos.
+--
+-- Le dossier est comparé au format texte, jamais converti en identifiant :
+-- convertir ferait échouer la règle ENTIÈRE — donc tout téléversement et
+-- toute suppression, pour tout le monde — dès qu'un seul fichier du seau
+-- aurait un dossier qui n'est pas un identifiant. Un tel fichier n'a rien à
+-- faire là, mais une règle de sécurité ne doit pas dépendre de ça.
 drop policy if exists "storage_restaurant_photos_insert_own" on storage.objects;
 create policy "storage_restaurant_photos_insert_own"
   on storage.objects for insert
   with check (
     bucket_id = 'restaurant-photos'
-    and public.peut_gerer(((storage.foldername(name))[1])::uuid)
+    and exists (
+      select 1 from public.restaurants r
+      where r.id::text = (storage.foldername(name))[1]
+        and public.peut_gerer(r.id)
+    )
   );
 
 drop policy if exists "storage_restaurant_photos_delete_own" on storage.objects;
@@ -257,5 +267,9 @@ create policy "storage_restaurant_photos_delete_own"
   on storage.objects for delete
   using (
     bucket_id = 'restaurant-photos'
-    and public.peut_gerer(((storage.foldername(name))[1])::uuid)
+    and exists (
+      select 1 from public.restaurants r
+      where r.id::text = (storage.foldername(name))[1]
+        and public.peut_gerer(r.id)
+    )
   );
