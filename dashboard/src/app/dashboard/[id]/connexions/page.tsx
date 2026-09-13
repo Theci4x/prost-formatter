@@ -89,14 +89,19 @@ export default async function ConnexionsPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ connected?: string }>;
+  searchParams: Promise<{ connected?: string; stripe_error?: string }>;
 }) {
   const { id } = await params;
-  const { connected } = await searchParams;
+  const { connected, stripe_error: stripeError } = await searchParams;
   const supabase = await createClient();
 
-  const [restaurantResult, googleResult, socialResult, tiktokResult] =
-    await Promise.all([
+  const [
+    restaurantResult,
+    googleResult,
+    socialResult,
+    tiktokResult,
+    stripeResult,
+  ] = await Promise.all([
       supabase.from("restaurants").select("*").eq("id", id).maybeSingle(),
       supabase
         .from("google_business_connections")
@@ -111,6 +116,11 @@ export default async function ConnexionsPage({
       supabase
         .from("tiktok_connections")
         .select("display_name, tiktok_username")
+        .eq("restaurant_id", id)
+        .maybeSingle(),
+      supabase
+        .from("restaurant_stripe_connexions")
+        .select("nom_affiche, stripe_account_id, paiements_actifs")
         .eq("restaurant_id", id)
         .maybeSingle(),
     ]);
@@ -131,6 +141,11 @@ export default async function ConnexionsPage({
   const tiktok = tiktokResult.data as {
     display_name: string | null;
     tiktok_username: string | null;
+  } | null;
+  const stripe = stripeResult.data as {
+    nom_affiche: string | null;
+    stripe_account_id: string;
+    paiements_actifs: boolean;
   } | null;
 
   const platforms: Platform[] = [
@@ -198,6 +213,25 @@ export default async function ConnexionsPage({
       managePath: `/dashboard/${id}/tiktok`,
       connectHref: `/api/tiktok/authorize?restaurant_id=${id}`,
     },
+    {
+      key: "stripe",
+      name: "Stripe",
+      purpose: "Acomptes, cautions et expériences payées d'avance.",
+      icon: platformIcons.stripe,
+      color: "#635bff",
+      tint: "#eeedff",
+      connected: Boolean(stripe),
+      // Un compte relié mais au dossier incomplet n'encaisse rien : mieux
+      // vaut le dire ici que de le laisser découvrir à la première demande
+      // d'acompte.
+      detail: stripe
+        ? `${stripe.nom_affiche ?? stripe.stripe_account_id}${
+            stripe.paiements_actifs ? "" : " — dossier à terminer"
+          }`
+        : null,
+      managePath: `/dashboard/${id}/paiements`,
+      connectHref: `/dashboard/${id}/paiements`,
+    },
   ];
 
   const connectedCount = platforms.filter((p) => p.connected).length;
@@ -215,6 +249,19 @@ export default async function ConnexionsPage({
         </p>
       )}
 
+      {stripeError && (
+        <p className="max-w-2xl rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
+          La connexion Stripe n&apos;a pas abouti.{" "}
+          <Link
+            href={`/dashboard/${id}/paiements`}
+            className="font-medium underline"
+          >
+            Voir le détail et réessayer
+          </Link>
+          .
+        </p>
+      )}
+
       <p className="max-w-2xl text-sm text-zinc-500">
         Relie tes comptes à Klarr pour qu&apos;il puisse lire tes avis, tes
         publications et tes statistiques. Tu restes propriétaire de tes
@@ -226,7 +273,7 @@ export default async function ConnexionsPage({
         {connectedCount > 1 ? "s" : ""} sur {platforms.length}
       </p>
 
-      <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         {platforms.map((platform) => (
           <PlatformCard key={platform.key} platform={platform} />
         ))}

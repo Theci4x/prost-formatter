@@ -40,6 +40,13 @@ export const platformIcons = {
       <circle cx="17" cy="7" r="1.1" fill="currentColor" stroke="none" />
     </svg>
   ),
+  // Le « S » de Stripe, tracé en plein : leur logo officiel n'est pas
+  // redistribuable, une lettre neutre l'est.
+  stripe: (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M13.2 9.6c0-.7.6-1 1.5-1 1.3 0 3 .4 4.3 1.1V5.9A11.4 11.4 0 0 0 14.7 5C11.2 5 8.9 6.8 8.9 9.8c0 4.7 6.5 4 6.5 6 0 .8-.7 1.1-1.7 1.1-1.4 0-3.3-.6-4.7-1.4v3.9c1.6.7 3.2 1 4.7 1 3.6 0 6.1-1.8 6.1-4.8 0-5.1-6.6-4.3-6.6-6z" />
+    </svg>
+  ),
   tiktok: (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
       <path d="M16.4 3h-2.5v12.2a2.4 2.4 0 1 1-2-2.37v-2.6a5 5 0 1 0 4.5 4.97V9.05A6.3 6.3 0 0 0 20 10.1V7.6a3.8 3.8 0 0 1-3.6-4.6z" />

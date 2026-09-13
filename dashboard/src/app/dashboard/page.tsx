@@ -27,6 +27,7 @@ const FEATURE_LINKS = [
   // le carnet pour arriver à l'écran de salle.
   { href: "service", label: "Service", icon: dashboardIcons.service },
   { href: "connexions", label: "Connexions", icon: dashboardIcons.connexions },
+  { href: "paiements", label: "Paiements", icon: dashboardIcons.abonnement },
   { href: "abonnement", label: "Abonnement", icon: dashboardIcons.abonnement },
 ] as const;
 
