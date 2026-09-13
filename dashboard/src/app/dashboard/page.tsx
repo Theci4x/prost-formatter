@@ -36,6 +36,12 @@ const FEATURE_LINKS: {
   // le carnet pour arriver à l'écran de salle.
   { href: "service", label: "Service", icon: dashboardIcons.service },
   {
+    href: "experiences",
+    label: "Expériences",
+    icon: dashboardIcons.menu,
+    minimum: "gerant",
+  },
+  {
     href: "connexions",
     label: "Connexions",
     icon: dashboardIcons.connexions,

@@ -36,22 +36,35 @@ async function enregistrerAcompte(session: Stripe.Checkout.Session) {
   if (!token || session.payment_status !== "paid") return;
 
   const supabase = createServiceClient();
+  const paymentIntentId =
+    typeof session.payment_intent === "string"
+      ? session.payment_intent
+      : (session.payment_intent?.id ?? null);
+
+  // Le jeton désigne soit un acompte sur une réservation, soit une place
+  // d'atelier. On tente les deux : le filtre sur le statut garantit qu'un
+  // événement rejoué n'écrase rien, et qu'une seule des deux tables répond.
   const { error } = await supabase
     .from("restaurant_reservations")
     .update({
       acompte_statut: "paye",
       acompte_paye_le: new Date().toISOString(),
-      stripe_payment_intent_id:
-        typeof session.payment_intent === "string"
-          ? session.payment_intent
-          : (session.payment_intent?.id ?? null),
+      stripe_payment_intent_id: paymentIntentId,
     })
     .eq("paiement_token", token)
-    // Le jeton suffit à désigner la réservation, mais on refuse d'écraser un
-    // acompte déjà enregistré : un même événement peut être rejoué.
     .eq("acompte_statut", "attendu");
-
   if (error) console.error("[stripe webhook] acompte", error);
+
+  const { error: erreurSeance } = await supabase
+    .from("restaurant_experience_reservations")
+    .update({
+      statut: "confirmee",
+      paye_le: new Date().toISOString(),
+      stripe_payment_intent_id: paymentIntentId,
+    })
+    .eq("paiement_token", token)
+    .eq("statut", "attendue");
+  if (erreurSeance) console.error("[stripe webhook] séance", erreurSeance);
 }
 
 export async function POST(request: NextRequest) {

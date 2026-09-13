@@ -5,6 +5,7 @@ import { formatEuros, resumePourClient } from "@/lib/reservations/acompte";
 import { engagementClient } from "@/lib/reservations/caution";
 import { cautionEnregistree, demanderCaution } from "@/lib/stripe/caution";
 import { formatCreneau } from "@/types/reservation";
+import { chargerSeance, PaiementSeance } from "./seance";
 
 export const dynamic = "force-dynamic";
 
@@ -66,6 +67,22 @@ export default async function PaiementPage({
     )
     .eq("paiement_token", token)
     .maybeSingle();
+
+  // Le jeton peut désigner une séance plutôt qu'une réservation de table :
+  // un seul lien, deux natures, et le client n'a pas à savoir laquelle.
+  if (!data) {
+    const seance = await chargerSeance(supabase, token);
+    if (seance) {
+      return (
+        <PaiementSeance
+          seance={seance}
+          token={token}
+          retour={Boolean(query.retour)}
+          annule={Boolean(query.annule)}
+        />
+      );
+    }
+  }
 
   const ligne = data as Ligne | null;
   // Le même lien sert l'acompte et la caution : c'est la réservation qui dit

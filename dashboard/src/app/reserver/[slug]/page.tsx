@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { createServiceClient } from "@/lib/supabase/service";
 import { GalerieRestaurant } from "@/components/reservations/GalerieRestaurant";
+import { SectionExperiences } from "@/components/experiences/SectionExperiences";
+import { prochainesSeances } from "@/lib/experiences/seances";
+import type { Experience, PlaceReservee } from "@/types/experience";
 import { ResumeEtablissement } from "@/components/reservations/ResumeEtablissement";
 import { resumeEtablissement } from "@/lib/reservations/resume";
 import { chargerFermetures } from "@/lib/reservations/fermetures";
@@ -126,6 +129,8 @@ export default async function ReserverPage({
     reservationsResult,
     photosResult,
     fermetures,
+    experiencesResult,
+    placesResult,
     reputationResult,
   ] = await Promise.all([
     supabase
@@ -154,6 +159,18 @@ export default async function ReserverPage({
       .order("ordre")
       .order("created_at"),
     chargerFermetures(supabase, restaurant.id, date),
+    supabase
+      .from("restaurant_experiences")
+      .select("*")
+      .eq("restaurant_id", restaurant.id)
+      .eq("actif", true)
+      .order("ordre"),
+    // Les places déjà prises sur la fenêtre affichée.
+    supabase
+      .from("restaurant_experience_reservations")
+      .select("id, experience_id, date_seance, places, statut")
+      .eq("restaurant_id", restaurant.id)
+      .gte("date_seance", date),
     // Le dernier relevé Google, s'il existe : une note affichée vaut mieux
     // qu'une case vide, mais on n'en fabrique pas une.
     supabase
@@ -174,6 +191,9 @@ export default async function ReserverPage({
     note: number | null;
     nombre_avis: number | null;
   } | null;
+
+  const experiences = (experiencesResult.data ?? []) as Experience[];
+  const placesPrises = (placesResult.data ?? []) as PlaceReservee[];
 
   const toutesPhotos = (photosResult.data ?? []) as RestaurantPhoto[];
   const photosEtablissement = toutesPhotos.filter((photo) => !photo.espace_id);
@@ -395,6 +415,27 @@ export default async function ReserverPage({
             ))
           )}
         </section>
+
+        <SectionExperiences
+          slug={slug}
+          experiences={experiences}
+          seancesParExperience={
+            new Map(
+              experiences.map((experience) => [
+                experience.id,
+                prochainesSeances({
+                  experience,
+                  depuis: date,
+                  jours: 28,
+                  places: 1,
+                  reservations: placesPrises,
+                  fermetures,
+                  maintenant: new Date(),
+                }).slice(0, 6),
+              ]),
+            )
+          }
+        />
       </main>
 
       <footer className="border-t border-zinc-200/70 px-6 py-6">

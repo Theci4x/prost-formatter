@@ -407,6 +407,12 @@ export default async function ReservationsPage({
             Écran de service
           </Link>
           <Link
+            href={`/dashboard/${id}/experiences`}
+            className="rounded-md border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
+          >
+            Expériences
+          </Link>
+          <Link
             href={`/dashboard/${id}/reservations/configuration`}
             className="rounded-md border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
           >
