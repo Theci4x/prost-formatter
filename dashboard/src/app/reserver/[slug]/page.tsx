@@ -45,9 +45,43 @@ export async function generateMetadata({
   const { slug } = await params;
   const restaurant = await chargerRestaurant(slug);
   if (!restaurant) return { title: "Réservation" };
+
+  // La photo de l'établissement, pas celle de Klarr : le lien est partagé
+  // par le restaurateur sur son Instagram et sa fiche Google, il doit
+  // montrer sa salle.
+  const supabase = createServiceClient();
+  const { data: photo } = await supabase
+    .from("restaurant_photos")
+    .select("url")
+    .eq("restaurant_id", restaurant.id)
+    .is("espace_id", null)
+    .order("ordre")
+    .limit(1)
+    .maybeSingle();
+
+  const titre = `Réserver — ${restaurant.nom}`;
+  const description = restaurant.adresse
+    ? `Réservez une table ou privatisez un espace chez ${restaurant.nom}, ${restaurant.adresse}.`
+    : `Réservez une table ou privatisez un espace chez ${restaurant.nom}.`;
+  const image = (photo as { url: string } | null)?.url;
+
   return {
-    title: `Réserver — ${restaurant.nom}`,
-    description: `Réservez une table ou privatisez un espace chez ${restaurant.nom}.`,
+    title: titre,
+    description,
+    openGraph: {
+      type: "website",
+      title: titre,
+      description,
+      siteName: restaurant.nom,
+      locale: "fr_FR",
+      ...(image ? { images: [image] } : {}),
+    },
+    twitter: {
+      card: image ? "summary_large_image" : "summary",
+      title: titre,
+      description,
+      ...(image ? { images: [image] } : {}),
+    },
   };
 }
 
