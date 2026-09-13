@@ -14,6 +14,9 @@ import {
   periode,
   type LigneStat,
 } from "@/lib/reservations/statistiques";
+import { LienAcompte } from "@/components/reservations/LienAcompte";
+import { libelleAcompte } from "@/lib/reservations/acompte";
+import { siteUrl } from "@/lib/site-url";
 import { annulerReservation, enregistrerNote } from "./actions";
 import { formatHeure, type Espace, type Service } from "@/types/reservation";
 import type { Restaurant } from "@/types/restaurant";
@@ -32,6 +35,9 @@ type Demande = {
   occasion: string | null;
   message: string | null;
   option_expire_le: string | null;
+  acompte_centimes: number | null;
+  acompte_statut: "non_requis" | "attendu" | "paye" | "rembourse";
+  paiement_token: string | null;
   note_interne: string | null;
   origine: "client" | "restaurateur";
   accepte_communications: boolean;
@@ -77,11 +83,13 @@ function Ligne({
   restaurantId,
   espace,
   service,
+  site,
 }: {
   demande: Demande;
   restaurantId: string;
   espace: Espace | undefined;
   service: Service | undefined;
+  site: string;
 }) {
   const restant = delaiRestant(demande.option_expire_le);
   // Une option échue reste décidable : le restaurateur rappelle le client
@@ -147,6 +155,41 @@ function Ligne({
           {demande.message}
         </p>
       )}
+
+      {(() => {
+        const libelle = libelleAcompte(
+          demande.acompte_statut,
+          demande.acompte_centimes,
+        );
+        if (!libelle) return null;
+        const paye = demande.acompte_statut === "paye";
+        return (
+          <div
+            className={`flex flex-col gap-2 rounded-xl p-4 ${
+              paye ? "bg-emerald-50" : "bg-brand-orange-soft"
+            }`}
+          >
+            <span
+              className={`text-sm font-medium ${
+                paye ? "text-emerald-700" : "text-brand-navy"
+              }`}
+            >
+              {libelle}
+            </span>
+            {!paye && demande.paiement_token && (
+              <>
+                <span className="text-xs text-zinc-600">
+                  Envoie ce lien à ton client : il paiera sur ton compte
+                  Stripe, sans commission.
+                </span>
+                <LienAcompte
+                  lien={`${site}/paiement/${demande.paiement_token}`}
+                />
+              </>
+            )}
+          </div>
+        );
+      })()}
 
       {enCours ? (
         <DecisionDemande
@@ -275,12 +318,22 @@ export default async function ReservationsPage({
     charges.set(reservation.date_reservation, charge);
   }
 
+  const site = siteUrl();
   const aujourdhui = new Date().toISOString().slice(0, 10);
   // À traiter : ce sur quoi le restaurateur doit se prononcer, les créneaux
   // passés exclus — les trancher n'aurait plus d'objet.
   const aTraiter = reservations.filter(
     (reservation) =>
       reservation.statut === "demande" &&
+      reservation.date_reservation >= aujourdhui,
+  );
+  // Une privatisation acceptée quitte « à traiter » : sans cette liste, le
+  // restaurateur n'aurait plus aucun endroit où retrouver le lien de paiement
+  // qu'il doit envoyer, sinon en devinant la date dans le calendrier.
+  const acomptesEnAttente = reservations.filter(
+    (reservation) =>
+      reservation.acompte_statut === "attendu" &&
+      reservation.statut === "confirmee" &&
       reservation.date_reservation >= aujourdhui,
   );
   const duJour = jour
@@ -345,6 +398,7 @@ export default async function ReservationsPage({
                 key={demande.id}
                 demande={demande}
                 restaurantId={id}
+                site={site}
                 espace={parEspace.get(demande.espace_id)}
                 service={
                   demande.service_id
@@ -356,6 +410,39 @@ export default async function ReservationsPage({
           </ul>
         )}
       </section>
+
+      {acomptesEnAttente.length > 0 && (
+        <section className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1">
+            <h2 className="text-base font-semibold text-zinc-900">
+              Acomptes à encaisser
+              <span className="ml-2 rounded-full bg-brand-orange px-2 py-0.5 text-xs font-semibold text-white">
+                {acomptesEnAttente.length}
+              </span>
+            </h2>
+            <p className="text-sm text-zinc-500">
+              Envoie le lien à ton client. Il paie sur ton compte Stripe, et la
+              ligne disparaît d&apos;ici dès que l&apos;argent est arrivé.
+            </p>
+          </div>
+          <ul className="flex flex-col gap-3">
+            {acomptesEnAttente.map((demande) => (
+              <Ligne
+                key={demande.id}
+                demande={demande}
+                restaurantId={id}
+                site={site}
+                espace={parEspace.get(demande.espace_id)}
+                service={
+                  demande.service_id
+                    ? parService.get(demande.service_id)
+                    : undefined
+                }
+              />
+            ))}
+          </ul>
+        </section>
+      )}
 
       <section className="grid gap-6 lg:grid-cols-[320px_1fr]">
         <div className="flex flex-col gap-4">
@@ -389,7 +476,8 @@ export default async function ReservationsPage({
                   key={demande.id}
                   demande={demande}
                   restaurantId={id}
-                  espace={parEspace.get(demande.espace_id)}
+                  site={site}
+                espace={parEspace.get(demande.espace_id)}
                   service={
                     demande.service_id
                       ? parService.get(demande.service_id)

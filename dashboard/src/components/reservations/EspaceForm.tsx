@@ -101,20 +101,56 @@ function Champs({
         </label>
 
         {privatisable && (
-          <label className={`${label} pl-7`} htmlFor="espace-minimum">
-            À partir de combien de couverts ?
-            <input
-              id="espace-minimum"
-              name="privatisation_minimum"
-              type="number"
-              min="1"
-              defaultValue={valeurs.minimum}
-              className={`${champ} max-w-32`}
-            />
-            <span className="text-xs font-normal text-zinc-500">
-              Une demande en dessous de ce nombre sera refusée automatiquement.
-            </span>
-          </label>
+          <>
+            <label className={`${label} pl-7`} htmlFor="espace-minimum">
+              À partir de combien de couverts ?
+              <input
+                id="espace-minimum"
+                name="privatisation_minimum"
+                type="number"
+                min="1"
+                defaultValue={valeurs.minimum}
+                className={`${champ} max-w-32`}
+              />
+              <span className="text-xs font-normal text-zinc-500">
+                Une demande en dessous de ce nombre sera refusée
+                automatiquement.
+              </span>
+            </label>
+
+            <div className="flex flex-col gap-2 pl-7">
+              <span className="text-sm font-medium text-zinc-700">
+                Acompte{" "}
+                <span className="font-normal text-zinc-400">(facultatif)</span>
+              </span>
+              <div className="flex flex-wrap items-center gap-2">
+                <input
+                  id="espace-acompte"
+                  name="acompte"
+                  inputMode="decimal"
+                  defaultValue={valeurs.acompte}
+                  placeholder="500"
+                  aria-label="Montant de l'acompte en euros"
+                  className={`${champ} max-w-32`}
+                />
+                <span className="text-sm text-zinc-500">€</span>
+                <select
+                  name="acompte_mode"
+                  defaultValue={valeurs.acompteMode}
+                  aria-label="Mode de calcul de l'acompte"
+                  className={`${champ} max-w-56`}
+                >
+                  <option value="forfait">au total</option>
+                  <option value="par_couvert">par couvert</option>
+                </select>
+              </div>
+              <span className="text-xs text-zinc-500">
+                Demandé au client une fois que tu as accepté sa privatisation.
+                Il va directement sur ton compte Stripe. Laisse vide pour ne
+                rien demander.
+              </span>
+            </div>
+          </>
         )}
       </div>
     </>

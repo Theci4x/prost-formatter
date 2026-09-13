@@ -1,11 +1,12 @@
 "use server";
 
-import { randomUUID } from "node:crypto";
+import { randomBytes, randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { slugDisponible, slugifier } from "@/lib/reservations/slug";
 import { chargerFermetures } from "@/lib/reservations/fermetures";
+import { montantAcompte, OCTETS_JETON } from "@/lib/reservations/acompte";
 import {
   disponibiliteEspace,
   type Reservation,
@@ -48,6 +49,19 @@ function texte(valeur: FormDataEntryValue | null): string {
   return ((valeur as string | null) ?? "").trim();
 }
 
+/**
+ * Un montant en euros saisi à la main, rendu en centimes. Accepte la virgule
+ * comme le point, et les espaces des milliers : un restaurateur écrit
+ * « 1 500 » ou « 1500,50 », pas « 150050 ».
+ */
+function enCentimes(brut: string): number | null {
+  if (!brut) return null;
+  const propre = brut.replace(/[\s\u00a0\u202f€]/g, "").replace(",", ".");
+  if (!/^\d+(\.\d{1,2})?$/.test(propre)) return null;
+  const centimes = Math.round(Number(propre) * 100);
+  return centimes > 0 ? centimes : null;
+}
+
 function entierPositif(brut: string): number | null {
   if (!brut) return null;
   const n = Number(brut);
@@ -66,6 +80,11 @@ export async function addEspace(
     accepteTable: formData.get("accepte_table") === "on",
     privatisable: formData.get("privatisable") === "on",
     minimum: texte(formData.get("privatisation_minimum")),
+    acompte: texte(formData.get("acompte")),
+    acompteMode:
+      texte(formData.get("acompte_mode")) === "par_couvert"
+        ? "par_couvert"
+        : "forfait",
   };
   const rendu = prevState.rendu + 1;
   const echec = (error: string): EspaceState => ({ error, rendu, valeurs });
@@ -95,6 +114,18 @@ export async function addEspace(
     );
   }
 
+  // L'acompte est saisi en euros et stocké en centimes : un montant à virgule
+  // en base finit toujours par produire un centime de trop ou de moins.
+  const acompteCentimes = enCentimes(valeurs.acompte);
+  if (valeurs.acompte && acompteCentimes === null) {
+    return echec("L'acompte doit être un montant en euros, par exemple 500.");
+  }
+  if (acompteCentimes !== null && !valeurs.privatisable) {
+    return echec(
+      "L'acompte ne s'applique qu'aux privatisations : coche « privatisation » ou laisse le montant vide.",
+    );
+  }
+
   const supabase = await createClient();
   const { error } = await supabase.from("restaurant_espaces").insert({
     restaurant_id: restaurantId,
@@ -103,6 +134,8 @@ export async function addEspace(
     capacite,
     privatisation_minimum: valeurs.privatisable ? minimum : null,
     accepte_table: valeurs.accepteTable,
+    acompte_centimes: valeurs.privatisable ? acompteCentimes : null,
+    acompte_mode: valeurs.acompteMode,
   });
 
   if (error) {
@@ -346,10 +379,24 @@ export async function accepterDemande(
     };
   }
 
+  // L'acompte est figé ici, à l'acceptation : si le tarif de l'espace change
+  // ensuite, la somme demandée au client ne bouge pas sous ses pieds.
+  const centimes = montantAcompte(espace, reservation.type, reservation.couverts);
+  const acompte =
+    centimes > 0
+      ? {
+          acompte_centimes: centimes,
+          acompte_statut: "attendu",
+          // Ce jeton tient lieu d'autorisation sur la page de paiement : il
+          // est tiré au hasard, jamais dérivé de l'identifiant.
+          paiement_token: randomBytes(OCTETS_JETON).toString("base64url"),
+        }
+      : {};
+
   const { error } = await supabase
     .from("restaurant_reservations")
     // L'option n'a plus lieu d'être une fois la réservation ferme.
-    .update({ statut: "confirmee", option_expire_le: null })
+    .update({ statut: "confirmee", option_expire_le: null, ...acompte })
     .eq("id", reservation.id);
 
   if (error) {
@@ -358,6 +405,7 @@ export async function accepterDemande(
   }
 
   revalidatePath(`/dashboard/${reservation.restaurant_id}/reservations`);
+  revalidatePath(`/dashboard/${reservation.restaurant_id}/service`);
   return { error: null };
 }
 

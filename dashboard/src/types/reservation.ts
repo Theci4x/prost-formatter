@@ -8,6 +8,10 @@ export type Espace = {
   privatisation_minimum: number | null;
   accepte_table: boolean;
   ordre: number;
+  // Acompte réclamé pour une privatisation de cet espace, en centimes.
+  // NULL quand l'espace n'en demande pas.
+  acompte_centimes: number | null;
+  acompte_mode: "forfait" | "par_couvert";
 };
 
 export type Service = {
@@ -83,6 +87,10 @@ export type EspaceValeurs = {
   accepteTable: boolean;
   privatisable: boolean;
   minimum: string;
+  // Montant saisi en euros, tel que tapé — la conversion en centimes se fait
+  // à l'enregistrement.
+  acompte: string;
+  acompteMode: "forfait" | "par_couvert";
 };
 
 export const ESPACE_VIDE: EspaceValeurs = {
@@ -92,6 +100,8 @@ export const ESPACE_VIDE: EspaceValeurs = {
   accepteTable: true,
   privatisable: true,
   minimum: "12",
+  acompte: "",
+  acompteMode: "forfait",
 };
 
 export type ServiceValeurs = {

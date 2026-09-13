@@ -25,6 +25,35 @@ async function upsertSubscription(subscription: Stripe.Subscription) {
   );
 }
 
+/**
+ * Acompte encaissé sur le compte d'un restaurateur. Le client est censé
+ * revenir sur notre page, qui vérifie et enregistre — mais il peut fermer
+ * l'onglet juste après avoir payé. Sans ce filet, sa réservation resterait
+ * « acompte en attente » alors que l'argent est parti.
+ */
+async function enregistrerAcompte(session: Stripe.Checkout.Session) {
+  const token = session.metadata?.klarr_token;
+  if (!token || session.payment_status !== "paid") return;
+
+  const supabase = createServiceClient();
+  const { error } = await supabase
+    .from("restaurant_reservations")
+    .update({
+      acompte_statut: "paye",
+      acompte_paye_le: new Date().toISOString(),
+      stripe_payment_intent_id:
+        typeof session.payment_intent === "string"
+          ? session.payment_intent
+          : (session.payment_intent?.id ?? null),
+    })
+    .eq("paiement_token", token)
+    // Le jeton suffit à désigner la réservation, mais on refuse d'écraser un
+    // acompte déjà enregistré : un même événement peut être rejoué.
+    .eq("acompte_statut", "attendu");
+
+  if (error) console.error("[stripe webhook] acompte", error);
+}
+
 export async function POST(request: NextRequest) {
   const body = await request.text();
   const signature = request.headers.get("stripe-signature");
@@ -52,6 +81,12 @@ export async function POST(request: NextRequest) {
   switch (event.type) {
     case "checkout.session.completed": {
       const session = event.data.object as Stripe.Checkout.Session;
+      // `event.account` n'est renseigné que pour un compte connecté : c'est
+      // ce qui distingue l'acompte d'un restaurateur de l'abonnement Klarr.
+      if (event.account) {
+        await enregistrerAcompte(session);
+        break;
+      }
       if (session.subscription) {
         const subscription = await getStripe().subscriptions.retrieve(
           session.subscription as string,
