@@ -6,7 +6,7 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { carteOrganisee, carteVisible, formatPrix } from "@/lib/menu/carte";
 import { langueDisponible, lireLangue, platAffiche } from "@/lib/menu/traduction";
 import { KlarrMark, KlarrWordmark } from "@/components/brand/KlarrMark";
-import type { MenuItem } from "@/types/menu";
+import { cartePubliee } from "@/lib/menu/publication";
 import { DonneesStructurees } from "@/components/seo/DonneesStructurees";
 import { filAriane, menuSchema } from "@/lib/seo/donnees-structurees";
 import { siteUrl } from "@/lib/site-url";
@@ -18,7 +18,7 @@ async function chargerCarte(slug: string) {
   const supabase = createServiceClient();
   const { data } = await supabase
     .from("restaurants")
-    .select("id, nom, adresse, logo_url, carte_publique, slug_reservation")
+    .select("id, nom, adresse, logo_url, slug_reservation")
     .eq("slug_reservation", slug)
     .maybeSingle();
 
@@ -27,21 +27,19 @@ async function chargerCarte(slug: string) {
     nom: string;
     adresse: string | null;
     logo_url: string | null;
-    carte_publique: boolean;
     slug_reservation: string;
   } | null;
 
+  if (!restaurant) return null;
+
   // Cette page est servie avec la clé de service, qui passe outre les règles
-  // d'accès : c'est donc ici que se vérifie le droit de publier.
-  if (!restaurant?.carte_publique) return null;
+  // d'accès : c'est donc ici que se vérifie le droit de publier. Une carte
+  // illisible vaut carte non publiée — la page n'existe alors pas, ce qui
+  // est le bon comportement pour celle-ci.
+  const carte = await cartePubliee(supabase, restaurant.id);
+  if (!carte.publiee) return null;
 
-  const { data: plats } = await supabase
-    .from("restaurant_menu_items")
-    .select("*")
-    .eq("restaurant_id", restaurant.id)
-    .eq("actif", true);
-
-  return { restaurant, items: (plats ?? []) as MenuItem[] };
+  return { restaurant, items: carte.items };
 }
 
 export async function generateMetadata({

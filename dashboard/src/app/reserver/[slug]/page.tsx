@@ -18,7 +18,7 @@ import { formatCreneau, type Espace, type Service } from "@/types/reservation";
 import { KlarrMark, KlarrWordmark } from "@/components/brand/KlarrMark";
 import type { RestaurantPhoto } from "@/types/photo";
 import { Carte } from "@/components/menu/Carte";
-import type { MenuItem } from "@/types/menu";
+import { cartePubliee } from "@/lib/menu/publication";
 import { DonneesStructurees } from "@/components/seo/DonneesStructurees";
 import { restaurantSchema } from "@/lib/seo/donnees-structurees";
 import { siteUrl } from "@/lib/site-url";
@@ -30,10 +30,10 @@ async function chargerRestaurant(slug: string) {
   const supabase = createServiceClient();
   const { data } = await supabase
     .from("restaurants")
-    // Page publique : on ne lit que ce qui doit s'y afficher.
-    .select(
-      "id, nom, adresse, description, logo_url, mentions_legales, carte_publique",
-    )
+    // Page publique : on ne lit que ce qui doit s'y afficher. Et surtout
+    // rien de récent — une colonne ajoutée par une migration pas encore
+    // passée ferait échouer toute la requête, donc toute la page.
+    .select("id, nom, adresse, description, logo_url, mentions_legales")
     .eq("slug_reservation", slug)
     .maybeSingle();
 
@@ -44,7 +44,6 @@ async function chargerRestaurant(slug: string) {
     description: string | null;
     logo_url: string | null;
     mentions_legales: string | null;
-    carte_publique: boolean | null;
   } | null;
 }
 
@@ -192,14 +191,9 @@ export default async function ReserverPage({
       .maybeSingle(),
     // La carte, seulement si le restaurateur l'a publiée. Cette page est
     // servie avec la clé de service, qui passe outre les règles d'accès :
-    // c'est donc ici, dans le code, que se fait la vérification.
-    restaurant.carte_publique
-      ? supabase
-          .from("restaurant_menu_items")
-          .select("*")
-          .eq("restaurant_id", restaurant.id)
-          .eq("actif", true)
-      : Promise.resolve({ data: [] }),
+    // c'est donc ici, dans le code, que se fait la vérification. Et jamais
+    // au prix de la page : sans carte lisible, on affiche la page sans elle.
+    cartePubliee(supabase, restaurant.id),
   ]);
 
   const espaces = (espacesResult.data ?? []) as Espace[];
@@ -214,7 +208,7 @@ export default async function ReserverPage({
   const experiences = (experiencesResult.data ?? []) as Experience[];
   const placesPrises = (placesResult.data ?? []) as PlaceReservee[];
 
-  const carte = (carteResult.data ?? []) as MenuItem[];
+  const carte = carteResult.items;
 
   const toutesPhotos = (photosResult.data ?? []) as RestaurantPhoto[];
   const photosEtablissement = toutesPhotos.filter((photo) => !photo.espace_id);
@@ -279,9 +273,7 @@ export default async function ReserverPage({
             espaces,
             carte,
             url: `${siteUrl()}/reserver/${slug}`,
-            urlCarte: restaurant.carte_publique
-              ? `${siteUrl()}/carte/${slug}`
-              : null,
+            urlCarte: carteResult.publiee ? `${siteUrl()}/carte/${slug}` : null,
             note: reputation?.note ? Number(reputation.note) : null,
             nombreAvis: reputation?.nombre_avis ?? null,
           })}
@@ -480,7 +472,7 @@ export default async function ReserverPage({
           }
         />
 
-        <Carte items={carte} slug={slug} />
+        <Carte items={carte} slug={carteResult.publiee ? slug : undefined} />
       </main>
 
       <footer className="border-t border-zinc-200/70 px-6 py-6">
