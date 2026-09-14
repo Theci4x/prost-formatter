@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { LogoutButton } from "@/components/auth/LogoutButton";
@@ -27,7 +28,17 @@ export default async function DashboardLayout({
           <KlarrWordmark className="text-lg text-zinc-900" />
         </span>
         <div className="flex items-center gap-4">
-          <span className="text-sm text-zinc-500">{user.email}</span>
+          {/* L'aide se cherche au moment où l'on bloque, pas après : elle
+              doit être atteignable depuis n'importe quel écran. */}
+          <Link
+            href="/aide"
+            className="text-sm text-zinc-500 transition-colors hover:text-brand-navy"
+          >
+            Aide
+          </Link>
+          <span className="hidden text-sm text-zinc-500 sm:inline">
+            {user.email}
+          </span>
           <LogoutButton />
         </div>
       </header>

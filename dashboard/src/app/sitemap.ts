@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { createServiceClient } from "@/lib/supabase/service";
 import { siteUrl } from "@/lib/site-url";
+import { tousLesArticles } from "@/lib/aide/articles";
 
 // Sans cette ligne, le plan du site est figé au moment du déploiement : une
 // page de réservation ouverte après coup n'y entrerait jamais.
@@ -12,6 +13,7 @@ const PAGES_FIXES = [
   { chemin: "/cgu", priorite: 0.3 },
   { chemin: "/confidentialite", priorite: 0.3 },
   { chemin: "/suppression-donnees", priorite: 0.3 },
+  { chemin: "/aide", priorite: 0.6 },
 ];
 
 /**
@@ -21,11 +23,20 @@ const PAGES_FIXES = [
  */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const site = siteUrl();
-  const fixes = PAGES_FIXES.map((page) => ({
-    url: `${site}${page.chemin}`,
-    lastModified: new Date(),
-    priority: page.priorite,
-  }));
+  const fixes = [
+    ...PAGES_FIXES.map((page) => ({
+      url: `${site}${page.chemin}`,
+      lastModified: new Date(),
+      priority: page.priorite,
+    })),
+    // Le mode d'emploi répond à des questions qu'on tape dans Google
+    // (« comment bloquer un jour de réservation »). Autant qu'il soit trouvé.
+    ...tousLesArticles().map((article) => ({
+      url: `${site}/aide/${article.slug}`,
+      lastModified: new Date(),
+      priority: 0.5,
+    })),
+  ];
 
   try {
     const supabase = createServiceClient();
