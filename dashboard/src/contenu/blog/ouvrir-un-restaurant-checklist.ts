@@ -39,9 +39,11 @@ Ce ne sont pas des règles obscures. Ce sont des règles que **personne ne vous 
 **2. Les ouvriers de votre artisan sont aussi votre problème.** Au-delà de 5 000 € de contrat, vous devez réclamer l'attestation de vigilance Urssaf, la vérifier, et la redemander tous les six mois. Sans ça, vous êtes solidairement redevable des cotisations impayées de votre prestataire.
 → [Des ouvriers travaillent chez vous : ce que vous risquez](/blog/ouvriers-sur-votre-chantier-obligations)
 
-**3. L'étude d'impact des nuisances sonores ne concerne pas que les boîtes de nuit.** Elle s'impose à tout lieu diffusant régulièrement de la musique amplifiée — une enceinte au plafond suffit. Et elle doit précéder les travaux d'insonorisation, sinon elle vous fait refaire ce que vous venez de payer.
+**3. L'étude d'impact des nuisances sonores ne concerne pas que les boîtes de nuit.** Elle vise les lieux qui diffusent des sons amplifiés à titre habituel et à niveau élevé — un DJ le vendredi, une vraie sonorisation, pas la musique d'ambiance du service. Et elle doit précéder les travaux d'insonorisation, sinon elle vous fait refaire ce que vous venez de payer.
+→ [Étude d'impact sonore : qui est vraiment concerné](/blog/etude-impact-nuisances-sonores-restaurant)
 
 **4. La déclaration sanitaire est une démarche à part.** Immatriculer sa société ne déclare pas son activité alimentaire. Tout établissement qui manipule des denrées d'origine animale doit se déclarer à la DDPP de son département via le Cerfa n° 13984, **avant l'ouverture** — comptez un mois d'avance.
+→ [Immatriculer sa société ne déclare pas son restaurant](/blog/declaration-sanitaire-restaurant-ddpp)
 
 ## La liste, dans l'ordre
 
@@ -54,7 +56,7 @@ Ce ne sont pas des règles obscures. Ce sont des règles que **personne ne vous 
 
 ### Avant de dessiner les travaux
 
-- **Étude d'impact des nuisances sonores** si vous comptez diffuser de la musique.
+- **Étude d'impact des nuisances sonores** si vous comptez diffuser de la musique amplifiée à niveau élevé, de façon habituelle.
 - **Autorisation de travaux ERP**, qui vaut aussi pour l'accessibilité et la sécurité incendie. Délai d'instruction à anticiper.
 - **Déclaration préalable** ou permis de construire selon l'ampleur, et pour toute modification de façade.
 

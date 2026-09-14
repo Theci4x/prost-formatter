@@ -3,6 +3,8 @@ import { CATEGORIES_BLOG, type Billet, type CategorieBillet } from "@/types/blog
 import { billet as ouvrirChecklist } from "@/contenu/blog/ouvrir-un-restaurant-checklist";
 import { billet as avantTravaux } from "@/contenu/blog/avant-travaux-diagnostics";
 import { billet as chantier } from "@/contenu/blog/chantier-obligations-employeur";
+import { billet as declarationSanitaire } from "@/contenu/blog/declaration-sanitaire-ddpp";
+import { billet as impactSonore } from "@/contenu/blog/etude-impact-sonore";
 
 /**
  * Les billets, importés un par un plutôt que lus sur le disque.
@@ -11,7 +13,13 @@ import { billet as chantier } from "@/contenu/blog/chantier-obligations-employeu
  * une revue de code, et un billet qu'on oublie de brancher se remarque
  * ici, pas six mois plus tard en constatant qu'il n'a jamais été indexé.
  */
-const TOUS: Billet[] = [ouvrirChecklist, avantTravaux, chantier];
+const TOUS: Billet[] = [
+  ouvrirChecklist,
+  avantTravaux,
+  chantier,
+  declarationSanitaire,
+  impactSonore,
+];
 
 /** Du plus récent au plus ancien : c'est l'ordre d'un blog. */
 export function tousLesBillets(): Billet[] {

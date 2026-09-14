@@ -53,7 +53,8 @@ Si vous reprenez un local dans un immeuble ancien — et à Paris, Lyon ou Borde
 
 Celle-là surprend tout le monde, parce qu'on croit qu'elle ne concerne que les boîtes de nuit.
 
-**Elle concerne tout lieu ouvert au public qui diffuse régulièrement de la musique amplifiée.** Un bar à vins avec une enceinte au plafond, un restaurant qui passe de la musique le soir, un rooftop : le décret n° 2017-1244 du 7 août 2017 ne parle pas de discothèques, il parle de sons amplifiés.
+**Elle ne parle pas de discothèques, elle parle de sons amplifiés.** Le décret n° 2017-1244 du 7 août 2017 vise les lieux recevant du public — clos ou ouverts — qui en diffusent *à titre habituel* et *à niveau élevé*. Un bar musical, un restaurant qui programme un DJ le vendredi, un rooftop sonorisé : concernés. Un restaurant qui passe de la musique d'ambiance pendant le service, à un volume qui laisse les tables se parler : non. Les deux conditions comptent, et la seconde se mesure au sonomètre plutôt qu'à l'oreille.
+→ [Étude d'impact sonore : qui est vraiment concerné](/blog/etude-impact-nuisances-sonores-restaurant)
 
 **Ce qu'elle contient :** une étude faite par un acousticien, qui examine l'effet des différentes configurations de votre installation sur le voisinage, et détermine les mesures à prendre — limiteur de pression acoustique, isolation, orientation des enceintes.
 
