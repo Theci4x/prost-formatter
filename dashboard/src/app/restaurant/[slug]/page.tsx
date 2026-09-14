@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { createServiceClient } from "@/lib/supabase/service";
 import { GalerieRestaurant } from "@/components/reservations/GalerieRestaurant";
+import { BandePhotos } from "@/components/reservations/BandePhotos";
 import { KlarrMark, KlarrWordmark } from "@/components/brand/KlarrMark";
 import { DonneesStructurees } from "@/components/seo/DonneesStructurees";
 import { restaurantSchema } from "@/lib/seo/donnees-structurees";
@@ -113,6 +114,32 @@ export async function generateMetadata({
   };
 }
 
+/**
+ * Ce que l'établissement demandera en garantie, dit avant la demande.
+ * Rien si aucune garantie n'est réclamée : une ligne « aucun acompte » ne
+ * rassure pas, elle fait penser qu'il y en a parfois un.
+ */
+function garantieLisible(espace: Espace): string | null {
+  const euros = (centimes: number) =>
+    (centimes / 100).toLocaleString("fr-FR", {
+      minimumFractionDigits: centimes % 100 === 0 ? 0 : 2,
+      maximumFractionDigits: 2,
+    });
+  const seuil = espace.garantie_seuil_couverts
+    ? ` à partir de ${espace.garantie_seuil_couverts} convives`
+    : "";
+
+  if (espace.acompte_centimes) {
+    const par = espace.acompte_mode === "par_couvert" ? " par personne" : "";
+    return `Acompte de ${euros(espace.acompte_centimes)} €${par}${seuil}, à verser pour confirmer.`;
+  }
+  if (espace.caution_centimes) {
+    const par = espace.caution_mode === "par_couvert" ? " par personne" : "";
+    return `Empreinte de carte de ${euros(espace.caution_centimes)} €${par}${seuil} — rien n'est prélevé, sauf si le groupe ne vient pas.`;
+  }
+  return null;
+}
+
 function Section({
   titre,
   children,
@@ -187,6 +214,14 @@ export default async function VitrinePage({
       (photo.espace_id ? nomEspace.get(photo.espace_id) : null) ??
       null,
   }));
+
+  const photosParEspace = new Map<string, RestaurantPhoto[]>();
+  for (const photo of photos) {
+    if (!photo.espace_id) continue;
+    const liste = photosParEspace.get(photo.espace_id) ?? [];
+    liste.push(photo);
+    photosParEspace.set(photo.espace_id, liste);
+  }
 
   const plages = plagesHoraires(restaurant.horaires ?? {});
   const privatisables = espaces.filter(
@@ -409,19 +444,63 @@ export default async function VitrinePage({
         {privatisables.length > 0 && (
           <Section titre="Privatiser un espace">
             <p className="text-sm text-zinc-600">
-              {privatisables
-                .map(
-                  (espace) =>
-                    `${espace.nom} (jusqu'à ${espace.capacite} couverts)`,
-                )
-                .join(" · ")}
+              Anniversaire, repas d&apos;équipe, séminaire : l&apos;espace est
+              à vous seuls pendant tout le service.
             </p>
-            <Link
-              href={`/reserver/${slug}`}
-              className="w-fit rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
-            >
-              Demander une privatisation
-            </Link>
+
+            {/* Une salle qu'on privatise se choisit sur photo. La lister en
+                une ligne de noms, comme avant, revenait à demander au client
+                de réserver une pièce qu'il n'a jamais vue. */}
+            <ul className="flex flex-col gap-4">
+              {privatisables.map((espace) => (
+                <li
+                  key={espace.id}
+                  className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm"
+                >
+                  <div className="flex flex-wrap items-baseline justify-between gap-2">
+                    <span className="font-medium text-zinc-900">
+                      {espace.nom}
+                    </span>
+                    <span className="text-sm text-zinc-500">
+                      {espace.privatisation_minimum
+                        ? `De ${espace.privatisation_minimum} à ${espace.capacite} couverts`
+                        : `Jusqu'à ${espace.capacite} couverts`}
+                    </span>
+                  </div>
+
+                  {espace.description && (
+                    <p className="mt-1 text-sm leading-relaxed text-zinc-600">
+                      {espace.description}
+                    </p>
+                  )}
+
+                  <BandePhotos
+                    photos={photosParEspace.get(espace.id) ?? []}
+                    espaceNom={espace.nom}
+                    restaurantNom={restaurant.nom}
+                    hauteur="h-40 w-56"
+                  />
+
+                  {/* La garantie est annoncée avant la demande. Un groupe
+                      qui l'apprend au moment de payer se sent piégé ; celui
+                      qui la lit ici sait à quoi s'en tenir, et le
+                      restaurateur ne perd plus son temps avec ceux que ça
+                      rebute. */}
+                  {garantieLisible(espace) && (
+                    <p className="mt-3 text-xs text-zinc-500">
+                      {garantieLisible(espace)}
+                    </p>
+                  )}
+
+                  <Link
+                    href={`/reserver/${slug}?espace=${espace.id}`}
+                    className="mt-3 inline-block rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
+                  >
+                    Demander {espace.nom}
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </Section>
         )}
       </main>

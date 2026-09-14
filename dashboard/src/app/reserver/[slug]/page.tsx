@@ -15,6 +15,7 @@ import {
 import { offrePrivatisation, propositions } from "@/lib/reservations/choix";
 import Image from "next/image";
 import { DemandeForm } from "@/components/reservations/DemandeForm";
+import { BandePhotos } from "@/components/reservations/BandePhotos";
 import { formatCreneau, type Espace, type Service } from "@/types/reservation";
 import { KlarrMark, KlarrWordmark } from "@/components/brand/KlarrMark";
 import type { RestaurantPhoto } from "@/types/photo";
@@ -102,45 +103,6 @@ export async function generateMetadata({
       ...(image ? { images: [image] } : {}),
     },
   };
-}
-
-/**
- * Les photos d'un espace, en bande défilante horizontalement : sur un
- * téléphone, une colonne de grandes images repousse le bouton de
- * réservation hors de l'écran.
- */
-function Photos({
-  photos,
-  espaceNom,
-  restaurantNom,
-}: {
-  photos: RestaurantPhoto[];
-  espaceNom: string;
-  restaurantNom: string;
-}) {
-  if (photos.length === 0) return null;
-  return (
-    <ul className="-mx-1 mt-3 flex gap-2 overflow-x-auto px-1 pb-1">
-      {photos.map((photo) => (
-        <li key={photo.id} className="w-40 shrink-0">
-          <div className="relative h-28 w-40 overflow-hidden rounded-lg border border-zinc-200">
-            <Image
-              src={photo.url}
-              // La légende du restaurateur fait un meilleur texte alternatif
-              // que le nom de la salle répété : elle dit ce qu'on voit.
-              alt={photo.legende ?? `${espaceNom} — ${restaurantNom}`}
-              fill
-              sizes="160px"
-              className="object-cover"
-            />
-          </div>
-          {photo.legende && (
-            <p className="mt-1 text-xs text-zinc-500">{photo.legende}</p>
-          )}
-        </li>
-      ))}
-    </ul>
-  );
 }
 
 function dateDuJour(): string {
@@ -495,7 +457,7 @@ export default async function ReserverPage({
                         {espaceDemande.description ??
                           "L'espace est à vous seuls pendant tout le service."}
                       </p>
-                      <Photos
+                      <BandePhotos
                         photos={photosParEspace.get(espaceDemande.id) ?? []}
                         espaceNom={espaceDemande.nom}
                         restaurantNom={restaurant.nom}
@@ -607,7 +569,7 @@ export default async function ReserverPage({
                               </p>
                             )}
 
-                            <Photos
+                            <BandePhotos
                               photos={
                                 photosParEspace.get(dispo.espace.id) ?? []
                               }
