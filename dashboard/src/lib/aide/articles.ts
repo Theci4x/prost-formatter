@@ -1,6 +1,10 @@
 import { CATEGORIES, type Article, type CategorieAide } from "@/types/aide";
 
 import { article as abonnement } from "@/contenu/aide/abonnement";
+import { article as ceQueKlarrNeFaitPas } from "@/contenu/aide/ce-que-klarr-ne-fait-pas";
+import { article as combienCaCoute } from "@/contenu/aide/combien-ca-coute";
+import { article as klarrEtLesPlateformes } from "@/contenu/aide/klarr-et-les-plateformes";
+import { article as questCeQueKlarr } from "@/contenu/aide/qu-est-ce-que-klarr";
 import { article as acomptePrivatisation } from "@/contenu/aide/acompte-privatisation";
 import { article as carteEnAnglais } from "@/contenu/aide/carte-en-anglais";
 import { article as cautionCarte } from "@/contenu/aide/caution-carte";
@@ -30,6 +34,10 @@ import { article as statistiques } from "@/contenu/aide/statistiques";
  * coup d'œil ce que Klarr documente.
  */
 const TOUS: Article[] = [
+  questCeQueKlarr,
+  combienCaCoute,
+  ceQueKlarrNeFaitPas,
+  klarrEtLesPlateformes,
   premiersPas,
   pageDeReservation,
   demandesReservation,
@@ -90,6 +98,52 @@ export function normaliser(texte: string): string {
 }
 
 /**
+ * La racine d'un mot, grossièrement : ses cinq premières lettres.
+ *
+ * Sans ça, « fermeture » ne trouve pas l'article « Fermer un jour » — les
+ * deux mots n'ont aucun préfixe commun au sens strict, alors qu'ils parlent
+ * évidemment de la même chose. Cinq lettres suffisent en français pour
+ * rapprocher fermer/fermeture ou réserver/réservation, sans confondre carte
+ * et carton.
+ */
+export function racine(mot: string): string {
+  return mot.length <= 5 ? mot : mot.slice(0, 5);
+}
+
+export function mots(texte: string): string[] {
+  return normaliser(texte).split(" ").filter(Boolean);
+}
+
+type Champ = { mots: Set<string>; racines: Set<string>; poids: number };
+type Entree = { article: Article; champs: Champ[] };
+
+function champ(texte: string, poids: number): Champ {
+  const liste = mots(texte);
+  return {
+    mots: new Set(liste),
+    racines: new Set(liste.map(racine)),
+    poids,
+  };
+}
+
+/**
+ * L'index, construit une fois. Les articles ne changent qu'au déploiement :
+ * re-découper trente-cinq mille caractères à chaque frappe serait du gâchis.
+ *
+ * On indexe des MOTS, pas des morceaux de texte. C'est ce qui évite que
+ * « caisse » remonte sept articles parce qu'ils contiennent « encaisser ».
+ */
+const INDEX: Entree[] = TOUS.map((article) => ({
+  article,
+  champs: [
+    champ(article.titre, 10),
+    champ(article.questions.join(" "), 6),
+    champ(article.resume, 3),
+    champ(article.markdown, 1),
+  ],
+}));
+
+/**
  * Une recherche simple, mais qui doit trouver.
  *
  * Le titre et les questions pèsent plus que le corps : quelqu'un qui tape
@@ -99,28 +153,25 @@ export function normaliser(texte: string): string {
  * documentation.
  */
 export function rechercher(requete: string): Article[] {
-  const mots = normaliser(requete).split(" ").filter(Boolean);
-  if (mots.length === 0) return [];
+  const demandes = mots(requete);
+  if (demandes.length === 0) return [];
 
-  const notes = TOUS.map((article) => {
-    const titre = normaliser(article.titre);
-    const questions = normaliser(article.questions.join(" "));
-    const resume = normaliser(article.resume);
-    const corps = normaliser(article.markdown);
-
+  const notes = INDEX.map(({ article, champs }) => {
     let note = 0;
-    for (const mot of mots) {
-      const dansTitre = titre.includes(mot);
-      const dansQuestions = questions.includes(mot);
-      const dansResume = resume.includes(mot);
-      const dansCorps = corps.includes(mot);
-      if (!dansTitre && !dansQuestions && !dansResume && !dansCorps) {
-        return { article, note: 0 };
+    for (const mot of demandes) {
+      const souche = racine(mot);
+      let trouve = false;
+      for (const c of champs) {
+        // Le mot exact vaut plein tarif, sa racine la moitié.
+        if (c.mots.has(mot)) {
+          note += c.poids;
+          trouve = true;
+        } else if (c.racines.has(souche)) {
+          note += c.poids / 2;
+          trouve = true;
+        }
       }
-      if (dansTitre) note += 10;
-      if (dansQuestions) note += 6;
-      if (dansResume) note += 3;
-      if (dansCorps) note += 1;
+      if (!trouve) return { article, note: 0 };
     }
     return { article, note };
   });

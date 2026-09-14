@@ -9,6 +9,7 @@
  */
 
 export type CategorieAide =
+  | "decouvrir"
   | "demarrer"
   | "reservations"
   | "salle"
@@ -22,6 +23,11 @@ export const CATEGORIES: {
   titre: string;
   resume: string;
 }[] = [
+  {
+    cle: "decouvrir",
+    titre: "Découvrir Klarr",
+    resume: "Ce que c'est, ce que ça coûte, et ce que ça ne fait pas.",
+  },
   {
     cle: "demarrer",
     titre: "Démarrer",
