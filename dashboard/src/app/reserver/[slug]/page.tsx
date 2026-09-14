@@ -120,16 +120,21 @@ function Photos({
   return (
     <ul className="-mx-1 mt-3 flex gap-2 overflow-x-auto px-1 pb-1">
       {photos.map((photo) => (
-        <li key={photo.id} className="shrink-0">
+        <li key={photo.id} className="w-40 shrink-0">
           <div className="relative h-28 w-40 overflow-hidden rounded-lg border border-zinc-200">
             <Image
               src={photo.url}
-              alt={`${espaceNom} — ${restaurantNom}`}
+              // La légende du restaurateur fait un meilleur texte alternatif
+              // que le nom de la salle répété : elle dit ce qu'on voit.
+              alt={photo.legende ?? `${espaceNom} — ${restaurantNom}`}
               fill
               sizes="160px"
               className="object-cover"
             />
           </div>
+          {photo.legende && (
+            <p className="mt-1 text-xs text-zinc-500">{photo.legende}</p>
+          )}
         </li>
       ))}
     </ul>
@@ -203,7 +208,10 @@ export default async function ReserverPage({
     // celles sans espace pour le bandeau d'en-tête.
     supabase
       .from("restaurant_photos")
-      .select("id, restaurant_id, espace_id, url, storage_path, ordre, created_at")
+      // « * » plutôt qu'une liste : nommer une colonne que la base n'a pas
+      // encore fait échouer la requête entière, donc la page. Une colonne
+      // en trop, elle, ne dérange personne.
+      .select("*")
       .eq("restaurant_id", restaurant.id)
       .order("ordre")
       .order("created_at"),
@@ -253,6 +261,8 @@ export default async function ReserverPage({
 
   const toutesPhotos = (photosResult.data ?? []) as RestaurantPhoto[];
   const photosEtablissement = toutesPhotos.filter((photo) => !photo.espace_id);
+
+  const nomEspace = new Map(espaces.map((espace) => [espace.id, espace.nom]));
 
   const photosParEspace = new Map<string, RestaurantPhoto[]>();
   for (const photo of toutesPhotos) {
@@ -335,7 +345,18 @@ export default async function ReserverPage({
             rien. */}
         <GalerieRestaurant
           photos={
-            photosEtablissement.length > 0 ? photosEtablissement : toutesPhotos
+            photosEtablissement.length > 0
+              ? photosEtablissement
+              : // Faute de légende, une photo de salle prend le nom de sa
+                // salle : « laquelle est la cave ? » est la première
+                // question du client qui ouvre la visionneuse.
+                toutesPhotos.map((photo) => ({
+                  ...photo,
+                  legende:
+                    photo.legende ??
+                    (photo.espace_id ? nomEspace.get(photo.espace_id) : null) ??
+                    null,
+                }))
           }
           nom={restaurant.nom}
         />

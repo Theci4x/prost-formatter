@@ -7,6 +7,7 @@ import {
   uploadPhoto,
 } from "@/app/dashboard/[id]/photos/actions";
 import type { RestaurantPhoto } from "@/types/photo";
+import { LegendePhoto } from "@/components/photos/LegendePhoto";
 
 // Même plafond que côté serveur : on refuse avant d'occuper la connexion.
 const TAILLE_MAX = 4 * 1024 * 1024;
@@ -48,7 +49,7 @@ export function PhotosEspace({
       {photos.length > 0 && (
         <ul className="flex flex-wrap gap-3">
           {photos.map((photo) => (
-            <li key={photo.id} className="flex flex-col items-center gap-1">
+            <li key={photo.id} className="flex w-32 flex-col items-center gap-1">
               <div className="relative h-24 w-32 overflow-hidden rounded-lg border border-zinc-200">
                 <Image
                   src={photo.url}
@@ -58,6 +59,11 @@ export function PhotosEspace({
                   className="object-cover"
                 />
               </div>
+              <LegendePhoto
+                photoId={photo.id}
+                restaurantId={restaurantId}
+                legende={photo.legende ?? null}
+              />
               <form action={removePhoto}>
                 <input type="hidden" name="id" value={photo.id} />
                 <input type="hidden" name="restaurant_id" value={restaurantId} />
@@ -94,6 +100,19 @@ export function PhotosEspace({
             accept="image/*"
             required
             className="text-sm file:mr-3 file:rounded-md file:border-0 file:bg-zinc-100 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-zinc-700 hover:file:bg-zinc-200"
+          />
+        </label>
+        {/* La légende s'écrit au moment où l'on choisit la photo : c'est
+            là qu'on sait ce qu'elle montre. Facultative, et modifiable
+            ensuite sous la vignette. */}
+        <label className="text-sm text-zinc-600" htmlFor={`legende-ajout-${espaceId}`}>
+          <span className="sr-only">Légende de la photo</span>
+          <input
+            id={`legende-ajout-${espaceId}`}
+            name="legende"
+            maxLength={80}
+            placeholder="Légende (facultatif)"
+            className="w-56 rounded-md border border-zinc-300 px-3 py-1.5 text-sm outline-none focus:border-brand-navy"
           />
         </label>
         <button

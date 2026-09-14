@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { removePhoto } from "./actions";
 import { AjoutPhoto } from "@/components/photos/AjoutPhoto";
+import { LegendePhoto } from "@/components/photos/LegendePhoto";
 import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
 import type { Restaurant } from "@/types/restaurant";
 import type { RestaurantPhoto } from "@/types/photo";
@@ -51,36 +52,41 @@ export default async function PhotosPage({
       ) : (
         <ul className="grid max-w-3xl grid-cols-2 gap-4 sm:grid-cols-3">
           {photos.map((photo) => (
-            <li
-              key={photo.id}
-              className="group relative aspect-square overflow-hidden rounded-xl border border-zinc-200/70 shadow-sm"
-            >
-              <Image
-                src={photo.url}
-                alt=""
-                fill
-                sizes="(max-width: 640px) 50vw, 240px"
-                className="object-cover"
-              />
-              <form
-                action={removePhoto}
-                className="absolute right-2 top-2 opacity-0 transition-opacity group-hover:opacity-100"
-              >
-                <input type="hidden" name="id" value={photo.id} />
-                <input type="hidden" name="restaurant_id" value={id} />
-                <input
-                  type="hidden"
-                  name="storage_path"
-                  value={photo.storage_path}
+            <li key={photo.id} className="flex flex-col gap-2">
+              <div className="group relative aspect-square overflow-hidden rounded-xl border border-zinc-200/70 shadow-sm">
+                <Image
+                  src={photo.url}
+                  alt=""
+                  fill
+                  sizes="(max-width: 640px) 50vw, 240px"
+                  className="object-cover"
                 />
-                <button
-                  type="submit"
-                  aria-label="Supprimer la photo"
-                  className="rounded-full bg-black/60 px-2 py-1 text-xs font-medium text-white hover:bg-black/80"
+                <form
+                  action={removePhoto}
+                  className="absolute right-2 top-2 opacity-0 transition-opacity group-hover:opacity-100"
                 >
-                  Supprimer
-                </button>
-              </form>
+                  <input type="hidden" name="id" value={photo.id} />
+                  <input type="hidden" name="restaurant_id" value={id} />
+                  <input
+                    type="hidden"
+                    name="storage_path"
+                    value={photo.storage_path}
+                  />
+                  <button
+                    type="submit"
+                    aria-label="Supprimer la photo"
+                    className="rounded-full bg-black/60 px-2 py-1 text-xs font-medium text-white hover:bg-black/80"
+                  >
+                    Supprimer
+                  </button>
+                </form>
+              </div>
+              <LegendePhoto
+                photoId={photo.id}
+                restaurantId={id}
+                legende={photo.legende ?? null}
+                placeholder="La terrasse, l'été"
+              />
             </li>
           ))}
         </ul>

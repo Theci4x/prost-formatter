@@ -9,6 +9,15 @@ const BUCKET = "restaurant-photos";
 // s'exécute : la photo ne partirait nulle part et l'écran n'aurait rien à
 // dire. Voir aussi serverActions.bodySizeLimit dans next.config.ts.
 const TAILLE_MAX = 4 * 1024 * 1024;
+// Une légende se lit sous une vignette : au-delà, elle déborde de la photo
+// qu'elle décrit. « Salle speakeasy, au sous-sol » en fait vingt-six.
+const LEGENDE_MAX = 80;
+
+/** La légende telle qu'on l'enregistre : vide vaut absente, jamais "". */
+function legendeSaine(brut: FormDataEntryValue | null): string | null {
+  const texte = typeof brut === "string" ? brut.trim() : "";
+  return texte ? texte.slice(0, LEGENDE_MAX) : null;
+}
 
 export async function uploadPhoto(formData: FormData): Promise<{
   error: string | null;
@@ -52,6 +61,7 @@ export async function uploadPhoto(formData: FormData): Promise<{
     espace_id: espaceId,
     storage_path: path,
     url: publicUrl,
+    legende: legendeSaine(formData.get("legende")),
   });
 
   if (error) {
@@ -80,6 +90,29 @@ export async function removePhoto(formData: FormData) {
     .eq("id", id);
 
   if (error) console.error("[removePhoto]", error);
+  revalidatePath(`/dashboard/${restaurantId}/photos`);
+  revalidatePath(`/dashboard/${restaurantId}/reservations/configuration`);
+}
+
+/**
+ * La légende d'une photo déjà en ligne. Elle s'écrit après coup : on met
+ * ses photos d'abord, on les nomme ensuite — et celles envoyées avant
+ * l'existence des légendes ne sont pas à renvoyer pour autant.
+ */
+export async function legenderPhoto(formData: FormData): Promise<void> {
+  const id = formData.get("id") as string;
+  const restaurantId = formData.get("restaurant_id") as string;
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("restaurant_photos")
+    .update({ legende: legendeSaine(formData.get("legende")) })
+    .eq("id", id);
+
+  if (error) console.error("[legenderPhoto]", error);
+
+  // Sans ces deux lignes, la légende est bien en base mais l'écran affiche
+  // encore l'ancienne : le restaurateur croit que le bouton n'a rien fait.
   revalidatePath(`/dashboard/${restaurantId}/photos`);
   revalidatePath(`/dashboard/${restaurantId}/reservations/configuration`);
 }

@@ -45,7 +45,7 @@ function Vignette({
     >
       <Image
         src={photo.url}
-        alt={`${nom} — photo ${index + 1}`}
+        alt={photo.legende ?? `${nom} — photo ${index + 1}`}
         fill
         sizes={sizes}
         className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
@@ -173,17 +173,21 @@ export function GalerieRestaurant({
               onClick={(evenement) => evenement.stopPropagation()}
             >
               {photos.map((photo, index) => (
-                <li
-                  key={photo.id}
-                  className="relative aspect-[4/3] overflow-hidden rounded-xl bg-zinc-900"
-                >
-                  <Image
-                    src={photo.url}
-                    alt={`${nom} — photo ${index + 1}`}
-                    fill
-                    sizes="(max-width: 640px) 100vw, 50vw"
-                    className="object-cover"
-                  />
+                <li key={photo.id} className="flex flex-col gap-1.5">
+                  <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-zinc-900">
+                    <Image
+                      src={photo.url}
+                      alt={photo.legende ?? `${nom} — photo ${index + 1}`}
+                      fill
+                      sizes="(max-width: 640px) 100vw, 50vw"
+                      className="object-cover"
+                    />
+                  </div>
+                  {/* La question du client devant une galerie d'hôtel ou de
+                      restaurant est toujours la même : laquelle est quoi. */}
+                  {photo.legende && (
+                    <p className="text-sm text-white/80">{photo.legende}</p>
+                  )}
                 </li>
               ))}
             </ul>

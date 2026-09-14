@@ -43,6 +43,18 @@ export function AjoutPhoto({ restaurantId }: { restaurantId: string }) {
         required
         className="flex-1 text-sm text-zinc-600 file:mr-3 file:rounded-md file:border-0 file:bg-zinc-100 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-zinc-700 hover:file:bg-zinc-200"
       />
+      {/* La légende s'écrit pendant qu'on regarde la photo qu'on envoie :
+          la réclamer plus tard, c'est ne jamais l'obtenir. */}
+      <label className="sr-only" htmlFor="legende-etablissement">
+        Légende de la photo
+      </label>
+      <input
+        id="legende-etablissement"
+        name="legende"
+        maxLength={80}
+        placeholder="Légende (facultatif)"
+        className="w-56 rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-brand-navy"
+      />
       <button
         type="submit"
         disabled={enCours}
