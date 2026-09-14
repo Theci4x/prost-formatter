@@ -231,3 +231,15 @@ body {
 .billet td strong {
   color: var(--ink);
 }
+
+/* Une citation dans un billet sert à isoler une formule ou une phrase
+   qu'on veut pouvoir relire seule. Discrète : ce n'est pas un encadré. */
+.billet blockquote {
+  margin: 0;
+  padding: 0.2rem 0 0.2rem 1.1rem;
+  border-left: 2px solid var(--accent);
+  color: var(--ink);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}

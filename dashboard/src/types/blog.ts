@@ -37,7 +37,7 @@ export const CATEGORIES_BLOG: {
     cle: "gerer",
     titre: "Tenir la maison",
     resume:
-      "Réservations, groupes, no-shows : ce qui se joue entre la demande et le service.",
+      "Marges, canaux de vente, réservations, no-shows : ce qui se joue entre la demande et l'encaissement.",
   },
 ];
 

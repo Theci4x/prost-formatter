@@ -7,6 +7,7 @@ import { billet as declarationSanitaire } from "@/contenu/blog/declaration-sanit
 import { billet as impactSonore } from "@/contenu/blog/etude-impact-sonore";
 import { billet as permisLicence } from "@/contenu/blog/permis-exploitation-licence";
 import { billet as menuOuCarte } from "@/contenu/blog/menu-ou-carte";
+import { billet as livraison } from "@/contenu/blog/livraison-plateformes";
 
 /**
  * Les billets, importés un par un plutôt que lus sur le disque.
@@ -23,6 +24,7 @@ const TOUS: Billet[] = [
   impactSonore,
   permisLicence,
   menuOuCarte,
+  livraison,
 ];
 
 /** Du plus récent au plus ancien : c'est l'ordre d'un blog. */
