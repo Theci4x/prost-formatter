@@ -76,7 +76,9 @@ export default function BlogPage() {
             <Couverture
               slug={premier.slug}
               rubrique={titreCategorieBillet(premier.categorie)}
+              image={premier.image}
               ratio={5}
+              ratioPhoto={2}
             />
             <div className="flex flex-col gap-2 p-6">
               <span
@@ -149,6 +151,7 @@ export default function BlogPage() {
                       <Couverture
                         slug={billet.slug}
                         rubrique={titreCategorieBillet(billet.categorie)}
+                        image={billet.image}
                       />
                       <div className="flex flex-1 flex-col gap-2 p-5">
                         <span

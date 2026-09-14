@@ -41,6 +41,19 @@ export const CATEGORIES_BLOG: {
   },
 ];
 
+export type Illustration = {
+  /** Chemin sous /public, par exemple « /blog/ouvrir-paperasse.jpg ». */
+  fichier: string;
+  /**
+   * La description pour qui ne voit pas l'image. Décrire ce qu'elle
+   * montre, pas répéter le titre : un lecteur d'écran qui énonce deux
+   * fois la même phrase fait perdre du temps au lieu d'en donner.
+   */
+  alt: string;
+  /** L'auteur ou la provenance, affiché sous l'image quand il est fourni. */
+  credit?: string;
+};
+
 export type Source = {
   /** Ce qu'on cite : « Code du travail, article R4412-97 ». */
   intitule: string;
@@ -68,6 +81,13 @@ export type Billet = {
    * écrit pour eux plutôt que subi.
    */
   essentiel?: string[];
+  /**
+   * La photo d'en-tête, quand il y en a une. Sans elle, le billet reçoit
+   * une couverture dessinée : c'est un repli correct, pas un équivalent.
+   * Une photo prise sur place dit au lecteur que l'article vient de
+   * quelqu'un qui y était, ce qu'aucun aplat de couleur ne dira jamais.
+   */
+  image?: Illustration;
   markdown: string;
 };
 

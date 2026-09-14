@@ -149,9 +149,16 @@ export default async function BilletPage({
           <Couverture
             slug={billet.slug}
             rubrique={titreCategorieBillet(billet.categorie)}
+            image={billet.image}
             ratio={6}
+            ratioPhoto={2}
           />
         </div>
+        {billet.image?.credit && (
+          <p style={{ marginTop: "-1.25rem", fontSize: 12.5 }}>
+            {billet.image.credit}
+          </p>
+        )}
 
         {billet.essentiel && billet.essentiel.length > 0 && (
           <section

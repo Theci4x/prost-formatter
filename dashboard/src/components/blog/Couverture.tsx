@@ -1,4 +1,5 @@
 import { teinteBillet } from "@/lib/blog/teintes";
+import type { Illustration } from "@/types/blog";
 
 /**
  * La couverture d'un billet, telle qu'elle s'affiche sur le site.
@@ -19,13 +20,66 @@ import { teinteBillet } from "@/lib/blog/teintes";
 export function Couverture({
   slug,
   rubrique,
+  image,
   ratio = 3.4,
+  ratioPhoto = 1.9,
 }: {
   slug: string;
   rubrique: string;
+  /** Quand elle existe, la photo remplace le motif. */
+  image?: Illustration;
   ratio?: number;
+  /**
+   * Une photo ne se recadre pas comme un aplat : le bandeau très plat qui
+   * va bien à un motif décapiterait le sujet. D'où deux proportions.
+   */
+  ratioPhoto?: number;
 }) {
   const { fond, trait } = teinteBillet(slug);
+
+  if (image) {
+    return (
+      <figure
+        style={{
+          position: "relative",
+          width: "100%",
+          aspectRatio: String(ratioPhoto),
+          background: fond,
+          margin: 0,
+        }}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element -- photo
+            servie telle quelle depuis /public : la faire passer par
+            l'optimiseur ajouterait un aller-retour sans rien gagner sur
+            une image déjà dimensionnée à la main. */}
+        <img
+          src={image.fichier}
+          alt={image.alt}
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            display: "block",
+          }}
+        />
+        {/* Le même trait de couleur que les couvertures dessinées : c'est
+            lui qui fait tenir la série ensemble quand les deux se
+            côtoient sur le sommaire. */}
+        <span
+          aria-hidden
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: 3,
+            background: trait,
+          }}
+        />
+      </figure>
+    );
+  }
+
   const hachures = `hachures-${slug}`;
   const halo = `halo-${slug}`;
 
