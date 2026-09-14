@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import {
   addService,
   type ServiceState,
@@ -116,10 +116,23 @@ function Champs({
 
 export function ServiceForm({ restaurantId }: { restaurantId: string }) {
   const [state, action, pending] = useActionState(addService, initialState);
+  // Quand le navigateur refuse d'envoyer le formulaire — un champ horaire
+  // incomplet, par exemple —, il n'affiche qu'une infobulle fugace. Sans ce
+  // message, on croit avoir enregistré alors que rien n'est parti.
+  const [bloque, setBloque] = useState<string | null>(null);
 
   return (
     <form
       action={action}
+      onInvalidCapture={(event) => {
+        const champ = event.target as HTMLInputElement;
+        setBloque(
+          champ.type === "time"
+            ? "Renseigne les heures de début et de fin, au format 19:00."
+            : "Il manque quelque chose : le champ surligné n'est pas rempli.",
+        );
+      }}
+      onSubmit={() => setBloque(null)}
       className="flex flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm"
     >
       {/* Voir EspaceForm : la clé remonte les champs avec les valeurs que
@@ -130,7 +143,11 @@ export function ServiceForm({ restaurantId }: { restaurantId: string }) {
         valeurs={state.valeurs}
       />
 
-      {state.error && <p className="text-sm text-red-600">{state.error}</p>}
+      {(state.error || bloque) && (
+        <p className="text-sm text-red-600" role="alert">
+          {state.error ?? bloque}
+        </p>
+      )}
 
       <button
         type="submit"

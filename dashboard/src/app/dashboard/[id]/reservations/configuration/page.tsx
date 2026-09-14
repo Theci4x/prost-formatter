@@ -316,13 +316,11 @@ export default async function ConfigurationReservationsPage({
         />
 
         <div className="flex flex-col gap-3 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm">
-          {espaces.length === 0 || services.length === 0 ? (
-            <p className="text-sm text-zinc-500">
-              Ajoute au moins un espace et un service : sans eux, la page
-              n&apos;aurait rien à proposer.
-            </p>
-          ) : slug ? (
+          {slug ? (
             <>
+              {/* Une page déjà en ligne a une adresse : on ne la cache jamais,
+                  même s'il manque une salle ou un service. C'est elle que le
+                  restaurateur colle sur sa fiche Google. */}
               <a
                 href={`/reserver/${slug}`}
                 target="_blank"
@@ -331,11 +329,29 @@ export default async function ConfigurationReservationsPage({
               >
                 {site}/reserver/{slug}
               </a>
-              <p className="text-sm text-zinc-500">
-                Elle est en ligne. Ouvre-la pour vérifier ce que voient tes
-                clients.
-              </p>
+              {espaces.length === 0 || services.length === 0 ? (
+                <p className="text-sm text-amber-700">
+                  Ton adresse est en ligne, mais la page ne propose rien
+                  encore : il te manque{" "}
+                  {espaces.length === 0 && services.length === 0
+                    ? "une salle et un service"
+                    : espaces.length === 0
+                      ? "une salle"
+                      : "un service"}
+                  . Ajoute-le plus haut sur cette page.
+                </p>
+              ) : (
+                <p className="text-sm text-zinc-500">
+                  Elle est en ligne. Ouvre-la pour vérifier ce que voient tes
+                  clients.
+                </p>
+              )}
             </>
+          ) : espaces.length === 0 || services.length === 0 ? (
+            <p className="text-sm text-zinc-500">
+              Ajoute au moins un espace et un service : sans eux, la page
+              n&apos;aurait rien à proposer.
+            </p>
           ) : (
             <form action={activerPageReservation} className="flex flex-col gap-3">
               <input type="hidden" name="restaurant_id" value={id} />
