@@ -7,6 +7,7 @@ import { ClientLogos } from "@/components/landing/ClientLogos";
 import { Comparison } from "@/components/landing/Comparison";
 import { Founder, Problem } from "@/components/landing/Manifesto";
 import { Partner } from "@/components/landing/Partner";
+import { Journal } from "@/components/landing/Journal";
 import { Reservation } from "@/components/landing/Reservation";
 import { Tarifs } from "@/components/landing/Tarifs";
 import { HeroBackdrop } from "@/components/landing/HeroBackdrop";
@@ -901,6 +902,10 @@ export default async function Home() {
           </Link>
         </div>
       </div>
+      </Reveal>
+
+      <Reveal>
+        <Journal />
       </Reveal>
 
       {/* FOOTER */}

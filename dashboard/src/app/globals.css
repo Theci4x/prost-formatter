@@ -185,3 +185,14 @@ body {
 .billet .encadre[data-ton="exemple"] {
   background: var(--bg-alt);
 }
+
+/* Les trois derniers billets en bas de l'accueil : une colonne au
+   téléphone, trois à partir de la tablette. */
+.grid-journal {
+  grid-template-columns: 1fr;
+}
+@media (min-width: 720px) {
+  .grid-journal {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
