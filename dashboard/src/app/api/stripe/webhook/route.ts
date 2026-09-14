@@ -50,6 +50,11 @@ async function enregistrerAcompte(session: Stripe.Checkout.Session) {
       acompte_statut: "paye",
       acompte_paye_le: new Date().toISOString(),
       stripe_payment_intent_id: paymentIntentId,
+      // C'est le paiement qui rend la réservation ferme : jusqu'ici la
+      // salle n'était tenue que par une option, qui s'éteint d'elle-même si
+      // le client ne donne pas suite.
+      statut: "confirmee",
+      option_expire_le: null,
     })
     .eq("paiement_token", token)
     .eq("acompte_statut", "attendu");

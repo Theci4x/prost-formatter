@@ -221,6 +221,10 @@ export default async function PaiementPage({
             caution_enregistree_le: new Date().toISOString(),
             stripe_customer_id: resultat.customerId,
             stripe_payment_method_id: resultat.carteId,
+            // La carte enregistrée rend la réservation ferme : jusque-là,
+            // la salle n'était tenue que par une option qui s'éteint seule.
+            statut: "confirmee",
+            option_expire_le: null,
           })
           .eq("id", ligne.id);
         redirect(`/paiement/${token}`);
@@ -238,6 +242,9 @@ export default async function PaiementPage({
             acompte_statut: "paye",
             acompte_paye_le: new Date().toISOString(),
             stripe_payment_intent_id: resultat.paymentIntentId,
+            // Idem : c'est l'acompte qui engage l'établissement.
+            statut: "confirmee",
+            option_expire_le: null,
           })
           .eq("id", ligne.id);
         redirect(`/paiement/${token}`);

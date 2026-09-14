@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
 import { DecisionDemande } from "@/components/reservations/DecisionDemande";
+import { aTrancher, attendLaGarantie } from "@/lib/reservations/garantie";
 import { SaisieReservation } from "@/components/reservations/SaisieReservation";
 import {
   CalendrierMois,
@@ -104,8 +105,10 @@ function Ligne({
   const restant = delaiRestant(demande.option_expire_le);
   // Une option échue reste décidable : le restaurateur rappelle le client
   // plutôt que de le perdre, et l'acceptation revérifie la disponibilité.
-  const enCours =
-    demande.statut === "demande" || demande.statut === "expiree";
+  const enCours = aTrancher(demande);
+  // Acceptée, mais la salle n'est tenue que par une option : c'est l'argent
+  // qui l'engagera.
+  const enAttente = attendLaGarantie(demande);
 
   return (
     <li className="flex flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm">
@@ -197,6 +200,12 @@ function Ligne({
             >
               {libelle}
             </span>
+            {enAttente && (
+              <span className="text-xs font-medium text-brand-navy">
+                Acceptée — la salle est tenue{restant ? ` ${restant}` : ""}, et
+                ne sera ferme qu&apos;une fois la carte enregistrée.
+              </span>
+            )}
             {attendLeClient && demande.paiement_token && (
               <>
                 <span className="text-xs text-zinc-600">
@@ -355,7 +364,10 @@ export default async function ReservationsPage({
   // passés exclus — les trancher n'aurait plus d'objet.
   const aTraiter = reservations.filter(
     (reservation) =>
-      reservation.statut === "demande" &&
+      // Une privatisation acceptée mais pas encore garantie reste au statut
+      // « demande » : elle ne doit pas réapparaître comme à trancher.
+      aTrancher(reservation) &&
+      reservation.statut !== "expiree" &&
       reservation.date_reservation >= aujourdhui,
   );
   // Une privatisation acceptée quitte « à traiter » : sans cette liste, le
@@ -369,7 +381,10 @@ export default async function ReservationsPage({
     (reservation) =>
       (reservation.acompte_statut !== "non_requis" ||
         reservation.caution_statut !== "non_requise") &&
-      reservation.statut === "confirmee" &&
+      // Les réservations en attente de garantie entrent ici aussi : c'est là
+      // que le restaurateur retrouve le lien de paiement à renvoyer, et
+      // qu'il voit combien de temps il tient encore sa salle.
+      (reservation.statut === "confirmee" || attendLaGarantie(reservation)) &&
       reservation.date_reservation >= aujourdhui,
   );
   const garantiesARegler = garanties.filter(

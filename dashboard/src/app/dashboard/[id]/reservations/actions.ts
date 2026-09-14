@@ -7,7 +7,12 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { slugDisponible, slugifier } from "@/lib/reservations/slug";
 import { chargerFermetures } from "@/lib/reservations/fermetures";
 import { peutGerer, roleSur } from "@/lib/equipe/roles";
-import { montantAcompte, OCTETS_JETON } from "@/lib/reservations/acompte";
+import { OCTETS_JETON } from "@/lib/reservations/acompte";
+import {
+  attendLaGarantie,
+  echeancePaiement,
+  garantieRequise,
+} from "@/lib/reservations/garantie";
 import { montantCaution, montantDebitable } from "@/lib/reservations/caution";
 import { debiterCaution } from "@/lib/stripe/caution";
 import {
@@ -400,6 +405,9 @@ type ReservationComplete = {
   type: "table" | "privatisation";
   statut: "demande" | "confirmee" | "refusee" | "annulee" | "expiree";
   option_expire_le: string | null;
+  // Déjà rempli si le client a reçu un lien de paiement lors d'une
+  // acceptation précédente.
+  paiement_token: string | null;
 };
 
 export type DecisionState = { error: string | null };
@@ -481,24 +489,43 @@ export async function accepterDemande(
     };
   }
 
-  // L'acompte est figé ici, à l'acceptation : si le tarif de l'espace change
-  // ensuite, la somme demandée au client ne bouge pas sous ses pieds.
-  const centimes = montantAcompte(espace, reservation.type, reservation.couverts);
-  const plafond = montantCaution(espace, reservation.type);
-  // Ce jeton tient lieu d'autorisation sur la page de paiement : il est tiré
-  // au hasard, jamais dérivé de l'identifiant.
-  const jeton = { paiement_token: randomBytes(OCTETS_JETON).toString("base64url") };
-  const acompte =
-    centimes > 0
-      ? { acompte_centimes: centimes, acompte_statut: "attendu", ...jeton }
-      : plafond > 0
-        ? { caution_centimes: plafond, caution_statut: "attendue", ...jeton }
-        : {};
+  // La somme est figée ici, à l'acceptation : si le tarif de l'espace change
+  // ensuite, ce qu'on demande au client ne bouge pas sous ses pieds.
+  const garantie = garantieRequise(espace, reservation.type, reservation.couverts);
+
+  // Un client déjà relancé garde son lien : en régénérer un invaliderait
+  // celui qu'il a reçu, sans que personne ne le sache avant qu'il clique.
+  const jeton = reservation.paiement_token
+    ? {}
+    : { paiement_token: randomBytes(OCTETS_JETON).toString("base64url") };
+
+  const argent = garantie.acompteCentimes
+    ? {
+        acompte_centimes: garantie.acompteCentimes,
+        acompte_statut: "attendu",
+        ...jeton,
+      }
+    : garantie.cautionCentimes
+      ? {
+          caution_centimes: garantie.cautionCentimes,
+          caution_statut: "attendue",
+          ...jeton,
+        }
+      : {};
+
+  // Rien n'est ferme tant que l'argent n'est pas posé : la salle reste tenue
+  // par une option, que la tâche de nuit rendra si le client ne donne pas
+  // suite. Sans garantie à réclamer, l'acceptation confirme comme avant.
+  const engagement = garantie.exigee
+    ? {
+        statut: "demande",
+        option_expire_le: echeancePaiement(new Date()).toISOString(),
+      }
+    : { statut: "confirmee", option_expire_le: null };
 
   const { error } = await supabase
     .from("restaurant_reservations")
-    // L'option n'a plus lieu d'être une fois la réservation ferme.
-    .update({ statut: "confirmee", option_expire_le: null, ...acompte })
+    .update({ ...engagement, ...argent })
     .eq("id", reservation.id);
 
   if (error) {
