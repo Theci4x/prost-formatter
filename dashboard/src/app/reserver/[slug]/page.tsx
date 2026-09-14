@@ -12,6 +12,7 @@ import {
   creneauxDuJour,
   type Reservation,
 } from "@/lib/reservations/disponibilite";
+import { propositions } from "@/lib/reservations/choix";
 import Image from "next/image";
 import { DemandeForm } from "@/components/reservations/DemandeForm";
 import { formatCreneau, type Espace, type Service } from "@/types/reservation";
@@ -28,7 +29,7 @@ type Query = { date?: string; couverts?: string };
 
 async function chargerRestaurant(slug: string) {
   const supabase = createServiceClient();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("restaurants")
     // Page publique : on ne lit que ce qui doit s'y afficher. Et surtout
     // rien de récent — une colonne ajoutée par une migration pas encore
@@ -37,6 +38,12 @@ async function chargerRestaurant(slug: string) {
     .eq("slug_reservation", slug)
     .maybeSingle();
 
+  // Sans cette trace, une page publique injoignable rend un 404 muet : rien
+  // ne distingue un slug inconnu d'une base hors d'atteinte, et le
+  // restaurateur appelle en disant « ma page a disparu ».
+  if (error) {
+    console.error(`Page de réservation « ${slug} » illisible :`, error.message);
+  }
   return data as {
     id: string;
     nom: string;
@@ -278,7 +285,17 @@ export default async function ReserverPage({
             nombreAvis: reputation?.nombre_avis ?? null,
           })}
         />
-        <GalerieRestaurant photos={photosEtablissement} nom={restaurant.nom} />
+        {/* Les photos des salles ne s'affichent plus que sous les
+            privatisations, là où le client choisit vraiment une pièce. Un
+            établissement qui n'a photographié que ses salles n'en montrerait
+            donc aucune : on les reprend alors en bandeau, faute de mieux que
+            rien. */}
+        <GalerieRestaurant
+          photos={
+            photosEtablissement.length > 0 ? photosEtablissement : toutesPhotos
+          }
+          nom={restaurant.nom}
+        />
 
         <div className="flex flex-col gap-2">
           <h1 className="text-2xl font-semibold text-zinc-900">
@@ -346,68 +363,107 @@ export default async function ReserverPage({
               Essaie une autre date.
             </p>
           ) : (
-            creneaux.map((creneau) => (
-              <div
-                key={creneau.service.id}
-                className="flex flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm"
-              >
-                <div className="flex flex-wrap items-baseline justify-between gap-2">
-                  <span className="font-medium text-zinc-900">
-                    {creneau.service.nom}{" "}
-                    <span className="font-normal text-zinc-500">
-                      {formatCreneau(
-                        creneau.service.heure_debut,
-                        creneau.service.heure_fin,
-                      )}
+            propositions(creneaux).map(
+              ({ creneau, table, privatisations, placesMax, raison }) => (
+                <div
+                  key={creneau.service.id}
+                  className="flex flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm"
+                >
+                  <div className="flex flex-wrap items-baseline justify-between gap-2">
+                    <span className="font-medium text-zinc-900">
+                      {creneau.service.nom}{" "}
+                      <span className="font-normal text-zinc-500">
+                        {formatCreneau(
+                          creneau.service.heure_debut,
+                          creneau.service.heure_fin,
+                        )}
+                      </span>
                     </span>
-                  </span>
-                  {!creneau.ouvert && creneau.raison && (
-                    <span className="text-sm text-zinc-500">
-                      {creneau.raison}
-                    </span>
+                  </div>
+
+                  {/* Réserver une table : l'action ordinaire, celle que
+                      quatre-vingt-dix-neuf clients sur cent viennent
+                      faire. Aucune salle à choisir — le client n'a aucun
+                      moyen de savoir laquelle lui convient, c'est
+                      l'établissement qui place, comme au téléphone. */}
+                  {table ? (
+                    <div className="rounded-xl border border-zinc-200 bg-zinc-50/70 p-4">
+                      <p className="font-medium text-zinc-900">
+                        Une table pour {couverts} convive
+                        {couverts > 1 ? "s" : ""}
+                      </p>
+                      <p className="mt-1 text-sm text-zinc-500">
+                        Placée par l&apos;établissement, comme au téléphone.
+                        {placesMax > couverts &&
+                          ` Il reste de la place jusqu'à ${placesMax} convives.`}
+                      </p>
+                      <DemandeForm
+                        slug={slug}
+                        espaceId={table.espace.id}
+                        serviceId={creneau.service.id}
+                        date={date}
+                        couverts={couverts}
+                        type="table"
+                        libelle="Réserver une table"
+                        restaurantNom={restaurant.nom}
+                        principal
+                      />
+                    </div>
+                  ) : (
+                    // Sans motif, rien : un cadre vide inquiète plus qu'il
+                    // n'informe, et la privatisation en dessous parle.
+                    raison && (
+                      <p className="rounded-xl border border-dashed border-zinc-200 p-4 text-sm text-zinc-500">
+                        {raison}
+                      </p>
+                    )
                   )}
-                </div>
 
-                {/* Les espaces sont listés même quand aucun n'est
-                    disponible : le motif du refus (« il ne reste que 12
-                    couverts ») aide le client à ajuster sa demande, là où un
-                    « complet » sec le fait partir. La liste n'est vide que
-                    lorsque le service lui-même est fermé. */}
-                {creneau.espaces.length > 0 && (
-                  <ul className="flex flex-col gap-3">
-                    {creneau.espaces.map((dispo) => {
-                      const possible =
-                        dispo.peutRecevoirTable || dispo.peutEtrePrivatise;
-                      return (
-                        <li
-                          key={dispo.espace.id}
-                          className="rounded-xl border border-zinc-200 p-4"
-                        >
-                          <div className="flex flex-wrap items-baseline justify-between gap-2">
-                            <span className="font-medium text-zinc-900">
-                              {dispo.espace.nom}
-                            </span>
-                            <span className="text-sm text-zinc-500">
-                              {dispo.privatise
-                                ? "Privatisé"
-                                : `${dispo.restants} couverts disponibles`}
-                            </span>
-                          </div>
-                          {dispo.espace.description && (
-                            <p className="mt-1 text-sm text-zinc-500">
-                              {dispo.espace.description}
-                            </p>
-                          )}
+                  {/* Privatiser : un autre métier, donc une autre section.
+                      Ici la salle EST le sujet : le client la choisit, et
+                      il a besoin de la voir. */}
+                  {privatisations.length > 0 && (
+                    <div className="flex flex-col gap-3 border-t border-zinc-100 pt-4">
+                      <div>
+                        <p className="font-medium text-zinc-900">
+                          Privatiser un espace
+                        </p>
+                        <p className="mt-1 text-sm text-zinc-500">
+                          L&apos;espace est à vous seuls pendant tout le
+                          service.
+                        </p>
+                      </div>
 
-                          {/* Les photos défilent horizontalement plutôt que
-                              de s'empiler : sur un téléphone, une colonne de
-                              grandes images repousse le bouton de réservation
-                              hors de l'écran. */}
-                          {(photosParEspace.get(dispo.espace.id) ?? []).length >
-                            0 && (
-                            <ul className="-mx-1 mt-3 flex gap-2 overflow-x-auto px-1 pb-1">
-                              {(photosParEspace.get(dispo.espace.id) ?? []).map(
-                                (photo) => (
+                      <ul className="flex flex-col gap-3">
+                        {privatisations.map((dispo) => (
+                          <li
+                            key={dispo.espace.id}
+                            className="rounded-xl border border-zinc-200 p-4"
+                          >
+                            <div className="flex flex-wrap items-baseline justify-between gap-2">
+                              <span className="font-medium text-zinc-900">
+                                {dispo.espace.nom}
+                              </span>
+                              <span className="text-sm text-zinc-500">
+                                Jusqu&apos;à {dispo.espace.capacite} couverts
+                              </span>
+                            </div>
+                            {dispo.espace.description && (
+                              <p className="mt-1 text-sm text-zinc-500">
+                                {dispo.espace.description}
+                              </p>
+                            )}
+
+                            {/* Les photos défilent horizontalement plutôt
+                                que de s'empiler : sur un téléphone, une
+                                colonne de grandes images repousse le
+                                bouton hors de l'écran. */}
+                            {(photosParEspace.get(dispo.espace.id) ?? [])
+                              .length > 0 && (
+                              <ul className="-mx-1 mt-3 flex gap-2 overflow-x-auto px-1 pb-1">
+                                {(
+                                  photosParEspace.get(dispo.espace.id) ?? []
+                                ).map((photo) => (
                                   <li key={photo.id} className="shrink-0">
                                     <div className="relative h-28 w-40 overflow-hidden rounded-lg border border-zinc-200">
                                       <Image
@@ -419,35 +475,28 @@ export default async function ReserverPage({
                                       />
                                     </div>
                                   </li>
-                                ),
-                              )}
-                            </ul>
-                          )}
+                                ))}
+                              </ul>
+                            )}
 
-                          {possible ? (
                             <DemandeForm
                               slug={slug}
                               espaceId={dispo.espace.id}
-                              espaceNom={dispo.espace.nom}
                               serviceId={creneau.service.id}
                               date={date}
                               couverts={couverts}
-                              peutRecevoirTable={dispo.peutRecevoirTable}
-                              peutEtrePrivatise={dispo.peutEtrePrivatise}
+                              type="privatisation"
+                              libelle={`Privatiser ${dispo.espace.nom}`}
                               restaurantNom={restaurant.nom}
                             />
-                          ) : (
-                            <p className="mt-2 text-sm text-zinc-400">
-                              {dispo.raison}
-                            </p>
-                          )}
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-              </div>
-            ))
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              ),
+            )
           )}
         </section>
 

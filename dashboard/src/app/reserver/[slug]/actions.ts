@@ -129,8 +129,14 @@ export async function demanderReservation(
   if (!possible) {
     return {
       error:
-        dispo.raison ??
-        "Ce créneau vient d'être pris. Choisis-en un autre, ou une autre date.",
+        // Pour une table, le client n'a choisi aucune salle : c'est Klarr
+        // qui l'a placé. Lui répondre « cet espace n'est plus libre » le
+        // renverrait à une décision qu'il n'a pas prise. On lui dit ce
+        // qu'il peut faire, pas ce qui s'est passé en coulisses.
+        type === "table"
+          ? "Ce créneau vient d'être pris pendant que tu remplissais le formulaire. Recharge la page : il reste peut-être de la place à une autre heure."
+          : (dispo.raison ??
+            "Ce créneau vient d'être pris. Choisis-en un autre, ou une autre date."),
     };
   }
 

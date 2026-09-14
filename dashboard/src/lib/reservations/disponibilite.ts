@@ -18,6 +18,9 @@ export type Disponibilite = {
   restants: number;
   // Un seul groupe occupe l'espace : plus rien n'est vendable dessus.
   privatise: boolean;
+  // Fermé ce jour-là par le restaurateur : les couverts restants sont un
+  // décor, rien ne s'y vend.
+  ferme: boolean;
   peutRecevoirTable: boolean;
   peutEtrePrivatise: boolean;
   // Motif du refus, à afficher tel quel au client.
@@ -135,7 +138,7 @@ export function disponibiliteEspace({
     : actives.reduce((total, reservation) => total + reservation.couverts, 0);
   const restants = Math.max(0, espace.capacite - occupes);
 
-  const base = { espace, occupes, restants, privatise };
+  const base = { espace, occupes, restants, privatise, ferme: false };
 
   // La fermeture prime sur la jauge : même à moitié vide, un espace fermé ne
   // se vend pas. Les couverts déjà attendus restent comptés — le restaurateur
@@ -144,6 +147,7 @@ export function disponibiliteEspace({
   if (fermeture) {
     return {
       ...base,
+      ferme: true,
       peutRecevoirTable: false,
       peutEtrePrivatise: false,
       raison: motifFermeture(fermeture),

@@ -12,44 +12,60 @@ const champ =
   "w-full rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-brand-navy";
 const label = "flex flex-col gap-1 text-sm font-medium text-zinc-700";
 
+/**
+ * Le formulaire de demande, pour un type déjà décidé.
+ *
+ * Le choix « table ou privatisation » ne se fait plus ici : il est fait en
+ * amont, par deux boutons distincts. Un client qui veut juste dîner ne doit
+ * pas avoir à lire une explication de ce qu'est une privatisation, ni à
+ * choisir une salle qu'il ne connaît pas.
+ */
 export function DemandeForm({
   slug,
   espaceId,
-  espaceNom,
   serviceId,
   date,
   couverts,
-  peutRecevoirTable,
-  peutEtrePrivatise,
+  type,
+  libelle,
   restaurantNom,
+  principal = false,
 }: {
   slug: string;
   espaceId: string;
-  espaceNom: string;
   serviceId: string;
   date: string;
   couverts: number;
-  peutRecevoirTable: boolean;
-  peutEtrePrivatise: boolean;
+  type: "table" | "privatisation";
+  /** Le texte du bouton fermé — c'est lui qui annonce ce qu'on demande. */
+  libelle: string;
   restaurantNom: string;
+  /** L'action principale du créneau : pleine, sombre, impossible à rater. */
+  principal?: boolean;
 }) {
   const [state, action, pending] = useActionState(
     demanderReservation,
     initialState,
   );
   const [ouvert, setOuvert] = useState(false);
-  // Quand les deux sont possibles, le client choisit ; sinon le seul type
-  // possible est imposé sans lui poser une question sans réponse.
-  const [type, setType] = useState(peutRecevoirTable ? "table" : "privatisation");
+
+  // Plusieurs formulaires cohabitent sur la page (deux salles privatisables,
+  // deux services) : les identifiants des champs combinent type, salle et
+  // service, sans quoi un « label for » désignerait le mauvais champ.
+  const cle = `${type}-${espaceId}-${serviceId}`;
 
   if (!ouvert) {
     return (
       <button
         type="button"
         onClick={() => setOuvert(true)}
-        className="mt-3 rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover"
+        className={
+          principal
+            ? "mt-3 w-full rounded-md bg-brand-navy px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover sm:w-auto"
+            : "mt-3 rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
+        }
       >
-        Demander {espaceNom}
+        {libelle}
       </button>
     );
   }
@@ -63,73 +79,31 @@ export function DemandeForm({
       <input type="hidden" name="couverts" value={couverts} />
       <input type="hidden" name="type" value={type} />
 
-      {peutRecevoirTable && peutEtrePrivatise && (
-        <fieldset className="flex flex-col gap-2">
-          <legend className="mb-1 text-sm font-medium text-zinc-700">
-            Que souhaitez-vous ?
-          </legend>
-          {[
-            {
-              valeur: "table",
-              texte: "Réservation individuelle",
-              aide: "Vous partagez la salle avec les autres clients.",
-            },
-            {
-              valeur: "privatisation",
-              texte: "Privatiser l'espace",
-              aide: "L'espace est à vous seul sur le créneau.",
-            },
-          ].map((choix) => (
-            <button
-              key={choix.valeur}
-              type="button"
-              onClick={() => setType(choix.valeur)}
-              className={`flex flex-col items-start gap-0.5 rounded-md border px-4 py-2.5 text-left text-sm transition-colors ${
-                type === choix.valeur
-                  ? "border-brand-navy bg-brand-orange-soft text-brand-navy"
-                  : "border-zinc-200 text-zinc-600 hover:border-zinc-400"
-              }`}
-            >
-              <span className="font-medium">{choix.texte}</span>
-              {/* Sans cette phrase, « réservation individuelle » et
-                  « privatisation » se ressemblent pour qui n'a jamais
-                  privatisé une salle. */}
-              <span className="text-xs opacity-80">{choix.aide}</span>
-            </button>
-          ))}
-        </fieldset>
-      )}
-
       <div className="grid gap-4 sm:grid-cols-2">
-        <label className={label} htmlFor={`nom-${espaceId}`}>
+        <label className={label} htmlFor={`nom-${cle}`}>
           Ton nom
-          <input
-            id={`nom-${espaceId}`}
-            name="client_nom"
-            required
-            className={champ}
-          />
+          <input id={`nom-${cle}`} name="client_nom" required className={champ} />
         </label>
-        <label className={label} htmlFor={`email-${espaceId}`}>
+        <label className={label} htmlFor={`email-${cle}`}>
           E-mail
           <input
-            id={`email-${espaceId}`}
+            id={`email-${cle}`}
             name="client_email"
             type="email"
             required
             className={champ}
           />
         </label>
-        <label className={label} htmlFor={`tel-${espaceId}`}>
+        <label className={label} htmlFor={`tel-${cle}`}>
           Téléphone{" "}
           <span className="font-normal text-zinc-400">(facultatif)</span>
-          <input id={`tel-${espaceId}`} name="client_telephone" className={champ} />
+          <input id={`tel-${cle}`} name="client_telephone" className={champ} />
         </label>
-        <label className={label} htmlFor={`occasion-${espaceId}`}>
+        <label className={label} htmlFor={`occasion-${cle}`}>
           Occasion{" "}
           <span className="font-normal text-zinc-400">(facultatif)</span>
           <input
-            id={`occasion-${espaceId}`}
+            id={`occasion-${cle}`}
             name="occasion"
             placeholder="Anniversaire, repas d'équipe…"
             className={champ}
@@ -137,15 +111,10 @@ export function DemandeForm({
         </label>
       </div>
 
-      <label className={label} htmlFor={`message-${espaceId}`}>
+      <label className={label} htmlFor={`message-${cle}`}>
         Un mot pour l&apos;établissement{" "}
         <span className="font-normal text-zinc-400">(facultatif)</span>
-        <textarea
-          id={`message-${espaceId}`}
-          name="message"
-          rows={3}
-          className={champ}
-        />
+        <textarea id={`message-${cle}`} name="message" rows={3} className={champ} />
       </label>
 
       {/* Décochée par défaut : le RGPD interdit de déduire un consentement
