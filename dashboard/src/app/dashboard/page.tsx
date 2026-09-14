@@ -9,59 +9,110 @@ import type { Restaurant } from "@/types/restaurant";
 
 // Ce que chaque rôle peut ouvrir. La base refuse déjà le reste ; ceci évite
 // de proposer une porte fermée, qu'un serveur prendrait pour une panne.
+/**
+ * Les pages d'un établissement.
+ *
+ * Chacune porte une phrase : douze pastilles nues se ressemblent toutes, et
+ * un restaurateur qui cherche « son site » ne devine pas qu'il s'appelle
+ * « Vitrine ». La phrase dit ce qu'on y fait, pas ce que ça contient.
+ */
 const FEATURE_LINKS: {
   href: string;
   label: string;
+  resume: string;
   icon: React.ReactNode;
   minimum?: "gerant" | "proprietaire";
 }[] = [
-  { href: "photos", label: "Photos", icon: dashboardIcons.photos, minimum: "gerant" },
-  { href: "menu", label: "Menu", icon: dashboardIcons.menu, minimum: "gerant" },
-  { href: "seo", label: "SEO", icon: dashboardIcons.seo, minimum: "gerant" },
   {
-    href: "visibilite-ia",
-    label: "Visibilité IA",
-    icon: dashboardIcons.visibiliteIa,
+    href: "vitrine",
+    label: "Site vitrine",
+    resume: "Le site de ton restaurant, fait de ce que tu as déjà rempli.",
+    icon: dashboardIcons.edit,
     minimum: "gerant",
   },
-  { href: "avis", label: "Avis", icon: dashboardIcons.avis, minimum: "gerant" },
-  // Google, Facebook, Instagram et TikTok sont regroupés derrière une seule
-  // entrée : le restaurateur relie ses comptes une fois, au même endroit.
   {
     href: "reservations",
     label: "Réservations",
+    resume: "Le carnet, tes salles, tes services et ton plan de salle.",
     icon: dashboardIcons.reservations,
   },
   // Raccourci assumé : en plein service, personne n'a le temps de passer par
   // le carnet pour arriver à l'écran de salle.
-  { href: "service", label: "Service", icon: dashboardIcons.service },
   {
-    href: "experiences",
-    label: "Expériences",
+    href: "service",
+    label: "Service",
+    resume: "L'écran de salle, pour le coup de feu.",
+    icon: dashboardIcons.service,
+  },
+  {
+    href: "menu",
+    label: "Carte",
+    resume: "Tes plats, leurs prix, leurs photos, et le QR code à poser.",
     icon: dashboardIcons.menu,
     minimum: "gerant",
   },
   {
+    href: "photos",
+    label: "Photos",
+    resume: "Ce que voit un client avant de choisir de venir.",
+    icon: dashboardIcons.photos,
+    minimum: "gerant",
+  },
+  {
+    href: "avis",
+    label: "Avis",
+    resume: "Tes avis Google, et des réponses prêtes à relire.",
+    icon: dashboardIcons.avis,
+    minimum: "gerant",
+  },
+  {
+    href: "seo",
+    label: "Référencement",
+    resume: "Ce que Google sait de toi, et ce qui lui manque.",
+    icon: dashboardIcons.seo,
+    minimum: "gerant",
+  },
+  {
+    href: "visibilite-ia",
+    label: "Visibilité IA",
+    resume: "Es-tu cité quand on demande à une IA où dîner ?",
+    icon: dashboardIcons.visibiliteIa,
+    minimum: "gerant",
+  },
+  {
+    href: "experiences",
+    label: "Expériences",
+    resume: "Ateliers, dégustations, soirées à places comptées.",
+    icon: dashboardIcons.menu,
+    minimum: "gerant",
+  },
+  // Google, Facebook, Instagram et TikTok sont regroupés derrière une seule
+  // entrée : le restaurateur relie ses comptes une fois, au même endroit.
+  {
     href: "connexions",
     label: "Connexions",
+    resume: "Relier Google, Facebook, Instagram et TikTok.",
     icon: dashboardIcons.connexions,
     minimum: "gerant",
   },
   {
     href: "paiements",
     label: "Paiements",
+    resume: "Acomptes, cautions, et ton compte Stripe.",
     icon: dashboardIcons.abonnement,
     minimum: "gerant",
   },
   {
     href: "equipe",
     label: "Équipe",
+    resume: "Qui accède à quoi, et qui décide.",
     icon: dashboardIcons.connexions,
     minimum: "proprietaire",
   },
   {
     href: "abonnement",
     label: "Abonnement",
+    resume: "Ta formule, tes factures.",
     icon: dashboardIcons.abonnement,
     minimum: "proprietaire",
   },
@@ -184,19 +235,29 @@ export default async function DashboardPage() {
                   )}
                 </div>
               </div>
-              <div className="flex flex-wrap gap-2">
+              {/* Des cases plutôt qu'une rangée de pastilles : à douze
+                  entrées, elles se ressemblent toutes et l'œil n'en
+                  distingue aucune. Une phrase par case, et on trouve. */}
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {FEATURE_LINKS.filter((feature) =>
                   accessible(feature.minimum, roles.get(restaurant.id) ?? null),
                 ).map((feature) => (
                   <Link
                     key={feature.href}
                     href={`/dashboard/${restaurant.id}/${feature.href}`}
-                    className="flex items-center gap-1.5 rounded-full bg-brand-orange-soft px-3 py-1.5 text-xs font-medium text-brand-navy transition-colors hover:bg-brand-navy hover:text-white"
+                    className="group flex items-start gap-3 rounded-xl border border-zinc-200/70 bg-white p-4 transition-colors hover:border-brand-navy"
                   >
-                    <span className="[&_svg]:h-3.5 [&_svg]:w-3.5">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-orange-soft text-brand-navy transition-colors group-hover:bg-brand-navy group-hover:text-white">
                       {feature.icon}
                     </span>
-                    {feature.label}
+                    <span className="flex min-w-0 flex-col gap-0.5">
+                      <span className="text-sm font-medium text-zinc-900">
+                        {feature.label}
+                      </span>
+                      <span className="text-xs leading-relaxed text-zinc-500">
+                        {feature.resume}
+                      </span>
+                    </span>
                   </Link>
                 ))}
               </div>

@@ -374,10 +374,10 @@ export default async function ConfigurationReservationsPage({
                     rassemble tes photos, ta carte, tes horaires et cette
                     adresse de réservation. Ça se publie depuis{" "}
                     <Link
-                      href={`/dashboard/${id}/edit`}
+                      href={`/dashboard/${id}/vitrine`}
                       className="font-medium text-brand-orange hover:underline"
                     >
-                      la fiche de ton établissement
+                      la page Site vitrine
                     </Link>
                     .
                   </p>
