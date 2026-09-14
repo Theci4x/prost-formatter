@@ -29,6 +29,23 @@ export type ReservationPlacable = {
   client_nom: string;
 };
 
+/**
+ * Une salle se dessine-t-elle ?
+ *
+ * Non si elle ne sert qu'à la privatisation. Quand un groupe prend la cave
+ * en entier, personne ne « place » qui que ce soit : la salle part d'un
+ * bloc. Y dessiner des tables numérotées donnerait un écran qui ne servira
+ * jamais, et laisserait croire qu'on peut y asseoir deux groupes.
+ */
+export function salleADessiner(espace: Espace): boolean {
+  return espace.accepte_table;
+}
+
+/** Les salles pour lesquelles un plan a un sens, dans l'ordre d'affichage. */
+export function sallesADessiner(espaces: Espace[]): Espace[] {
+  return espaces.filter(salleADessiner);
+}
+
 /** Les tables d'une salle, dans l'ordre de lecture du plan. */
 export function tablesDeLEspace(
   tables: TableSalle[],

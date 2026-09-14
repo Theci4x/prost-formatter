@@ -10,8 +10,10 @@ import {
   nomDejaPris,
   placementPossible,
   prochaineCaseLibre,
+  salleADessiner,
   type ReservationPlacable,
 } from "@/lib/reservations/plan";
+import type { Espace } from "@/types/reservation";
 import { TABLE_VIDE, type FormeTable, type TableSalle, type TableValeurs } from "@/types/plan";
 
 export type TableState = {
@@ -63,6 +65,22 @@ export async function ajouterTable(
   const places = Number(valeurs.places);
   if (!Number.isInteger(places) || places <= 0) {
     return echec("Indique le nombre de places (un nombre entier).");
+  }
+
+  const supabaseSalle = await createClient();
+  const { data: salleData } = await supabaseSalle
+    .from("restaurant_espaces")
+    .select("*")
+    .eq("id", espaceId)
+    .eq("restaurant_id", restaurantId)
+    .maybeSingle();
+  const salle = salleData as Espace | null;
+  if (!salle) return echec("Cette salle n'existe plus.");
+  // Une salle qui ne se loue qu'en entier n'a personne à placer.
+  if (!salleADessiner(salle)) {
+    return echec(
+      `${salle.nom} ne se loue qu'en entier : un groupe qui la privatise la prend toute, il n'y a pas de table à attribuer.`,
+    );
   }
 
   const tables = await chargerTables(restaurantId, espaceId);

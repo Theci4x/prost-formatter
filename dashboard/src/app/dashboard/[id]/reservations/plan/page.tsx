@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { exiger } from "@/lib/equipe/roles";
 import { PlanSalle } from "@/components/reservations/PlanSalle";
-import { tablesDeLEspace } from "@/lib/reservations/plan";
+import { sallesADessiner, tablesDeLEspace } from "@/lib/reservations/plan";
 import type { TableSalle } from "@/types/plan";
 import type { Espace } from "@/types/reservation";
 import type { Restaurant } from "@/types/restaurant";
@@ -32,8 +32,14 @@ export default async function PlanPage({
   const restaurant = restaurantResult.data as Restaurant | null;
   if (!restaurant) notFound();
 
-  const espaces = (espacesResult.data ?? []) as Espace[];
+  const toutesLesSalles = (espacesResult.data ?? []) as Espace[];
   const tables = (tablesResult.data ?? []) as TableSalle[];
+  // Une salle qui ne se loue qu'en entier n'a pas de plan : on n'y place
+  // personne, le groupe prend tout.
+  const espaces = sallesADessiner(toutesLesSalles);
+  const privatisationSeule = toutesLesSalles.filter(
+    (salle) => !salle.accepte_table,
+  );
 
   return (
     <div className="flex flex-1 flex-col gap-8 px-6 py-8">
@@ -46,23 +52,42 @@ export default async function PlanPage({
         </Link>
         <h1 className="text-2xl font-semibold text-zinc-900">Plan de salle</h1>
         <p className="max-w-2xl text-sm text-zinc-500">
-          Dessine tes tables une fois, salle par salle. Pendant le service, tu
-          assignes chaque réservation à une table depuis l&apos;écran du jour.
-          Klarr continue d&apos;accepter ou de refuser les réservations en
-          couverts : le plan sert à placer, pas à vendre.
+          Dessine tes tables une fois, salle par salle — ta salle du bas, ton
+          premier étage, ta terrasse. Pendant le service, tu assignes chaque
+          réservation à une table depuis l&apos;écran du jour. Klarr continue
+          d&apos;accepter ou de refuser les réservations en couverts : le plan
+          sert à placer, pas à vendre.
         </p>
       </div>
 
       {espaces.length === 0 ? (
         <p className="rounded-2xl border border-zinc-200/70 bg-white p-5 text-sm text-zinc-500 shadow-sm">
-          Crée d&apos;abord une salle dans{" "}
-          <Link
-            href={`/dashboard/${id}/reservations/configuration`}
-            className="text-brand-navy underline-offset-2 hover:underline"
-          >
-            la configuration
-          </Link>
-          . Une table appartient toujours à une salle.
+          {toutesLesSalles.length === 0 ? (
+            <>
+              Crée d&apos;abord une salle dans{" "}
+              <Link
+                href={`/dashboard/${id}/reservations/configuration`}
+                className="text-brand-navy underline-offset-2 hover:underline"
+              >
+                la configuration
+              </Link>
+              . Une table appartient toujours à une salle.
+            </>
+          ) : (
+            <>
+              Aucune de tes salles ne prend de réservation individuelle :
+              elles ne se louent qu&apos;en entier, et une salle privatisée
+              n&apos;a pas besoin de plan — le groupe prend tout. Coche
+              « réservations individuelles » sur une salle dans{" "}
+              <Link
+                href={`/dashboard/${id}/reservations/configuration`}
+                className="text-brand-navy underline-offset-2 hover:underline"
+              >
+                la configuration
+              </Link>{" "}
+              pour lui dessiner un plan.
+            </>
+          )}
         </p>
       ) : (
         espaces.map((espace) => (
@@ -73,6 +98,18 @@ export default async function PlanPage({
             tables={tablesDeLEspace(tables, espace.id)}
           />
         ))
+      )}
+
+      {privatisationSeule.length > 0 && (
+        <p className="text-sm text-zinc-500">
+          Sans plan, parce qu&apos;{privatisationSeule.length > 1 ? "elles" : "elle"}{" "}
+          ne se loue{privatisationSeule.length > 1 ? "nt" : ""} qu&apos;en
+          entier :{" "}
+          <span className="font-medium text-zinc-700">
+            {privatisationSeule.map((salle) => salle.nom).join(", ")}
+          </span>
+          . Quand un groupe privatise, il n&apos;y a personne à placer.
+        </p>
       )}
     </div>
   );

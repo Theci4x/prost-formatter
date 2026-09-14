@@ -16,6 +16,7 @@ import { PlanService } from "@/components/reservations/PlanService";
 import { PlacerReservation } from "@/components/reservations/PlacerReservation";
 import {
   reservationsNonPlacees,
+  salleADessiner,
   tablesDeLEspace,
   tablesProposees,
   type ReservationPlacable,
@@ -261,7 +262,11 @@ export default async function ServicePage({
                   (l) =>
                     l.espace_id === espace.id && l.service_id === service.id,
                 );
-                const tablesSalle = tablesDeLEspace(tables, espace.id);
+                // Une salle qui ne se loue qu'en entier n'a pas de plan :
+                // le groupe qui la privatise la prend toute.
+                const tablesSalle = salleADessiner(espace)
+                  ? tablesDeLEspace(tables, espace.id)
+                  : [];
 
                 return (
                   <div
