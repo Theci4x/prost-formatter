@@ -14,12 +14,19 @@ export type StatutCaution =
  * garantie pour une table de deux ferait fuir sans rien protéger.
  */
 export function montantCaution(
-  espace: Pick<Espace, "caution_centimes">,
+  espace: Pick<Espace, "caution_centimes" | "caution_mode">,
   type: "table" | "privatisation",
+  couverts = 0,
 ): number {
   if (type !== "privatisation") return 0;
   const plafond = espace.caution_centimes;
-  return plafond && plafond > 0 ? plafond : 0;
+  if (!plafond || plafond <= 0) return 0;
+  // Par convive, c'est le nombre de personnes qui fait le risque, pas la
+  // pièce : vingt personnes ne laissent pas la salle dans l'état de six.
+  if (espace.caution_mode === "par_couvert") {
+    return couverts > 0 ? plafond * couverts : 0;
+  }
+  return plafond;
 }
 
 /**

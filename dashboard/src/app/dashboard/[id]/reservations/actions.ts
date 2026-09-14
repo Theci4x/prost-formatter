@@ -9,11 +9,10 @@ import { chargerFermetures } from "@/lib/reservations/fermetures";
 import { peutGerer, roleSur } from "@/lib/equipe/roles";
 import { OCTETS_JETON } from "@/lib/reservations/acompte";
 import {
-  attendLaGarantie,
   echeancePaiement,
   garantieRequise,
 } from "@/lib/reservations/garantie";
-import { montantCaution, montantDebitable } from "@/lib/reservations/caution";
+import { montantDebitable } from "@/lib/reservations/caution";
 import { debiterCaution } from "@/lib/stripe/caution";
 import {
   disponibiliteEspace,
@@ -80,12 +79,9 @@ function entierPositif(brut: string): number | null {
   return Number.isInteger(n) && n > 0 ? n : null;
 }
 
-export async function addEspace(
-  prevState: EspaceState,
-  formData: FormData,
-): Promise<EspaceState> {
-  const restaurantId = formData.get("restaurant_id") as string;
-  const valeurs: EspaceValeurs = {
+/** Les valeurs du formulaire d'espace, telles que tapées. */
+function lireEspace(formData: FormData): EspaceValeurs {
+  return {
     nom: texte(formData.get("nom")),
     capacite: texte(formData.get("capacite")),
     description: texte(formData.get("description")),
@@ -98,34 +94,47 @@ export async function addEspace(
         ? "par_couvert"
         : "forfait",
     caution: texte(formData.get("caution")),
+    cautionMode:
+      texte(formData.get("caution_mode")) === "par_couvert"
+        ? "par_couvert"
+        : "forfait",
+    seuil: texte(formData.get("garantie_seuil")),
     garantie: lireGarantie(texte(formData.get("garantie"))),
   };
-  const rendu = prevState.rendu + 1;
-  const echec = (error: string): EspaceState => ({ error, rendu, valeurs });
+}
 
+/**
+ * Ce qu'on écrit en base, ou la phrase à montrer. Partagé par l'ajout et la
+ * modification : deux validations séparées finissent toujours par diverger,
+ * et c'est la seconde qui laisse passer ce que la première refusait.
+ */
+function validerEspace(
+  valeurs: EspaceValeurs,
+): { erreur: string } | { donnees: Record<string, unknown> } {
   const capacite = entierPositif(valeurs.capacite);
   const minimum = entierPositif(valeurs.minimum);
 
-  if (!valeurs.nom) return echec("Donne un nom à cet espace.");
+  if (!valeurs.nom) return { erreur: "Donne un nom à cet espace." };
   if (!capacite) {
-    return echec("Indique la capacité en couverts (un nombre entier).");
+    return { erreur: "Indique la capacité en couverts (un nombre entier)." };
   }
   // Un espace qui n'accepte ni table ni privatisation ne serait proposé nulle
   // part : mieux vaut le dire que le laisser créer.
   if (!valeurs.accepteTable && !valeurs.privatisable) {
-    return echec(
-      "Coche au moins « tables classiques » ou « privatisation », sinon cet espace ne sera jamais réservable.",
-    );
+    return {
+      erreur:
+        "Coche au moins « tables classiques » ou « privatisation », sinon cet espace ne sera jamais réservable.",
+    };
   }
   if (valeurs.privatisable && !minimum) {
-    return echec(
-      "Indique le minimum de couverts à partir duquel tu privatises.",
-    );
+    return {
+      erreur: "Indique le minimum de couverts à partir duquel tu privatises.",
+    };
   }
   if (minimum && minimum > capacite) {
-    return echec(
-      `Le minimum de privatisation (${minimum}) dépasse la capacité de l'espace (${capacite}).`,
-    );
+    return {
+      erreur: `Le minimum de privatisation (${minimum}) dépasse la capacité de l'espace (${capacite}).`,
+    };
   }
 
   // Les montants sont saisis en euros et stockés en centimes : un montant à
@@ -136,41 +145,127 @@ export async function addEspace(
 
   const acompteCentimes = veutAcompte ? enCentimes(valeurs.acompte) : null;
   if (veutAcompte && acompteCentimes === null) {
-    return echec("L'acompte doit être un montant en euros, par exemple 500.");
+    return {
+      erreur: "L'acompte doit être un montant en euros, par exemple 500.",
+    };
   }
   const cautionCentimes = veutCaution ? enCentimes(valeurs.caution) : null;
   if (veutCaution && cautionCentimes === null) {
-    return echec("La caution doit être un montant en euros, par exemple 1000.");
+    return {
+      erreur: "La caution doit être un montant en euros, par exemple 1000.",
+    };
   }
   if (valeurs.garantie !== "aucune" && !valeurs.privatisable) {
-    return echec(
-      "Acompte et caution ne s'appliquent qu'aux privatisations : coche « privatisation », ou choisis « aucune garantie ».",
-    );
+    return {
+      erreur:
+        "Acompte et caution ne s'appliquent qu'aux privatisations : coche « privatisation », ou choisis « aucune garantie ».",
+    };
+  }
+
+  // Le seuil est facultatif : vide, la garantie s'applique dès le premier
+  // convive. Mais s'il est saisi, il doit vouloir dire quelque chose.
+  const seuil = valeurs.seuil ? entierPositif(valeurs.seuil) : null;
+  if (valeurs.seuil && !seuil) {
+    return {
+      erreur:
+        "Le seuil doit être un nombre de convives, par exemple 20 — ou vide pour l'appliquer dès le premier.",
+    };
+  }
+  if (seuil && seuil > capacite) {
+    return {
+      erreur: `Le seuil de garantie (${seuil}) dépasse la capacité de l'espace (${capacite}) : elle ne se déclencherait jamais.`,
+    };
+  }
+
+  return {
+    donnees: {
+      nom: valeurs.nom,
+      description: valeurs.description || null,
+      capacite,
+      privatisation_minimum: valeurs.privatisable ? minimum : null,
+      accepte_table: valeurs.accepteTable,
+      acompte_centimes: valeurs.privatisable ? acompteCentimes : null,
+      acompte_mode: valeurs.acompteMode,
+      caution_centimes: valeurs.privatisable ? cautionCentimes : null,
+      caution_mode: valeurs.cautionMode,
+      garantie_seuil_couverts: valeurs.privatisable ? seuil : null,
+    },
+  };
+}
+
+export async function addEspace(
+  prevState: EspaceState,
+  formData: FormData,
+): Promise<EspaceState> {
+  const restaurantId = formData.get("restaurant_id") as string;
+  const valeurs = lireEspace(formData);
+  const rendu = prevState.rendu + 1;
+
+  const verdict = validerEspace(valeurs);
+  if ("erreur" in verdict) {
+    return { error: verdict.erreur, rendu, valeurs };
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.from("restaurant_espaces").insert({
-    restaurant_id: restaurantId,
-    nom: valeurs.nom,
-    description: valeurs.description || null,
-    capacite,
-    privatisation_minimum: valeurs.privatisable ? minimum : null,
-    accepte_table: valeurs.accepteTable,
-    acompte_centimes: valeurs.privatisable ? acompteCentimes : null,
-    acompte_mode: valeurs.acompteMode,
-    caution_centimes: valeurs.privatisable ? cautionCentimes : null,
-  });
+  const { error } = await supabase
+    .from("restaurant_espaces")
+    .insert({ restaurant_id: restaurantId, ...verdict.donnees });
 
   if (error) {
     console.error("[addEspace]", error);
-    return echec("L'enregistrement a échoué. Réessaie dans un instant.");
+    return {
+      error: "L'enregistrement a échoué. Réessaie dans un instant.",
+      rendu,
+      valeurs,
+    };
   }
 
   revalidatePath(`/dashboard/${restaurantId}/reservations`);
   // C'est l'écran de configuration qui affiche ces listes : sans cette
-  // ligne, on ajoute un service et on ne le retrouve pas en revenant.
+  // ligne, on ajoute un espace et on ne le retrouve pas en revenant.
   revalidatePath(`/dashboard/${restaurantId}/reservations/configuration`);
   return { error: null, rendu, valeurs: ESPACE_VIDE };
+}
+
+/**
+ * Modifier un espace existant. Jusqu'ici il fallait le supprimer et le
+ * recréer, ce qui emportait ses photos et coupait le lien avec les
+ * réservations prises dessus. Changer une caution ne doit pas coûter ça —
+ * et sans cet écran, le restaurateur ne pourrait régler sa garantie qu'une
+ * seule fois, à la création.
+ */
+export async function modifierEspace(
+  prevState: EspaceState,
+  formData: FormData,
+): Promise<EspaceState> {
+  const restaurantId = texte(formData.get("restaurant_id"));
+  const espaceId = texte(formData.get("espace_id"));
+  const valeurs = lireEspace(formData);
+  const rendu = prevState.rendu + 1;
+  const echec = (error: string): EspaceState => ({ error, rendu, valeurs });
+
+  if (!peutGerer(await roleSur(restaurantId))) {
+    return echec("Seul un gérant peut modifier les espaces.");
+  }
+
+  const verdict = validerEspace(valeurs);
+  if ("erreur" in verdict) return echec(verdict.erreur);
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("restaurant_espaces")
+    .update(verdict.donnees)
+    .eq("id", espaceId)
+    .eq("restaurant_id", restaurantId);
+
+  if (error) {
+    console.error("[modifierEspace]", error);
+    return echec("L'enregistrement a échoué. Réessaie dans un instant.");
+  }
+
+  revalidatePath(`/dashboard/${restaurantId}/reservations`);
+  revalidatePath(`/dashboard/${restaurantId}/reservations/configuration`);
+  return { error: null, rendu, valeurs };
 }
 
 export async function removeEspace(formData: FormData) {

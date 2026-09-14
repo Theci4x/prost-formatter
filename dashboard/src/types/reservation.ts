@@ -15,6 +15,10 @@ export type Espace = {
   // Plafond débitable en cas de défection. Exclusif de l'acompte : on ne
   // réclame pas les deux au même client.
   caution_centimes: number | null;
+  caution_mode: "forfait" | "par_couvert";
+  // À partir de combien de convives la garantie se déclenche. NULL quand
+  // elle s'applique dès le premier.
+  garantie_seuil_couverts: number | null;
 };
 
 export type Service = {
@@ -95,6 +99,10 @@ export type EspaceValeurs = {
   acompte: string;
   acompteMode: "forfait" | "par_couvert";
   caution: string;
+  cautionMode: "forfait" | "par_couvert";
+  // À partir de combien de convives la garantie s'applique. Vide = dès le
+  // premier.
+  seuil: string;
   // Ce que l'espace réclame : rien, un acompte, ou une carte en garantie.
   garantie: "aucune" | "acompte" | "caution";
 };
@@ -109,6 +117,8 @@ export const ESPACE_VIDE: EspaceValeurs = {
   acompte: "",
   acompteMode: "forfait",
   caution: "",
+  cautionMode: "forfait",
+  seuil: "",
   garantie: "aucune",
 };
 

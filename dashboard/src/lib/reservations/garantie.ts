@@ -34,15 +34,30 @@ export type Garantie = {
 };
 
 export function garantieRequise(
-  espace: Pick<Espace, "acompte_centimes" | "acompte_mode" | "caution_centimes">,
+  espace: Pick<
+    Espace,
+    | "acompte_centimes"
+    | "acompte_mode"
+    | "caution_centimes"
+    | "caution_mode"
+    | "garantie_seuil_couverts"
+  >,
   type: "table" | "privatisation",
   couverts: number,
 ): Garantie {
+  // En dessous du seuil, on ne demande rien. Réclamer une empreinte de carte
+  // à six personnes qui privatisent la petite salle un mardi soir coûte plus
+  // de réservations que ça n'en sécurise.
+  const seuil = espace.garantie_seuil_couverts;
+  if (seuil && couverts < seuil) {
+    return { acompteCentimes: 0, cautionCentimes: 0, exigee: false };
+  }
+
   const acompteCentimes = montantAcompte(espace, type, couverts);
   // L'acompte l'emporte : réclamer les deux au même client reviendrait à lui
   // demander de payer deux fois pour la même soirée.
   const cautionCentimes =
-    acompteCentimes > 0 ? 0 : montantCaution(espace, type);
+    acompteCentimes > 0 ? 0 : montantCaution(espace, type, couverts);
   return {
     acompteCentimes,
     cautionCentimes,

@@ -2,7 +2,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
-import { EspaceForm } from "@/components/reservations/EspaceForm";
+import {
+  EspaceForm,
+  EspaceModifiable,
+} from "@/components/reservations/EspaceForm";
 import { PhotosEspace } from "@/components/reservations/PhotosEspace";
 import { IdentitePublique } from "@/components/reservations/IdentitePublique";
 import { ServiceForm } from "@/components/reservations/ServiceForm";
@@ -53,6 +56,34 @@ function Puce({ children }: { children: React.ReactNode }) {
       {children}
     </span>
   );
+}
+
+/**
+ * La garantie d'un espace, en une phrase. Le restaurateur doit relire son
+ * réglage sans rouvrir le formulaire : c'est ce qui sera réclamé à son
+ * client, il ne doit pas avoir à le deviner.
+ */
+function garantieLisible(espace: Espace): string | null {
+  const euros = (centimes: number) =>
+    (centimes / 100).toLocaleString("fr-FR", {
+      minimumFractionDigits: centimes % 100 === 0 ? 0 : 2,
+      maximumFractionDigits: 2,
+    });
+  const seuil = espace.garantie_seuil_couverts
+    ? ` dès ${espace.garantie_seuil_couverts} convives`
+    : "";
+
+  if (espace.acompte_centimes) {
+    const par =
+      espace.acompte_mode === "par_couvert" ? " par personne" : "";
+    return `Acompte ${euros(espace.acompte_centimes)} €${par}${seuil}`;
+  }
+  if (espace.caution_centimes) {
+    const par =
+      espace.caution_mode === "par_couvert" ? " par personne" : "";
+    return `Caution ${euros(espace.caution_centimes)} €${par}${seuil}`;
+  }
+  return null;
 }
 
 function jourLisible(date: string): string {
@@ -172,25 +203,32 @@ export default async function ConfigurationReservationsPage({
                 key={espace.id}
                 className="flex flex-wrap items-start justify-between gap-4 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm"
               >
-                <div className="flex min-w-0 flex-col gap-2">
-                  <span className="font-medium text-zinc-900">
-                    {espace.nom}
-                  </span>
-                  {espace.description && (
-                    <span className="text-sm text-zinc-500">
-                      {espace.description}
+                <EspaceModifiable restaurantId={id} espace={espace}>
+                  <div className="flex min-w-0 flex-col gap-2">
+                    <span className="font-medium text-zinc-900">
+                      {espace.nom}
                     </span>
-                  )}
-                  <div className="flex flex-wrap gap-2">
-                    <Puce>{espace.capacite} couverts</Puce>
-                    {espace.accepte_table && <Puce>Réservations individuelles</Puce>}
-                    {espace.privatisation_minimum !== null && (
-                      <Puce>
-                        Privatisation dès {espace.privatisation_minimum}
-                      </Puce>
+                    {espace.description && (
+                      <span className="text-sm text-zinc-500">
+                        {espace.description}
+                      </span>
                     )}
+                    <div className="flex flex-wrap gap-2">
+                      <Puce>{espace.capacite} couverts</Puce>
+                      {espace.accepte_table && (
+                        <Puce>Réservations individuelles</Puce>
+                      )}
+                      {espace.privatisation_minimum !== null && (
+                        <Puce>
+                          Privatisation dès {espace.privatisation_minimum}
+                        </Puce>
+                      )}
+                      {garantieLisible(espace) && (
+                        <Puce>{garantieLisible(espace)}</Puce>
+                      )}
+                    </div>
                   </div>
-                </div>
+                </EspaceModifiable>
                 <Supprimer
                   id={espace.id}
                   restaurantId={id}
