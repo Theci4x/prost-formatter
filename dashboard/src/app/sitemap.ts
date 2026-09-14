@@ -42,13 +42,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const supabase = createServiceClient();
     const { data } = await supabase
       .from("restaurants")
-      .select("slug_reservation, created_at, carte_publique")
+      // Toutes les colonnes : nommer « site_publie » avant que la migration
+      // ne soit passée ferait échouer la requête, et le plan du site
+      // perdrait d'un coup toutes les pages de restaurants.
+      .select("*")
       .not("slug_reservation", "is", null);
 
     const restaurants = (data ?? []) as {
       slug_reservation: string;
       created_at: string | null;
       carte_publique: boolean | null;
+      site_publie: boolean | null;
     }[];
 
     const quand = (restaurant: { created_at: string | null }) =>
@@ -71,7 +75,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: 0.7,
       }));
 
-    return [...fixes, ...pages, ...cartes];
+    // La vitrine est la page que Klarr vend comme « votre site » : c'est
+    // elle qui doit être trouvée sur « restaurant + quartier », donc elle
+    // qui porte la priorité la plus haute du lot.
+    const vitrines = restaurants
+      .filter((restaurant) => restaurant.site_publie)
+      .map((restaurant) => ({
+        url: `${site}/restaurant/${restaurant.slug_reservation}`,
+        lastModified: quand(restaurant),
+        priority: 0.9,
+      }));
+
+    return [...fixes, ...vitrines, ...pages, ...cartes];
   } catch (erreur) {
     // Une base injoignable ne doit pas rendre le plan du site indisponible :
     // mieux vaut les pages fixes que rien du tout.

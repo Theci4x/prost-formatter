@@ -102,3 +102,32 @@ export async function deleteRestaurant(formData: FormData) {
 
   revalidatePath("/dashboard");
 }
+
+/**
+ * Ouvre ou ferme la vitrine du restaurant.
+ *
+ * Comme pour la carte, publier est un geste : une fiche remplie à moitié
+ * n'a rien à faire sur une adresse que Google va indexer, et un
+ * restaurateur doit pouvoir tout saisir avant de se montrer.
+ */
+export async function basculerVitrine(formData: FormData) {
+  const id = formData.get("id") as string;
+  const publier = formData.get("publier") === "1";
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("restaurants")
+    .update({ site_publie: publier })
+    .eq("id", id);
+
+  if (error) console.error("[basculerVitrine]", error);
+
+  revalidatePath(`/dashboard/${id}/edit`);
+  // La vitrine elle-même : sans cette ligne, une page qu'on vient de fermer
+  // resterait servie depuis le cache.
+  revalidatePath("/restaurant/[slug]", "page");
+  // Et le plan du site, qui se régénère sinon toutes les heures : une
+  // vitrine publiée doit pouvoir être soumise à Google dans la minute, pas
+  // au prochain tour d'horloge.
+  revalidatePath("/sitemap.xml");
+}
