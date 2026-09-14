@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { createServiceClient } from "@/lib/supabase/service";
 import { carteOrganisee, carteVisible, formatPrix } from "@/lib/menu/carte";
 import { langueDisponible, lireLangue, platAffiche } from "@/lib/menu/traduction";
-import { KlarrMark, KlarrWordmark } from "@/components/brand/KlarrMark";
+import { SignatureKlarr } from "@/components/brand/SignatureKlarr";
 import { cartePubliee } from "@/lib/menu/publication";
 import { DonneesStructurees } from "@/components/seo/DonneesStructurees";
 import { filAriane, menuSchema } from "@/lib/seo/donnees-structurees";
@@ -245,13 +245,10 @@ export default async function CartePage({
       </main>
 
       <footer className="border-t border-zinc-200/70 px-5 py-6">
-        <div className="mx-auto flex max-w-2xl items-center gap-2 text-sm text-zinc-400">
-          <KlarrMark size={16} />
-          <span>
-            {anglais ? "Menu powered by " : "Carte propulsée par "}
-            <KlarrWordmark className="text-zinc-500" />
-          </span>
-        </div>
+        <SignatureKlarr
+          texte={anglais ? "Menu powered by" : "Carte propulsée par"}
+          className="mx-auto max-w-2xl"
+        />
       </footer>
     </div>
   );

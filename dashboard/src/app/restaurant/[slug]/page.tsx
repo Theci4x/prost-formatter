@@ -5,7 +5,7 @@ import Image from "next/image";
 import { createServiceClient } from "@/lib/supabase/service";
 import { GalerieRestaurant } from "@/components/reservations/GalerieRestaurant";
 import { BandePhotos } from "@/components/reservations/BandePhotos";
-import { KlarrMark, KlarrWordmark } from "@/components/brand/KlarrMark";
+import { SignatureKlarr } from "@/components/brand/SignatureKlarr";
 import { DonneesStructurees } from "@/components/seo/DonneesStructurees";
 import { restaurantSchema } from "@/lib/seo/donnees-structurees";
 import { reseauxPublics } from "@/lib/seo/reseaux";
@@ -513,13 +513,10 @@ export default async function VitrinePage({
             </p>
           </div>
         )}
-        <div className="mx-auto flex max-w-3xl items-center gap-2 text-sm text-zinc-400">
-          <KlarrMark size={16} />
-          <span>
-            Site et réservations propulsés par{" "}
-            <KlarrWordmark className="text-zinc-500" />
-          </span>
-        </div>
+        <SignatureKlarr
+          texte="Site et réservations propulsés par"
+          className="mx-auto max-w-3xl"
+        />
       </footer>
     </div>
   );

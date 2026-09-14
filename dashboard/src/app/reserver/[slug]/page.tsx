@@ -17,7 +17,7 @@ import Image from "next/image";
 import { DemandeForm } from "@/components/reservations/DemandeForm";
 import { BandePhotos } from "@/components/reservations/BandePhotos";
 import { formatCreneau, type Espace, type Service } from "@/types/reservation";
-import { KlarrMark, KlarrWordmark } from "@/components/brand/KlarrMark";
+import { SignatureKlarr } from "@/components/brand/SignatureKlarr";
 import type { RestaurantPhoto } from "@/types/photo";
 import { Carte } from "@/components/menu/Carte";
 import { cartePubliee } from "@/lib/menu/publication";
@@ -647,13 +647,10 @@ export default async function ReserverPage({
             </p>
           </div>
         )}
-        <div className="mx-auto flex max-w-3xl items-center gap-2 text-sm text-zinc-400">
-          <KlarrMark size={16} />
-          <span>
-            Réservations propulsées par{" "}
-            <KlarrWordmark className="text-zinc-500" />
-          </span>
-        </div>
+        <SignatureKlarr
+          texte="Réservations propulsées par"
+          className="mx-auto max-w-3xl"
+        />
       </footer>
     </div>
   );

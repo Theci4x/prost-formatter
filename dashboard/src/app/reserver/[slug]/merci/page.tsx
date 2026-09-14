@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { KlarrMark, KlarrWordmark } from "@/components/brand/KlarrMark";
+import { SignatureKlarr } from "@/components/brand/SignatureKlarr";
 
 export const metadata: Metadata = {
   title: "Demande envoyée",
@@ -54,13 +54,7 @@ export default async function MerciPage({
         Faire une autre demande
       </Link>
 
-      <div className="mt-4 flex items-center gap-2 text-sm text-zinc-400">
-        <KlarrMark size={16} />
-        <span>
-          Réservations propulsées par{" "}
-          <KlarrWordmark className="text-zinc-500" />
-        </span>
-      </div>
+      <SignatureKlarr texte="Réservations propulsées par" className="mt-4" />
     </div>
   );
 }
