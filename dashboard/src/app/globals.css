@@ -196,3 +196,38 @@ body {
     grid-template-columns: repeat(3, 1fr);
   }
 }
+
+/* Les tableaux d'un billet. Le conteneur défile, pas la page : sans lui,
+   un tableau à six colonnes pousse tout le corps de l'article au-delà de
+   l'écran d'un téléphone. */
+.billet .billet-tableau {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 0.9rem;
+  background: var(--paper);
+}
+.billet table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+.billet th,
+.billet td {
+  padding: 0.7rem 0.9rem;
+  text-align: left;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--line);
+}
+.billet th {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.billet tbody tr:last-child td {
+  border-bottom: 0;
+}
+.billet td strong {
+  color: var(--ink);
+}

@@ -82,6 +82,23 @@ export async function rendreBillet(
   // en même temps.
   const moteur = new Marked({
     renderer: {
+      // Un tableau large ne rentre pas sur un téléphone. Sans ce
+      // conteneur, il pousse toute la page et c'est le corps de l'article
+      // qui défile horizontalement — pas le tableau.
+      table(token) {
+        const entete = token.header
+          .map((cellule) => `<th>${this.parser.parseInline(cellule.tokens)}</th>`)
+          .join("");
+        const corps = token.rows
+          .map(
+            (ligne) =>
+              `<tr>${ligne
+                .map((cellule) => `<td>${this.parser.parseInline(cellule.tokens)}</td>`)
+                .join("")}</tr>`,
+          )
+          .join("");
+        return `<div class="billet-tableau"><table><thead><tr>${entete}</tr></thead><tbody>${corps}</tbody></table></div>\n`;
+      },
       heading({ tokens, depth }) {
         const titre = this.parser.parseInline(tokens);
         const brut = tokens.map((t) => ("raw" in t ? t.raw : "")).join("");
