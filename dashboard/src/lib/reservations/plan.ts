@@ -1,6 +1,8 @@
 import {
-  GRILLE_COLONNES,
-  GRILLE_LIGNES,
+  PAS,
+  PLAN_HAUTEUR,
+  PLAN_LARGEUR,
+  type Repere,
   type TableSalle,
 } from "@/types/plan";
 import type { Espace } from "@/types/reservation";
@@ -56,52 +58,135 @@ export function tablesDeLEspace(
     .sort((a, b) => (a.y === b.y ? a.x - b.x : a.y - b.y));
 }
 
-export function dansLaGrille(x: number, y: number): boolean {
-  return (
-    Number.isInteger(x) &&
-    Number.isInteger(y) &&
-    x >= 0 &&
-    y >= 0 &&
-    x < GRILLE_COLONNES &&
-    y < GRILLE_LIGNES
-  );
-}
-
-/**
- * La case est-elle libre dans cette salle ? `sauf` permet de déplacer une
- * table sans qu'elle se heurte à elle-même.
- */
-export function caseLibre(
-  tables: TableSalle[],
-  espaceId: string,
+/** Une position tient-elle dans le plan ? */
+export function dansLePlan(
   x: number,
   y: number,
-  sauf?: string,
+  largeur = 0,
+  hauteur = 0,
 ): boolean {
-  return !tables.some(
-    (table) =>
-      table.espace_id === espaceId &&
-      table.id !== sauf &&
-      table.x === x &&
-      table.y === y,
+  return (
+    Number.isFinite(x) &&
+    Number.isFinite(y) &&
+    x >= 0 &&
+    y >= 0 &&
+    x + largeur <= PLAN_LARGEUR &&
+    y + hauteur <= PLAN_HAUTEUR
   );
 }
 
+/** Ramène une position dans le plan, plutôt que de refuser le déplacement. */
+export function contraindre(
+  x: number,
+  y: number,
+  largeur: number,
+  hauteur: number,
+): { x: number; y: number } {
+  return {
+    x: Math.min(Math.max(Math.round(x), 0), Math.max(PLAN_LARGEUR - largeur, 0)),
+    y: Math.min(Math.max(Math.round(y), 0), Math.max(PLAN_HAUTEUR - hauteur, 0)),
+  };
+}
+
+/** Aimantation au pas du plan : assez fin pour être libre, assez gros pour aligner. */
+export function aimanter(valeur: number): number {
+  return Math.round(valeur / PAS) * PAS;
+}
+
+/** Les quatre rotations utiles. Une salle ne se dessine pas au degré près. */
+export function rotationSuivante(rotation: number, sens: 1 | -1): number {
+  return (((rotation + sens * 90) % 360) + 360) % 360;
+}
+
+export type Boite = { x: number; y: number; largeur: number; hauteur: number };
+
 /**
- * Où poser la prochaine table sans rien demander. On remplit ligne par
- * ligne : un restaurateur qui clique cinq fois « ajouter » obtient cinq
- * tables alignées, qu'il déplace ensuite.
+ * L'encombrement réel d'un élément tourné. Une banquette de 220 × 50 posée à
+ * 90° occupe 50 × 220 : sans ce calcul, elle se placerait hors du plan ou
+ * masquerait sa voisine sans qu'on comprenne pourquoi.
  */
-export function prochaineCaseLibre(
-  tables: TableSalle[],
-  espaceId: string,
-): { x: number; y: number } | null {
-  for (let y = 0; y < GRILLE_LIGNES; y += 1) {
-    for (let x = 0; x < GRILLE_COLONNES; x += 1) {
-      if (caseLibre(tables, espaceId, x, y)) return { x, y };
+export function encombrement(element: Boite & { rotation: number }): Boite {
+  const quart = ((element.rotation % 180) + 180) % 180 === 90;
+  const largeur = quart ? element.hauteur : element.largeur;
+  const hauteur = quart ? element.largeur : element.hauteur;
+  // La rotation se fait autour du centre : le coin haut gauche bouge.
+  const cx = element.x + element.largeur / 2;
+  const cy = element.y + element.hauteur / 2;
+  return { x: cx - largeur / 2, y: cy - hauteur / 2, largeur, hauteur };
+}
+
+/** Deux éléments se chevauchent-ils ? Un avertissement, jamais un refus. */
+export function seChevauchent(
+  a: Boite & { rotation: number },
+  b: Boite & { rotation: number },
+): boolean {
+  const ea = encombrement(a);
+  const eb = encombrement(b);
+  return (
+    ea.x < eb.x + eb.largeur &&
+    eb.x < ea.x + ea.largeur &&
+    ea.y < eb.y + eb.hauteur &&
+    eb.y < ea.y + ea.hauteur
+  );
+}
+
+/** Les tables qui en recouvrent une autre : à signaler au restaurateur. */
+export function tablesQuiSeChevauchent(tables: TableSalle[]): Set<string> {
+  const fautives = new Set<string>();
+  for (let i = 0; i < tables.length; i += 1) {
+    for (let j = i + 1; j < tables.length; j += 1) {
+      if (seChevauchent(tables[i], tables[j])) {
+        fautives.add(tables[i].id);
+        fautives.add(tables[j].id);
+      }
     }
   }
-  return null;
+  return fautives;
+}
+
+/**
+ * Où poser le prochain élément sans rien demander : la première place libre
+ * en balayant le plan, pour qu'un ajout ne tombe jamais sur une table
+ * existante.
+ */
+export function prochainePlaceLibre(
+  occupants: (Boite & { rotation: number })[],
+  largeur: number,
+  hauteur: number,
+): { x: number; y: number } {
+  for (let y = 20; y + hauteur <= PLAN_HAUTEUR; y += 20) {
+    for (let x = 20; x + largeur <= PLAN_LARGEUR; x += 20) {
+      const candidat = { x, y, largeur, hauteur, rotation: 0 };
+      if (!occupants.some((autre) => seChevauchent(candidat, autre))) {
+        return { x, y };
+      }
+    }
+  }
+  // Plan saturé : on pose en haut à gauche plutôt que de refuser l'ajout.
+  return { x: 20, y: 20 };
+}
+
+/** Le cadre utile, repères compris : de quoi recadrer l'affichage. */
+export function cadreDuPlan(
+  tables: TableSalle[],
+  reperes: Repere[] = [],
+): Boite {
+  const boites = [...tables, ...reperes].map(encombrement);
+  if (boites.length === 0) {
+    return { x: 0, y: 0, largeur: PLAN_LARGEUR, hauteur: PLAN_HAUTEUR };
+  }
+  const x = Math.min(...boites.map((b) => b.x));
+  const y = Math.min(...boites.map((b) => b.y));
+  const droite = Math.max(...boites.map((b) => b.x + b.largeur));
+  const bas = Math.max(...boites.map((b) => b.y + b.hauteur));
+  // Une marge, sinon les tables du bord touchent le cadre.
+  const marge = 20;
+  return {
+    x: Math.max(x - marge, 0),
+    y: Math.max(y - marge, 0),
+    largeur: droite - x + marge * 2,
+    hauteur: bas - y + marge * 2,
+  };
 }
 
 /** Un nom de table déjà pris dans la salle, à la casse près. */
@@ -282,27 +367,5 @@ export function ecartCapacite(
     placesPlan,
     capacite: espace.capacite,
     ecart: placesPlan - espace.capacite,
-  };
-}
-
-export type Cadre = { x0: number; y0: number; colonnes: number; lignes: number };
-
-/**
- * Le rectangle utile du plan : de quoi dessiner une salle sans afficher les
- * quatre-vingt-seize cases de la grille quand le restaurateur n'en a garni
- * que six. L'écran de service s'en sert ; l'éditeur garde la grille entière,
- * puisqu'il faut de la place libre pour déplacer une table.
- */
-export function cadrePlan(tables: TableSalle[]): Cadre {
-  if (tables.length === 0) return { x0: 0, y0: 0, colonnes: 1, lignes: 1 };
-  const xs = tables.map((table) => table.x);
-  const ys = tables.map((table) => table.y);
-  const x0 = Math.min(...xs);
-  const y0 = Math.min(...ys);
-  return {
-    x0,
-    y0,
-    colonnes: Math.max(...xs) - x0 + 1,
-    lignes: Math.max(...ys) - y0 + 1,
   };
 }

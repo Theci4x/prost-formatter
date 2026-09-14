@@ -1,15 +1,15 @@
 import {
-  cadrePlan,
+  cadreDuPlan,
   occupationDuPlan,
   type ReservationPlacable,
 } from "@/lib/reservations/plan";
-import { type FormeTable, type TableSalle } from "@/types/plan";
-
-function silhouette(forme: FormeTable): string {
-  if (forme === "ronde") return "m-auto aspect-square h-full rounded-full";
-  if (forme === "carree") return "m-auto aspect-square h-full rounded-md";
-  return "my-auto h-2/3 w-full rounded-md";
-}
+import type { Repere, TableSalle } from "@/types/plan";
+import {
+  bordureForme,
+  classesForme,
+  classesRepere,
+} from "@/components/reservations/FormeSalle";
+import { LIBELLES_REPERE } from "@/types/plan";
 
 /**
  * Le plan pendant le service : chaque table porte le nom de qui l'occupe.
@@ -20,31 +20,46 @@ export function PlanService({
   tables,
   espaceId,
   reservations,
+  reperes = [],
 }: {
   tables: TableSalle[];
   espaceId: string;
   reservations: ReservationPlacable[];
+  reperes?: Repere[];
 }) {
   const occupation = occupationDuPlan({ tables, espaceId, reservations });
   if (occupation.length === 0) return null;
 
-  // Le plan est recadré sur les tables réellement dessinées : en plein
+  // Le plan est recadré sur ce qui est réellement dessiné : en plein
   // service, une salle de six tables ne doit pas occuper l'écran entier de
-  // cases vides.
-  const cadre = cadrePlan(occupation.map(({ table }) => table));
+  // vide.
+  const cadre = cadreDuPlan(
+    occupation.map(({ table }) => table),
+    reperes,
+  );
+  // Le plan garde ses proportions et se règle sur la largeur disponible.
+  const echelle = 100 / cadre.largeur;
 
   return (
     <div
-      className="grid w-full overflow-hidden rounded-xl border border-zinc-200 bg-zinc-50"
-      style={{
-        gridTemplateColumns: `repeat(${cadre.colonnes}, minmax(0, 1fr))`,
-        gridTemplateRows: `repeat(${cadre.lignes}, minmax(0, 1fr))`,
-        aspectRatio: `${cadre.colonnes} / ${cadre.lignes}`,
-        // Recadré, un plan de trois tables s'étirerait sur toute la largeur
-        // de la carte : une case ne dépasse pas la taille d'une vignette.
-        maxWidth: `${cadre.colonnes * 72}px`,
-      }}
+      className="relative w-full overflow-hidden rounded-xl border border-zinc-200 bg-white"
+      style={{ aspectRatio: `${cadre.largeur} / ${cadre.hauteur}` }}
     >
+      {reperes.map((repere) => (
+        <div
+          key={repere.id}
+          title={repere.libelle ?? LIBELLES_REPERE[repere.type]}
+          style={{
+            left: `${(repere.x - cadre.x) * echelle}%`,
+            top: `${((repere.y - cadre.y) / cadre.hauteur) * 100}%`,
+            width: `${repere.largeur * echelle}%`,
+            height: `${(repere.hauteur / cadre.hauteur) * 100}%`,
+            transform: `rotate(${repere.rotation}deg)`,
+          }}
+          className={`absolute border ${classesRepere(repere.type)}`}
+        />
+      ))}
+
       {occupation.map(({ table, occupants, couverts, doublon, surcharge }) => {
         const prise = occupants.length > 0;
         const alerte = doublon || surcharge;
@@ -67,19 +82,22 @@ export function PlanService({
                 : `${table.nom} — libre, ${table.places} places`
             }
             style={{
-              gridColumnStart: table.x - cadre.x0 + 1,
-              gridRowStart: table.y - cadre.y0 + 1,
+              left: `${(table.x - cadre.x) * echelle}%`,
+              top: `${((table.y - cadre.y) / cadre.hauteur) * 100}%`,
+              width: `${table.largeur * echelle}%`,
+              height: `${(table.hauteur / cadre.hauteur) * 100}%`,
+              transform: `rotate(${table.rotation}deg)`,
             }}
-            className={`flex flex-col items-center justify-center overflow-hidden border px-0.5 text-center leading-tight ${silhouette(
+            className={`absolute flex flex-col items-center justify-center overflow-hidden px-0.5 text-center leading-tight ${classesForme(
               table.forme,
-            )} ${couleur}`}
+            )} ${bordureForme(table.forme)} ${couleur}`}
           >
             <span className="text-[10px] font-semibold sm:text-xs">
               {table.nom}
             </span>
             {prise ? (
               <span className="w-full truncate text-[9px] opacity-90 sm:text-[11px]">
-                {alerte && "⚠ "}
+                {alerte && "\u26a0 "}
                 {occupants[0].client_nom}
               </span>
             ) : (

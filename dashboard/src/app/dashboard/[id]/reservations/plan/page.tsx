@@ -2,9 +2,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { exiger } from "@/lib/equipe/roles";
-import { PlanSalle } from "@/components/reservations/PlanSalle";
+import { EditeurPlan } from "@/components/reservations/EditeurPlan";
 import { sallesADessiner, tablesDeLEspace } from "@/lib/reservations/plan";
-import type { TableSalle } from "@/types/plan";
+import { brouillonDe } from "@/lib/reservations/plan-edition";
+import type { Repere, TableSalle } from "@/types/plan";
 import type { Espace } from "@/types/reservation";
 import type { Restaurant } from "@/types/restaurant";
 
@@ -19,7 +20,8 @@ export default async function PlanPage({
   await exiger(id, "gerant");
 
   const supabase = await createClient();
-  const [restaurantResult, espacesResult, tablesResult] = await Promise.all([
+  const [restaurantResult, espacesResult, tablesResult, reperesResult] =
+    await Promise.all([
     supabase.from("restaurants").select("*").eq("id", id).maybeSingle(),
     supabase
       .from("restaurant_espaces")
@@ -27,6 +29,7 @@ export default async function PlanPage({
       .eq("restaurant_id", id)
       .order("ordre"),
     supabase.from("restaurant_tables").select("*").eq("restaurant_id", id),
+    supabase.from("restaurant_reperes").select("*").eq("restaurant_id", id),
   ]);
 
   const restaurant = restaurantResult.data as Restaurant | null;
@@ -34,6 +37,7 @@ export default async function PlanPage({
 
   const toutesLesSalles = (espacesResult.data ?? []) as Espace[];
   const tables = (tablesResult.data ?? []) as TableSalle[];
+  const reperes = (reperesResult.data ?? []) as Repere[];
   // Une salle qui ne se loue qu'en entier n'a pas de plan : on n'y place
   // personne, le groupe prend tout.
   const espaces = sallesADessiner(toutesLesSalles);
@@ -52,11 +56,13 @@ export default async function PlanPage({
         </Link>
         <h1 className="text-2xl font-semibold text-zinc-900">Plan de salle</h1>
         <p className="max-w-2xl text-sm text-zinc-500">
-          Dessine tes tables une fois, salle par salle — ta salle du bas, ton
-          premier étage, ta terrasse. Pendant le service, tu assignes chaque
-          réservation à une table depuis l&apos;écran du jour. Klarr continue
-          d&apos;accepter ou de refuser les réservations en couverts : le plan
-          sert à placer, pas à vendre.
+          Dessine ta salle comme elle est — ta salle du bas, ton premier
+          étage, ta terrasse. Pose tes tables où tu veux, à la bonne taille,
+          tournées comme il faut, et ajoute le bar, l&apos;entrée ou un
+          poteau pour t&apos;y retrouver. Pendant le service, tu assignes
+          chaque réservation à une table depuis l&apos;écran du jour. Klarr
+          continue d&apos;accepter ou de refuser les réservations en
+          couverts : le plan sert à placer, pas à vendre.
         </p>
       </div>
 
@@ -91,11 +97,14 @@ export default async function PlanPage({
         </p>
       ) : (
         espaces.map((espace) => (
-          <PlanSalle
+          <EditeurPlan
             key={espace.id}
             restaurantId={id}
             espace={espace}
-            tables={tablesDeLEspace(tables, espace.id)}
+            initial={brouillonDe(
+              tablesDeLEspace(tables, espace.id),
+              reperes.filter((repere) => repere.espace_id === espace.id),
+            )}
           />
         ))
       )}

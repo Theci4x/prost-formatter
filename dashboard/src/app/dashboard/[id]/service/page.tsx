@@ -21,7 +21,7 @@ import {
   tablesProposees,
   type ReservationPlacable,
 } from "@/lib/reservations/plan";
-import type { TableSalle } from "@/types/plan";
+import type { Repere, TableSalle } from "@/types/plan";
 import {
   formatCreneau,
   formatHeure,
@@ -75,6 +75,7 @@ export default async function ServicePage({
     servicesResult,
     reservationsResult,
     tablesResult,
+    reperesResult,
     fermetures,
   ] = await Promise.all([
       supabase.from("restaurants").select("*").eq("id", id).maybeSingle(),
@@ -94,6 +95,7 @@ export default async function ServicePage({
         .eq("restaurant_id", id)
         .eq("date_reservation", jour),
       supabase.from("restaurant_tables").select("*").eq("restaurant_id", id),
+      supabase.from("restaurant_reperes").select("*").eq("restaurant_id", id),
       chargerFermetures(supabase, id, jour),
     ]);
 
@@ -104,6 +106,7 @@ export default async function ServicePage({
   const services = (servicesResult.data ?? []) as Service[];
   const lignes = (reservationsResult.data ?? []) as Ligne[];
   const tables = (tablesResult.data ?? []) as TableSalle[];
+  const reperes = (reperesResult.data ?? []) as Repere[];
 
   const maintenant = new Date();
   const confirmees = lignes.filter((l) => l.statut === "confirmee");
@@ -300,6 +303,9 @@ export default async function ServicePage({
                         tables={tablesSalle}
                         espaceId={espace.id}
                         reservations={actifs}
+                        reperes={reperes.filter(
+                          (repere) => repere.espace_id === espace.id,
+                        )}
                       />
                     )}
 
