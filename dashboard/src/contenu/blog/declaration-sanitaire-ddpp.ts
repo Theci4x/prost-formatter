@@ -15,7 +15,8 @@ export const billet: Billet = {
       url: "https://eur-lex.europa.eu/legal-content/FR/TXT/?uri=CELEX:32004R0852",
     },
     {
-      intitule: "Cerfa n° 13984 — déclaration de manipulation de denrées alimentaires d'origine animale",
+      intitule:
+        "Cerfa n° 13984 — déclaration de manipulation de denrées alimentaires d'origine animale",
       url: "https://www.formulaires.service-public.gouv.fr/gf/cerfa_13984.do",
     },
     {
@@ -40,6 +41,10 @@ export const billet: Billet = {
     "Dès que vous cédez vos préparations à un autre établissement, vous sortez de la déclaration et vous entrez dans l'agrément sanitaire.",
     "Le contrôle porte sur trois choses : plan de maîtrise sanitaire, formation hygiène, traçabilité.",
   ],
+  image: {
+    fichier: "/blog/declaration-classeurs.jpg",
+    alt: "Une pile de classeurs — déclaration DDPP, licence IV, commission de sécurité, déclaration d'ouverture en mairie — surmontée d'un post-it « et le restaurant ?! », à côté d'un restaurateur qui lit son Kbis.",
+  },
   markdown: `
 Quand on crée une société, on a le sentiment d'avoir tout déclaré. Le greffe a enregistré, l'INSEE a attribué un SIRET, le comptable a sa liasse. On se dit, raisonnablement, que l'administration sait qu'on ouvre un restaurant.
 

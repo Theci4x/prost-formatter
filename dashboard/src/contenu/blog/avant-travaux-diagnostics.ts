@@ -10,15 +10,18 @@ export const billet: Billet = {
   misAJourLe: "2026-09-14",
   sources: [
     {
-      intitule: "Code du travail, article R4412-97 (repérage amiante avant travaux)",
+      intitule:
+        "Code du travail, article R4412-97 (repérage amiante avant travaux)",
       url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000034616411",
     },
     {
-      intitule: "Décret n° 2017-899 du 9 mai 2017 relatif au repérage de l'amiante avant certaines opérations",
+      intitule:
+        "Décret n° 2017-899 du 9 mai 2017 relatif au repérage de l'amiante avant certaines opérations",
       url: "https://www.legifrance.gouv.fr/loda/id/JORFTEXT000034637576",
     },
     {
-      intitule: "Décret n° 2017-1244 du 7 août 2017 relatif à la prévention des risques liés aux bruits et aux sons amplifiés",
+      intitule:
+        "Décret n° 2017-1244 du 7 août 2017 relatif à la prévention des risques liés aux bruits et aux sons amplifiés",
       url: "https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000035388481",
     },
   ],
@@ -27,6 +30,10 @@ export const billet: Billet = {
     "Il concerne tout bâtiment antérieur au 1er juillet 1997 pour l'amiante, et à 1949 pour le plomb.",
     "L'étude d'impact sonore, elle, se décide en phase de conception : faite après les travaux, elle vous fait refaire ce que vous venez de payer.",
   ],
+  image: {
+    fichier: "/blog/diagnostics-mur.jpg",
+    alt: "Un opérateur en gilet de chantier passe un appareil de mesure sur un mur décroûté, dans une pièce en travaux, un rapport à la main.",
+  },
   markdown: `
 Voici l'erreur que fait à peu près tout le monde, et je l'ai faite : **le diagnostic immobilier remis à la vente ou à la signature du bail ne vaut pas diagnostic avant travaux.** Ce sont deux documents différents, avec deux objets différents, et le second est à votre charge.
 

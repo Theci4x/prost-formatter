@@ -15,7 +15,8 @@ export const billet: Billet = {
       url: "https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000035388481",
     },
     {
-      intitule: "Code de la santé publique, article R1336-1 (niveaux sonores dans les lieux recevant du public)",
+      intitule:
+        "Code de la santé publique, article R1336-1 (niveaux sonores dans les lieux recevant du public)",
       url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000035425898",
     },
     {
@@ -24,7 +25,8 @@ export const billet: Billet = {
       url: "https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000047490690",
     },
     {
-      intitule: "Code du travail, article R4431-2 (valeurs d'exposition au bruit des salariés)",
+      intitule:
+        "Code du travail, article R4431-2 (valeurs d'exposition au bruit des salariés)",
       url: "https://code.travail.gouv.fr/code-du-travail/r4431-2",
     },
     {
@@ -38,6 +40,10 @@ export const billet: Billet = {
     "Le seuil est plus bas qu'il n'en a l'air : c'est une dose, pas un volume. 86 dB(A) pendant deux heures, c'est déjà le dépassement.",
     "Elle doit précéder les travaux d'insonorisation — c'est elle qui les décide.",
   ],
+  image: {
+    fichier: "/blog/impact-sonore-mesure.jpg",
+    alt: "Un acousticien relève un niveau sonore au sonomètre dans une salle de restaurant fermée, le rapport d'étude d'impact sonore posé devant lui, sous le regard du patron.",
+  },
   markdown: `
 On lit partout que « tout établissement qui diffuse de la musique » doit faire une étude d'impact des nuisances sonores. C'est faux, et l'approximation fait deux dégâts : elle fait dépenser de l'argent à des gens qui n'en ont pas besoin, et elle fait hausser les épaules à ceux qui devraient s'en soucier.
 

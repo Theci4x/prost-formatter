@@ -2,7 +2,8 @@ import type { Billet } from "@/types/blog";
 
 export const billet: Billet = {
   slug: "ouvriers-sur-votre-chantier-obligations",
-  titre: "Des ouvriers travaillent chez vous : ce que vous risquez sans le savoir",
+  titre:
+    "Des ouvriers travaillent chez vous : ce que vous risquez sans le savoir",
   resume:
     "Ce ne sont pas vos salariés, mais c'est votre chantier. L'obligation de vigilance, l'attestation à réclamer tous les six mois, et ce que coûte l'oubli.",
   categorie: "ouvrir",
@@ -14,7 +15,8 @@ export const billet: Billet = {
       url: "https://www.urssaf.fr/accueil/attestation-vigilance.html",
     },
     {
-      intitule: "Code du travail, article L8222-1 (obligation de vigilance du donneur d'ordre)",
+      intitule:
+        "Code du travail, article L8222-1 (obligation de vigilance du donneur d'ordre)",
       url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000006904828",
     },
     {
@@ -27,6 +29,10 @@ export const billet: Billet = {
     "Sans ces vérifications, vous êtes solidairement redevable des cotisations que votre prestataire n'a pas versées, au prorata de votre chantier.",
     "Trois minutes par prestataire, deux fois par an. Une entreprise qui traîne à fournir la sienne vient de vous dire quelque chose d'utile.",
   ],
+  image: {
+    fichier: "/blog/chantier-contrats.jpg",
+    alt: "Au fond, des ouvriers travaillent sur un chantier ; au premier plan, un homme inquiet devant des contrats de travaux et des courriers Urssaf.",
+  },
   markdown: `
 Vous avez signé un devis avec une entreprise. Elle envoie ses ouvriers. Vous vous dites, raisonnablement, que la manière dont elle emploie ses gens la regarde.
 

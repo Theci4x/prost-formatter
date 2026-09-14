@@ -10,7 +10,8 @@ export const billet: Billet = {
   misAJourLe: "2026-09-14",
   sources: [
     {
-      intitule: "Décret n° 2017-899 du 9 mai 2017 (repérage amiante avant travaux)",
+      intitule:
+        "Décret n° 2017-899 du 9 mai 2017 (repérage amiante avant travaux)",
       url: "https://www.legifrance.gouv.fr/loda/id/JORFTEXT000034637576",
     },
     {
@@ -22,7 +23,8 @@ export const billet: Billet = {
       url: "https://www.formulaires.service-public.gouv.fr/gf/cerfa_13984.do",
     },
     {
-      intitule: "Urssaf — attestation de vigilance et obligation du donneur d'ordre",
+      intitule:
+        "Urssaf — attestation de vigilance et obligation du donneur d'ordre",
       url: "https://www.urssaf.fr/accueil/attestation-vigilance.html",
     },
   ],
@@ -32,6 +34,10 @@ export const billet: Billet = {
     "L'étude d'impact sonore ne vise pas que les boîtes de nuit, et elle doit précéder les travaux d'insonorisation.",
     "La déclaration sanitaire est une démarche à part : immatriculer sa société ne déclare pas son activité alimentaire.",
   ],
+  image: {
+    fichier: "/blog/ouvrir-paperasse.jpg",
+    alt: "Un restaurateur assis seul dans sa salle fermée, la tête dans la main, devant des piles de courriers Urssaf, TVA, impôts et normes de sécurité.",
+  },
   markdown: `
 Cet article est né d'une ouverture ratée sur quatre points. Pas ratée au sens où le restaurant n'a pas ouvert — il a ouvert — mais ratée au sens où quatre obligations ont été découvertes après coup, chacune ayant coûté du temps, de l'argent, ou les deux.
 
