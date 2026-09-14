@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Commis } from "@/components/commis/Commis";
 import Link from "next/link";
 import { rubriques, tousLesArticles } from "@/lib/aide/articles";
 import { KlarrMark, KlarrWordmark } from "@/components/brand/KlarrMark";
@@ -100,6 +101,7 @@ export default function AidePage() {
           </Link>
         </div>
       </footer>
+          <Commis />
     </div>
   );
 }

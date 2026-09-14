@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { LogoutButton } from "@/components/auth/LogoutButton";
+import { Commis } from "@/components/commis/Commis";
 import { KlarrMark, KlarrWordmark } from "@/components/brand/KlarrMark";
 
 export default async function DashboardLayout({
@@ -43,6 +44,7 @@ export default async function DashboardLayout({
         </div>
       </header>
       <main className="flex flex-1 flex-col">{children}</main>
+          <Commis connecte />
     </div>
   );
 }

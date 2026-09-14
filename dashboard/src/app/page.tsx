@@ -14,6 +14,7 @@ import { FloatingChip, Tilt } from "@/components/landing/Tilt";
 import { Reveal } from "@/components/landing/Reveal";
 
 import type { Metadata } from "next";
+import { Commis } from "@/components/commis/Commis";
 
 export const metadata: Metadata = {
   // La page d'accueil garde le titre par défaut du gabarit, mais elle a
@@ -949,6 +950,7 @@ export default async function Home() {
           <span>© 2026 Klarr — édité par EDIREF.</span>
         </div>
       </div>
+          <Commis />
     </div>
   );
 }
