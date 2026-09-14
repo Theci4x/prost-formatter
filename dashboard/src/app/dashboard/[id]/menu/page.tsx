@@ -89,7 +89,9 @@ export default async function MenuPage({
         Ta carte s&apos;affiche sur ta page de réservation, sous les
         disponibilités : le client sait ce qu&apos;il vient manger avant de
         demander une table. Les catégories apparaissent dans l&apos;ordre où
-        tu les ranges ici, pas par ordre alphabétique.
+        tu les ranges ici, pas par ordre alphabétique. Le carré à gauche de
+        chaque plat ajoute sa photo : un carpaccio photographié se commande
+        plus qu&apos;un carpaccio décrit.
       </p>
 
       {/* Publier est un choix explicite : une carte saisie pour essayer n'a

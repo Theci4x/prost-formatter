@@ -60,18 +60,28 @@ export function PhotoPlat({
 
   return (
     <span className="flex flex-col items-center gap-1">
+      {/* Un pointillé gris pâle portant le mot « Photo » se lit comme un
+          emplacement vide, pas comme un bouton : le restaurateur qui avait
+          demandé la fonctionnalité ne l'a pas trouvée à l'écran. Le « + » et
+          le trait plus marqué disent qu'il y a quelque chose à faire ici. */}
       <label
-        className={`relative flex h-16 w-16 cursor-pointer items-center justify-center overflow-hidden rounded-xl border border-dashed border-zinc-300 bg-zinc-50 text-center text-[10px] leading-tight text-zinc-400 transition-colors hover:border-brand-navy hover:text-brand-navy ${
+        title={photoUrl ? `Remplacer la photo de ${nom}` : `Ajouter une photo à ${nom}`}
+        className={`relative flex h-16 w-16 cursor-pointer flex-col items-center justify-center gap-0.5 overflow-hidden rounded-xl border-2 border-dashed border-zinc-300 bg-zinc-50 text-center text-[10px] font-medium leading-tight text-zinc-500 transition-colors hover:border-brand-navy hover:bg-brand-orange-soft hover:text-brand-navy ${
           enCours ? "opacity-50" : ""
         }`}
       >
         <span className="sr-only">
-          {photoUrl ? `Remplacer la photo de ${nom}` : `Photo de ${nom}`}
+          {photoUrl ? `Remplacer la photo de ${nom}` : `Ajouter une photo à ${nom}`}
         </span>
         {photoUrl ? (
           <Image src={photoUrl} alt="" fill sizes="64px" className="object-cover" />
         ) : (
-          <span aria-hidden="true">Photo</span>
+          <>
+            <span aria-hidden="true" className="text-base leading-none">
+              +
+            </span>
+            <span aria-hidden="true">Photo</span>
+          </>
         )}
         <input
           ref={champ}
