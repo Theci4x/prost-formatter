@@ -1,9 +1,15 @@
+"use client";
+
 import Image from "next/image";
+import { useRef, useState, useTransition } from "react";
 import {
   removePhoto,
   uploadPhoto,
 } from "@/app/dashboard/[id]/photos/actions";
 import type { RestaurantPhoto } from "@/types/photo";
+
+// Même plafond que côté serveur : on refuse avant d'occuper la connexion.
+const TAILLE_MAX = 4 * 1024 * 1024;
 
 /**
  * Galerie d'un espace réservable, côté restaurateur. Réutilise le stockage
@@ -19,6 +25,24 @@ export function PhotosEspace({
   espaceId: string;
   photos: RestaurantPhoto[];
 }) {
+  const [erreur, setErreur] = useState<string | null>(null);
+  const [enCours, startTransition] = useTransition();
+  const champ = useRef<HTMLInputElement>(null);
+
+  function envoyer(donnees: FormData) {
+    const fichier = donnees.get("photo") as File | null;
+    if (fichier && fichier.size > TAILLE_MAX) {
+      setErreur("Photo trop lourde (4 Mo maximum). Réduis-la avant de l'envoyer.");
+      return;
+    }
+    setErreur(null);
+    startTransition(async () => {
+      const reponse = await uploadPhoto(donnees);
+      setErreur(reponse.error);
+      if (!reponse.error && champ.current) champ.current.value = "";
+    });
+  }
+
   return (
     <div className="flex flex-col gap-3">
       {photos.length > 0 && (
@@ -54,7 +78,7 @@ export function PhotosEspace({
         </ul>
       )}
 
-      <form action={uploadPhoto} className="flex flex-wrap items-center gap-3">
+      <form action={envoyer} className="flex flex-wrap items-center gap-3">
         <input type="hidden" name="restaurant_id" value={restaurantId} />
         <input type="hidden" name="espace_id" value={espaceId} />
         <label
@@ -63,6 +87,7 @@ export function PhotosEspace({
         >
           <span className="sr-only">Photo de cet espace</span>
           <input
+            ref={champ}
             id={`photo-${espaceId}`}
             type="file"
             name="photo"
@@ -73,10 +98,17 @@ export function PhotosEspace({
         </label>
         <button
           type="submit"
-          className="rounded-md border border-zinc-200 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
+          disabled={enCours}
+          className="rounded-md border border-zinc-200 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy disabled:opacity-50"
         >
-          Ajouter la photo
+          {enCours ? "Envoi…" : "Ajouter la photo"}
         </button>
+
+        {erreur && (
+          <p className="w-full text-sm text-red-600" role="alert">
+            {erreur}
+          </p>
+        )}
       </form>
     </div>
   );

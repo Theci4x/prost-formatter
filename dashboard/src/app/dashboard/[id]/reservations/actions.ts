@@ -162,6 +162,9 @@ export async function addEspace(
   }
 
   revalidatePath(`/dashboard/${restaurantId}/reservations`);
+  // C'est l'écran de configuration qui affiche ces listes : sans cette
+  // ligne, on ajoute un service et on ne le retrouve pas en revenant.
+  revalidatePath(`/dashboard/${restaurantId}/reservations/configuration`);
   return { error: null, rendu, valeurs: ESPACE_VIDE };
 }
 
@@ -177,6 +180,9 @@ export async function removeEspace(formData: FormData) {
 
   if (error) console.error("[removeEspace]", error);
   revalidatePath(`/dashboard/${restaurantId}/reservations`);
+  // C'est l'écran de configuration qui affiche ces listes : sans cette
+  // ligne, on ajoute un service et on ne le retrouve pas en revenant.
+  revalidatePath(`/dashboard/${restaurantId}/reservations/configuration`);
 }
 
 export async function addService(
@@ -232,7 +238,79 @@ export async function addService(
   }
 
   revalidatePath(`/dashboard/${restaurantId}/reservations`);
+  // C'est l'écran de configuration qui affiche ces listes : sans cette
+  // ligne, on ajoute un service et on ne le retrouve pas en revenant.
+  revalidatePath(`/dashboard/${restaurantId}/reservations/configuration`);
   return { error: null, rendu, valeurs: SERVICE_VIDE };
+}
+
+/**
+ * Modifier un service existant. Jusqu'ici il fallait le supprimer et le
+ * recréer — ce qui, au passage, coupait le lien avec les réservations déjà
+ * prises dessus : leur service_id repassait à NULL et elles disparaissaient
+ * de l'écran du jour. Corriger une heure de fin ne doit pas coûter ça.
+ */
+export async function modifierService(
+  prevState: ServiceState,
+  formData: FormData,
+): Promise<ServiceState> {
+  const restaurantId = texte(formData.get("restaurant_id"));
+  const serviceId = texte(formData.get("service_id"));
+  const valeurs: ServiceValeurs = {
+    nom: texte(formData.get("nom")),
+    heureDebut: texte(formData.get("heure_debut")),
+    heureFin: texte(formData.get("heure_fin")),
+    delai: texte(formData.get("delai_heures")),
+    jours: formData
+      .getAll("jours")
+      .map(Number)
+      .filter((jour) => Number.isInteger(jour) && jour >= 1 && jour <= 7),
+  };
+  const rendu = prevState.rendu + 1;
+  const echec = (error: string): ServiceState => ({ error, rendu, valeurs });
+
+  if (!peutGerer(await roleSur(restaurantId))) {
+    return echec("Seul un gérant peut modifier les services.");
+  }
+
+  const delai = Number(valeurs.delai);
+
+  if (!valeurs.nom) return echec("Donne un nom à ce service (« Déjeuner »…).");
+  if (valeurs.jours.length === 0) {
+    return echec("Choisis au moins un jour de la semaine.");
+  }
+  if (!valeurs.heureDebut || !valeurs.heureFin) {
+    return echec("Indique l'heure de début et l'heure de fin.");
+  }
+  if (valeurs.heureFin === valeurs.heureDebut) {
+    return echec("L'heure de fin doit être différente de l'heure de début.");
+  }
+  if (!Number.isInteger(delai) || delai < 0) {
+    return echec("Le délai de prévenance doit être un nombre d'heures.");
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("restaurant_services")
+    .update({
+      nom: valeurs.nom,
+      jours: valeurs.jours,
+      heure_debut: valeurs.heureDebut,
+      heure_fin: valeurs.heureFin,
+      delai_heures: delai,
+    })
+    .eq("id", serviceId)
+    .eq("restaurant_id", restaurantId);
+
+  if (error) {
+    console.error("[modifierService]", error);
+    return echec("L'enregistrement a échoué. Réessaie dans un instant.");
+  }
+
+  revalidatePath(`/dashboard/${restaurantId}/reservations`);
+  revalidatePath(`/dashboard/${restaurantId}/reservations/configuration`);
+  revalidatePath(`/dashboard/${restaurantId}/service`);
+  return { error: null, rendu, valeurs };
 }
 
 export async function removeService(formData: FormData) {
@@ -247,6 +325,9 @@ export async function removeService(formData: FormData) {
 
   if (error) console.error("[removeService]", error);
   revalidatePath(`/dashboard/${restaurantId}/reservations`);
+  // C'est l'écran de configuration qui affiche ces listes : sans cette
+  // ligne, on ajoute un service et on ne le retrouve pas en revenant.
+  revalidatePath(`/dashboard/${restaurantId}/reservations/configuration`);
 }
 
 /**
@@ -292,6 +373,9 @@ export async function activerPageReservation(formData: FormData) {
 
   if (error) console.error("[activerPageReservation]", error);
   revalidatePath(`/dashboard/${restaurantId}/reservations`);
+  // C'est l'écran de configuration qui affiche ces listes : sans cette
+  // ligne, on ajoute un service et on ne le retrouve pas en revenant.
+  revalidatePath(`/dashboard/${restaurantId}/reservations/configuration`);
 }
 
 // — Suivi des demandes —
@@ -644,10 +728,24 @@ export async function enregistrerIdentitePublique(formData: FormData) {
   revalidatePath(`/dashboard/${restaurantId}/reservations/configuration`);
 }
 
-export async function televerserLogo(formData: FormData) {
+// Au-delà, l'hébergeur refuse le corps de la requête avant nous : mieux vaut
+// le dire tout de suite que laisser l'envoi partir pour rien.
+const LOGO_MAX = 4 * 1024 * 1024;
+
+export async function televerserLogo(formData: FormData): Promise<{
+  error: string | null;
+}> {
   const restaurantId = formData.get("restaurant_id") as string;
   const file = formData.get("logo") as File | null;
-  if (!file || file.size === 0) return;
+  if (!file || file.size === 0) return { error: "Choisis un fichier." };
+  if (!file.type.startsWith("image/")) {
+    return { error: "Ce fichier n'est pas une image." };
+  }
+  if (file.size > LOGO_MAX) {
+    return {
+      error: "Logo trop lourd (4 Mo maximum). Réduis-le avant de l'envoyer.",
+    };
+  }
 
   const supabase = await createClient();
   const { data: actuel } = await supabase
@@ -665,17 +763,23 @@ export async function televerserLogo(formData: FormData) {
 
   if (uploadError) {
     console.error("[televerserLogo]", uploadError);
-    return;
+    return { error: "L'envoi a échoué. Réessaie." };
   }
 
   const {
     data: { publicUrl },
   } = supabase.storage.from("restaurant-photos").getPublicUrl(path);
 
-  await supabase
+  const { error: ecriture } = await supabase
     .from("restaurants")
     .update({ logo_url: publicUrl, logo_storage_path: path })
     .eq("id", restaurantId);
+
+  if (ecriture) {
+    console.error("[televerserLogo]", ecriture);
+    await supabase.storage.from("restaurant-photos").remove([path]);
+    return { error: "Le logo n'a pas été enregistré." };
+  }
 
   // L'ancien fichier n'a plus de référence : le laisser encombrerait le
   // stockage sans que personne puisse le retrouver.
@@ -686,6 +790,7 @@ export async function televerserLogo(formData: FormData) {
   }
 
   revalidatePath(`/dashboard/${restaurantId}/reservations/configuration`);
+  return { error: null };
 }
 
 

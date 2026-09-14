@@ -19,6 +19,15 @@ const supabaseImagePattern = supabaseUrl
   : [];
 
 const nextConfig: NextConfig = {
+  // Une action serveur reçoit 1 Mo par défaut. Un logo ou une photo de plat
+  // sortis d'un téléphone pèsent couramment 2 à 4 Mo : la requête était
+  // rejetée avant même d'entrer dans le code, et l'écran ne montrait rien.
+  // 4 Mo plutôt que davantage : au-delà, c'est l'hébergeur qui refuse le
+  // corps de la requête, et on retomberait sur le même silence.
+  experimental: {
+    serverActions: { bodySizeLimit: "4mb" },
+  },
+
   images: {
     remotePatterns: supabaseImagePattern,
     // next/image refuse d'aller chercher une image sur une IP privée, pour

@@ -1,7 +1,8 @@
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { uploadPhoto, removePhoto } from "./actions";
+import { removePhoto } from "./actions";
+import { AjoutPhoto } from "@/components/photos/AjoutPhoto";
 import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
 import type { Restaurant } from "@/types/restaurant";
 import type { RestaurantPhoto } from "@/types/photo";
@@ -43,25 +44,7 @@ export default async function PhotosPage({
         title={`Photos — ${restaurant.nom}`}
       />
 
-      <form
-        action={uploadPhoto}
-        className="flex max-w-xl items-center gap-3 rounded-2xl border border-zinc-200/70 bg-white p-4 shadow-sm"
-      >
-        <input type="hidden" name="restaurant_id" value={id} />
-        <input
-          type="file"
-          name="photo"
-          accept="image/*"
-          required
-          className="flex-1 text-sm text-zinc-600 file:mr-3 file:rounded-md file:border-0 file:bg-zinc-100 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-zinc-700 hover:file:bg-zinc-200"
-        />
-        <button
-          type="submit"
-          className="rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover"
-        >
-          Ajouter
-        </button>
-      </form>
+      <AjoutPhoto restaurantId={id} />
 
       {photos.length === 0 ? (
         <p className="text-sm text-zinc-500">Aucune photo pour le moment.</p>

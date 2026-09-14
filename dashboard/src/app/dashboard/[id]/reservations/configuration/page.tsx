@@ -5,6 +5,7 @@ import { EspaceForm } from "@/components/reservations/EspaceForm";
 import { PhotosEspace } from "@/components/reservations/PhotosEspace";
 import { IdentitePublique } from "@/components/reservations/IdentitePublique";
 import { ServiceForm } from "@/components/reservations/ServiceForm";
+import { ServiceModifiable } from "@/components/reservations/ServiceModifiable";
 import { FermetureForm } from "@/components/reservations/FermetureForm";
 import {
   activerPageReservation,
@@ -13,8 +14,6 @@ import {
   supprimerFermeture,
 } from "../actions";
 import {
-  formatCreneau,
-  formatJours,
   type Espace,
   type Fermeture,
   type Service,
@@ -236,24 +235,7 @@ export default async function ConfigurationReservationsPage({
                 key={service.id}
                 className="flex flex-wrap items-start justify-between gap-4 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm"
               >
-                <div className="flex min-w-0 flex-col gap-2">
-                  <span className="font-medium text-zinc-900">
-                    {service.nom}{" "}
-                    <span className="font-normal text-zinc-500">
-                      {formatCreneau(service.heure_debut, service.heure_fin)}
-                    </span>
-                  </span>
-                  <span className="text-sm text-zinc-500 first-letter:capitalize">
-                    {formatJours(service.jours)}
-                  </span>
-                  <div className="flex flex-wrap gap-2">
-                    <Puce>
-                      {service.delai_heures === 0
-                        ? "Dernière minute acceptée"
-                        : `Prévenance ${service.delai_heures} h`}
-                    </Puce>
-                  </div>
-                </div>
+                <ServiceModifiable restaurantId={id} service={service} />
                 <Supprimer
                   id={service.id}
                   restaurantId={id}
