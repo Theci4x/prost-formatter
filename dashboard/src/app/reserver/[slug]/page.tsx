@@ -455,7 +455,7 @@ export default async function ReserverPage({
           }
         />
 
-        <Carte items={carte} />
+        <Carte items={carte} slug={slug} />
       </main>
 
       <footer className="border-t border-zinc-200/70 px-6 py-6">

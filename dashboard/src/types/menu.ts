@@ -17,8 +17,33 @@ export type MenuItem = {
   ordre: number;
   // Décroché de la carte sans être effacé.
   actif: boolean;
+  // Une seule photo par plat. NULL tant qu'il n'y en a pas : sur une carte,
+  // la moitié des plats n'est jamais photographiée, et c'est très bien.
+  photo_url: string | null;
+  photo_storage_path: string | null;
+  // Traductions par code de langue. Voir la migration 0029 pour la forme.
+  traductions: Traductions;
   created_at: string;
 };
+
+/** Les langues proposées au client. Le français est la langue de saisie. */
+export type Langue = "fr" | "en";
+
+export const LANGUES: { code: Langue; libelle: string; drapeau: string }[] = [
+  { code: "fr", libelle: "Français", drapeau: "FR" },
+  { code: "en", libelle: "English", drapeau: "EN" },
+];
+
+export type TraductionPlat = {
+  nom: string;
+  description: string | null;
+  categorie: string;
+  // Le texte français d'où vient cette traduction, pour repérer celles que
+  // le restaurateur a rendues caduques en corrigeant son plat.
+  source: { nom: string; description: string | null; categorie: string };
+};
+
+export type Traductions = Partial<Record<Exclude<Langue, "fr">, TraductionPlat>>;
 
 export type MenuValeurs = {
   categorie: string;
