@@ -76,3 +76,112 @@ body {
 .klarr-landing .btn-primary:hover {
   transform: translateY(-1px);
 }
+
+/* ── Le journal ────────────────────────────────────────────────────────
+   Le corps d'un article arrive en HTML déjà fabriqué : aucune classe
+   Tailwind ne peut s'y accrocher. Ces règles-là sont donc le seul endroit
+   où la mise en forme d'un billet peut vivre. */
+.billet {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  font-size: 1.0625rem;
+  line-height: 1.75;
+  color: var(--ink-soft);
+}
+.billet h2 {
+  font-family: var(--font-instrument-serif), Georgia, serif;
+  font-size: 1.65rem;
+  line-height: 1.2;
+  color: var(--ink);
+  margin-top: 1.5rem;
+}
+.billet h3 {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin-top: 0.8rem;
+}
+.billet strong {
+  font-weight: 600;
+  color: var(--ink);
+}
+.billet a {
+  color: var(--accent-dark);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+.billet ul,
+.billet ol {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-left: 1.3rem;
+}
+.billet li {
+  list-style: disc;
+}
+.billet ol li {
+  list-style: decimal;
+}
+.billet hr {
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin: 0.4rem 0;
+}
+.billet em {
+  font-style: italic;
+}
+
+/* Les encadrés. Trois tons, et pas un de plus : dès qu'un article a
+   quatre couleurs d'encadrés, plus aucune ne veut dire quelque chose. */
+.billet .encadre {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 1.15rem 1.3rem;
+  border-radius: 1rem;
+  border: 1px solid var(--line);
+  background: var(--paper);
+}
+.billet .encadre-corps {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+.billet .encadre-titre {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+/* Ce qui coûte de l'argent si on passe à côté. */
+.billet .encadre[data-ton="attention"] {
+  border-color: color-mix(in oklch, var(--accent) 40%, white);
+  background: var(--accent-soft);
+}
+.billet .encadre[data-ton="attention"] .encadre-titre {
+  color: var(--accent-dark);
+}
+/* Un seuil, un montant, un délai : le titre est le chiffre lui-même. */
+.billet .encadre[data-ton="chiffre"] {
+  border: 0;
+  border-left: 3px solid var(--accent);
+  border-radius: 0 0.75rem 0.75rem 0;
+  background: var(--bg-alt);
+}
+.billet .encadre[data-ton="chiffre"] .encadre-titre {
+  font-family: var(--font-instrument-serif), Georgia, serif;
+  font-size: 2rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  line-height: 1.1;
+  color: var(--ink);
+}
+/* Un cas concret, raconté. */
+.billet .encadre[data-ton="exemple"] {
+  background: var(--bg-alt);
+}

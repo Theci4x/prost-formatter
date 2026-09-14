@@ -22,6 +22,11 @@ export const billet: Billet = {
       url: "https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000035388481",
     },
   ],
+  essentiel: [
+    "Le diagnostic remis à la vente ou au bail informe sur l'état du bien ; le repérage avant travaux protège les ouvriers. Ce sont deux documents différents, et le second est à votre charge.",
+    "Il concerne tout bâtiment antérieur au 1er juillet 1997 pour l'amiante, et à 1949 pour le plomb.",
+    "L'étude d'impact sonore, elle, se décide en phase de conception : faite après les travaux, elle vous fait refaire ce que vous venez de payer.",
+  ],
   markdown: `
 Voici l'erreur que fait à peu près tout le monde, et je l'ai faite : **le diagnostic immobilier remis à la vente ou à la signature du bail ne vaut pas diagnostic avant travaux.** Ce sont deux documents différents, avec deux objets différents, et le second est à votre charge.
 
@@ -35,7 +40,9 @@ Quand on s'en aperçoit, le chantier a commencé. C'est trop tard : il faut l'ar
 
 **Quand :** avant le début des travaux, et le rapport doit être remis aux entreprises qui interviennent, pour qu'elles organisent leur protection.
 
-**Sur quels bâtiments :** ceux construits avant le 1er juillet 1997, date d'interdiction de l'amiante en France. Un immeuble haussmannien, un local des années 1970, un pavillon de 1990 : tous concernés.
+::: chiffre 1er juillet 1997
+La date d'interdiction de l'amiante en France. Tout bâtiment dont le permis est antérieur est concerné par le repérage avant travaux — un immeuble haussmannien, un local des années 1970, un pavillon de 1990 : tous.
+:::
 
 L'obligation vient du décret n° 2017-899, codifié aux articles R. 4412-97 et suivants du code du travail. Le repérage doit être fait par un opérateur certifié.
 

@@ -26,10 +26,20 @@ export const billet: Billet = {
       url: "https://www.urssaf.fr/accueil/attestation-vigilance.html",
     },
   ],
+  essentiel: [
+    "Le diagnostic immobilier remis à la signature ne vaut pas diagnostic avant travaux : le repérage amiante est une obligation distincte, et elle est à votre charge.",
+    "Au-delà de 5 000 € de contrat, les ouvriers de votre artisan deviennent votre problème : attestation de vigilance Urssaf à réclamer, vérifier et redemander tous les six mois.",
+    "L'étude d'impact sonore ne vise pas que les boîtes de nuit, et elle doit précéder les travaux d'insonorisation.",
+    "La déclaration sanitaire est une démarche à part : immatriculer sa société ne déclare pas son activité alimentaire.",
+  ],
   markdown: `
 Cet article est né d'une ouverture ratée sur quatre points. Pas ratée au sens où le restaurant n'a pas ouvert — il a ouvert — mais ratée au sens où quatre obligations ont été découvertes après coup, chacune ayant coûté du temps, de l'argent, ou les deux.
 
 Ce ne sont pas des règles obscures. Ce sont des règles que **personne ne vous annonce** : ni le bailleur, ni le comptable, ni l'architecte, chacun supposant que c'est l'affaire d'un autre.
+
+::: attention Le point qui tue le plus de projets
+L'extraction. Sans conduit jusqu'en toiture, pas de cuisine chaude — et ça ne se répare pas après coup. Ça se vérifie **avant de signer le bail**, pas après, parce qu'aucun budget travaux ne rattrape un immeuble qui ne peut pas être percé.
+:::
 
 ## Les quatre qu'on découvre trop tard
 

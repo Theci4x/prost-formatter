@@ -62,6 +62,12 @@ export type Billet = {
    * vérifier, et nous ne pouvons pas relire.
    */
   sources: Source[];
+  /**
+   * Trois ou quatre phrases en tête d'article : ce qu'on retient si on ne
+   * lit que ça. La moitié des gens ne liront que ça — autant que ce soit
+   * écrit pour eux plutôt que subi.
+   */
+  essentiel?: string[];
   markdown: string;
 };
 

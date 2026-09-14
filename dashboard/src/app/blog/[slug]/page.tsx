@@ -1,16 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { marked } from "marked";
 import { Commis } from "@/components/commis/Commis";
+import { CadreJournal, Separateur } from "@/components/blog/CadreJournal";
+import { Couverture } from "@/components/blog/Couverture";
 import {
   billetParSlug,
   dateLisible,
   memeRubrique,
   tousLesBillets,
 } from "@/lib/blog/billets";
+import { rendreBillet } from "@/lib/blog/rendu";
 import { tempsDeLecture, titreCategorieBillet } from "@/types/blog";
-import { KlarrMark, KlarrWordmark } from "@/components/brand/KlarrMark";
 import { DonneesStructurees } from "@/components/seo/DonneesStructurees";
 import { filAriane } from "@/lib/seo/donnees-structurees";
 import { siteUrl } from "@/lib/site-url";
@@ -57,30 +58,27 @@ export default async function BilletPage({
 
   // Le contenu vient du dépôt, pas d'un utilisateur : il n'y a pas de saisie
   // hostile à filtrer ici, seulement notre propre texte.
-  const html = await marked.parse(billet.markdown);
+  const { html, sommaire } = await rendreBillet(billet.markdown);
   const voisins = memeRubrique(billet);
   const site = siteUrl();
+  const couverture = `/blog/${billet.slug}/opengraph-image`;
 
   return (
-    <div className="flex min-h-screen flex-col bg-brand-cream">
-      <header className="border-b border-zinc-200/70 bg-white px-6 py-4">
-        <div className="mx-auto flex w-full max-w-3xl flex-wrap items-center gap-2">
-          <Link href="/" className="flex items-center gap-2">
-            <KlarrMark size={20} />
-            <KlarrWordmark className="text-zinc-700" />
-          </Link>
-          <span className="text-zinc-300">/</span>
-          <Link href="/blog" className="text-sm text-zinc-500 hover:text-zinc-900">
-            Le journal
-          </Link>
-          <span className="text-zinc-300">/</span>
-          <span className="text-sm text-zinc-500">
-            {titreCategorieBillet(billet.categorie)}
-          </span>
-        </div>
-      </header>
-
-      <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-6 py-10">
+    <>
+      <CadreJournal
+        fil={
+          <>
+            <Separateur />
+            <Link href="/blog" style={{ fontSize: 14 }}>
+              Le journal
+            </Link>
+            <Separateur />
+            <span style={{ fontSize: 14 }}>
+              {titreCategorieBillet(billet.categorie)}
+            </span>
+          </>
+        }
+      >
         {/* Le balisage d'article porte les deux dates : Google affiche la
             plus récente, et sur un texte réglementaire c'est elle qui dit
             au lecteur s'il peut s'y fier. */}
@@ -93,6 +91,7 @@ export default async function BilletPage({
             datePublished: billet.publieLe,
             dateModified: billet.misAJourLe,
             inLanguage: "fr-FR",
+            image: `${site}${couverture}`,
             mainEntityOfPage: `${site}/blog/${billet.slug}`,
             publisher: {
               "@type": "Organization",
@@ -111,19 +110,135 @@ export default async function BilletPage({
           ])}
         />
 
-        <div className="flex flex-col gap-2">
-          <h1 className="text-2xl font-semibold text-zinc-900">
+        <div className="flex flex-col gap-4">
+          <span
+            style={{
+              fontSize: 12,
+              fontWeight: 700,
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+              color: "var(--accent-dark)",
+            }}
+          >
+            {titreCategorieBillet(billet.categorie)}
+          </span>
+          <h1
+            style={{
+              fontFamily: "var(--font-instrument-serif), Georgia, serif",
+              fontSize: "clamp(2rem, 6vw, 2.75rem)",
+              lineHeight: 1.1,
+              color: "var(--ink)",
+            }}
+          >
             {billet.titre}
           </h1>
-          <p className="text-sm text-zinc-500">{billet.resume}</p>
-          <p className="text-xs text-zinc-400">
+          <p style={{ fontSize: 17, lineHeight: 1.6 }}>{billet.resume}</p>
+          <p style={{ fontSize: 13.5 }}>
             Mis à jour le {dateLisible(billet.misAJourLe)} ·{" "}
             {tempsDeLecture(billet.markdown)} min de lecture
           </p>
         </div>
 
+        <div
+          style={{
+            overflow: "hidden",
+            borderRadius: "1rem",
+            border: "1px solid var(--line)",
+          }}
+        >
+          <Couverture
+            slug={billet.slug}
+            rubrique={titreCategorieBillet(billet.categorie)}
+            ratio={6}
+          />
+        </div>
+
+        {billet.essentiel && billet.essentiel.length > 0 && (
+          <section
+            style={{
+              borderRadius: "1rem",
+              border: "1px solid var(--line)",
+              background: "var(--paper)",
+              padding: "1.35rem 1.5rem",
+              display: "flex",
+              flexDirection: "column",
+              gap: "0.8rem",
+            }}
+          >
+            <h2
+              style={{
+                fontSize: 12,
+                fontWeight: 700,
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+                color: "var(--ink)",
+              }}
+            >
+              L&apos;essentiel
+            </h2>
+            <ul className="flex flex-col gap-2.5">
+              {billet.essentiel.map((point) => (
+                <li
+                  key={point}
+                  className="flex gap-2.5"
+                  style={{ fontSize: 15.5, lineHeight: 1.6 }}
+                >
+                  <span
+                    aria-hidden
+                    style={{
+                      flexShrink: 0,
+                      marginTop: 9,
+                      width: 6,
+                      height: 6,
+                      borderRadius: 99,
+                      background: "var(--accent)",
+                    }}
+                  />
+                  <span>{point}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {/* Un article réglementaire se consulte plus qu'il ne se lit :
+            quelqu'un cherche « l'agrément » et veut y aller directement. */}
+        {sommaire.length > 2 && (
+          <nav
+            aria-label="Sommaire"
+            style={{
+              borderLeft: "2px solid var(--line)",
+              paddingLeft: "1.1rem",
+              display: "flex",
+              flexDirection: "column",
+              gap: "0.55rem",
+            }}
+          >
+            <span
+              style={{
+                fontSize: 12,
+                fontWeight: 700,
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+                color: "var(--ink)",
+              }}
+            >
+              Au sommaire
+            </span>
+            {sommaire.map((section) => (
+              <a
+                key={section.id}
+                href={`#${section.id}`}
+                style={{ fontSize: 15, lineHeight: 1.45 }}
+              >
+                {section.titre}
+              </a>
+            ))}
+          </nav>
+        )}
+
         <article
-          className="flex flex-col gap-4 text-sm leading-relaxed text-zinc-700 [&_a]:text-brand-navy [&_a]:underline-offset-2 hover:[&_a]:underline [&_h2]:mt-4 [&_h2]:text-base [&_h2]:font-semibold [&_h2]:text-zinc-900 [&_h3]:mt-2 [&_h3]:text-sm [&_h3]:font-semibold [&_h3]:text-zinc-900 [&_li]:ml-5 [&_li]:list-disc [&_ol_li]:list-decimal [&_strong]:font-semibold [&_strong]:text-zinc-900 [&_ul]:flex [&_ul]:flex-col [&_ul]:gap-2 [&_ol]:flex [&_ol]:flex-col [&_ol]:gap-2 [&_em]:text-zinc-500 [&_hr]:border-zinc-200"
+          className="billet"
           dangerouslySetInnerHTML={{ __html: html }}
         />
 
@@ -131,8 +246,20 @@ export default async function BilletPage({
             une obligation légale sans dire d'où elle sort ne se vérifie pas,
             et ne se relit pas quand le texte change. */}
         {billet.sources.length > 0 && (
-          <section className="flex flex-col gap-3 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm">
-            <h2 className="text-sm font-semibold text-zinc-900">Sources</h2>
+          <section
+            style={{
+              borderRadius: "1rem",
+              border: "1px solid var(--line)",
+              background: "var(--paper)",
+              padding: "1.35rem 1.5rem",
+              display: "flex",
+              flexDirection: "column",
+              gap: "0.8rem",
+            }}
+          >
+            <h2 style={{ fontSize: 15, fontWeight: 700, color: "var(--ink)" }}>
+              Sources
+            </h2>
             <ul className="flex flex-col gap-2">
               {billet.sources.map((source) => (
                 <li key={source.url}>
@@ -140,14 +267,19 @@ export default async function BilletPage({
                     href={source.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm text-brand-navy underline-offset-2 hover:underline"
+                    style={{
+                      fontSize: 14.5,
+                      color: "var(--accent-dark)",
+                      textDecoration: "underline",
+                      textUnderlineOffset: 3,
+                    }}
                   >
                     {source.intitule}
                   </a>
                 </li>
               ))}
             </ul>
-            <p className="text-xs text-zinc-500">
+            <p style={{ fontSize: 13 }}>
               Ces règles changent. Cet article est à jour au{" "}
               {dateLisible(billet.misAJourLe)} ; confirmez auprès de
               l&apos;administration concernée avant d&apos;engager une
@@ -157,8 +289,11 @@ export default async function BilletPage({
         )}
 
         {voisins.length > 0 && (
-          <section className="flex flex-col gap-3 border-t border-zinc-200 pt-6">
-            <h2 className="text-sm font-semibold text-zinc-900">
+          <section
+            className="flex flex-col gap-3 pt-2"
+            style={{ borderTop: "1px solid var(--line)", paddingTop: "1.5rem" }}
+          >
+            <h2 style={{ fontSize: 15, fontWeight: 700, color: "var(--ink)" }}>
               Dans la même rubrique
             </h2>
             <ul className="flex flex-col gap-2">
@@ -166,7 +301,12 @@ export default async function BilletPage({
                 <li key={autre.slug}>
                   <Link
                     href={`/blog/${autre.slug}`}
-                    className="text-sm text-brand-navy underline-offset-2 hover:underline"
+                    style={{
+                      fontSize: 15,
+                      color: "var(--accent-dark)",
+                      textDecoration: "underline",
+                      textUnderlineOffset: 3,
+                    }}
                   >
                     {autre.titre}
                   </Link>
@@ -180,34 +320,34 @@ export default async function BilletPage({
             quelqu'un venu chercher une obligation réglementaire n'est pas
             venu acheter un logiciel. Le lui rappeler trois fois dans
             l'article le ferait partir. */}
-        <aside className="rounded-2xl border border-zinc-200/70 bg-white p-5 text-sm text-zinc-600 shadow-sm">
+        <aside
+          style={{
+            borderRadius: "1rem",
+            border: "1px solid var(--line)",
+            background: "var(--paper)",
+            padding: "1.35rem 1.5rem",
+            fontSize: 15,
+            lineHeight: 1.65,
+          }}
+        >
           Klarr est un outil de réservation pour restaurants indépendants :
           une page de réservation, une carte en ligne, un carnet. Si vous
           ouvrez bientôt,{" "}
           <Link
             href="/"
-            className="font-medium text-brand-navy underline-offset-2 hover:underline"
+            style={{
+              fontWeight: 600,
+              color: "var(--accent-dark)",
+              textDecoration: "underline",
+              textUnderlineOffset: 3,
+            }}
           >
             voyez à quoi ça ressemble
           </Link>
           .
         </aside>
-      </main>
-
-      <footer className="border-t border-zinc-200/70 px-6 py-6">
-        <div className="mx-auto flex max-w-3xl flex-wrap items-center gap-x-4 gap-y-2 text-sm text-zinc-400">
-          <Link href="/blog" className="hover:text-zinc-700">
-            Le journal
-          </Link>
-          <Link href="/aide" className="hover:text-zinc-700">
-            Aide
-          </Link>
-          <Link href="/mentions-legales" className="hover:text-zinc-700">
-            Mentions légales
-          </Link>
-        </div>
-      </footer>
+      </CadreJournal>
       <Commis />
-    </div>
+    </>
   );
 }

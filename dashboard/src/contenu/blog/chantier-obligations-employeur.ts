@@ -22,6 +22,11 @@ export const billet: Billet = {
       url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000006904830",
     },
   ],
+  essentiel: [
+    "Au-delà de 5 000 € HT par contrat, vous êtes donneur d'ordre : vous devez réclamer l'attestation de vigilance Urssaf de votre prestataire, en vérifier l'authenticité, et la redemander tous les six mois.",
+    "Sans ces vérifications, vous êtes solidairement redevable des cotisations que votre prestataire n'a pas versées, au prorata de votre chantier.",
+    "Trois minutes par prestataire, deux fois par an. Une entreprise qui traîne à fournir la sienne vient de vous dire quelque chose d'utile.",
+  ],
   markdown: `
 Vous avez signé un devis avec une entreprise. Elle envoie ses ouvriers. Vous vous dites, raisonnablement, que la manière dont elle emploie ses gens la regarde.
 
@@ -29,7 +34,11 @@ C'est faux, et c'est la mauvaise surprise la plus chère de l'ouverture, parce q
 
 ## L'obligation de vigilance
 
-Dès qu'un contrat atteint **5 000 € hors taxes**, vous devenez ce que la loi appelle un donneur d'ordre. À ce titre, vous devez :
+::: chiffre 5 000 € HT
+Le seuil à partir duquel vous devenez donneur d'ordre. Il s'apprécie **par contrat**, pas par facture : cinq devis de 1 500 € avec le même prestataire peuvent n'en former qu'un seul.
+:::
+
+À ce titre, vous devez :
 
 - réclamer à votre prestataire son **attestation de vigilance** délivrée par l'Urssaf, **à la signature du contrat** ;
 - la **redemander tous les six mois** jusqu'à la fin des travaux ;
@@ -41,7 +50,9 @@ Ces trois gestes, dans cet ordre. Une attestation qu'on vous tend et que vous ra
 
 Si votre prestataire a eu recours au travail dissimulé et que vous n'avez pas fait ces vérifications, vous êtes **solidairement responsable**. Concrètement : l'Urssaf peut vous réclamer les cotisations, impôts et taxes que votre prestataire n'a pas versés, au prorata du chantier qu'il a réalisé pour vous.
 
-Les sanctions civiles encourues atteignent 45 000 € pour une personne physique et 250 000 € pour une société. Et la solidarité financière n'est pas une amende : c'est une dette que vous payez à la place de quelqu'un d'autre.
+::: attention La solidarité financière n'est pas une amende
+C'est une dette que vous payez **à la place de quelqu'un d'autre**, calculée sur ce qu'il n'a pas versé. Les sanctions civiles encourues atteignent par ailleurs 45 000 € pour une personne physique et 250 000 € pour une société.
+:::
 
 Un contrôle de l'inspection du travail sur votre chantier, c'est donc un contrôle qui vous concerne. Les ouvriers ne sont pas vos salariés, mais le chantier est le vôtre.
 

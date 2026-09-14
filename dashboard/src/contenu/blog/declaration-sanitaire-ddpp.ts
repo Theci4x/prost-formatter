@@ -34,6 +34,12 @@ export const billet: Billet = {
       url: "https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000034112196",
     },
   ],
+  essentiel: [
+    "Immatriculer sa société ne déclare pas son activité alimentaire : la déclaration à la DDPP est une démarche distincte, à faire avant l'ouverture, avec le Cerfa n° 13984.",
+    "Ce n'est pas une autorisation mais un enregistrement — rien ne vous bloque si vous l'oubliez, et c'est précisément pour ça qu'on l'oublie.",
+    "Dès que vous cédez vos préparations à un autre établissement, vous sortez de la déclaration et vous entrez dans l'agrément sanitaire.",
+    "Le contrôle porte sur trois choses : plan de maîtrise sanitaire, formation hygiène, traçabilité.",
+  ],
   markdown: `
 Quand on crée une société, on a le sentiment d'avoir tout déclaré. Le greffe a enregistré, l'INSEE a attribué un SIRET, le comptable a sa liasse. On se dit, raisonnablement, que l'administration sait qu'on ouvre un restaurant.
 
@@ -55,7 +61,9 @@ Le principe vient de l'article 6 du règlement européen n° 852/2004 : chaque �
 
 **Ce que ce n'est pas.** Ce n'est pas une autorisation. Personne n'instruit votre dossier, personne ne vient visiter avant de vous dire oui. Vous déclarez, on vous renvoie un récépissé, vous êtes enregistré.
 
-C'est exactement ce qui la rend facile à oublier : **rien ne vous bloque si vous ne la faites pas.** Vous ouvrez, ça marche, les clients viennent — jusqu'au jour où un contrôleur se présente et constate que l'établissement n'existe pas dans ses fichiers. Ce jour-là, la conversation ne commence pas bien.
+::: attention Pourquoi on l'oublie
+**Rien ne vous bloque si vous ne la faites pas.** Vous ouvrez, ça marche, les clients viennent — jusqu'au jour où un contrôleur se présente et constate que l'établissement n'existe pas dans ses fichiers. Ce jour-là, la conversation ne commence pas bien.
+:::
 
 ## Le cas qui change tout : l'agrément
 
@@ -68,7 +76,9 @@ Entre les deux existe une **dérogation à l'agrément**, prévue par l'arrêté
 - la quantité cédée reste, par catégorie de produits, sous **30 % de votre production** de cette catégorie — sauf si elle reste sous le plafond fixé en annexe de l'arrêté, auquel cas la limite des 30 % ne s'applique pas ;
 - les établissements livrés sont dans un rayon de **80 km**. Le préfet peut porter cette distance jusqu'à 200 km dans les zones soumises à des contraintes géographiques particulières.
 
-Ce n'est pas un détail de juriste. Beaucoup de restaurants se mettent à vendre leurs bocaux à l'épicerie du coin en pensant rendre service. C'est une cession à un autre établissement, et elle relève de ce régime.
+::: exemple Le cas typique
+Vous faites des terrines, l'épicerie d'en face en veut quelques-unes, vous dites oui en pensant rendre service. C'est une **cession à un autre établissement** : vous venez de sortir du régime de la déclaration. Ça se règle très bien — mais ça se règle avant, pas quand la DDPP le découvre.
+:::
 
 ## Ce que le contrôle regarde vraiment
 

@@ -32,6 +32,12 @@ export const billet: Billet = {
       url: "https://www.iledefrance.ars.sante.fr/les-lieux-diffusant-des-sons-amplifies-ldsa",
     },
   ],
+  essentiel: [
+    "L'étude ne s'impose pas à « tout lieu qui diffuse de la musique » : il faut deux conditions réunies, à titre habituel ET au-dessus de la règle d'égale énergie fondée sur 80 dB(A) sur 8 heures.",
+    "Une musique d'ambiance de service est hors champ ; un DJ le vendredi, un rooftop sonorisé, un bar musical ne le sont pas.",
+    "Le seuil est plus bas qu'il n'en a l'air : c'est une dose, pas un volume. 86 dB(A) pendant deux heures, c'est déjà le dépassement.",
+    "Elle doit précéder les travaux d'insonorisation — c'est elle qui les décide.",
+  ],
   markdown: `
 On lit partout que « tout établissement qui diffuse de la musique » doit faire une étude d'impact des nuisances sonores. C'est faux, et l'approximation fait deux dégâts : elle fait dépenser de l'argent à des gens qui n'en ont pas besoin, et elle fait hausser les épaules à ceux qui devraient s'en soucier.
 
@@ -46,7 +52,9 @@ Le décret n° 2017-1244 du 7 août 2017 s'applique aux lieux ouverts au public 
 
 Un restaurant qui passe de la musique d'ambiance pendant le service, à un volume qui laisse les tables se parler, n'atteint pas ce niveau : il n'est pas concerné. Un bar musical, un restaurant qui programme un DJ le vendredi, un rooftop avec une vraie sonorisation, une salle qui accueille des concerts : concernés.
 
-**Le piège du second critère.** « 80 dB(A) sur 8 heures » paraît très haut quand on l'entend comme un volume. Ce n'en est pas un : c'est une dose. La règle d'égale énergie dit que doubler l'énergie sonore revient à diviser la durée par deux. Autrement dit, 83 dB(A) pendant 4 heures, 86 pendant 2 heures, 89 pendant une heure : même dose, même dépassement.
+::: chiffre 80 dB(A) sur 8 heures
+Ce n'est pas un volume, c'est une **dose**. La règle d'égale énergie dit que doubler l'énergie sonore revient à diviser la durée par deux : 83 dB(A) pendant 4 heures, 86 pendant 2 heures, 89 pendant une heure — même dose, même dépassement.
+:::
 
 Or 86 dB(A), ce n'est pas un concert. C'est une salle pleine, animée, avec de la musique par-dessus, un vendredi à 22 h. Beaucoup d'établissements qui se croient hors champ y sont. Et la seule façon de le savoir n'est pas d'en discuter : c'est de mesurer.
 
@@ -63,7 +71,9 @@ Elle tient compte des activités environnantes qui diffusent elles aussi des son
 
 C'est le point qui coûte le plus cher, et il n'a rien de juridique.
 
+::: attention L'ordre compte plus que le texte
 L'étude sert à **décider** des travaux d'insonorisation : où isoler, avec quoi, jusqu'où. La faire après les travaux, c'est apprendre qu'il faut déposer un plafond qu'on vient de payer, ou recouper une cloison finie.
+:::
 
 Elle se place donc en phase de conception, avec l'architecte, au moment où le plan existe et où rien n'est encore posé. Un acousticien consulté à ce moment-là coûte une fraction de ce que coûte le même acousticien consulté après la première plainte.
 
