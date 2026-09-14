@@ -31,21 +31,36 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const supabase = createServiceClient();
     const { data } = await supabase
       .from("restaurants")
-      .select("slug_reservation, created_at")
+      .select("slug_reservation, created_at, carte_publique")
       .not("slug_reservation", "is", null);
 
-    const pages = ((data ?? []) as {
+    const restaurants = (data ?? []) as {
       slug_reservation: string;
       created_at: string | null;
-    }[]).map((restaurant) => ({
+      carte_publique: boolean | null;
+    }[];
+
+    const quand = (restaurant: { created_at: string | null }) =>
+      restaurant.created_at ? new Date(restaurant.created_at) : new Date();
+
+    const pages = restaurants.map((restaurant) => ({
       url: `${site}/reserver/${restaurant.slug_reservation}`,
-      lastModified: restaurant.created_at
-        ? new Date(restaurant.created_at)
-        : new Date(),
+      lastModified: quand(restaurant),
       priority: 0.8,
     }));
 
-    return [...fixes, ...pages];
+    // « La carte du restaurant X » est une recherche courante, et c'est une
+    // page que Klarr sait servir. Seules les cartes publiées y entrent :
+    // les autres renvoient une 404.
+    const cartes = restaurants
+      .filter((restaurant) => restaurant.carte_publique)
+      .map((restaurant) => ({
+        url: `${site}/carte/${restaurant.slug_reservation}`,
+        lastModified: quand(restaurant),
+        priority: 0.7,
+      }));
+
+    return [...fixes, ...pages, ...cartes];
   } catch (erreur) {
     // Une base injoignable ne doit pas rendre le plan du site indisponible :
     // mieux vaut les pages fixes que rien du tout.

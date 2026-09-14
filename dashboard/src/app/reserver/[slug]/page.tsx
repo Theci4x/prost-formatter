@@ -19,6 +19,9 @@ import { KlarrMark, KlarrWordmark } from "@/components/brand/KlarrMark";
 import type { RestaurantPhoto } from "@/types/photo";
 import { Carte } from "@/components/menu/Carte";
 import type { MenuItem } from "@/types/menu";
+import { DonneesStructurees } from "@/components/seo/DonneesStructurees";
+import { restaurantSchema } from "@/lib/seo/donnees-structurees";
+import { siteUrl } from "@/lib/site-url";
 
 type Params = { slug: string };
 type Query = { date?: string; couverts?: string };
@@ -261,6 +264,28 @@ export default async function ReserverPage({
       </header>
 
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-6 py-10">
+        {/* Ce que Google lit pour afficher la note, les horaires, la
+            fourchette de prix et un bouton « Réserver » plutôt qu'un lien
+            bleu. On n'y déclare que ce que la page montre réellement. */}
+        <DonneesStructurees
+          donnees={restaurantSchema({
+            etablissement: {
+              nom: restaurant.nom,
+              adresse: restaurant.adresse,
+              description: restaurant.description,
+              logoUrl: restaurant.logo_url,
+            },
+            services,
+            espaces,
+            carte,
+            url: `${siteUrl()}/reserver/${slug}`,
+            urlCarte: restaurant.carte_publique
+              ? `${siteUrl()}/carte/${slug}`
+              : null,
+            note: reputation?.note ? Number(reputation.note) : null,
+            nombreAvis: reputation?.nombre_avis ?? null,
+          })}
+        />
         <GalerieRestaurant photos={photosEtablissement} nom={restaurant.nom} />
 
         <div className="flex flex-col gap-2">

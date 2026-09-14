@@ -13,6 +13,16 @@ import { HeroBackdrop } from "@/components/landing/HeroBackdrop";
 import { FloatingChip, Tilt } from "@/components/landing/Tilt";
 import { Reveal } from "@/components/landing/Reveal";
 
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  // La page d'accueil garde le titre par défaut du gabarit, mais elle a
+  // droit à sa propre adresse canonique : sans elle, klarr.net et
+  // www.klarr.net se font concurrence dans l'index de Google.
+  alternates: { canonical: "/" },
+};
+
+
 const instrumentSerif = Instrument_Serif({
   weight: "400",
   style: ["normal", "italic"],

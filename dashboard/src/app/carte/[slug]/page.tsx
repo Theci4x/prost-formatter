@@ -7,6 +7,9 @@ import { carteOrganisee, carteVisible, formatPrix } from "@/lib/menu/carte";
 import { langueDisponible, lireLangue, platAffiche } from "@/lib/menu/traduction";
 import { KlarrMark, KlarrWordmark } from "@/components/brand/KlarrMark";
 import type { MenuItem } from "@/types/menu";
+import { DonneesStructurees } from "@/components/seo/DonneesStructurees";
+import { filAriane, menuSchema } from "@/lib/seo/donnees-structurees";
+import { siteUrl } from "@/lib/site-url";
 
 type Params = { slug: string };
 type Query = { lang?: string };
@@ -50,9 +53,20 @@ export async function generateMetadata({
   const charge = await chargerCarte(slug);
   if (!charge) return { title: "Carte" };
 
+  // Une description qui nomme quelques plats répond mieux à « carte du
+  // restaurant X » qu'une phrase générique.
+  const apercu = charge.items
+    .filter((plat) => plat.actif)
+    .slice(0, 4)
+    .map((plat) => plat.nom)
+    .join(", ");
+
   return {
+    alternates: { canonical: `/carte/${slug}` },
     title: `La carte — ${charge.restaurant.nom}`,
-    description: `La carte de ${charge.restaurant.nom}.`,
+    description: apercu
+      ? `La carte de ${charge.restaurant.nom} : ${apercu}…`
+      : `La carte de ${charge.restaurant.nom}.`,
     // Une carte change ; on ne veut pas qu'un moteur serve la version de
     // l'an dernier, mais on veut bien qu'elle soit trouvable.
     robots: { index: true, follow: true },
@@ -128,6 +142,25 @@ export default async function CartePage({
       </header>
 
       <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-5 py-8">
+        {/* La carte en schema.org : sections, plats, prix. C'est ce qui
+            permet à Google de répondre « la carte du restaurant X » avec le
+            contenu, et pas seulement avec un lien. */}
+        <DonneesStructurees
+          donnees={menuSchema({
+            nom: restaurant.nom,
+            url: `${siteUrl()}/carte/${slug}`,
+            carte: items,
+          })}
+        />
+        <DonneesStructurees
+          donnees={filAriane([
+            {
+              nom: restaurant.nom,
+              url: `${siteUrl()}/reserver/${restaurant.slug_reservation}`,
+            },
+            { nom: "La carte", url: `${siteUrl()}/carte/${slug}` },
+          ])}
+        />
         <div className="flex flex-col gap-1">
           <h1 className="text-2xl font-semibold text-zinc-900">
             {anglais ? "Menu" : "La carte"}

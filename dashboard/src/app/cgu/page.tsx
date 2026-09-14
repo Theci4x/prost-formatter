@@ -3,7 +3,12 @@ import Link from "next/link";
 import { LegalLayout, LegalSection } from "@/components/legal/LegalLayout";
 
 export const metadata: Metadata = {
-  title: "Conditions générales d'utilisation — Klarr",
+  // Sans adresse canonique, klarr.net et www.klarr.net se font
+  // concurrence dans l'index pour la même page.
+  alternates: { canonical: "/cgu" },
+  title: "Conditions générales d'utilisation",
+  description:
+    "Les conditions d'utilisation de Klarr : abonnement, résiliation, responsabilités et données.",
 };
 
 export default function CguPage() {

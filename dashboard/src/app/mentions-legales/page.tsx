@@ -3,7 +3,12 @@ import Link from "next/link";
 import { LegalLayout, LegalSection } from "@/components/legal/LegalLayout";
 
 export const metadata: Metadata = {
-  title: "Mentions légales — Klarr",
+  // Sans adresse canonique, klarr.net et www.klarr.net se font
+  // concurrence dans l'index pour la même page.
+  alternates: { canonical: "/mentions-legales" },
+  title: "Mentions légales",
+  description:
+    "Éditeur, hébergeur et coordonnées du service Klarr.",
 };
 
 export default function MentionsLegalesPage() {

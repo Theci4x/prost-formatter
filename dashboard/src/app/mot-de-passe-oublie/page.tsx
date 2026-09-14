@@ -4,7 +4,11 @@ import { KlarrMark, KlarrWordmark } from "@/components/brand/KlarrMark";
 import { LoginIllustration } from "@/components/brand/LoginIllustration";
 
 export const metadata: Metadata = {
-  title: "Mot de passe oublié — Klarr",
+  // Un formulaire de réinitialisation ne répond à aucune recherche.
+  robots: { index: false, follow: false },
+  title: "Mot de passe oublié",
+  description:
+    "Recevez un lien pour choisir un nouveau mot de passe Klarr.",
 };
 
 export default function ForgotPasswordPage() {

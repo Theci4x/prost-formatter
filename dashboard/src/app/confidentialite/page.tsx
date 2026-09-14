@@ -3,7 +3,12 @@ import Link from "next/link";
 import { LegalLayout, LegalSection } from "@/components/legal/LegalLayout";
 
 export const metadata: Metadata = {
-  title: "Politique de confidentialité — Klarr",
+  // Sans adresse canonique, klarr.net et www.klarr.net se font
+  // concurrence dans l'index pour la même page.
+  alternates: { canonical: "/confidentialite" },
+  title: "Politique de confidentialité",
+  description:
+    "Quelles données Klarr collecte, pourquoi, combien de temps, et comment les faire effacer.",
 };
 
 export default function ConfidentialitePage() {

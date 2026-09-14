@@ -7,6 +7,16 @@ import { cautionEnregistree, demanderCaution } from "@/lib/stripe/caution";
 import { formatCreneau } from "@/types/reservation";
 import { chargerSeance, PaiementSeance } from "./seance";
 
+import type { Metadata } from "next";
+
+// L'adresse de cette page contient le jeton de paiement du client. Un moteur
+// qui l'indexe le publie : rien de ce qui est ici n'a vocation à être trouvé
+// par une recherche.
+export const metadata: Metadata = {
+  title: "Paiement",
+  robots: { index: false, follow: false, nocache: true },
+};
+
 export const dynamic = "force-dynamic";
 
 type Ligne = {

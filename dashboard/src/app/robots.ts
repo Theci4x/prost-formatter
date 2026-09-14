@@ -11,7 +11,20 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: ["/dashboard", "/admin", "/api/", "/auth/", "/nouveau-mot-de-passe"],
+      disallow: [
+        "/dashboard",
+        "/admin",
+        "/api/",
+        "/auth/",
+        "/nouveau-mot-de-passe",
+        // L'adresse porte le jeton de paiement du client : l'indexer le
+        // publierait. Les pages elles-mêmes portent aussi un noindex —
+        // robots.txt empêche la visite, la balise empêche l'indexation si
+        // l'adresse fuite par un autre chemin.
+        "/paiement/",
+        // Une page de connexion ne répond à aucune recherche.
+        "/login",
+      ],
     },
     sitemap: `${siteUrl()}/sitemap.xml`,
   };

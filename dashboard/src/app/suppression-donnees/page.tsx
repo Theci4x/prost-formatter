@@ -2,7 +2,12 @@ import type { Metadata } from "next";
 import { LegalLayout, LegalSection } from "@/components/legal/LegalLayout";
 
 export const metadata: Metadata = {
-  title: "Suppression des données — Klarr",
+  // Sans adresse canonique, klarr.net et www.klarr.net se font
+  // concurrence dans l'index pour la même page.
+  alternates: { canonical: "/suppression-donnees" },
+  title: "Suppression des données",
+  description:
+    "Comment demander la suppression de votre compte Klarr et de vos données.",
 };
 
 export default function SuppressionDonneesPage() {
