@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
@@ -135,6 +136,7 @@ export default async function ConfigurationReservationsPage({
     slug_reservation?: string | null;
     logo_url?: string | null;
     mentions_legales?: string | null;
+    site_publie?: boolean | null;
   };
   const slug = publique.slug_reservation;
   const site = siteUrl();
@@ -346,6 +348,41 @@ export default async function ConfigurationReservationsPage({
                   clients.
                 </p>
               )}
+
+              {/* La vitrine se règle sur la fiche de l'établissement, une
+                  page qu'on n'ouvre presque jamais. C'est ici qu'on vient
+                  chercher ses adresses publiques : autant qu'elle s'y
+                  trouve aussi. */}
+              <div className="mt-2 border-t border-zinc-100 pt-4">
+                {publique.site_publie ? (
+                  <>
+                    <p className="mb-1 text-sm font-medium text-zinc-900">
+                      Ton site vitrine
+                    </p>
+                    <a
+                      href={`/restaurant/${slug}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-fit break-all font-medium text-brand-orange hover:underline"
+                    >
+                      {site}/restaurant/{slug}
+                    </a>
+                  </>
+                ) : (
+                  <p className="text-sm text-zinc-500">
+                    Tu peux aussi ouvrir un site vitrine — une page qui
+                    rassemble tes photos, ta carte, tes horaires et cette
+                    adresse de réservation. Ça se publie depuis{" "}
+                    <Link
+                      href={`/dashboard/${id}/edit`}
+                      className="font-medium text-brand-orange hover:underline"
+                    >
+                      la fiche de ton établissement
+                    </Link>
+                    .
+                  </p>
+                )}
+              </div>
             </>
           ) : espaces.length === 0 || services.length === 0 ? (
             <p className="text-sm text-zinc-500">

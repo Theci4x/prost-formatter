@@ -1,6 +1,16 @@
 "use server";
 
+import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
+import {
+  adresseIp,
+  AUDITS_PAR_JOUR,
+  AUDITS_PAR_JOUR_GLOBAL,
+  consommer,
+  empreinte,
+  secretEmpreinte,
+} from "@/lib/limites/publiques";
 import { searchPlace, getPlaceDetails } from "@/lib/google/places";
 import { checkWebsite } from "@/lib/audit/website";
 import {
@@ -123,6 +133,27 @@ export async function submitProspect(
 
   if (!prenom || !nom || !email || !telephone || !entreprise || !ville) {
     return { status: "error", error: "missing" };
+  }
+
+  // Chaque soumission déclenche deux appels facturés à Google Places. Sans
+  // compteur, la facture est à la main du premier venu — et on ne la
+  // découvre qu'à la fin du mois. Le compteur s'écrit avec la clé de
+  // service : la fonction n'est pas ouverte au visiteur, qui pourrait
+  // sinon gonfler le compteur d'autrui jusqu'à le bloquer.
+  const entetes = await headers();
+  const compteurs = createServiceClient();
+  const visiteur = empreinte(
+    "audit",
+    adresseIp(entetes),
+    entetes.get("user-agent") ?? "",
+    secretEmpreinte(),
+  );
+  const [sousPlafond, sousPlafondGlobal] = await Promise.all([
+    consommer(compteurs, visiteur, AUDITS_PAR_JOUR),
+    consommer(compteurs, "audit:global", AUDITS_PAR_JOUR_GLOBAL),
+  ]);
+  if (!sousPlafond || !sousPlafondGlobal) {
+    return { status: "error", error: "generic" };
   }
 
   const supabase = await createClient();

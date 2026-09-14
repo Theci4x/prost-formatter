@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
+import { jetonValide } from "@/lib/limites/publiques";
 
 // Les options échues ne bloquent déjà plus la jauge — le moteur de
 // disponibilité les ignore. Cette tâche ne fait que le dire : sans elle, une
@@ -11,7 +12,7 @@ export async function GET(request: Request) {
     console.error("[cron/options-expirees] CRON_SECRET manquant");
     return NextResponse.json({ error: "non configuré" }, { status: 500 });
   }
-  if (request.headers.get("authorization") !== `Bearer ${secret}`) {
+  if (!jetonValide(request.headers.get("authorization"), secret)) {
     return NextResponse.json({ error: "non autorisé" }, { status: 401 });
   }
 

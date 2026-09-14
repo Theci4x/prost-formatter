@@ -1,7 +1,17 @@
 "use server";
 
+import { headers } from "next/headers";
+
 import { redirect } from "next/navigation";
 import { createServiceClient } from "@/lib/supabase/service";
+import {
+  adresseIp,
+  consommer,
+  DEMANDES_PAR_JOUR,
+  DEMANDES_PAR_RESTAURANT,
+  empreinte,
+  secretEmpreinte,
+} from "@/lib/limites/publiques";
 import { chargerFermetures } from "@/lib/reservations/fermetures";
 import {
   disponibiliteEspace,
@@ -15,10 +25,16 @@ import type { Espace, Service } from "@/types/reservation";
 // hésitants, trop long on gèle les vendredis soir.
 const OPTION_HEURES = 48;
 
+/** Longueur au-delà de laquelle un champ libre n'est plus un message. */
+const TEXTE_MAX = 1000;
+
 export type DemandeState = { error: string | null };
 
-function texte(valeur: FormDataEntryValue | null): string {
-  return ((valeur as string | null) ?? "").trim();
+function texte(valeur: FormDataEntryValue | null, max = 200): string {
+  // Coupé plutôt que refusé : un nom de trois cents caractères est une
+  // maladresse ou un robot, dans les deux cas ce n'est pas au client de
+  // recommencer sa saisie pour ça.
+  return ((valeur as string | null) ?? "").trim().slice(0, max);
 }
 
 /**
@@ -42,7 +58,7 @@ export async function demanderReservation(
   const email = texte(formData.get("client_email"));
   const telephone = texte(formData.get("client_telephone"));
   const occasion = texte(formData.get("occasion"));
-  const message = texte(formData.get("message"));
+  const message = texte(formData.get("message"), TEXTE_MAX);
   const accepteCommunications = formData.get("accepte_communications") === "on";
 
   if (!nom || !email) {
@@ -68,6 +84,30 @@ export async function demanderReservation(
 
   const restaurant = restaurantData as { id: string } | null;
   if (!restaurant) return { error: "Établissement introuvable." };
+
+  // Une demande pose une option de 48 heures : elle bloque des couverts.
+  // Sans compteur, un script les bloque tous et met les réservations en
+  // ligne d'un établissement hors service pour deux jours. Le compteur
+  // vient après l'établissement, pour ne pas révéler l'existence d'un slug
+  // à qui tape au hasard, et avant toute écriture.
+  const entetes = await headers();
+  const visiteur = empreinte(
+    "resa",
+    adresseIp(entetes),
+    entetes.get("user-agent") ?? "",
+    secretEmpreinte(),
+  );
+  const [sousPlafondGlobal, sousPlafondMaison] = await Promise.all([
+    consommer(supabase, visiteur, DEMANDES_PAR_JOUR),
+    consommer(supabase, `${visiteur}:${restaurant.id}`, DEMANDES_PAR_RESTAURANT),
+  ]);
+  if (!sousPlafondGlobal || !sousPlafondMaison) {
+    return {
+      error:
+        "Tu as déjà envoyé plusieurs demandes aujourd'hui. Appelle " +
+        "l'établissement directement, il te répondra plus vite.",
+    };
+  }
 
   const [espaceResult, serviceResult, reservationsResult, fermetures] =
     await Promise.all([

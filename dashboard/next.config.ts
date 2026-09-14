@@ -40,6 +40,41 @@ const nextConfig: NextConfig = {
     dangerouslyAllowLocalIP: process.env.KLARR_IMAGES_LOCALES === "1",
   },
 
+  /**
+   * Les en-têtes de sécurité, sur toutes les pages.
+   *
+   * « frame-ancestors » est le seul qui ne peut pas se poser en balise meta,
+   * et c'est le plus utile ici : sans lui, le tableau de bord peut être
+   * chargé dans une iframe sur un site tiers, qui superpose ses propres
+   * boutons aux nôtres — un restaurateur croit accepter un cookie et
+   * supprime son établissement.
+   *
+   * Pas de politique de contenu complète : Next pose ses propres scripts en
+   * ligne, une CSP stricte les casserait, et une CSP permissive donnerait
+   * l'illusion d'une protection. Et pas de « payment=() » dans les
+   * permissions : Stripe s'en sert pour Apple Pay et Google Pay.
+   */
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          {
+            key: "Strict-Transport-Security",
+            value: "max-age=63072000; includeSubDomains",
+          },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          {
+            key: "Permissions-Policy",
+            value: "camera=(), microphone=(), geolocation=()",
+          },
+          { key: "Content-Security-Policy", value: "frame-ancestors 'self'" },
+        ],
+      },
+    ];
+  },
+
   // Empêche la redirection 308 automatique de Next sur les URLs avec un
   // "/" final, pour que les rewrites ci-dessous servent directement le
   // fichier (200) au lieu de rediriger — le vérificateur TikTok ne suit
