@@ -17,6 +17,8 @@ import { DemandeForm } from "@/components/reservations/DemandeForm";
 import { formatCreneau, type Espace, type Service } from "@/types/reservation";
 import { KlarrMark, KlarrWordmark } from "@/components/brand/KlarrMark";
 import type { RestaurantPhoto } from "@/types/photo";
+import { Carte } from "@/components/menu/Carte";
+import type { MenuItem } from "@/types/menu";
 
 type Params = { slug: string };
 type Query = { date?: string; couverts?: string };
@@ -26,7 +28,9 @@ async function chargerRestaurant(slug: string) {
   const { data } = await supabase
     .from("restaurants")
     // Page publique : on ne lit que ce qui doit s'y afficher.
-    .select("id, nom, adresse, description, logo_url, mentions_legales")
+    .select(
+      "id, nom, adresse, description, logo_url, mentions_legales, carte_publique",
+    )
     .eq("slug_reservation", slug)
     .maybeSingle();
 
@@ -37,6 +41,7 @@ async function chargerRestaurant(slug: string) {
     description: string | null;
     logo_url: string | null;
     mentions_legales: string | null;
+    carte_publique: boolean | null;
   } | null;
 }
 
@@ -132,6 +137,7 @@ export default async function ReserverPage({
     experiencesResult,
     placesResult,
     reputationResult,
+    carteResult,
   ] = await Promise.all([
     supabase
       .from("restaurant_espaces")
@@ -181,6 +187,16 @@ export default async function ReserverPage({
       .order("releve_le", { ascending: false })
       .limit(1)
       .maybeSingle(),
+    // La carte, seulement si le restaurateur l'a publiée. Cette page est
+    // servie avec la clé de service, qui passe outre les règles d'accès :
+    // c'est donc ici, dans le code, que se fait la vérification.
+    restaurant.carte_publique
+      ? supabase
+          .from("restaurant_menu_items")
+          .select("*")
+          .eq("restaurant_id", restaurant.id)
+          .eq("actif", true)
+      : Promise.resolve({ data: [] }),
   ]);
 
   const espaces = (espacesResult.data ?? []) as Espace[];
@@ -194,6 +210,8 @@ export default async function ReserverPage({
 
   const experiences = (experiencesResult.data ?? []) as Experience[];
   const placesPrises = (placesResult.data ?? []) as PlaceReservee[];
+
+  const carte = (carteResult.data ?? []) as MenuItem[];
 
   const toutesPhotos = (photosResult.data ?? []) as RestaurantPhoto[];
   const photosEtablissement = toutesPhotos.filter((photo) => !photo.espace_id);
@@ -436,6 +454,8 @@ export default async function ReserverPage({
             )
           }
         />
+
+        <Carte items={carte} />
       </main>
 
       <footer className="border-t border-zinc-200/70 px-6 py-6">

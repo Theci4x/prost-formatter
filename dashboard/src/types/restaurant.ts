@@ -27,5 +27,11 @@ export type Restaurant = {
   description: string | null;
   horaires: Horaires;
   proprietaire_id: string;
+  // Adresse publique de la page de réservation. NULL tant que le
+  // restaurateur ne l'a pas ouverte.
+  slug_reservation: string | null;
+  // La carte est-elle montrée au client sur cette page ? Faux par défaut :
+  // publier est un choix, pas une conséquence de la saisie.
+  carte_publique: boolean;
   created_at: string;
 };
