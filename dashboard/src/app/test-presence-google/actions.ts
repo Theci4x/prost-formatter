@@ -1,6 +1,5 @@
 "use server";
 
-import Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@/lib/supabase/server";
 import { searchPlace, getPlaceDetails } from "@/lib/google/places";
 import { checkWebsite } from "@/lib/audit/website";
@@ -11,12 +10,17 @@ import {
   scoreGlobal,
   scoreLabel,
 } from "@/lib/audit/scoring";
+import {
+  actionsPrioritaires,
+  type ActionPrioritaire,
+} from "@/lib/audit/actions";
 
 export type AuditResult = {
   score: number;
   label: "excellent" | "bon" | "moyen" | "critique";
   pillars: { localSeo: number; eReputation: number; geo: number };
-  summary: string;
+  /** Les gestes à faire, du plus lourd au plus léger. */
+  actions: ActionPrioritaire[];
 };
 
 export type ProspectFormState = {
@@ -25,28 +29,14 @@ export type ProspectFormState = {
   audit?: AuditResult;
 };
 
-async function generateSummary(signals: unknown): Promise<string> {
-  const client = new Anthropic();
-
-  const response = await client.messages.create({
-    model: "claude-opus-5",
-    max_tokens: 1200,
-    system:
-      "Tu es consultant en visibilité locale pour restaurants. On te donne " +
-      "des données brutes d'audit (scores sur 100 et signaux détaillés). " +
-      "Rédige, en français : un commentaire court sur le score global, puis " +
-      "3 à 5 recommandations concrètes et priorisées. Sois direct, concis " +
-      "et actionnable, sans jargon.",
-    messages: [
-      { role: "user", content: JSON.stringify(signals) },
-    ],
-  });
-
-  const textBlock = response.content.find(
-    (block): block is Anthropic.TextBlock => block.type === "text",
-  );
-  return textBlock?.text ?? "";
-}
+/*
+ * Ici se trouvait une synthèse rédigée par Claude à partir des mêmes
+ * signaux. Elle a été retirée : un paragraphe libre disait moins que la
+ * liste d'actions qui le remplace, coûtait un appel par prospect, et
+ * n'était écrit qu'en français sur une page servie en trois langues. Les
+ * actions, elles, se calculent sans réseau — l'audit tourne donc même sans
+ * clé Anthropic.
+ */
 
 async function runAudit(
   restaurantName: string,
@@ -88,14 +78,7 @@ async function runAudit(
       scores: { localSeo, eReputation, geo, global },
     };
 
-    // La synthèse Claude est un plus : si elle échoue, on garde quand même
-    // les scores calculés plutôt que de perdre tout l'audit.
-    let summary = "";
-    try {
-      summary = await generateSummary(signals);
-    } catch (err) {
-      console.error("[generateSummary]", err);
-    }
+    const actions = actionsPrioritaires(details, website);
 
     await supabase.from("visibility_audits").insert({
       prospect_id: prospectId,
@@ -106,15 +89,17 @@ async function runAudit(
       e_reputation_score: eReputation,
       geo_score: geo,
       global_score: global,
-      summary,
-      raw_signals: signals,
+      // Les actions dorment avec les signaux : un audit qu'on relit six mois
+      // plus tard doit dire ce qu'on avait conseillé, pas seulement ce qu'on
+      // avait mesuré.
+      raw_signals: { ...signals, actions },
     });
 
     return {
       score: global,
       label: scoreLabel(global),
       pillars: { localSeo, eReputation, geo },
-      summary,
+      actions,
     };
   } catch (err) {
     // L'audit est un bonus : s'il échoue (clé API manquante, service

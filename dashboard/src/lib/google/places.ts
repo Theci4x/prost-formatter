@@ -1,7 +1,12 @@
 // Google Places API (New) — nécessite une clé API avec "Places API (New)"
 // activée et la facturation Google Cloud configurée (pas d'OAuth, pas de
 // vérification à attendre, contrairement à l'API Business Profile).
-const PLACES_BASE_URL = "https://places.googleapis.com/v1";
+// L'adresse est surchargeable pour les tests : sans cela, l'audit de
+// visibilité ne peut être vérifié de bout en bout qu'en appelant Google
+// pour de vrai, donc en payant, donc jamais. La variable n'est définie que
+// sur la machine de test ; absente, on parle à Google.
+const PLACES_BASE_URL =
+  process.env.GOOGLE_PLACES_BASE_URL ?? "https://places.googleapis.com/v1";
 
 export type PlaceSearchResult = {
   id: string;
