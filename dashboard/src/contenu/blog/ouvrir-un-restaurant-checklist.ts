@@ -73,7 +73,7 @@ L'extraction. Sans conduit jusqu'en toiture, pas de cuisine chaude — et ça ne
 ### Avant de dessiner les travaux
 
 - **Étude d'impact des nuisances sonores** si vous comptez diffuser de la musique amplifiée à niveau élevé, de façon habituelle.
-- **Autorisation de travaux ERP**, qui vaut aussi pour l'accessibilité et la sécurité incendie. Délai d'instruction à anticiper.
+- **Autorisation de travaux ERP**, qui vaut aussi pour l'accessibilité et la sécurité incendie. Délai d'instruction à anticiper — [et votre catégorie ne dépend pas du nombre de chaises](/blog/erp-restaurant-categorie-commission-securite).
 - **Déclaration préalable** ou permis de construire selon l'ampleur, et pour toute modification de façade.
 
 ### Avant le premier coup de marteau

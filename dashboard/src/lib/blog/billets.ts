@@ -10,6 +10,7 @@ import { billet as menuOuCarte } from "@/contenu/blog/menu-ou-carte";
 import { billet as livraison } from "@/contenu/blog/livraison-plateformes";
 import { billet as noShow } from "@/contenu/blog/no-show";
 import { billet as avisGoogle } from "@/contenu/blog/avis-google";
+import { billet as erp } from "@/contenu/blog/erp-commission-securite";
 
 /**
  * Les billets, importés un par un plutôt que lus sur le disque.
@@ -29,6 +30,7 @@ const TOUS: Billet[] = [
   livraison,
   noShow,
   avisGoogle,
+  erp,
 ];
 
 /** Du plus récent au plus ancien : c'est l'ordre d'un blog. */
