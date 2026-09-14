@@ -932,6 +932,15 @@ export default async function Home() {
             color: "var(--ink-soft)",
           }}
         >
+          {/* Le journal en tête du pied de page : c'est la porte d'entrée
+              de ceux qui arrivent par une recherche, et la seule page du
+              site qui leur parle avant qu'ils sachent ce qu'est Klarr. */}
+          <Link href="/blog" style={{ color: "inherit" }}>
+            Le journal
+          </Link>
+          <Link href="/aide" style={{ color: "inherit" }}>
+            Aide
+          </Link>
           <Link href="/mentions-legales" style={{ color: "inherit" }}>
             Mentions légales
           </Link>

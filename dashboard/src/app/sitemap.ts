@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { createServiceClient } from "@/lib/supabase/service";
 import { siteUrl } from "@/lib/site-url";
 import { tousLesArticles } from "@/lib/aide/articles";
+import { tousLesBillets } from "@/lib/blog/billets";
 
 // Sans cette ligne, le plan du site est figé au moment du déploiement : une
 // page de réservation ouverte après coup n'y entrerait jamais.
@@ -14,6 +15,7 @@ const PAGES_FIXES = [
   { chemin: "/confidentialite", priorite: 0.3 },
   { chemin: "/suppression-donnees", priorite: 0.3 },
   { chemin: "/aide", priorite: 0.6 },
+  { chemin: "/blog", priorite: 0.8 },
 ];
 
 /**
@@ -35,6 +37,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: `${site}/aide/${article.slug}`,
       lastModified: new Date(),
       priority: 0.5,
+    })),
+    // Le journal vise des recherches qu'on ne fait qu'une fois dans sa vie
+    // (« diagnostic amiante avant travaux restaurant ») : sa date de mise à
+    // jour est celle du texte, pas celle du déploiement.
+    ...tousLesBillets().map((billet) => ({
+      url: `${site}/blog/${billet.slug}`,
+      lastModified: new Date(`${billet.misAJourLe}T12:00:00`),
+      priority: 0.7,
     })),
   ];
 
