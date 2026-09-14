@@ -86,7 +86,7 @@ L'extraction. Sans conduit jusqu'en toiture, pas de cuisine chaude — et ça ne
 
 - **Déclaration sanitaire** à la DDPP (Cerfa 13984), un mois avant.
 - **Formation HACCP** : au moins une personne formée à l'hygiène alimentaire dans l'établissement.
-- **Permis d'exploitation** et **licence** si vous servez de l'alcool, à déclarer en mairie.
+- **Permis d'exploitation** et **licence** si vous servez de l'alcool, à déclarer en mairie — [et la licence IV n'est pas celle qu'il vous faut](/blog/permis-exploitation-licence-restaurant).
 - **SACEM et SPRE** si vous diffusez de la musique.
 - **Autorisation d'occupation du domaine public** pour une terrasse.
 - **Passage de la commission de sécurité** selon votre catégorie d'ERP.

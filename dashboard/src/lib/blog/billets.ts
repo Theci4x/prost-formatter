@@ -5,6 +5,7 @@ import { billet as avantTravaux } from "@/contenu/blog/avant-travaux-diagnostics
 import { billet as chantier } from "@/contenu/blog/chantier-obligations-employeur";
 import { billet as declarationSanitaire } from "@/contenu/blog/declaration-sanitaire-ddpp";
 import { billet as impactSonore } from "@/contenu/blog/etude-impact-sonore";
+import { billet as permisLicence } from "@/contenu/blog/permis-exploitation-licence";
 
 /**
  * Les billets, importés un par un plutôt que lus sur le disque.
@@ -19,6 +20,7 @@ const TOUS: Billet[] = [
   chantier,
   declarationSanitaire,
   impactSonore,
+  permisLicence,
 ];
 
 /** Du plus récent au plus ancien : c'est l'ordre d'un blog. */
