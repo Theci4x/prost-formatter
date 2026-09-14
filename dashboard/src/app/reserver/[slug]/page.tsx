@@ -22,6 +22,7 @@ import { Carte } from "@/components/menu/Carte";
 import { cartePubliee } from "@/lib/menu/publication";
 import { DonneesStructurees } from "@/components/seo/DonneesStructurees";
 import { restaurantSchema } from "@/lib/seo/donnees-structurees";
+import { reseauxPublics } from "@/lib/seo/reseaux";
 import { siteUrl } from "@/lib/site-url";
 
 type Params = { slug: string };
@@ -34,7 +35,7 @@ async function chargerRestaurant(slug: string) {
     // Page publique : on ne lit que ce qui doit s'y afficher. Et surtout
     // rien de récent — une colonne ajoutée par une migration pas encore
     // passée ferait échouer toute la requête, donc toute la page.
-    .select("id, nom, adresse, description, logo_url, mentions_legales")
+    .select("id, nom, adresse, description, logo_url, mentions_legales, site_web")
     .eq("slug_reservation", slug)
     .maybeSingle();
 
@@ -51,6 +52,7 @@ async function chargerRestaurant(slug: string) {
     description: string | null;
     logo_url: string | null;
     mentions_legales: string | null;
+    site_web: string | null;
   } | null;
 }
 
@@ -186,6 +188,7 @@ export default async function ReserverPage({
     placesResult,
     reputationResult,
     carteResult,
+    reseaux,
   ] = await Promise.all([
     supabase
       .from("restaurant_espaces")
@@ -243,6 +246,9 @@ export default async function ReserverPage({
     // c'est donc ici, dans le code, que se fait la vérification. Et jamais
     // au prix de la page : sans carte lisible, on affiche la page sans elle.
     cartePubliee(supabase, restaurant.id),
+    // Les comptes du restaurant, pour le « sameAs » du balisage. Lecture
+    // sans jetons et sans exception : c'est du bonus, jamais du contenu.
+    reseauxPublics(supabase, restaurant.id, restaurant.site_web),
   ]);
 
   const espaces = (espacesResult.data ?? []) as Espace[];
@@ -336,6 +342,7 @@ export default async function ReserverPage({
             urlCarte: carteResult.publiee ? `${siteUrl()}/carte/${slug}` : null,
             note: reputation?.note ? Number(reputation.note) : null,
             nombreAvis: reputation?.nombre_avis ?? null,
+            reseaux,
           })}
         />
         {/* Les photos des salles ne s'affichent plus que sous les

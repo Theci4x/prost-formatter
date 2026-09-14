@@ -93,6 +93,7 @@ export function restaurantSchema({
   urlCarte,
   note,
   nombreAvis,
+  reseaux = [],
 }: {
   etablissement: Etablissement;
   services: Service[];
@@ -102,6 +103,8 @@ export function restaurantSchema({
   urlCarte?: string | null;
   note?: number | null;
   nombreAvis?: number | null;
+  /** Site, page Facebook, comptes Instagram et TikTok du restaurant. */
+  reseaux?: string[];
 }): Record<string, unknown> {
   const horaires = horairesSchema(services);
   const prix = fourchettePrix(carte);
@@ -154,6 +157,11 @@ export function restaurantSchema({
     };
   }
   if (urlCarte && carteVisible(carte).length > 0) schema.hasMenu = urlCarte;
+  // « sameAs » relie cette page aux comptes du restaurant : sans lui, Google
+  // et les moteurs de réponse traitent la page de réservation, la page
+  // Facebook et le compte Instagram comme trois établissements distincts, et
+  // la réputation accumulée d'un côté ne profite pas à l'autre.
+  if (reseaux.length > 0) schema.sameAs = reseaux;
 
   return schema;
 }
