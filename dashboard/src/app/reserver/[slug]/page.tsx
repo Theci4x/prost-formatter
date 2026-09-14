@@ -423,22 +423,19 @@ export default async function ReserverPage({
                       Ici la salle EST le sujet : le client la choisit, et
                       il a besoin de la voir. */}
                   {privatisations.length > 0 && (
-                    <div className="flex flex-col gap-3 border-t border-zinc-100 pt-4">
-                      <div>
-                        <p className="font-medium text-zinc-900">
-                          Privatiser un espace
-                        </p>
-                        <p className="mt-1 text-sm text-zinc-500">
-                          L&apos;espace est à vous seuls pendant tout le
-                          service.
-                        </p>
-                      </div>
+                    <div className="rounded-xl border border-zinc-200 bg-zinc-50/70 p-4">
+                      <p className="font-medium text-zinc-900">
+                        Privatiser un espace
+                      </p>
+                      <p className="mt-1 text-sm text-zinc-500">
+                        L&apos;espace est à vous seuls pendant tout le service.
+                      </p>
 
-                      <ul className="flex flex-col gap-3">
+                      <ul className="mt-3 flex flex-col gap-3">
                         {privatisations.map((dispo) => (
                           <li
                             key={dispo.espace.id}
-                            className="rounded-xl border border-zinc-200 p-4"
+                            className="rounded-lg border border-zinc-200 bg-white p-4"
                           >
                             <div className="flex flex-wrap items-baseline justify-between gap-2">
                               <span className="font-medium text-zinc-900">
