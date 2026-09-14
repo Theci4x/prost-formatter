@@ -1,4 +1,5 @@
 import type { Creneau, Disponibilite } from "@/lib/reservations/disponibilite";
+import type { Espace } from "@/types/reservation";
 
 /**
  * Ce qu'on propose au client, et dans quel ordre.
@@ -128,4 +129,31 @@ export function propositions(creneaux: Creneau[]): Proposition[] {
       raison: table ? null : raisonDuRefus(creneau),
     };
   });
+}
+
+export type OffrePrivatisation = { minimum: number; espaces: Espace[] };
+
+/**
+ * Ce que l'établissement privatise, indépendamment de la date et du nombre
+ * de convives cherchés.
+ *
+ * Un couple qui réserve pour deux ne verra jamais la privatisation : elle
+ * n'est proposable qu'à partir d'un certain nombre. Il repart donc sans
+ * savoir que la salle du bas se loue — et rappellera six mois plus tard,
+ * pour l'anniversaire de sa mère, un concurrent qui, lui, l'affiche.
+ * Cette fonction sert à le lui dire, sans rien lui demander.
+ */
+export function offrePrivatisation(espaces: Espace[]): OffrePrivatisation | null {
+  const privatisables = espaces.filter(
+    (espace) => espace.privatisation_minimum !== null,
+  );
+  if (privatisables.length === 0) return null;
+  return {
+    // Le plus petit minimum de toutes les salles : c'est le seuil à partir
+    // duquel quelque chose devient possible, pas la moyenne de rien.
+    minimum: Math.min(
+      ...privatisables.map((espace) => espace.privatisation_minimum as number),
+    ),
+    espaces: privatisables,
+  };
 }

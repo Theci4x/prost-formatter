@@ -12,7 +12,7 @@ import {
   creneauxDuJour,
   type Reservation,
 } from "@/lib/reservations/disponibilite";
-import { propositions } from "@/lib/reservations/choix";
+import { offrePrivatisation, propositions } from "@/lib/reservations/choix";
 import Image from "next/image";
 import { DemandeForm } from "@/components/reservations/DemandeForm";
 import { formatCreneau, type Espace, type Service } from "@/types/reservation";
@@ -25,7 +25,7 @@ import { restaurantSchema } from "@/lib/seo/donnees-structurees";
 import { siteUrl } from "@/lib/site-url";
 
 type Params = { slug: string };
-type Query = { date?: string; couverts?: string };
+type Query = { date?: string; couverts?: string; espace?: string };
 
 async function chargerRestaurant(slug: string) {
   const supabase = createServiceClient();
@@ -100,6 +100,40 @@ export async function generateMetadata({
       ...(image ? { images: [image] } : {}),
     },
   };
+}
+
+/**
+ * Les photos d'un espace, en bande défilante horizontalement : sur un
+ * téléphone, une colonne de grandes images repousse le bouton de
+ * réservation hors de l'écran.
+ */
+function Photos({
+  photos,
+  espaceNom,
+  restaurantNom,
+}: {
+  photos: RestaurantPhoto[];
+  espaceNom: string;
+  restaurantNom: string;
+}) {
+  if (photos.length === 0) return null;
+  return (
+    <ul className="-mx-1 mt-3 flex gap-2 overflow-x-auto px-1 pb-1">
+      {photos.map((photo) => (
+        <li key={photo.id} className="shrink-0">
+          <div className="relative h-28 w-40 overflow-hidden rounded-lg border border-zinc-200">
+            <Image
+              src={photo.url}
+              alt={`${espaceNom} — ${restaurantNom}`}
+              fill
+              sizes="160px"
+              className="object-cover"
+            />
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
 }
 
 function dateDuJour(): string {
@@ -228,6 +262,15 @@ export default async function ReserverPage({
     photosParEspace.set(photo.espace_id, liste);
   }
 
+  // Ce que l'établissement privatise, quel que soit le jour cherché : c'est
+  // ce qui peuple le menu déroulant, et donc ce qui fait qu'un client venu
+  // réserver à deux apprend que la salle du bas se loue.
+  const offre = offrePrivatisation(espaces);
+  // L'espace demandé dans le menu, vérifié contre la liste réelle : un
+  // identifiant bricolé dans l'URL ne doit rien ouvrir.
+  const espaceDemande =
+    offre?.espaces.find((espace) => espace.id === query.espace) ?? null;
+
   const creneaux = creneauxDuJour({
     date,
     couverts,
@@ -343,6 +386,29 @@ export default async function ReserverPage({
               className="w-28 rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-brand-navy"
             />
           </label>
+          {/* La privatisation ne se propose qu'au-delà d'un certain nombre de
+              convives : un couple qui réserve pour deux ne la verrait jamais,
+              et repartirait sans savoir que la salle se loue. Ici elle est
+              écrite avant même la recherche, sans rien demander — la
+              réservation ordinaire reste le choix par défaut. */}
+          {offre && (
+            <label className="flex flex-col gap-1 text-sm font-medium text-zinc-700">
+              Je souhaite
+              <select
+                name="espace"
+                defaultValue={espaceDemande?.id ?? ""}
+                className="rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-brand-navy"
+              >
+                <option value="">Réserver une table</option>
+                {offre.espaces.map((espace) => (
+                  <option key={espace.id} value={espace.id}>
+                    Privatiser {espace.nom} — jusqu&apos;à {espace.capacite}{" "}
+                    couverts
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
           <button
             type="submit"
             className="rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover"
@@ -363,8 +429,19 @@ export default async function ReserverPage({
               Essaie une autre date.
             </p>
           ) : (
-            propositions(creneaux).map(
-              ({ creneau, table, privatisations, placesMax, raison }) => (
+            propositions(creneaux).map((proposition) => {
+              const { creneau, table, privatisations, placesMax, raison } =
+                proposition;
+              // Une salle demandée dans le menu : c'est elle qu'on montre,
+              // libre ou non. Lui répondre par le catalogue reviendrait à
+              // ignorer ce qu'il vient de choisir.
+              const demandee = espaceDemande
+                ? (creneau.espaces.find(
+                    (dispo) => dispo.espace.id === espaceDemande.id,
+                  ) ?? null)
+                : null;
+
+              return (
                 <div
                   key={creneau.service.id}
                   className="flex flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm"
@@ -381,6 +458,57 @@ export default async function ReserverPage({
                     </span>
                   </div>
 
+                  {espaceDemande ? (
+                    <div className="rounded-xl border border-zinc-200 bg-zinc-50/70 p-4">
+                      <p className="font-medium text-zinc-900">
+                        Privatiser {espaceDemande.nom}
+                      </p>
+                      <p className="mt-1 text-sm text-zinc-500">
+                        {espaceDemande.description ??
+                          "L'espace est à vous seuls pendant tout le service."}
+                      </p>
+                      <Photos
+                        photos={photosParEspace.get(espaceDemande.id) ?? []}
+                        espaceNom={espaceDemande.nom}
+                        restaurantNom={restaurant.nom}
+                      />
+                      {demandee?.peutEtrePrivatise ? (
+                        <DemandeForm
+                          slug={slug}
+                          espaceId={espaceDemande.id}
+                          serviceId={creneau.service.id}
+                          date={date}
+                          couverts={couverts}
+                          type="privatisation"
+                          libelle={`Privatiser ${espaceDemande.nom}`}
+                          restaurantNom={restaurant.nom}
+                          principal
+                        />
+                      ) : (
+                        <div className="mt-3 flex flex-col gap-1">
+                          <p className="text-sm text-zinc-500">
+                            {demandee?.raison ??
+                              creneau.raison ??
+                              "Cet espace ne se privatise pas sur ce service."}
+                          </p>
+                          {/* Le client est venu pour deux et découvre un
+                              minimum : lui faire retaper le nombre serait
+                              le perdre à la dernière marche. */}
+                          {espaceDemande.privatisation_minimum !== null &&
+                            couverts < espaceDemande.privatisation_minimum && (
+                              <a
+                                href={`?date=${date}&couverts=${espaceDemande.privatisation_minimum}&espace=${espaceDemande.id}`}
+                                className="w-fit text-sm font-medium text-brand-orange hover:underline"
+                              >
+                                Voir pour{" "}
+                                {espaceDemande.privatisation_minimum} convives
+                              </a>
+                            )}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <>
                   {/* Réserver une table : l'action ordinaire, celle que
                       quatre-vingt-dix-neuf clients sur cent viennent
                       faire. Aucune salle à choisir — le client n'a aucun
@@ -451,30 +579,13 @@ export default async function ReserverPage({
                               </p>
                             )}
 
-                            {/* Les photos défilent horizontalement plutôt
-                                que de s'empiler : sur un téléphone, une
-                                colonne de grandes images repousse le
-                                bouton hors de l'écran. */}
-                            {(photosParEspace.get(dispo.espace.id) ?? [])
-                              .length > 0 && (
-                              <ul className="-mx-1 mt-3 flex gap-2 overflow-x-auto px-1 pb-1">
-                                {(
-                                  photosParEspace.get(dispo.espace.id) ?? []
-                                ).map((photo) => (
-                                  <li key={photo.id} className="shrink-0">
-                                    <div className="relative h-28 w-40 overflow-hidden rounded-lg border border-zinc-200">
-                                      <Image
-                                        src={photo.url}
-                                        alt={`${dispo.espace.nom} — ${restaurant.nom}`}
-                                        fill
-                                        sizes="160px"
-                                        className="object-cover"
-                                      />
-                                    </div>
-                                  </li>
-                                ))}
-                              </ul>
-                            )}
+                            <Photos
+                              photos={
+                                photosParEspace.get(dispo.espace.id) ?? []
+                              }
+                              espaceNom={dispo.espace.nom}
+                              restaurantNom={restaurant.nom}
+                            />
 
                             <DemandeForm
                               slug={slug}
@@ -491,9 +602,23 @@ export default async function ReserverPage({
                       </ul>
                     </div>
                   )}
+                    </>
+                  )}
                 </div>
-              ),
-            )
+              );
+            })
+          )}
+
+          {/* Le client qui a ouvert le menu peut vouloir en ressortir : sans
+              ce retour, il lui faudrait comprendre que c'est le menu qu'il
+              doit remettre sur « Réserver une table ». */}
+          {espaceDemande && (
+            <a
+              href={`?date=${date}&couverts=${couverts}`}
+              className="w-fit text-sm font-medium text-brand-orange hover:underline"
+            >
+              Ou réserver simplement une table
+            </a>
           )}
         </section>
 
