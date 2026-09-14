@@ -7,10 +7,20 @@ import {
   disponibiliteEspace,
   fermetureApplicable,
   motifFermeture,
+  occupeLaJauge,
   serviceOuvertCeJour,
   type Reservation,
 } from "@/lib/reservations/disponibilite";
 import { chargerFermetures } from "@/lib/reservations/fermetures";
+import { PlanService } from "@/components/reservations/PlanService";
+import { PlacerReservation } from "@/components/reservations/PlacerReservation";
+import {
+  reservationsNonPlacees,
+  tablesDeLEspace,
+  tablesProposees,
+  type ReservationPlacable,
+} from "@/lib/reservations/plan";
+import type { TableSalle } from "@/types/plan";
 import {
   formatCreneau,
   formatHeure,
@@ -25,6 +35,7 @@ type Ligne = Reservation & {
   occasion: string | null;
   note_interne: string | null;
   origine: "client" | "restaurateur";
+  table_id: string | null;
 };
 
 function decalerJour(date: string, jours: number): string {
@@ -62,6 +73,7 @@ export default async function ServicePage({
     espacesResult,
     servicesResult,
     reservationsResult,
+    tablesResult,
     fermetures,
   ] = await Promise.all([
       supabase.from("restaurants").select("*").eq("id", id).maybeSingle(),
@@ -80,6 +92,7 @@ export default async function ServicePage({
         .select("*")
         .eq("restaurant_id", id)
         .eq("date_reservation", jour),
+      supabase.from("restaurant_tables").select("*").eq("restaurant_id", id),
       chargerFermetures(supabase, id, jour),
     ]);
 
@@ -89,7 +102,9 @@ export default async function ServicePage({
   const espaces = (espacesResult.data ?? []) as Espace[];
   const services = (servicesResult.data ?? []) as Service[];
   const lignes = (reservationsResult.data ?? []) as Ligne[];
+  const tables = (tablesResult.data ?? []) as TableSalle[];
 
+  const maintenant = new Date();
   const confirmees = lignes.filter((l) => l.statut === "confirmee");
   const enAttente = lignes.filter(
     (l) => l.statut === "demande" || l.statut === "expiree",
@@ -209,13 +224,26 @@ export default async function ServicePage({
           Aucun service ce jour-là.
         </p>
       ) : (
-        servicesDuJour.map((service) => (
+        servicesDuJour.map((service) => {
+          // Ce qui pèse réellement sur ce service : c'est là-dessus qu'on
+          // juge si une table est déjà prise.
+          const actifs = lignes.filter(
+            (l) => l.service_id === service.id && occupeLaJauge(l, maintenant),
+          ) as ReservationPlacable[];
+          const aPlacer = reservationsNonPlacees(actifs);
+
+          return (
           <section key={service.id} className="flex flex-col gap-4">
             <h2 className="text-base font-semibold text-zinc-900">
               {service.nom}{" "}
               <span className="font-normal text-zinc-500">
                 {formatCreneau(service.heure_debut, service.heure_fin)}
               </span>
+              {tables.length > 0 && aPlacer.length > 0 && (
+                <span className="ml-2 rounded-full bg-brand-orange-soft px-2 py-0.5 text-xs font-medium text-brand-navy">
+                  {aPlacer.length} à placer
+                </span>
+              )}
             </h2>
 
             <div className="grid gap-4 lg:grid-cols-2">
@@ -227,12 +255,13 @@ export default async function ServicePage({
                   couverts: 1,
                   reservations: lignes,
                   fermetures,
-                  maintenant: new Date(),
+                  maintenant,
                 });
                 const duService = confirmees.filter(
                   (l) =>
                     l.espace_id === espace.id && l.service_id === service.id,
                 );
+                const tablesSalle = tablesDeLEspace(tables, espace.id);
 
                 return (
                   <div
@@ -260,6 +289,14 @@ export default async function ServicePage({
                         }}
                       />
                     </span>
+
+                    {tablesSalle.length > 0 && (
+                      <PlanService
+                        tables={tablesSalle}
+                        espaceId={espace.id}
+                        reservations={actifs}
+                      />
+                    )}
 
                     {duService.length === 0 ? (
                       <p className="text-sm text-zinc-400">
@@ -289,7 +326,25 @@ export default async function ServicePage({
                                 </span>
                               )}
                             </span>
-                            <span className="flex items-baseline gap-4 text-sm">
+                            <span className="flex flex-wrap items-baseline justify-end gap-x-4 gap-y-1 text-sm">
+                              {tablesSalle.length > 0 &&
+                                ligne.type !== "privatisation" && (
+                                  <PlacerReservation
+                                    restaurantId={id}
+                                    reservationId={ligne.id}
+                                    couverts={ligne.couverts}
+                                    tableActuelle={
+                                      tablesSalle.find(
+                                        (table) => table.id === ligne.table_id,
+                                      ) ?? null
+                                    }
+                                    tables={tablesProposees({
+                                      tables: tablesSalle,
+                                      reservation: ligne as ReservationPlacable,
+                                      occupees: actifs,
+                                    })}
+                                  />
+                                )}
                               {ligne.client_telephone && (
                                 <a
                                   href={`tel:${ligne.client_telephone}`}
@@ -316,7 +371,8 @@ export default async function ServicePage({
               })}
             </div>
           </section>
-        ))
+          );
+        })
       )}
 
       {servicesDuJour.length > 0 && (
