@@ -43,7 +43,7 @@ export default function MentionsLegalesPage() {
           </li>
           <li>
             <strong>Contact</strong> —{" "}
-            <a href="mailto:contact@klarr.biz">contact@klarr.biz</a>
+            <a href="mailto:contact@klarr.net">contact@klarr.net</a>
           </li>
         </ul>
       </LegalSection>

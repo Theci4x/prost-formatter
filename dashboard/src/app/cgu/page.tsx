@@ -168,8 +168,8 @@ export default function CguPage() {
       <LegalSection n="11" title="Contact">
         <p>
           Pour toute question relative à ces conditions :{" "}
-          <a href="mailto:contact@klarr.biz">
-            contact@klarr.biz
+          <a href="mailto:contact@klarr.net">
+            contact@klarr.net
           </a>
           .
         </p>

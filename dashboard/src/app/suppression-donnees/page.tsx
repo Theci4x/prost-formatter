@@ -75,7 +75,7 @@ export default function SuppressionDonneesPage() {
         <p>
           Pour la suppression complète de votre compte et de toutes les
           données associées, écrivez à{" "}
-          <a href="mailto:contact@klarr.biz">contact@klarr.biz</a> depuis
+          <a href="mailto:contact@klarr.net">contact@klarr.net</a> depuis
           l&apos;adresse e-mail de votre compte, avec pour objet «&nbsp;
           Suppression de mon compte&nbsp;». Nous procédons à la suppression
           sous trente jours au plus et vous confirmons par e-mail une fois
@@ -97,7 +97,7 @@ export default function SuppressionDonneesPage() {
         </p>
         <p>
           Une question sur vos données ?{" "}
-          <a href="mailto:contact@klarr.biz">contact@klarr.biz</a>.
+          <a href="mailto:contact@klarr.net">contact@klarr.net</a>.
         </p>
       </LegalSection>
     </LegalLayout>

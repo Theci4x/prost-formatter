@@ -958,8 +958,8 @@ export default async function Home() {
           <Link href="/suppression-donnees" style={{ color: "inherit" }}>
             Suppression des données
           </Link>
-          <a href="mailto:contact@klarr.biz" style={{ color: "inherit" }}>
-            contact@klarr.biz
+          <a href="mailto:contact@klarr.net" style={{ color: "inherit" }}>
+            contact@klarr.net
           </a>
           <span>© 2026 Klarr — édité par EDIREF.</span>
         </div>

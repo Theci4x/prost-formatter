@@ -27,7 +27,7 @@ export default function ConfidentialitePage() {
           503 428 369, dont le siège social est situé 10 rue de Penthièvre,
           75008 Paris. Pour toute question relative à vos données
           personnelles, contactez{" "}
-          <a href="mailto:contact@klarr.biz">contact@klarr.biz</a>.
+          <a href="mailto:contact@klarr.net">contact@klarr.net</a>.
         </p>
       </LegalSection>
 
@@ -227,8 +227,8 @@ export default function ConfidentialitePage() {
       <LegalSection n="11" title="Contact et réclamation">
         <p>
           Pour toute question sur cette politique ou vos données :{" "}
-          <a href="mailto:contact@klarr.biz">
-            contact@klarr.biz
+          <a href="mailto:contact@klarr.net">
+            contact@klarr.net
           </a>
           .
         </p>
