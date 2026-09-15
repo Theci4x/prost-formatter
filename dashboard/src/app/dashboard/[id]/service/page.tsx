@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { SaisieReservation } from "@/components/reservations/SaisieReservation";
 import { DecisionDemande } from "@/components/reservations/DecisionDemande";
+import { heureLisible } from "@/lib/site/horaires";
 import {
   disponibiliteEspace,
   fermetureApplicable,
@@ -212,6 +213,8 @@ export default async function ServicePage({
                     {ligne.client_nom}
                   </span>{" "}
                   <span className="text-zinc-600">
+                    {ligne.heure_arrivee &&
+                      ` · ${heureLisible(ligne.heure_arrivee)}`}
                     · {ligne.couverts} couverts
                     {ligne.type === "privatisation" && " · privatisation"}
                   </span>

@@ -73,6 +73,29 @@ function Champs({
         restera rattaché au jour où il commence.
       </p>
 
+      {/* Sans cette durée, une salle de 92 places ne vendrait que 92
+          couverts pour toute la soirée. C'est elle qui fait tourner les
+          tables. */}
+      <label className={label} htmlFor="service-duree">
+        Durée moyenne d&apos;une table (minutes)
+        <input
+          id="service-duree"
+          name="duree_minutes"
+          type="number"
+          min={15}
+          max={720}
+          step={15}
+          required
+          defaultValue={valeurs.duree}
+          className={champ}
+        />
+        <span className="text-xs font-normal text-zinc-500">
+          Elle fixe les heures d&apos;arrivée proposées et libère la table
+          pour les suivants. Deux heures le soir, une heure et demie le
+          midi, en général.
+        </span>
+      </label>
+
       <fieldset className="flex flex-col gap-2">
         <legend className="text-sm font-medium text-zinc-700">
           Jours concernés

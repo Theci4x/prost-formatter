@@ -24,6 +24,7 @@ export function DemandeForm({
   slug,
   espaceId,
   serviceId,
+  heure,
   date,
   couverts,
   type,
@@ -34,6 +35,8 @@ export function DemandeForm({
   slug: string;
   espaceId: string;
   serviceId: string;
+  /** L'heure d'arrivée choisie, telle que le moteur l'a proposée. */
+  heure: string;
   date: string;
   couverts: number;
   type: "table" | "privatisation";
@@ -52,7 +55,10 @@ export function DemandeForm({
   // Plusieurs formulaires cohabitent sur la page (deux salles privatisables,
   // deux services) : les identifiants des champs combinent type, salle et
   // service, sans quoi un « label for » désignerait le mauvais champ.
-  const cle = `${type}-${espaceId}-${serviceId}`;
+  // Deux créneaux du même service partagent la salle et le service : sans
+  // l'heure dans la clé, les identifiants de champs se répéteraient d'un
+  // horaire à l'autre sur la même page.
+  const cle = `${type}-${espaceId}-${serviceId}-${heure}`;
 
   if (!ouvert) {
     return (
@@ -75,6 +81,7 @@ export function DemandeForm({
       <input type="hidden" name="slug" value={slug} />
       <input type="hidden" name="espace_id" value={espaceId} />
       <input type="hidden" name="service_id" value={serviceId} />
+      <input type="hidden" name="heure" value={heure} />
       <input type="hidden" name="date" value={date} />
       <input type="hidden" name="couverts" value={couverts} />
       <input type="hidden" name="type" value={type} />

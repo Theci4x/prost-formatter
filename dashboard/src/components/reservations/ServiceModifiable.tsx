@@ -23,6 +23,7 @@ function valeursDe(service: Service): ServiceValeurs {
     // PostgreSQL renvoie « 19:00:00 » ; un champ horaire attend « 19:00 ».
     heureDebut: service.heure_debut.slice(0, 5),
     heureFin: service.heure_fin.slice(0, 5),
+    duree: String(service.duree_minutes),
     delai: String(service.delai_heures),
     jours: service.jours,
   };
@@ -91,6 +92,30 @@ function Champs({
           />
         </label>
       </div>
+
+      {/* La durée décide de tout le reste : c'est elle qui permet de vendre
+          la même place deux ou trois fois dans un service. Un service de
+          17h30 à 2h avec deux heures de table, ce sont dix-sept heures
+          d'arrivée proposées, pas une seule jauge pour la soirée. */}
+      <label className={label} htmlFor={`mod-duree-${service.id}`}>
+        Durée moyenne d&apos;une table (minutes)
+        <input
+          id={`mod-duree-${service.id}`}
+          name="duree_minutes"
+          type="number"
+          min={15}
+          max={720}
+          step={15}
+          required
+          defaultValue={valeurs.duree}
+          className={champ}
+        />
+        <span className="text-xs font-normal text-zinc-500">
+          C&apos;est elle qui fixe les heures d&apos;arrivée proposées, et
+          qui libère la table pour les suivants. Deux heures le soir, une
+          heure et demie le midi, en général.
+        </span>
+      </label>
 
       <fieldset className="flex flex-col gap-2">
         <legend className="text-sm font-medium text-zinc-700">

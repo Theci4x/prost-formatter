@@ -16,6 +16,7 @@ import { montantDebitable } from "@/lib/reservations/caution";
 import { debiterCaution } from "@/lib/stripe/caution";
 import {
   disponibiliteEspace,
+  heuresDArrivee,
   type Reservation,
 } from "@/lib/reservations/disponibilite";
 import {
@@ -294,6 +295,7 @@ export async function addService(
     nom: texte(formData.get("nom")),
     heureDebut: texte(formData.get("heure_debut")),
     heureFin: texte(formData.get("heure_fin")),
+    duree: texte(formData.get("duree_minutes")),
     delai: texte(formData.get("delai_heures")),
     jours: formData
       .getAll("jours")
@@ -304,6 +306,7 @@ export async function addService(
   const echec = (error: string): ServiceState => ({ error, rendu, valeurs });
 
   const delai = Number(valeurs.delai);
+  const duree = Number(valeurs.duree);
 
   if (!valeurs.nom) return echec("Donne un nom à ce service (« Déjeuner »…).");
   if (valeurs.jours.length === 0) {
@@ -321,6 +324,11 @@ export async function addService(
   if (!Number.isInteger(delai) || delai < 0) {
     return echec("Le délai de prévenance doit être un nombre d'heures.");
   }
+  // Les bornes sont celles de la base : moins d'un quart d'heure ne veut
+  // rien dire, plus de douze heures non plus.
+  if (!Number.isInteger(duree) || duree < 15 || duree > 720) {
+    return echec("La durée d'une table doit être comprise entre 15 et 720 minutes.");
+  }
 
   const supabase = await createClient();
   const { error } = await supabase.from("restaurant_services").insert({
@@ -329,6 +337,7 @@ export async function addService(
     jours: valeurs.jours,
     heure_debut: valeurs.heureDebut,
     heure_fin: valeurs.heureFin,
+    duree_minutes: duree,
     delai_heures: delai,
   });
 
@@ -360,6 +369,7 @@ export async function modifierService(
     nom: texte(formData.get("nom")),
     heureDebut: texte(formData.get("heure_debut")),
     heureFin: texte(formData.get("heure_fin")),
+    duree: texte(formData.get("duree_minutes")),
     delai: texte(formData.get("delai_heures")),
     jours: formData
       .getAll("jours")
@@ -374,6 +384,7 @@ export async function modifierService(
   }
 
   const delai = Number(valeurs.delai);
+  const duree = Number(valeurs.duree);
 
   if (!valeurs.nom) return echec("Donne un nom à ce service (« Déjeuner »…).");
   if (valeurs.jours.length === 0) {
@@ -388,6 +399,11 @@ export async function modifierService(
   if (!Number.isInteger(delai) || delai < 0) {
     return echec("Le délai de prévenance doit être un nombre d'heures.");
   }
+  // Les bornes sont celles de la base : moins d'un quart d'heure ne veut
+  // rien dire, plus de douze heures non plus.
+  if (!Number.isInteger(duree) || duree < 15 || duree > 720) {
+    return echec("La durée d'une table doit être comprise entre 15 et 720 minutes.");
+  }
 
   const supabase = await createClient();
   const { error } = await supabase
@@ -397,6 +413,7 @@ export async function modifierService(
       jours: valeurs.jours,
       heure_debut: valeurs.heureDebut,
       heure_fin: valeurs.heureFin,
+      duree_minutes: duree,
       delai_heures: delai,
     })
     .eq("id", serviceId)
@@ -496,6 +513,7 @@ type ReservationComplete = {
   espace_id: string;
   service_id: string | null;
   date_reservation: string;
+  heure_arrivee: string | null;
   couverts: number;
   type: "table" | "privatisation";
   statut: "demande" | "confirmee" | "refusee" | "annulee" | "expiree";
@@ -539,7 +557,7 @@ export async function accepterDemande(
       supabase
         .from("restaurant_reservations")
         .select(
-          "id, espace_id, service_id, date_reservation, couverts, type, statut, option_expire_le",
+          "id, espace_id, service_id, date_reservation, heure_arrivee, couverts, type, statut, option_expire_le",
         )
         .eq("restaurant_id", reservation.restaurant_id)
         .eq("date_reservation", reservation.date_reservation),
@@ -565,6 +583,10 @@ export async function accepterDemande(
     espace,
     service,
     date: reservation.date_reservation,
+    // La demande a son heure : c'est celle-là qu'on juge, pas l'ouverture
+    // du service. Sans ça, accepter une table de 23h la confronterait aux
+    // tables de 19h, qui seront parties depuis longtemps.
+    heure: reservation.heure_arrivee?.slice(0, 5) ?? undefined,
     couverts: reservation.couverts,
     reservations: voisines,
     fermetures,
@@ -702,6 +724,7 @@ export async function ajouterReservation(
   const nom = texte(formData.get("client_nom"));
   const telephone = texte(formData.get("client_telephone"));
   const note = texte(formData.get("note_interne"));
+  const heureDemandee = texte(formData.get("heure")).slice(0, 5);
   const forcer = formData.get("forcer") === "on";
 
   const rendu = prevState.rendu + 1;
@@ -713,6 +736,7 @@ export async function ajouterReservation(
     date,
     couverts: texte(formData.get("couverts")),
     serviceId,
+    heure: heureDemandee,
     espaceId,
     type,
     note,
@@ -748,7 +772,7 @@ export async function ajouterReservation(
       supabase
         .from("restaurant_reservations")
         .select(
-          "id, espace_id, service_id, date_reservation, couverts, type, statut, option_expire_le",
+          "id, espace_id, service_id, date_reservation, heure_arrivee, couverts, type, statut, option_expire_le",
         )
         .eq("restaurant_id", restaurantId)
         .eq("date_reservation", date),
@@ -761,11 +785,19 @@ export async function ajouterReservation(
 
   const reservations = (voisinesResult.data ?? []) as Reservation[];
   const maintenant = new Date();
+  const proposees = heuresDArrivee(service);
+  // Une heure absente ou fantaisiste retombe sur l'ouverture du service :
+  // au téléphone, le restaurateur note souvent l'heure après coup, et lui
+  // refuser la saisie pour si peu serait pénible.
+  const heure = proposees.includes(heureDemandee)
+    ? heureDemandee
+    : proposees[0];
   const dispoDe = (espace: Espace) =>
     disponibiliteEspace({
       espace,
       service,
       date,
+      heure,
       couverts,
       reservations,
       fermetures,
@@ -813,6 +845,7 @@ export async function ajouterReservation(
     espace_id: espace.id,
     service_id: serviceId,
     date_reservation: date,
+    heure_arrivee: heure,
     couverts,
     type,
     statut: "confirmee",

@@ -10,6 +10,8 @@ import { resumeEtablissement } from "@/lib/reservations/resume";
 import { chargerFermetures } from "@/lib/reservations/fermetures";
 import {
   creneauxDuJour,
+  parService,
+  type Creneau,
   type Reservation,
 } from "@/lib/reservations/disponibilite";
 import { offrePrivatisation, propositions } from "@/lib/reservations/choix";
@@ -17,6 +19,7 @@ import Image from "next/image";
 import { DemandeForm } from "@/components/reservations/DemandeForm";
 import { BandePhotos } from "@/components/reservations/BandePhotos";
 import { formatCreneau, type Espace, type Service } from "@/types/reservation";
+import { heureLisible } from "@/lib/site/horaires";
 import { SignatureKlarr } from "@/components/brand/SignatureKlarr";
 import type { RestaurantPhoto } from "@/types/photo";
 import { Carte } from "@/components/menu/Carte";
@@ -27,7 +30,13 @@ import { reseauxPublics } from "@/lib/seo/reseaux";
 import { siteUrl } from "@/lib/site-url";
 
 type Params = { slug: string };
-type Query = { date?: string; couverts?: string; espace?: string };
+type Query = {
+  date?: string;
+  couverts?: string;
+  espace?: string;
+  /** L'heure d'arrivée retenue, « 19:30 ». */
+  heure?: string;
+};
 
 async function chargerRestaurant(slug: string) {
   const supabase = createServiceClient();
@@ -165,7 +174,7 @@ export default async function ReserverPage({
     supabase
       .from("restaurant_reservations")
       .select(
-        "id, espace_id, service_id, date_reservation, couverts, type, statut, option_expire_le",
+        "id, espace_id, service_id, date_reservation, heure_arrivee, couverts, type, statut, option_expire_le",
       )
       .eq("restaurant_id", restaurant.id)
       .eq("date_reservation", date),
@@ -258,6 +267,19 @@ export default async function ReserverPage({
     fermetures,
     maintenant: new Date(),
   });
+
+  // Le moteur raisonne par heure d'arrivée ; la page montre un bloc par
+  // service avec ses heures en dessous. Dix-sept cartes pour une soirée
+  // seraient illisibles.
+  const groupes = parService(creneaux);
+
+  // L'heure retenue pour chaque service : celle de l'URL si elle existe
+  // encore, sinon la première qui a de la place — et à défaut la première
+  // tout court, pour que le motif du refus s'affiche quelque part.
+  const heureChoisie = (heures: Creneau[]): Creneau =>
+    heures.find((creneau) => creneau.heure === query.heure) ??
+    heures.find((creneau) => creneau.ouvert) ??
+    heures[0];
 
   return (
     <div className="flex min-h-screen flex-col bg-[#FAF7F0]">
@@ -419,7 +441,9 @@ export default async function ReserverPage({
               Essaie une autre date.
             </p>
           ) : (
-            propositions(creneaux).map((proposition) => {
+            groupes.map((groupe) => {
+              const retenu = heureChoisie(groupe.heures);
+              const [proposition] = propositions([retenu]);
               const { creneau, table, privatisations, placesMax, raison } =
                 proposition;
               // Une salle demandée dans le menu : c'est elle qu'on montre,
@@ -448,6 +472,48 @@ export default async function ReserverPage({
                     </span>
                   </div>
 
+                  {/* Les heures d'arrivée. Un service n'a plus une jauge
+                      unique : chaque heure a la sienne, et celles qui sont
+                      complètes restent visibles plutôt que de disparaître —
+                      une liste qui se raccourcit sans explication donne
+                      l'impression que le site a bugué. */}
+                  {groupe.heures.length > 1 && (
+                    <div className="flex flex-col gap-2">
+                      <span className="text-sm text-zinc-500">
+                        À quelle heure ?
+                      </span>
+                      <div className="flex flex-wrap gap-2">
+                        {groupe.heures.map((h) => {
+                          const actif = h.heure === retenu.heure;
+                          return h.ouvert ? (
+                            <a
+                              key={h.heure}
+                              href={`?date=${date}&couverts=${couverts}&heure=${h.heure}${
+                                query.espace ? `&espace=${query.espace}` : ""
+                              }`}
+                              aria-current={actif ? "true" : undefined}
+                              className={`rounded-lg border px-3 py-1.5 text-sm transition-colors ${
+                                actif
+                                  ? "border-brand-navy bg-brand-navy text-white"
+                                  : "border-zinc-200 text-zinc-700 hover:border-brand-navy"
+                              }`}
+                            >
+                              {heureLisible(h.heure)}
+                            </a>
+                          ) : (
+                            <span
+                              key={h.heure}
+                              title="Complet à cette heure"
+                              className="rounded-lg border border-zinc-100 px-3 py-1.5 text-sm text-zinc-300 line-through"
+                            >
+                              {heureLisible(h.heure)}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
                   {espaceDemande ? (
                     <div className="rounded-xl border border-zinc-200 bg-zinc-50/70 p-4">
                       <p className="font-medium text-zinc-900">
@@ -467,6 +533,7 @@ export default async function ReserverPage({
                           slug={slug}
                           espaceId={espaceDemande.id}
                           serviceId={creneau.service.id}
+                        heure={creneau.heure}
                           date={date}
                           couverts={couverts}
                           type="privatisation"
@@ -519,6 +586,7 @@ export default async function ReserverPage({
                         slug={slug}
                         espaceId={table.espace.id}
                         serviceId={creneau.service.id}
+                        heure={creneau.heure}
                         date={date}
                         couverts={couverts}
                         type="table"
@@ -581,6 +649,7 @@ export default async function ReserverPage({
                               slug={slug}
                               espaceId={dispo.espace.id}
                               serviceId={creneau.service.id}
+                        heure={creneau.heure}
                               date={date}
                               couverts={couverts}
                               type="privatisation"

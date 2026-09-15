@@ -72,7 +72,7 @@ function Champs({
         </label>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <label className={label} htmlFor="saisie-date">
           Date
           <input
@@ -111,6 +111,21 @@ function Champs({
               </option>
             ))}
           </select>
+        </label>
+        {/* L'heure d'arrivée : c'est elle qui décide contre quelles autres
+            tables celle-ci se compare. Laissée vide, elle retombe sur
+            l'ouverture du service — au téléphone, on la note souvent après
+            coup, et bloquer la saisie pour si peu serait pénible. */}
+        <label className={label} htmlFor="saisie-heure">
+          Heure d&apos;arrivée
+          <input
+            id="saisie-heure"
+            name="heure"
+            type="time"
+            step={900}
+            defaultValue={valeurs.heure}
+            className={champ}
+          />
         </label>
       </div>
 

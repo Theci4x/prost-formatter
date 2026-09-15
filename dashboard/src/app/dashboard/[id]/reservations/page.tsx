@@ -29,6 +29,7 @@ type Demande = {
   espace_id: string;
   service_id: string | null;
   date_reservation: string;
+  heure_arrivee: string | null;
   couverts: number;
   type: "table" | "privatisation";
   statut: "demande" | "confirmee" | "refusee" | "annulee" | "expiree";
@@ -122,7 +123,14 @@ function Ligne({
           </span>
           <span className="text-sm text-zinc-500 first-letter:capitalize">
             {formatDate(demande.date_reservation)}
-            {service && ` · ${service.nom} ${formatHeure(service.heure_debut)}`}
+            {/* L'heure de la table, pas celle du service : c'est ce que
+                le restaurateur cherche quand il parcourt sa journée. Les
+                réservations antérieures aux créneaux n'en ont pas, on
+                retombe alors sur l'ouverture. */}
+            {service &&
+              ` · ${service.nom} ${formatHeure(
+                demande.heure_arrivee ?? service.heure_debut,
+              )}`}
             {espace && ` · ${espace.nom}`}
             {demande.type === "privatisation" && " · privatisation"}
             {demande.origine === "restaurateur" && " · prise au téléphone"}

@@ -15,6 +15,7 @@ import {
 import { chargerFermetures } from "@/lib/reservations/fermetures";
 import {
   disponibiliteEspace,
+  heuresDArrivee,
   serviceOuvertCeJour,
   servicePasseOuTropTard,
   type Reservation,
@@ -126,7 +127,7 @@ export async function demanderReservation(
       supabase
         .from("restaurant_reservations")
         .select(
-          "id, espace_id, service_id, date_reservation, couverts, type, statut, option_expire_le",
+          "id, espace_id, service_id, date_reservation, heure_arrivee, couverts, type, statut, option_expire_le",
         )
         .eq("restaurant_id", restaurant.id)
         .eq("date_reservation", date),
@@ -154,10 +155,22 @@ export async function demanderReservation(
     };
   }
 
+  // L'heure ne se prend pas telle quelle : un champ bricolé enverrait
+  // « 03:00 » sur un service qui ferme à 2h, ou une heure hors du pas des
+  // créneaux, et le calcul de chevauchement s'appuierait dessus.
+  const heure = texte(formData.get("heure")).slice(0, 5);
+  const proposees = heuresDArrivee(service);
+  if (!proposees.includes(heure)) {
+    return {
+      error: "Choisis une heure d'arrivée dans la liste proposée.",
+    };
+  }
+
   const dispo = disponibiliteEspace({
     espace,
     service,
     date,
+    heure,
     couverts,
     reservations: (reservationsResult.data ?? []) as Reservation[],
     fermetures,
@@ -189,6 +202,7 @@ export async function demanderReservation(
     espace_id: espace.id,
     service_id: service.id,
     date_reservation: date,
+    heure_arrivee: heure,
     couverts,
     type,
     statut: "demande",

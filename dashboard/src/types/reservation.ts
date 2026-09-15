@@ -29,6 +29,12 @@ export type Service = {
   jours: number[];
   heure_debut: string;
   heure_fin: string;
+  /**
+   * Combien de temps une table reste occupée, en minutes. C'est ce qui
+   * permet de vendre plusieurs fois la même place dans un service : sans
+   * elle, une salle de 92 couverts n'en vend que 92 pour la soirée.
+   */
+  duree_minutes: number;
   delai_heures: number;
   ordre: number;
 };
@@ -126,6 +132,7 @@ export type ServiceValeurs = {
   nom: string;
   heureDebut: string;
   heureFin: string;
+  duree: string;
   delai: string;
   jours: number[];
 };
@@ -134,6 +141,7 @@ export const SERVICE_VIDE: ServiceValeurs = {
   nom: "",
   heureDebut: "19:00",
   heureFin: "23:00",
+  duree: "120",
   delai: "72",
   jours: [],
 };
@@ -141,6 +149,8 @@ export const SERVICE_VIDE: ServiceValeurs = {
 export type SaisieValeurs = {
   nom: string;
   telephone: string;
+  /** L'heure d'arrivée retenue, « 19:30 ». */
+  heure: string;
   date: string;
   couverts: string;
   serviceId: string;
@@ -154,6 +164,7 @@ export type SaisieValeurs = {
 export const SAISIE_VIDE: SaisieValeurs = {
   nom: "",
   telephone: "",
+  heure: "",
   date: "",
   couverts: "2",
   serviceId: "",
