@@ -60,7 +60,7 @@ export async function getUserPages(
   // sources plutôt que de traiter la seconde comme un simple fallback.
   const [personalPages, businessPages] = await Promise.all([
     fetchAccountsPages(userAccessToken),
-    fetchBusinessOwnedPages(userAccessToken),
+    fetchBusinessPages(userAccessToken),
   ]);
 
   const pages = new Map<string, FacebookPage>();
@@ -92,40 +92,74 @@ async function fetchAccountsPages(
   }));
 }
 
-async function fetchBusinessOwnedPages(
+// Un portefeuille distingue les Pages qu'il *possède* (créées en son sein)
+// de celles auxquelles il a seulement *accès* (une Page existante qu'on lui
+// a rattachée). Meta les expose sur deux arêtes différentes, et ne
+// recherchez que la première revient à ignorer toutes les Pages qu'un
+// restaurateur avait déjà avant de monter son Business Manager — c'est-à-dire
+// le cas le plus courant.
+const ARETES_PAGES = ["owned_pages", "client_pages"] as const;
+
+async function fetchBusinessPages(
   userAccessToken: string,
 ): Promise<FacebookPage[]> {
   const businessesUrl = new URL(`${GRAPH_BASE_URL}/me/businesses`);
   businessesUrl.searchParams.set("access_token", userAccessToken);
   const businessesRes = await fetch(businessesUrl);
-  if (!businessesRes.ok) return [];
+  if (!businessesRes.ok) {
+    // Silencieux, ce retour à vide se confondait avec « cet utilisateur n'a
+    // pas de portefeuille » — et laissait chercher la panne du mauvais côté.
+    console.error(
+      "[facebook] /me/businesses a échoué",
+      businessesRes.status,
+      await businessesRes.text(),
+    );
+    return [];
+  }
 
   const businessesData = (await businessesRes.json()) as {
-    data?: { id: string }[];
+    data?: { id: string; name?: string }[];
   };
 
-  const pages: FacebookPage[] = [];
+  const pages = new Map<string, FacebookPage>();
+
   for (const business of businessesData.data ?? []) {
-    const ownedUrl = new URL(`${GRAPH_BASE_URL}/${business.id}/owned_pages`);
-    ownedUrl.searchParams.set("access_token", userAccessToken);
-    const ownedRes = await fetch(ownedUrl);
-    if (!ownedRes.ok) continue;
+    for (const arete of ARETES_PAGES) {
+      const url = new URL(`${GRAPH_BASE_URL}/${business.id}/${arete}`);
+      url.searchParams.set("access_token", userAccessToken);
+      const res = await fetch(url);
+      if (!res.ok) {
+        console.error(
+          `[facebook] ${arete} a échoué pour ${business.name ?? business.id}`,
+          res.status,
+          await res.text(),
+        );
+        continue;
+      }
 
-    const ownedData = (await ownedRes.json()) as {
-      data?: { id: string; name: string }[];
-    };
+      const data = (await res.json()) as {
+        data?: { id: string; name: string }[];
+      };
 
-    for (const page of ownedData.data ?? []) {
-      const accessToken = await fetchPageAccessToken(page.id, userAccessToken);
-      if (accessToken) pages.push({ id: page.id, name: page.name, accessToken });
+      for (const page of data.data ?? []) {
+        if (pages.has(page.id)) continue;
+        const accessToken = await fetchPageAccessToken(page.id, userAccessToken);
+        if (accessToken) {
+          pages.set(page.id, { id: page.id, name: page.name, accessToken });
+        } else {
+          console.error(
+            `[facebook] aucun token pour la Page ${page.name} (${page.id})`,
+          );
+        }
+      }
     }
   }
 
-  return pages;
+  return [...pages.values()];
 }
 
-// /owned_pages ne renvoie pas de token par Page (contrairement à
-// /me/accounts) : il faut le récupérer séparément pour chaque Page.
+// Ni owned_pages ni client_pages ne renvoient de token par Page
+// (contrairement à /me/accounts) : il faut le récupérer séparément.
 async function fetchPageAccessToken(
   pageId: string,
   userAccessToken: string,

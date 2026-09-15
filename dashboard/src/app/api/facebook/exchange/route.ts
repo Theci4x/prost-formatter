@@ -43,7 +43,15 @@ export async function POST(request: Request) {
 
     const pages = await getUserPages(userToken);
     if (pages.length === 0) {
-      throw new Error("Aucune page Facebook trouvée pour cet utilisateur");
+      // Dire quoi faire, pas seulement ce qui manque : ce message tombe
+      // presque toujours sur quelqu'un qui *a* une Page, mais dont le
+      // compte n'en est pas administrateur, ou qui vient de la décocher
+      // dans l'écran d'autorisations de Meta.
+      throw new Error(
+        "Aucune Page Facebook accessible avec ce compte. Vérifie que tu es " +
+          "bien administrateur de la Page du restaurant, et que tu l'as " +
+          "cochée dans l'écran d'autorisations de Facebook.",
+      );
     }
 
     // Plusieurs Pages disponibles et aucune n'a encore été choisie : on
