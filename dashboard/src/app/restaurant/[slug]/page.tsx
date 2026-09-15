@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { createServiceClient } from "@/lib/supabase/service";
 import { GalerieRestaurant } from "@/components/reservations/GalerieRestaurant";
+import { CouvertureVitrine } from "@/components/reservations/CouvertureVitrine";
 import { BandePhotos } from "@/components/reservations/BandePhotos";
 import { SignatureKlarr } from "@/components/brand/SignatureKlarr";
 import { DonneesStructurees } from "@/components/seo/DonneesStructurees";
@@ -35,6 +36,8 @@ type Vitrine = {
   site_web: string | null;
   horaires: Horaires;
   slug_reservation: string;
+  /** La photo qui ouvre la page. Colonne récente, donc facultative. */
+  photo_couverture_id?: string | null;
 };
 
 /**
@@ -69,15 +72,24 @@ export async function generateMetadata({
   const restaurant = await chargerVitrine(slug);
   if (!restaurant) return { title: "Restaurant" };
 
+  // L'image de partage est la couverture : c'est elle qu'on a choisie
+  // pour représenter la maison, elle doit l'être aussi sur WhatsApp et
+  // sur Facebook. À défaut, la première photo, comme avant.
   const supabase = createServiceClient();
-  const { data: photo } = await supabase
-    .from("restaurant_photos")
-    .select("url")
-    .eq("restaurant_id", restaurant.id)
-    .is("espace_id", null)
-    .order("ordre")
-    .limit(1)
-    .maybeSingle();
+  const { data: photo } = restaurant.photo_couverture_id
+    ? await supabase
+        .from("restaurant_photos")
+        .select("url")
+        .eq("id", restaurant.photo_couverture_id)
+        .maybeSingle()
+    : await supabase
+        .from("restaurant_photos")
+        .select("url")
+        .eq("restaurant_id", restaurant.id)
+        .is("espace_id", null)
+        .order("ordre")
+        .limit(1)
+        .maybeSingle();
 
   // Le titre porte la ville : « Prost — restaurant à Paris » répond à ce
   // qu'on tape, là où le seul nom ne répond qu'à ceux qui le connaissent
@@ -205,9 +217,24 @@ export default async function VitrinePage({
   } | null;
 
   const photosEtablissement = photos.filter((photo) => !photo.espace_id);
+
+  // La couverture choisie par le restaurateur ; à défaut, la première
+  // photo de l'établissement — mieux vaut une image que pas d'image, et
+  // la page reste correcte tant qu'aucun choix n'a été fait.
+  const couverture =
+    photosEtablissement.find(
+      (photo) => photo.id === restaurant.photo_couverture_id,
+    ) ??
+    photosEtablissement[0] ??
+    null;
+
   const galerie = (
     photosEtablissement.length > 0 ? photosEtablissement : photos
-  ).map((photo) => ({
+  )
+    // La couverture est déjà en haut de la page : la remontrer dans la
+    // grille juste en dessous donnerait l'impression d'un bug.
+    .filter((photo) => photo.id !== couverture?.id)
+    .map((photo) => ({
     ...photo,
     legende:
       photo.legende ??
@@ -294,14 +321,27 @@ export default async function VitrinePage({
           })}
         />
 
-        <GalerieRestaurant photos={galerie} nom={restaurant.nom} />
+        {couverture && (
+          <CouvertureVitrine
+            url={couverture.url}
+            nom={restaurant.nom}
+            legende={couverture.legende ?? null}
+            adresse={restaurant.adresse}
+          />
+        )}
 
         <div className="flex flex-col gap-3">
-          <h1 className="text-3xl font-semibold text-zinc-900">
-            {restaurant.nom}
-          </h1>
-          {restaurant.adresse && (
-            <p className="text-zinc-500">{restaurant.adresse}</p>
+          {/* Sans couverture, le titre reprend sa place : une page sans
+              photo ne doit pas se retrouver sans nom. */}
+          {!couverture && (
+            <>
+              <h1 className="text-3xl font-semibold text-zinc-900">
+                {restaurant.nom}
+              </h1>
+              {restaurant.adresse && (
+                <p className="text-zinc-500">{restaurant.adresse}</p>
+              )}
+            </>
           )}
           {reputation?.note && reputation.nombre_avis ? (
             <p className="text-sm text-zinc-600">
@@ -333,6 +373,12 @@ export default async function VitrinePage({
             )}
           </div>
         </div>
+
+        {/* La galerie vient après l'appel à réserver : la couverture
+            annonce, le texte et le bouton convertissent, les autres
+            photos illustrent. Placée avant, elle repoussait l'action
+            principale sous un écran de vignettes. */}
+        <GalerieRestaurant photos={galerie} nom={restaurant.nom} />
 
         {apercuCarte.length > 0 && (
           <Section titre="Un aperçu de la carte">

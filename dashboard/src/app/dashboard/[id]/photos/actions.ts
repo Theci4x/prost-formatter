@@ -116,3 +116,43 @@ export async function legenderPhoto(formData: FormData): Promise<void> {
   revalidatePath(`/dashboard/${restaurantId}/photos`);
   revalidatePath(`/dashboard/${restaurantId}/reservations/configuration`);
 }
+
+/**
+ * Désigne la photo qui ouvre la vitrine.
+ *
+ * Écrit sur le restaurant plutôt qu'un drapeau sur la photo : une seule
+ * peut être la couverture, et une référence unique le garantit sans
+ * qu'on ait à en décocher une autre — donc sans qu'un double clic laisse
+ * deux couvertures ou zéro.
+ *
+ * Passe par la session, pas par la clé de service : c'est la RLS qui
+ * vérifie que ce restaurant est bien le sien.
+ */
+export async function definirCouverture(formData: FormData): Promise<void> {
+  const restaurantId = formData.get("restaurant_id") as string;
+  const photoId = (formData.get("photo_id") as string | null) || null;
+
+  const supabase = await createClient();
+
+  // La photo doit appartenir à ce restaurant. Sans cette vérification, un
+  // identifiant emprunté afficherait la salle d'un confrère en couverture.
+  if (photoId) {
+    const { data } = await supabase
+      .from("restaurant_photos")
+      .select("id")
+      .eq("id", photoId)
+      .eq("restaurant_id", restaurantId)
+      .maybeSingle();
+    if (!data) return;
+  }
+
+  const { error } = await supabase
+    .from("restaurants")
+    .update({ photo_couverture_id: photoId })
+    .eq("id", restaurantId);
+
+  if (error) console.error("[definirCouverture]", error);
+
+  revalidatePath(`/dashboard/${restaurantId}/photos`);
+  revalidatePath(`/dashboard/${restaurantId}/vitrine`);
+}
