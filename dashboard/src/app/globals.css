@@ -1,0 +1,245 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+/* Couleurs de marque Klarr — utilisées dans le dashboard interne
+   (bg-brand-navy, hover:bg-brand-navy-hover, text-brand-orange, etc.). */
+@theme {
+  --color-brand-navy: #0f1e3d;
+  --color-brand-navy-hover: #16295a;
+  --color-brand-orange: #e8871e;
+  --color-brand-orange-soft: #fdf1e2;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+/* Bandeau de logos clients (landing) : deux copies de la liste se
+   suivent, translater de -50% boucle donc sans saut visible. */
+@keyframes klarr-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+.klarr-marquee-track {
+  animation: klarr-marquee 38s linear infinite;
+}
+.klarr-marquee:hover .klarr-marquee-track {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .klarr-marquee-track {
+    animation: none;
+  }
+}
+
+/* Grain de pellicule sur la landing : casse le côté "aplat numérique" des
+   fonds unis. Fixe plutôt qu'en défilement, sinon la texture "glisse" sur le
+   contenu. pointer-events évite qu'il n'intercepte les clics. */
+.klarr-grain::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0.045;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Landing page (/) only — scoped so it never leaks into the dashboard. */
+.klarr-landing a {
+  color: inherit;
+  text-decoration: none;
+}
+.klarr-landing .nav-link:hover {
+  color: var(--accent-dark) !important;
+}
+.klarr-landing .btn-primary {
+  transition:
+    background 0.15s ease,
+    transform 0.15s ease;
+  display: inline-block;
+}
+.klarr-landing .btn-primary:hover {
+  transform: translateY(-1px);
+}
+
+/* ── Le journal ────────────────────────────────────────────────────────
+   Le corps d'un article arrive en HTML déjà fabriqué : aucune classe
+   Tailwind ne peut s'y accrocher. Ces règles-là sont donc le seul endroit
+   où la mise en forme d'un billet peut vivre. */
+.billet {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  font-size: 1.0625rem;
+  line-height: 1.75;
+  color: var(--ink-soft);
+}
+.billet h2 {
+  font-family: var(--font-instrument-serif), Georgia, serif;
+  font-size: 1.65rem;
+  line-height: 1.2;
+  color: var(--ink);
+  margin-top: 1.5rem;
+}
+.billet h3 {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin-top: 0.8rem;
+}
+.billet strong {
+  font-weight: 600;
+  color: var(--ink);
+}
+.billet a {
+  color: var(--accent-dark);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+.billet ul,
+.billet ol {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-left: 1.3rem;
+}
+.billet li {
+  list-style: disc;
+}
+.billet ol li {
+  list-style: decimal;
+}
+.billet hr {
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin: 0.4rem 0;
+}
+.billet em {
+  font-style: italic;
+}
+
+/* Les encadrés. Trois tons, et pas un de plus : dès qu'un article a
+   quatre couleurs d'encadrés, plus aucune ne veut dire quelque chose. */
+.billet .encadre {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 1.15rem 1.3rem;
+  border-radius: 1rem;
+  border: 1px solid var(--line);
+  background: var(--paper);
+}
+.billet .encadre-corps {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+.billet .encadre-titre {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+/* Ce qui coûte de l'argent si on passe à côté. */
+.billet .encadre[data-ton="attention"] {
+  border-color: color-mix(in oklch, var(--accent) 40%, white);
+  background: var(--accent-soft);
+}
+.billet .encadre[data-ton="attention"] .encadre-titre {
+  color: var(--accent-dark);
+}
+/* Un seuil, un montant, un délai : le titre est le chiffre lui-même. */
+.billet .encadre[data-ton="chiffre"] {
+  border: 0;
+  border-left: 3px solid var(--accent);
+  border-radius: 0 0.75rem 0.75rem 0;
+  background: var(--bg-alt);
+}
+.billet .encadre[data-ton="chiffre"] .encadre-titre {
+  font-family: var(--font-instrument-serif), Georgia, serif;
+  font-size: 2rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  line-height: 1.1;
+  color: var(--ink);
+}
+/* Un cas concret, raconté. */
+.billet .encadre[data-ton="exemple"] {
+  background: var(--bg-alt);
+}
+
+/* Les trois derniers billets en bas de l'accueil : une colonne au
+   téléphone, trois à partir de la tablette. */
+.grid-journal {
+  grid-template-columns: 1fr;
+}
+@media (min-width: 720px) {
+  .grid-journal {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Les tableaux d'un billet. Le conteneur défile, pas la page : sans lui,
+   un tableau à six colonnes pousse tout le corps de l'article au-delà de
+   l'écran d'un téléphone. */
+.billet .billet-tableau {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 0.9rem;
+  background: var(--paper);
+}
+.billet table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+.billet th,
+.billet td {
+  padding: 0.7rem 0.9rem;
+  text-align: left;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--line);
+}
+.billet th {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.billet tbody tr:last-child td {
+  border-bottom: 0;
+}
+.billet td strong {
+  color: var(--ink);
+}
+
+/* Une citation dans un billet sert à isoler une formule ou une phrase
+   qu'on veut pouvoir relire seule. Discrète : ce n'est pas un encadré. */
+.billet blockquote {
+  margin: 0;
+  padding: 0.2rem 0 0.2rem 1.1rem;
+  border-left: 2px solid var(--accent);
+  color: var(--ink);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
