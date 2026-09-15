@@ -44,6 +44,42 @@ export async function exchangeForLongLivedToken(
   return data.access_token;
 }
 
+/**
+ * Ce que Meta a réellement accordé.
+ *
+ * Une autorisation refusée ne produit aucune erreur : les appels
+ * réussissent et renvoient des listes vides, ce qui se confond avec « ce
+ * compte n'a rien ». Demander l'inventaire au lieu de le déduire est le
+ * seul moyen de distinguer les deux.
+ */
+export async function getPermissions(
+  userAccessToken: string,
+): Promise<{ accordees: string[]; refusees: string[] }> {
+  const url = new URL(`${GRAPH_BASE_URL}/me/permissions`);
+  url.searchParams.set("access_token", userAccessToken);
+
+  const res = await fetch(url);
+  if (!res.ok) {
+    console.error(
+      "[facebook] /me/permissions a échoué",
+      res.status,
+      await res.text(),
+    );
+    return { accordees: [], refusees: [] };
+  }
+
+  const data = (await res.json()) as {
+    data?: { permission: string; status: string }[];
+  };
+
+  const accordees: string[] = [];
+  const refusees: string[] = [];
+  for (const ligne of data.data ?? []) {
+    (ligne.status === "granted" ? accordees : refusees).push(ligne.permission);
+  }
+  return { accordees, refusees };
+}
+
 export type FacebookPage = {
   id: string;
   name: string;
@@ -62,6 +98,10 @@ export async function getUserPages(
     fetchAccountsPages(userAccessToken),
     fetchBusinessPages(userAccessToken),
   ]);
+
+  console.log(
+    `[facebook] Pages trouvées — /me/accounts : ${personalPages.length}, portefeuilles : ${businessPages.length}`,
+  );
 
   const pages = new Map<string, FacebookPage>();
   for (const page of [...personalPages, ...businessPages]) {

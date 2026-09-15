@@ -4,6 +4,7 @@ import {
   exchangeForLongLivedToken,
   getUserPages,
   getPageDetails,
+  getPermissions,
 } from "@/lib/facebook/oauth";
 
 // Appelé côté client une fois que FB.login() (SDK JavaScript, "Facebook
@@ -43,14 +44,32 @@ export async function POST(request: Request) {
 
     const pages = await getUserPages(userToken);
     if (pages.length === 0) {
-      // Dire quoi faire, pas seulement ce qui manque : ce message tombe
-      // presque toujours sur quelqu'un qui *a* une Page, mais dont le
-      // compte n'en est pas administrateur, ou qui vient de la décocher
-      // dans l'écran d'autorisations de Meta.
+      // Meta ne signale pas une autorisation manquante : il répond « rien »
+      // avec un aplomb parfait. Le message dit donc ce qui a été accordé,
+      // parce que c'est la seule chose qui distingue « pas de Page » de
+      // « pas le droit de voir les Pages ».
+      const { accordees, refusees } = await getPermissions(userToken);
+      console.log(
+        "[facebook] autorisations accordées :",
+        accordees.join(", ") || "aucune",
+        "| refusées :",
+        refusees.join(", ") || "aucune",
+      );
+
+      if (!accordees.includes("pages_show_list")) {
+        throw new Error(
+          "Facebook n'a pas accordé l'accès aux Pages. Relance la connexion, " +
+            "choisis « Modifier les paramètres », et coche la Page du " +
+            `restaurant dans l'écran « Pages ». (Accordé : ${
+              accordees.join(", ") || "rien"
+            }.)`,
+        );
+      }
+
       throw new Error(
         "Aucune Page Facebook accessible avec ce compte. Vérifie que tu es " +
           "bien administrateur de la Page du restaurant, et que tu l'as " +
-          "cochée dans l'écran d'autorisations de Facebook.",
+          `cochée dans l'écran d'autorisations. (Accordé : ${accordees.join(", ")}.)`,
       );
     }
 
