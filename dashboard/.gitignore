@@ -45,3 +45,4 @@ certificates
 
 # Captures laissées par les tests Playwright : elles n'ont rien à faire ici.
 shot-*.png
+mock-*.log
