@@ -7,10 +7,6 @@
     {
       "path": "/api/cron/options-expirees",
       "schedule": "0 4 * * *"
-    },
-    {
-      "path": "/api/cron/courriels-en-echec",
-      "schedule": "0 * * * *"
     }
   ]
 }
