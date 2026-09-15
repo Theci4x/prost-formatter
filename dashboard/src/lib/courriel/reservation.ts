@@ -124,14 +124,12 @@ export async function prevenirRestaurateur({
   reservationId,
   contexte,
   destinataire,
-  lien,
   confirmee,
 }: {
   supabase: SupabaseClient;
   reservationId: string;
   contexte: Contexte;
   destinataire: string | null;
-  lien: string;
   confirmee: boolean;
 }): Promise<void> {
   if (!destinataire) return;
@@ -142,7 +140,7 @@ export async function prevenirRestaurateur({
 
   const resultat = await envoyerCourriel({
     destinataire,
-    ...alerteRestaurateur(contexte, confirmee, lien),
+    ...alerteRestaurateur(contexte, confirmee),
   });
   if (!resultat.envoye) {
     await noterLEchec(
@@ -203,13 +201,11 @@ export async function prevenirAnnulationClient({
   reservationId,
   contexte,
   destinataire,
-  lien,
 }: {
   supabase: SupabaseClient;
   reservationId: string;
   contexte: Contexte;
   destinataire: string | null;
-  lien: string;
 }): Promise<void> {
   if (!destinataire) return;
   const genre: Genre = "alerte_annulation";
@@ -219,7 +215,7 @@ export async function prevenirAnnulationClient({
 
   const resultat = await envoyerCourriel({
     destinataire,
-    ...alerteAnnulationClient(contexte, lien),
+    ...alerteAnnulationClient(contexte),
   });
   if (!resultat.envoye) {
     await noterLEchec(

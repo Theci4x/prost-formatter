@@ -159,11 +159,7 @@ export async function rattraperCourriels({
         : null,
     };
 
-    const message = messageDe(
-      ligne.genre,
-      contexte,
-      `${siteUrl()}/dashboard/${reservation.restaurant_id}/reservations`,
-    );
+    const message = messageDe(ligne.genre, contexte);
     // Un genre qu'on ne sait pas reconstruire ne se renvoie pas : mieux
     // vaut ne rien envoyer qu'envoyer le mauvais message.
     if (!message) {

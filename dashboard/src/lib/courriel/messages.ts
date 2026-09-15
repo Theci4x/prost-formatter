@@ -259,7 +259,6 @@ export function reservationRefusee(
 export function alerteRestaurateur(
   c: Contexte,
   confirmee: boolean,
-  lienCarnet: string,
 ): Message {
   const etat = confirmee
     ? "Elle est déjà confirmée automatiquement."
@@ -268,7 +267,6 @@ export function alerteRestaurateur(
     `${c.type === "privatisation" ? "Demande de privatisation" : "Nouvelle réservation"} : <strong>${echapper(c.clientNom)}</strong>.`,
     encadre(c),
     etat,
-    { bouton: { libelle: "Ouvrir le carnet", url: lienCarnet } },
   ];
   return {
     sujet: sujet(
@@ -283,8 +281,9 @@ export function alerteRestaurateur(
  * Le lien de paiement, envoyé au client quand sa demande est acceptée.
  *
  * Le message dit trois choses, dans cet ordre : la bonne nouvelle, ce
- * qu'il reste à faire, et jusqu'à quand. C'est le seul message dont
- * l'action est un bouton — parce que c'en est réellement une.
+ * qu'il reste à faire, et jusqu'à quand. C'est le seul message à porter
+ * un bouton — parce que c'est le seul dont l'action appartient au
+ * destinataire. Le restaurateur, lui, est déjà dans son carnet.
  */
 export function lienDePaiement(
   c: Contexte,
@@ -350,12 +349,11 @@ export function rappelReservation(c: Contexte): Message {
  * C'est une bonne nouvelle, et le message le dit — la table est de
  * nouveau vendable, et elle l'est d'autant mieux qu'on l'apprend tôt.
  */
-export function alerteAnnulationClient(c: Contexte, lienCarnet: string): Message {
+export function alerteAnnulationClient(c: Contexte): Message {
   const blocs: Bloc[] = [
     `<strong>${echapper(c.clientNom)}</strong> vient d'annuler.`,
     encadre(c),
     `La table est de nouveau disponible à la réservation — personne n'a eu à décrocher le téléphone.`,
-    { bouton: { libelle: "Ouvrir le carnet", url: lienCarnet } },
   ];
   return {
     sujet: sujet(`Annulation — ${c.clientNom}, ${rappel(c)}`),

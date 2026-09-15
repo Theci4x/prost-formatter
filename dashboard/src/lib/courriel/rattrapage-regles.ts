@@ -134,7 +134,6 @@ export function aRetenter(
 export function messageDe(
   genre: Genre,
   contexte: Contexte,
-  lien: string,
 ): Message | null {
   switch (genre) {
     case "recue":
@@ -146,9 +145,9 @@ export function messageDe(
     case "annulee":
       return reservationRefusee(contexte, "annulee");
     case "alerte_restaurateur":
-      return alerteRestaurateur(contexte, false, lien);
+      return alerteRestaurateur(contexte, false);
     case "alerte_annulation":
-      return alerteAnnulationClient(contexte, lien);
+      return alerteAnnulationClient(contexte);
     case "rappel":
       return rappelReservation(contexte);
     // Écartés en amont par aRetenter : ils ne se reconstruisent pas sans

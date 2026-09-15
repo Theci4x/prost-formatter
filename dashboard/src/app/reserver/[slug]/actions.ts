@@ -337,7 +337,6 @@ export async function demanderReservation(
         reservationId,
         contexte,
         destinataire: restaurant.email_contact ?? null,
-        lien: `${siteUrl()}/dashboard/${restaurant.id}/reservations`,
         confirmee,
       }),
     ]);

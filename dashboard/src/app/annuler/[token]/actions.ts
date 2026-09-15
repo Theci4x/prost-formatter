@@ -4,7 +4,6 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { peutAnnuler } from "@/lib/reservations/annulation";
 import { prevenirAnnulationClient } from "@/lib/courriel/reservation";
 import type { Contexte } from "@/lib/courriel/messages";
-import { siteUrl } from "@/lib/site-url";
 import type { Service } from "@/types/reservation";
 
 export type AnnulationState = { error: string | null; fait: boolean };
@@ -114,7 +113,6 @@ export async function annulerParLeClient(
       reservationId: reservation.id,
       contexte,
       destinataire: restaurant.email_contact,
-      lien: `${siteUrl()}/dashboard/${reservation.restaurant_id}/reservations`,
     });
   }
 
