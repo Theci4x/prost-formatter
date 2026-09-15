@@ -9,6 +9,11 @@ import { heureLisible } from "@/lib/site/horaires";
  *
  * Le ton est celui du restaurant, pas celui d'un logiciel : c'est le nom
  * du restaurant qui signe, et c'est à lui qu'on répond.
+ *
+ * La mise en forme obéit aux contraintes du courriel, pas à celles du
+ * web : tableaux plutôt que flex, styles en ligne plutôt que feuille de
+ * style, aucune image distante. Ce qui survit à Outlook, à Gmail et à la
+ * messagerie d'un téléphone, c'est ça et rien d'autre.
  */
 
 export type Contexte = {
@@ -35,6 +40,25 @@ export type Contexte = {
 };
 
 export type Message = { sujet: string; texte: string; html: string };
+
+/**
+ * Un message se compose de trois sortes de blocs. Le texte courant, le
+ * bouton — un seul par message, sans quoi aucun n'est l'action — et
+ * l'encadré qui porte le quand et le combien, seule chose qu'un client
+ * relit vraiment.
+ */
+type Bloc =
+  | string
+  | { bouton: { libelle: string; url: string } }
+  | { encadre: string[] };
+
+const ENCRE = "#1f1b17";
+const ENCRE_DOUCE = "#7a7168";
+const FOND = "#f4f1ec";
+const BORDURE = "#e9e3da";
+const MARQUE = "#0f1e3d";
+const POLICE =
+  "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
 
 function dateLisible(iso: string): string {
   return new Date(`${iso}T12:00:00`).toLocaleDateString("fr-FR", {
@@ -69,26 +93,20 @@ function echapper(texte: string): string {
     .replace(/>/g, "&gt;");
 }
 
-/**
- * Le HTML : volontairement pauvre. Les messageries mangent les feuilles de
- * style, les images distantes et la moitié des balises ; ce qui survit
- * partout, c'est du texte avec quelques paragraphes.
- */
-function enveloppe(corps: string[], signature: string): string {
-  const paragraphes = corps
-    .filter((ligne) => ligne !== "")
-    .map(
-      (p) =>
-        `<p style="margin:0 0 14px;font-size:15px;line-height:1.6;color:#1a1614">${p}</p>`,
-    )
-    .join("");
-  return `<div style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;max-width:520px">${paragraphes}<p style="margin:24px 0 0;font-size:13px;color:#6b6259">${echapper(signature)}</p></div>`;
+/** Dans un attribut, le guillemet referme la valeur : il s'échappe aussi. */
+function echapperUrl(url: string): string {
+  return echapper(url).replace(/"/g, "&quot;");
 }
 
 /**
- * La phrase qui rend la table. Elle vient en dernier et sans emphase :
- * on ne pousse personne à annuler, on rend juste la chose possible.
+ * Un lien dans une phrase. L'adresse ne s'affiche pas : une suite de
+ * trente caractères aléatoires au milieu d'un paragraphe fait douter de
+ * l'expéditeur, alors même qu'elle prouve le contraire.
  */
+function lien(libelle: string, url: string): string {
+  return `<a href="${echapperUrl(url)}" style="color:${MARQUE};text-decoration:underline">${echapper(libelle)}</a>`;
+}
+
 /** L'engagement pris, rappelé au client. Vide quand il n'y en a pas. */
 function ligneMinimum(c: Contexte): string {
   return c.minimumConsommation
@@ -96,46 +114,117 @@ function ligneMinimum(c: Contexte): string {
     : "";
 }
 
+/**
+ * La phrase qui rend la table. Elle vient en dernier, en lien discret et
+ * non en bouton : on ne pousse personne à annuler, on rend juste la
+ * chose possible.
+ */
 function ligneAnnulation(c: Contexte): string {
   return c.lienAnnulation
-    ? `Un empêchement ? Rends ta table en un clic : ${echapper(c.lienAnnulation)}`
+    ? `Un empêchement ? ${lien("Rendez votre table en un clic", c.lienAnnulation)}.`
     : "";
+}
+
+/** Le quand et le combien, détachés du texte pour se relire d'un coup d'œil. */
+function encadre(c: Contexte): Bloc {
+  const lignes = [
+    c.heure
+      ? `${dateLisible(c.date)} à ${heureLisible(c.heure)}`
+      : dateLisible(c.date),
+    `${c.couverts} couvert${c.couverts > 1 ? "s" : ""}${
+      c.serviceNom ? ` · ${c.serviceNom}` : ""
+    }`,
+  ];
+  if (c.restaurantAdresse) lignes.push(c.restaurantAdresse);
+  return { encadre: lignes };
+}
+
+function paragraphe(html: string): string {
+  return `<p style="margin:0 0 16px;font-size:15px;line-height:1.65;color:${ENCRE}">${html}</p>`;
+}
+
+function boutonHtml(libelle: string, url: string): string {
+  return [
+    `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:4px 0 22px">`,
+    `<tr><td style="border-radius:8px;background:${MARQUE}">`,
+    `<a href="${echapperUrl(url)}" style="display:inline-block;padding:13px 28px;font-family:${POLICE};font-size:15px;font-weight:600;line-height:1;color:#ffffff;text-decoration:none;border-radius:8px">${echapper(libelle)}</a>`,
+    `</td></tr></table>`,
+  ].join("");
+}
+
+function encadreHtml(lignes: string[]): string {
+  const contenu = lignes
+    .map(
+      (ligne, i) =>
+        `<div style="font-size:${i === 0 ? "17px" : "14px"};line-height:1.5;color:${
+          i === 0 ? ENCRE : ENCRE_DOUCE
+        };${i === 0 ? "font-weight:600;" : "margin-top:4px;"}">${echapper(ligne)}</div>`,
+    )
+    .join("");
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px"><tr><td style="padding:16px 18px;background:${FOND};border-radius:10px;border-left:3px solid ${MARQUE}">${contenu}</td></tr></table>`;
+}
+
+/**
+ * L'enveloppe : une carte claire sur fond chaud, le nom qui signe en
+ * tête plutôt qu'en pied. Tout est en tableaux et en styles en ligne —
+ * c'est laid à écrire, c'est la seule chose qui s'affiche partout.
+ */
+function enveloppe(blocs: Bloc[], signature: string): string {
+  const corps = blocs
+    .filter((bloc) => bloc !== "")
+    .map((bloc) => {
+      if (typeof bloc === "string") return paragraphe(bloc);
+      if ("bouton" in bloc) return boutonHtml(bloc.bouton.libelle, bloc.bouton.url);
+      return encadreHtml(bloc.encadre);
+    })
+    .join("");
+
+  return [
+    `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${FOND};width:100%">`,
+    `<tr><td align="center" style="padding:28px 12px">`,
+    `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:544px;background:#ffffff;border:1px solid ${BORDURE};border-radius:14px">`,
+    `<tr><td style="padding:30px 32px 26px;font-family:${POLICE}">`,
+    `<p style="margin:0 0 22px;font-size:12px;letter-spacing:0.14em;text-transform:uppercase;font-weight:700;color:${MARQUE}">${echapper(signature)}</p>`,
+    corps,
+    `</td></tr></table>`,
+    `<p style="margin:16px 0 0;font-family:${POLICE};font-size:11px;color:${ENCRE_DOUCE}">Envoyé par Klarr</p>`,
+    `</td></tr></table>`,
+  ].join("");
 }
 
 /** Reçue, mais pas encore confirmée : le restaurant doit se prononcer. */
 export function demandeRecue(c: Contexte): Message {
   const quoi =
     c.type === "privatisation" ? "votre demande de privatisation" : "votre demande de réservation";
-  const lignes = [
+  const blocs: Bloc[] = [
     `Bonjour ${echapper(c.clientNom)},`,
-    `Nous avons bien reçu ${quoi} chez ${echapper(c.restaurantNom)} : <strong>${echapper(rappel(c))}</strong>.`,
+    `Nous avons bien reçu ${quoi} chez ${echapper(c.restaurantNom)}.`,
+    encadre(c),
     ligneMinimum(c),
     `Elle n'est pas encore confirmée — le restaurant revient vers vous très vite. Vous recevrez un second message dès que ce sera fait.`,
     ligneAnnulation(c) || `Si vos plans changent, répondez simplement à cet e-mail.`,
   ];
   return {
     sujet: sujet(`Demande reçue — ${c.restaurantNom}`),
-    texte: texteDe(lignes, c),
-    html: enveloppe(lignes, c.restaurantNom),
+    texte: texteDe(blocs, c),
+    html: enveloppe(blocs, c.restaurantNom),
   };
 }
 
 /** Confirmée : c'est le message que le client gardera. */
 export function reservationConfirmee(c: Contexte): Message {
-  const lignes = [
+  const blocs: Bloc[] = [
     `Bonjour ${echapper(c.clientNom)},`,
-    `Votre table est confirmée chez ${echapper(c.restaurantNom)} : <strong>${echapper(rappel(c))}</strong>.`,
+    `Votre table est confirmée chez ${echapper(c.restaurantNom)}.`,
+    encadre(c),
     ligneMinimum(c),
-    c.restaurantAdresse
-      ? `L'adresse : ${echapper(c.restaurantAdresse)}.`
-      : `À très bientôt.`,
     ligneAnnulation(c) ||
       `Un empêchement ? Prévenez-nous en répondant à cet e-mail — une table rendue à temps, c'est une table qui resert.`,
   ];
   return {
     sujet: sujet(`Réservation confirmée — ${c.restaurantNom}`),
-    texte: texteDe(lignes, c),
-    html: enveloppe(lignes, c.restaurantNom),
+    texte: texteDe(blocs, c),
+    html: enveloppe(blocs, c.restaurantNom),
   };
 }
 
@@ -149,7 +238,7 @@ export function reservationRefusee(
   c: Contexte,
   motif: "refusee" | "annulee",
 ): Message {
-  const lignes = [
+  const blocs: Bloc[] = [
     `Bonjour ${echapper(c.clientNom)},`,
     motif === "refusee"
       ? `${echapper(c.restaurantNom)} ne peut malheureusement pas honorer votre demande du <strong>${echapper(rappel(c))}</strong>.`
@@ -161,8 +250,8 @@ export function reservationRefusee(
     sujet: sujet(
       `${motif === "refusee" ? "Demande non retenue" : "Réservation annulée"} — ${c.restaurantNom}`,
     ),
-    texte: texteDe(lignes, c),
-    html: enveloppe(lignes, c.restaurantNom),
+    texte: texteDe(blocs, c),
+    html: enveloppe(blocs, c.restaurantNom),
   };
 }
 
@@ -170,52 +259,54 @@ export function reservationRefusee(
 export function alerteRestaurateur(
   c: Contexte,
   confirmee: boolean,
-  lien: string,
+  lienCarnet: string,
 ): Message {
   const etat = confirmee
     ? "Elle est déjà confirmée automatiquement."
     : "<strong>Elle attend votre validation.</strong>";
-  const lignes = [
-    `${c.type === "privatisation" ? "Demande de privatisation" : "Nouvelle réservation"} : <strong>${echapper(c.clientNom)}</strong>, ${echapper(rappel(c))}.`,
-    c.serviceNom ? `Service : ${echapper(c.serviceNom)}.` : "",
+  const blocs: Bloc[] = [
+    `${c.type === "privatisation" ? "Demande de privatisation" : "Nouvelle réservation"} : <strong>${echapper(c.clientNom)}</strong>.`,
+    encadre(c),
     etat,
-    `Le carnet : ${echapper(lien)}`,
+    { bouton: { libelle: "Ouvrir le carnet", url: lienCarnet } },
   ];
   return {
     sujet: sujet(
       `${confirmee ? "Réservation" : "À valider"} — ${c.clientNom}, ${rappel(c)}`,
     ),
-    texte: texteDe(lignes, c),
-    html: enveloppe(lignes, "Klarr"),
+    texte: texteDe(blocs, c),
+    html: enveloppe(blocs, "Klarr"),
   };
 }
 
 /**
  * Le lien de paiement, envoyé au client quand sa demande est acceptée.
  *
- * Il n'existait pas : le restaurateur acceptait, Klarr fabriquait un lien
- * — et le laissait dans le tableau de bord, à charge pour lui de le
- * copier dans un e-mail écrit à la main. Le client, lui, attendait sans
- * rien savoir, et l'option expirait au bout de quelques jours.
- *
  * Le message dit trois choses, dans cet ordre : la bonne nouvelle, ce
- * qu'il reste à faire, et jusqu'à quand.
+ * qu'il reste à faire, et jusqu'à quand. C'est le seul message dont
+ * l'action est un bouton — parce que c'en est réellement une.
  */
 export function lienDePaiement(
   c: Contexte,
-  lien: string,
+  url: string,
   garantie: { montant: string; caution: boolean; echeance: string | null },
 ): Message {
   const quoi = garantie.caution
     ? `Pour la confirmer définitivement, il reste à enregistrer une carte en garantie de <strong>${echapper(garantie.montant)}</strong>. <strong>Rien ne sera prélevé</strong> : elle ne serait débitée qu'en cas de défection.`
     : `Pour la confirmer définitivement, il reste à régler un acompte de <strong>${echapper(garantie.montant)}</strong>, qui viendra en déduction de l'addition.`;
 
-  const lignes = [
+  const blocs: Bloc[] = [
     `Bonjour ${echapper(c.clientNom)},`,
-    `Bonne nouvelle : ${echapper(c.restaurantNom)} a accepté votre demande — <strong>${echapper(rappel(c))}</strong>.`,
+    `Bonne nouvelle : ${echapper(c.restaurantNom)} a accepté votre demande.`,
+    encadre(c),
     ligneMinimum(c),
     quoi,
-    `C'est ici : ${echapper(lien)}`,
+    {
+      bouton: {
+        libelle: garantie.caution ? "Enregistrer ma carte" : "Régler l'acompte",
+        url,
+      },
+    },
     garantie.echeance
       ? `La salle vous est réservée jusqu'au ${echapper(garantie.echeance)}. Passé ce délai, elle repart à la réservation.`
       : `La salle vous est réservée le temps de cette formalité.`,
@@ -225,8 +316,8 @@ export function lienDePaiement(
     sujet: sujet(
       `${garantie.caution ? "Carte à enregistrer" : "Acompte à régler"} — ${c.restaurantNom}`,
     ),
-    texte: texteDe(lignes, c),
-    html: enveloppe(lignes, c.restaurantNom),
+    texte: texteDe(blocs, c),
+    html: enveloppe(blocs, c.restaurantNom),
   };
 }
 
@@ -237,24 +328,19 @@ export function lienDePaiement(
  * après l'annulation en un clic. Un client prévenu la veille se souvient
  * — et s'il ne peut plus venir, c'est ce message-là qui le lui fait
  * dire, pendant qu'il reste une soirée pour revendre la table.
- *
- * D'où le lien d'annulation, mis en évidence plutôt que caché : on ne
- * cherche pas à retenir quelqu'un qui ne viendra pas.
  */
 export function rappelReservation(c: Contexte): Message {
-  const lignes = [
+  const blocs: Bloc[] = [
     `Bonjour ${echapper(c.clientNom)},`,
-    `Petit rappel : vous êtes attendus <strong>${echapper(rappel(c))}</strong> chez ${echapper(c.restaurantNom)}.`,
-    c.restaurantAdresse
-      ? `L'adresse : ${echapper(c.restaurantAdresse)}.`
-      : `À demain.`,
+    `Petit rappel : vous êtes attendus chez ${echapper(c.restaurantNom)}.`,
+    encadre(c),
     ligneAnnulation(c) ||
       `Un empêchement ? Répondez à cet e-mail, l'établissement préfère le savoir ce soir que demain à table.`,
   ];
   return {
     sujet: sujet(`Demain — ${c.restaurantNom}, ${rappel(c)}`),
-    texte: texteDe(lignes, c),
-    html: enveloppe(lignes, c.restaurantNom),
+    texte: texteDe(blocs, c),
+    html: enveloppe(blocs, c.restaurantNom),
   };
 }
 
@@ -264,33 +350,48 @@ export function rappelReservation(c: Contexte): Message {
  * C'est une bonne nouvelle, et le message le dit — la table est de
  * nouveau vendable, et elle l'est d'autant mieux qu'on l'apprend tôt.
  */
-export function alerteAnnulationClient(c: Contexte, lien: string): Message {
-  const lignes = [
-    `<strong>${echapper(c.clientNom)}</strong> vient d'annuler : ${echapper(rappel(c))}.`,
+export function alerteAnnulationClient(c: Contexte, lienCarnet: string): Message {
+  const blocs: Bloc[] = [
+    `<strong>${echapper(c.clientNom)}</strong> vient d'annuler.`,
+    encadre(c),
     `La table est de nouveau disponible à la réservation — personne n'a eu à décrocher le téléphone.`,
-    `Le carnet : ${echapper(lien)}`,
+    { bouton: { libelle: "Ouvrir le carnet", url: lienCarnet } },
   ];
   return {
     sujet: sujet(`Annulation — ${c.clientNom}, ${rappel(c)}`),
-    texte: texteDe(lignes, c),
-    html: enveloppe(lignes, "Klarr"),
+    texte: texteDe(blocs, c),
+    html: enveloppe(blocs, "Klarr"),
   };
 }
 
 /**
- * La version texte : les mêmes lignes, sans balises et sans entités. Les
+ * La version texte : les mêmes blocs, sans balises et sans entités. Les
  * lignes sont écrites pour le HTML, donc échappées ; les relire telles
  * quelles afficherait « Chez Paul &amp; Fils » dans un message qui n'a
  * pourtant rien de HTML.
+ *
+ * Un lien, lui, doit redevenir visible : le texte brut ne sait pas
+ * cliquer, et une adresse cachée y devient une adresse perdue.
  */
-function texteDe(lignes: string[], c: Contexte): string {
-  const nu = lignes.filter((ligne) => ligne !== "").map(deshtml);
+function texteDe(blocs: Bloc[], c: Contexte): string {
+  const nu = blocs
+    .filter((bloc) => bloc !== "")
+    .map((bloc) => {
+      if (typeof bloc === "string") return deshtml(bloc);
+      if ("bouton" in bloc) return `${bloc.bouton.libelle} : ${bloc.bouton.url}`;
+      return bloc.encadre.join("\n");
+    });
   return `${nu.join("\n\n")}\n\n— ${c.restaurantNom}`;
 }
 
 function deshtml(html: string): string {
   return html
+    .replace(/<a href="([^"]*)"[^>]*>([^<]*)<\/a>/g, "$2 : $1")
+    // Le point de la phrase collé à l'adresse : plusieurs messageries
+    // l'avalent dans le lien cliquable, et le lien ne mène nulle part.
+    .replace(/(https?:\/\/[^\s]*[^\s.])\.(?=\s|$)/g, "$1")
     .replace(/<[^>]+>/g, "")
+    .replace(/&quot;/g, '"')
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")
     .replace(/&amp;/g, "&");
