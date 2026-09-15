@@ -31,6 +31,10 @@ export const billet: Billet = {
     "Un dixième de rotation sur quarante couverts vaut environ 89 € par service — exactement ce que coûte un taux de no-show de 10 %.",
     "Les extras relèvent du CDD d'usage, mais au-delà de soixante jours par trimestre civil, la convention HCR ouvre la voie à une requalification.",
   ],
+  image: {
+    fichier: "/blog/organisation-salle.jpg",
+    alt: "Une restauratrice met au propre son organisation de salle : d'un côté la liste des fonctions, de l'autre les prénoms de l'équipe, pendant que le service se prépare derrière elle.",
+  },
   markdown: `
 « Marc s'occupe de la cave. » « Julie sait faire la caisse. » « Pour les groupes, on demande à Sofiane. »
 

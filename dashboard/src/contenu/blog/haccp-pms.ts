@@ -41,6 +41,10 @@ export const billet: Billet = {
     "Le point le plus regardé est le refroidissement : passer de +63 °C à +10 °C en moins de deux heures.",
     "Le plat témoin est obligatoire en restauration collective, pas en restauration commerciale. On en vend pourtant beaucoup aux restaurants traditionnels.",
   ],
+  image: {
+    fichier: "/blog/haccp-pms.jpg",
+    alt: "Un cuisinier en gants, dans une cuisine inox, devant un classeur « sécurité alimentaire » acheté tout fait et une liste des relevés obligatoires à tenir chaque jour.",
+  },
   markdown: `
 On dit « avoir son HACCP » comme on dirait avoir son permis. Ce n'est pas ça, et cette confusion coûte cher — en argent dépensé pour rien, et en sécurité qu'on croit avoir.
 

@@ -41,6 +41,10 @@ export const billet: Billet = {
     "Le chauffage et la climatisation des terrasses en extérieur sont interdits depuis le 31 mars 2022, sauf sous un abri couvert et fermé par des parois rigides.",
     "Le règlement des terrasses de votre commune décide du reste : passage libre, mobilier, horaires, saison. Il est public et précis.",
   ],
+  image: {
+    fichier: "/blog/terrasse.jpg",
+    alt: "Des agents de la police municipale contrôlent l'autorisation d'occupation du domaine public d'une terrasse, devant la restauratrice.",
+  },
   markdown: `
 Vous reprenez un fonds « avec une terrasse de vingt couverts ». Le prix en tient compte, évidemment : vingt couverts de plus aux beaux jours, c'est une part sérieuse de la saison.
 

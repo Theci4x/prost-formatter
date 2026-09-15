@@ -36,6 +36,10 @@ export const billet: Billet = {
     "Et une offre musicale professionnelle ne remplace pas la SACEM. Ce sont deux choses différentes, et il faut les deux.",
     "Il n'y a ni seuil de volume ni seuil de durée : la radio, la télévision de la salle et l'attente téléphonique comptent.",
   ],
+  image: {
+    fichier: "/blog/sacem-spre.jpg",
+    alt: "Une restauratrice dans sa salle fermée, devant une facture unique SACEM-SPRE et une note qui sépare le droit d'auteur de la rémunération équitable.",
+  },
   markdown: `
 Presque tous les restaurateurs paient la SACEM. Presque aucun ne sait ce qu'il paie, ni qu'une seconde redevance existe — ni, surtout, que l'abonnement musical avec lequel ils passent la musique tous les soirs ne les autorise pas à le faire.
 
