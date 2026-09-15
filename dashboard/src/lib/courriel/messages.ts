@@ -176,6 +176,34 @@ export function alerteRestaurateur(
 }
 
 /**
+ * Le rappel de la veille.
+ *
+ * Ce n'est pas une politesse : c'est le deuxième levier sur le no-show,
+ * après l'annulation en un clic. Un client prévenu la veille se souvient
+ * — et s'il ne peut plus venir, c'est ce message-là qui le lui fait
+ * dire, pendant qu'il reste une soirée pour revendre la table.
+ *
+ * D'où le lien d'annulation, mis en évidence plutôt que caché : on ne
+ * cherche pas à retenir quelqu'un qui ne viendra pas.
+ */
+export function rappelReservation(c: Contexte): Message {
+  const lignes = [
+    `Bonjour ${echapper(c.clientNom)},`,
+    `Petit rappel : vous êtes attendus <strong>${echapper(rappel(c))}</strong> chez ${echapper(c.restaurantNom)}.`,
+    c.restaurantAdresse
+      ? `L'adresse : ${echapper(c.restaurantAdresse)}.`
+      : `À demain.`,
+    ligneAnnulation(c) ||
+      `Un empêchement ? Répondez à cet e-mail, l'établissement préfère le savoir ce soir que demain à table.`,
+  ];
+  return {
+    sujet: sujet(`Demain — ${c.restaurantNom}, ${rappel(c)}`),
+    texte: texteDe(lignes, c),
+    html: enveloppe(lignes, c.restaurantNom),
+  };
+}
+
+/**
  * Pour le restaurateur : le client vient de rendre sa table.
  *
  * C'est une bonne nouvelle, et le message le dit — la table est de

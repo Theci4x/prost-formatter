@@ -2,6 +2,7 @@ import type { Genre } from "@/lib/courriel/reservation";
 import {
   alerteAnnulationClient,
   alerteRestaurateur,
+  rappelReservation,
   demandeRecue,
   reservationConfirmee,
   reservationRefusee,
@@ -108,6 +109,9 @@ export function aRetenter(
     // L'annulation, elle, reste vraie : la table est rendue, et le
     // restaurateur a tout intérêt à l'apprendre même avec du retard.
     alerte_annulation: ["annulee"],
+    // Un rappel ne vaut que pour une table encore debout : celle qui a
+    // été annulée entre-temps n'a plus personne à faire venir.
+    rappel: ["confirmee"],
   };
   if (!attendu[ligne.genre].includes(reservation.statut)) {
     return { retenter: false, motif: `statut devenu « ${reservation.statut} »` };
@@ -135,6 +139,8 @@ export function messageDe(
       return alerteRestaurateur(contexte, false, lien);
     case "alerte_annulation":
       return alerteAnnulationClient(contexte, lien);
+    case "rappel":
+      return rappelReservation(contexte);
   }
 }
 

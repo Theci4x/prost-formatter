@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { jetonValide } from "@/lib/limites/publiques";
 import { rattraperCourriels } from "@/lib/courriel/rattrapage";
+import { rappelerLesReservations } from "@/lib/courriel/rappel";
 
 // Les options échues ne bloquent déjà plus la jauge — le moteur de
 // disponibilité les ignore. Cette tâche ne fait que le dire : sans elle, une
@@ -46,5 +47,18 @@ export async function GET(request: Request) {
       `${courriels.echoues} en échec, ${courriels.abandonnes} abandonné(s)`,
   );
 
-  return NextResponse.json({ expirees, courriels });
+  // Les rappels viennent après le rattrapage, et non l'inverse : un
+  // rappel qui échoue ce soir doit pouvoir être repris demain, pas
+  // retenté dans la seconde alors que la panne dure encore.
+  const rappels = await rappelerLesReservations({
+    supabase,
+    maintenant: new Date(),
+  });
+  console.log(
+    `[cron/options-expirees] rappels : ${rappels.envoyes} envoyé(s), ` +
+      `${rappels.echoues} en échec, ${rappels.ignorees} ignoré(s) ` +
+      `sur ${rappels.concernees} table(s) de demain`,
+  );
+
+  return NextResponse.json({ expirees, courriels, rappels });
 }

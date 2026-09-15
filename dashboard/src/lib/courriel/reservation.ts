@@ -29,7 +29,9 @@ export type Genre =
   | "refusee"
   | "annulee"
   /** Le client a rendu sa table : on prévient la maison. */
-  | "alerte_annulation";
+  | "alerte_annulation"
+  /** Le rappel de la veille, envoyé au client. */
+  | "rappel";
 
 /**
  * Pose la trace AVANT d'envoyer. Dans l'autre sens, deux requêtes
