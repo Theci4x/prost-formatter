@@ -2,6 +2,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { envoyerCourriel } from "@/lib/courriel/envoyer";
 import {
+  alerteAnnulationClient,
   alerteRestaurateur,
   demandeRecue,
   reservationConfirmee,
@@ -26,7 +27,9 @@ export type Genre =
   | "confirmee"
   | "alerte_restaurateur"
   | "refusee"
-  | "annulee";
+  | "annulee"
+  /** Le client a rendu sa table : on prévient la maison. */
+  | "alerte_annulation";
 
 /**
  * Pose la trace AVANT d'envoyer. Dans l'autre sens, deux requêtes
@@ -178,6 +181,44 @@ export async function prevenirRefus({
       supabase,
       reservationId,
       motif,
+      resultat.erreur ?? "inconnue",
+    );
+  }
+}
+
+/**
+ * Prévient le restaurateur qu'un client a rendu sa table. Sans ce
+ * message, une table libérée le reste sur l'écran mais pas dans la tête
+ * du chef de rang, qui continue de la tenir.
+ */
+export async function prevenirAnnulationClient({
+  supabase,
+  reservationId,
+  contexte,
+  destinataire,
+  lien,
+}: {
+  supabase: SupabaseClient;
+  reservationId: string;
+  contexte: Contexte;
+  destinataire: string | null;
+  lien: string;
+}): Promise<void> {
+  if (!destinataire) return;
+  const genre: Genre = "alerte_annulation";
+  if (!(await reserverLEnvoi(supabase, reservationId, genre, destinataire))) {
+    return;
+  }
+
+  const resultat = await envoyerCourriel({
+    destinataire,
+    ...alerteAnnulationClient(contexte, lien),
+  });
+  if (!resultat.envoye) {
+    await noterLEchec(
+      supabase,
+      reservationId,
+      genre,
       resultat.erreur ?? "inconnue",
     );
   }

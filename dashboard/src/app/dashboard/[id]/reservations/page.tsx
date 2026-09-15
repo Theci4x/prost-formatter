@@ -33,6 +33,8 @@ type Demande = {
   couverts: number;
   type: "table" | "privatisation";
   statut: "demande" | "confirmee" | "refusee" | "annulee" | "expiree";
+  /** « client » quand c'est lui qui a rendu la table, « restaurant » sinon. */
+  annulee_par: string | null;
   client_nom: string;
   client_email: string;
   client_telephone: string | null;
@@ -140,7 +142,12 @@ function Ligne({
           <span
             className={`rounded-full px-2.5 py-1 text-xs font-medium ${STATUT_STYLES[demande.statut]}`}
           >
-            {STATUT_LABELS[demande.statut]}
+            {/* Une table rendue par le client et une table qu'on a
+                refusée soi-même n'ont pas le même sens : la première se
+                revend, et il faut le voir sans ouvrir la fiche. */}
+            {demande.statut === "annulee" && demande.annulee_par === "client"
+              ? "Annulée par le client"
+              : STATUT_LABELS[demande.statut]}
           </span>
           {enCours && restant && (
             <span className="text-xs text-zinc-400">{restant}</span>

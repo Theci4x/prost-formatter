@@ -64,7 +64,7 @@ export async function rattraperCourriels({
   const { data: reservationsData } = await supabase
     .from("restaurant_reservations")
     .select(
-      "id, restaurant_id, service_id, date_reservation, heure_arrivee, couverts, type, statut, client_nom, client_email",
+      "id, restaurant_id, service_id, date_reservation, heure_arrivee, couverts, type, statut, client_nom, client_email, annulation_token",
     )
     .in("id", [...new Set(lignes.map((ligne) => ligne.reservation_id))]);
 
@@ -154,6 +154,9 @@ export async function rattraperCourriels({
         ? (services.get(reservation.service_id) ?? null)
         : null,
       type: reservation.type,
+      lienAnnulation: reservation.annulation_token
+        ? `${siteUrl()}/annuler/${reservation.annulation_token}`
+        : null,
     };
 
     const message = messageDe(

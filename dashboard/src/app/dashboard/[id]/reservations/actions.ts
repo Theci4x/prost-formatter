@@ -13,6 +13,8 @@ import {
   garantieRequise,
 } from "@/lib/reservations/garantie";
 import { montantDebitable } from "@/lib/reservations/caution";
+import { jetonAnnulation } from "@/lib/reservations/annulation";
+import { siteUrl } from "@/lib/site-url";
 import {
   prevenirClient,
   prevenirRefus,
@@ -528,6 +530,7 @@ type ReservationComplete = {
   paiement_token: string | null;
   client_nom: string | null;
   client_email: string | null;
+  annulation_token: string | null;
 };
 
 /**
@@ -583,6 +586,11 @@ async function contexteCourriel(reservation: ReservationComplete): Promise<{
       couverts: reservation.couverts,
       serviceNom: (serviceResult.data as { nom: string } | null)?.nom ?? null,
       type: reservation.type,
+      // Le lien d'annulation voyage avec chaque message : c'est celui du
+      // dernier e-mail reçu que le client retrouvera le jour venu.
+      lienAnnulation: reservation.annulation_token
+        ? `${siteUrl()}/annuler/${reservation.annulation_token}`
+        : null,
     },
   };
 }
@@ -746,7 +754,10 @@ async function changerStatut(
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("restaurant_reservations")
-    .update({ statut, option_expire_le: null })
+    // On note qui décide : le restaurateur, ici. Une table qu'il refuse
+    // et une table que le client rend ne se lisent pas pareil dans le
+    // carnet, et la seconde se revend.
+    .update({ statut, option_expire_le: null, annulee_par: "restaurant" })
     .eq("id", reservationId)
     .select("*")
     .maybeSingle();
@@ -963,6 +974,10 @@ export async function ajouterReservation(
     client_email: texte(formData.get("client_email")) || "—",
     client_telephone: telephone || null,
     note_interne: note || null,
+    // Même une réservation prise au téléphone reçoit son jeton : si le
+    // client a laissé une adresse, le rappel de la veille pourra lui
+    // proposer de rendre sa table comme aux autres.
+    annulation_token: jetonAnnulation(),
   });
 
   if (error) {

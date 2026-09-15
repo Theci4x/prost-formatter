@@ -1,5 +1,6 @@
 import type { Genre } from "@/lib/courriel/reservation";
 import {
+  alerteAnnulationClient,
   alerteRestaurateur,
   demandeRecue,
   reservationConfirmee,
@@ -53,6 +54,7 @@ export type ReservationRattrapee = {
   statut: "demande" | "confirmee" | "refusee" | "annulee" | "expiree";
   client_nom: string | null;
   client_email: string | null;
+  annulation_token: string | null;
 };
 
 export type Verdict =
@@ -103,6 +105,9 @@ export function aRetenter(
     // L'alerte sert au restaurateur tant qu'il y a quelque chose à voir.
     // Une réservation qu'il a lui-même refusée n'a plus rien à lui dire.
     alerte_restaurateur: ["demande", "confirmee"],
+    // L'annulation, elle, reste vraie : la table est rendue, et le
+    // restaurateur a tout intérêt à l'apprendre même avec du retard.
+    alerte_annulation: ["annulee"],
   };
   if (!attendu[ligne.genre].includes(reservation.statut)) {
     return { retenter: false, motif: `statut devenu « ${reservation.statut} »` };
@@ -128,6 +133,8 @@ export function messageDe(
       return reservationRefusee(contexte, "annulee");
     case "alerte_restaurateur":
       return alerteRestaurateur(contexte, false, lien);
+    case "alerte_annulation":
+      return alerteAnnulationClient(contexte, lien);
   }
 }
 

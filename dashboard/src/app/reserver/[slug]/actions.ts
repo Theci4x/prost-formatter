@@ -15,6 +15,7 @@ import {
 import { chargerFermetures } from "@/lib/reservations/fermetures";
 import { decisionAutomatique } from "@/lib/reservations/confirmation";
 import { garantieRequise } from "@/lib/reservations/garantie";
+import { jetonAnnulation } from "@/lib/reservations/annulation";
 import {
   prevenirClient,
   prevenirRestaurateur,
@@ -248,6 +249,10 @@ export async function demanderReservation(
   });
   const confirmee = decision.statut === "confirmee";
 
+  // Le jeton part avec la réservation : c'est lui qui permettra au client
+  // de rendre sa table sans téléphoner en plein service.
+  const annulation = jetonAnnulation();
+
   const { data: creee, error } = await supabase.from("restaurant_reservations").insert({
     restaurant_id: restaurant.id,
     espace_id: espace.id,
@@ -270,6 +275,7 @@ export async function demanderReservation(
     // Une réservation confirmée ne pose plus d'option : elle est acquise,
     // et une date d'expiration traînante la ferait disparaître du carnet.
     option_expire_le: confirmee ? null : expiration.toISOString(),
+    annulation_token: annulation,
   }).select("id").maybeSingle();
 
   if (error) {
@@ -290,6 +296,7 @@ export async function demanderReservation(
       couverts,
       serviceNom: service.nom,
       type,
+      lienAnnulation: `${siteUrl()}/annuler/${annulation}`,
     };
     await Promise.all([
       prevenirClient({

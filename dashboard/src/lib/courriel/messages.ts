@@ -20,6 +20,12 @@ export type Contexte = {
   couverts: number;
   serviceNom: string | null;
   type: "table" | "privatisation";
+  /**
+   * L'adresse qui permet au client de rendre sa table en un clic. Sans
+   * elle, un empêchement se règle par téléphone en plein service — donc
+   * le plus souvent ne se règle pas, et la table reste vide.
+   */
+  lienAnnulation?: string | null;
 };
 
 export type Message = { sujet: string; texte: string; html: string };
@@ -73,6 +79,16 @@ function enveloppe(corps: string[], signature: string): string {
   return `<div style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;max-width:520px">${paragraphes}<p style="margin:24px 0 0;font-size:13px;color:#6b6259">${echapper(signature)}</p></div>`;
 }
 
+/**
+ * La phrase qui rend la table. Elle vient en dernier et sans emphase :
+ * on ne pousse personne à annuler, on rend juste la chose possible.
+ */
+function ligneAnnulation(c: Contexte): string {
+  return c.lienAnnulation
+    ? `Un empêchement ? Rends ta table en un clic : ${echapper(c.lienAnnulation)}`
+    : "";
+}
+
 /** Reçue, mais pas encore confirmée : le restaurant doit se prononcer. */
 export function demandeRecue(c: Contexte): Message {
   const quoi =
@@ -81,7 +97,7 @@ export function demandeRecue(c: Contexte): Message {
     `Bonjour ${echapper(c.clientNom)},`,
     `Nous avons bien reçu ${quoi} chez ${echapper(c.restaurantNom)} : <strong>${echapper(rappel(c))}</strong>.`,
     `Elle n'est pas encore confirmée — le restaurant revient vers vous très vite. Vous recevrez un second message dès que ce sera fait.`,
-    `Si vos plans changent, répondez simplement à cet e-mail.`,
+    ligneAnnulation(c) || `Si vos plans changent, répondez simplement à cet e-mail.`,
   ];
   return {
     sujet: sujet(`Demande reçue — ${c.restaurantNom}`),
@@ -98,7 +114,8 @@ export function reservationConfirmee(c: Contexte): Message {
     c.restaurantAdresse
       ? `L'adresse : ${echapper(c.restaurantAdresse)}.`
       : `À très bientôt.`,
-    `Un empêchement ? Prévenez-nous en répondant à cet e-mail — une table rendue à temps, c'est une table qui resert.`,
+    ligneAnnulation(c) ||
+      `Un empêchement ? Prévenez-nous en répondant à cet e-mail — une table rendue à temps, c'est une table qui resert.`,
   ];
   return {
     sujet: sujet(`Réservation confirmée — ${c.restaurantNom}`),
@@ -153,6 +170,25 @@ export function alerteRestaurateur(
     sujet: sujet(
       `${confirmee ? "Réservation" : "À valider"} — ${c.clientNom}, ${rappel(c)}`,
     ),
+    texte: texteDe(lignes, c),
+    html: enveloppe(lignes, "Klarr"),
+  };
+}
+
+/**
+ * Pour le restaurateur : le client vient de rendre sa table.
+ *
+ * C'est une bonne nouvelle, et le message le dit — la table est de
+ * nouveau vendable, et elle l'est d'autant mieux qu'on l'apprend tôt.
+ */
+export function alerteAnnulationClient(c: Contexte, lien: string): Message {
+  const lignes = [
+    `<strong>${echapper(c.clientNom)}</strong> vient d'annuler : ${echapper(rappel(c))}.`,
+    `La table est de nouveau disponible à la réservation — personne n'a eu à décrocher le téléphone.`,
+    `Le carnet : ${echapper(lien)}`,
+  ];
+  return {
+    sujet: sujet(`Annulation — ${c.clientNom}, ${rappel(c)}`),
     texte: texteDe(lignes, c),
     html: enveloppe(lignes, "Klarr"),
   };
