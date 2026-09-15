@@ -39,6 +39,10 @@ export const billet: Billet = {
     "L'empreinte bancaire n'est pas un paiement, et elle est légale — à condition d'annoncer le montant avant, de ne jamais stocker la carte vous-même, et de savoir si vous encaissez des arrhes ou un acompte : la loi ne leur fait pas le même sort.",
     "Le SMS de confirmation ne sert pas à rappeler. Il sert à rendre l'annulation facile : une table annulée à 17 h se revend, un no-show à 20 h 30 ne se revend pas.",
   ],
+  image: {
+    fichier: "/blog/no-show.jpg",
+    alt: "Un restaurateur devant un cahier de réservations couvert de mentions « no-show », dans une salle vide aux chaises encore relevées.",
+  },
   markdown: `
 Demandez à dix restaurateurs leur taux de no-show. Dix vous répondront « beaucoup ». Aucun ne vous donnera un chiffre.
 

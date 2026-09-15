@@ -41,6 +41,10 @@ export const billet: Billet = {
     "Sur un menu à 32 € comprenant un verre de vin, l'écart entre la bonne ventilation et le taux plein est de 2,10 € — et le délai de reprise est de trois ans.",
     "Les arrhes conservées après un no-show sont une indemnité, donc hors champ de la TVA. Un acompte, lui, est dans le champ. Le mot que vous écrivez décide.",
   ],
+  image: {
+    fichier: "/blog/tva-menu-vin.jpg",
+    alt: "Un restaurateur calcule la ventilation de TVA d'un menu, un verre de vin posé à côté de ses notes sur les taux à 10 et 20 %.",
+  },
   markdown: `
 « La restauration, c'est 10 %. »
 

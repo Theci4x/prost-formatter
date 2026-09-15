@@ -41,6 +41,10 @@ export const billet: Billet = {
     "L'autorisation de travaux conditionne l'ouverture, et elle valide les plans. Commencer les travaux avant de l'avoir, c'est risquer de les refaire.",
     "Deux registres sont obligatoires, dont l'un pour toutes les catégories sans exception : le registre public d'accessibilité, qui manque presque partout.",
   ],
+  image: {
+    fichier: "/blog/erp-commission.jpg",
+    alt: "Un technicien explique un plan de sécurité ERP à un restaurateur, mètre ruban sur la table, dans une salle fermée sous un panneau de sortie de secours.",
+  },
   markdown: `
 « On fera 60 couverts, on est un petit restaurant. »
 

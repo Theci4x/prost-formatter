@@ -36,6 +36,10 @@ export const billet: Billet = {
     "Un avis négatif qui exprime une opinion est protégé. La diffamation commence à l'imputation d'un fait précis : intoxication, insalubrité, escroquerie. Et elle se prescrit en trois mois.",
     "Votre réponse ne s'adresse pas à celui qui a écrit, mais aux centaines de gens qui la liront avant de réserver.",
   ],
+  image: {
+    fichier: "/blog/avis-google.jpg",
+    alt: "Un restaurateur regarde ses avis sur son ordinateur, à côté de notes sur les faux avis et les sanctions prévues par le code de la consommation.",
+  },
   markdown: `
 Il existe des centaines d'articles sur « comment obtenir plus d'avis Google ». Il n'en existe presque aucun sur ce qui est interdit — alors que c'est là que les restaurateurs se mettent en danger, souvent de bonne foi, en appliquant des conseils trouvés en ligne.
 

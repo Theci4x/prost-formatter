@@ -35,6 +35,10 @@ export const billet: Billet = {
     "Tous vos plats n'y survivent pas pareil : la commission est proportionnelle, le coût matière ne l'est pas. Une carte de livraison est un sous-ensemble choisi, pas votre carte.",
     "Le piège comptable : quand la plateforme facture depuis un autre pays de l'Union, la TVA sur la commission s'autoliquide. L'oublier se paie au contrôle.",
   ],
+  image: {
+    fichier: "/blog/livraison-plateformes.jpg",
+    alt: "Un restaurateur devant son ordinateur, entouré de sacs de livraison en kraft et d'un sac isotherme de coursier, avec des notes sur les commissions et les marges.",
+  },
   markdown: `
 **Disons-le tout de suite : nous ne sommes pas neutres.** Klarr vend une page de réservation et de commande sans commission. Nous avons donc un intérêt direct à ce que vous trouviez les commissions des plateformes trop chères.
 

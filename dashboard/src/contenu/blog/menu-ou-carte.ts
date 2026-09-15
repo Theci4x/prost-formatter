@@ -41,6 +41,10 @@ export const billet: Billet = {
     "Quatre familles de plats, deux questions : marge et popularité. Chacune appelle une action différente, et retirer un plat en est une.",
     "La loi en met plus que vous ne croyez sur votre carte : origine des viandes, allergènes, et cinq vins avec leur contenance.",
   ],
+  image: {
+    fichier: "/blog/menu-carte.jpg",
+    alt: "Un restaurateur compare deux documents sur sa table : une page de menus et formules, et une carte, avec une calculatrice et des relevés de coût matière.",
+  },
   markdown: `
 « On met une carte, comme ça les gens choisissent. »
 

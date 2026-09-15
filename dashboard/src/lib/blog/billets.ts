@@ -13,6 +13,7 @@ import { billet as avisGoogle } from "@/contenu/blog/avis-google";
 import { billet as erp } from "@/contenu/blog/erp-commission-securite";
 import { billet as tvaMenuVin } from "@/contenu/blog/tva-menu-vin";
 import { billet as sacemSpre } from "@/contenu/blog/sacem-spre";
+import { billet as haccp } from "@/contenu/blog/haccp-pms";
 
 /**
  * Les billets, importés un par un plutôt que lus sur le disque.
@@ -35,6 +36,7 @@ const TOUS: Billet[] = [
   erp,
   tvaMenuVin,
   sacemSpre,
+  haccp,
 ];
 
 /** Du plus récent au plus ancien : c'est l'ordre d'un blog. */
