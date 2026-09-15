@@ -164,6 +164,12 @@ export async function rattraperCourriels({
       contexte,
       `${siteUrl()}/dashboard/${reservation.restaurant_id}/reservations`,
     );
+    // Un genre qu'on ne sait pas reconstruire ne se renvoie pas : mieux
+    // vaut ne rien envoyer qu'envoyer le mauvais message.
+    if (!message) {
+      bilan.abandonnes += 1;
+      continue;
+    }
 
     const resultat = await envoyerCourriel({
       destinataire: ligne.destinataire,

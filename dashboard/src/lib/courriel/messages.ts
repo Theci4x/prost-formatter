@@ -191,6 +191,46 @@ export function alerteRestaurateur(
 }
 
 /**
+ * Le lien de paiement, envoyé au client quand sa demande est acceptée.
+ *
+ * Il n'existait pas : le restaurateur acceptait, Klarr fabriquait un lien
+ * — et le laissait dans le tableau de bord, à charge pour lui de le
+ * copier dans un e-mail écrit à la main. Le client, lui, attendait sans
+ * rien savoir, et l'option expirait au bout de quelques jours.
+ *
+ * Le message dit trois choses, dans cet ordre : la bonne nouvelle, ce
+ * qu'il reste à faire, et jusqu'à quand.
+ */
+export function lienDePaiement(
+  c: Contexte,
+  lien: string,
+  garantie: { montant: string; caution: boolean; echeance: string | null },
+): Message {
+  const quoi = garantie.caution
+    ? `Pour la confirmer définitivement, il reste à enregistrer une carte en garantie de <strong>${echapper(garantie.montant)}</strong>. <strong>Rien ne sera prélevé</strong> : elle ne serait débitée qu'en cas de défection.`
+    : `Pour la confirmer définitivement, il reste à régler un acompte de <strong>${echapper(garantie.montant)}</strong>, qui viendra en déduction de l'addition.`;
+
+  const lignes = [
+    `Bonjour ${echapper(c.clientNom)},`,
+    `Bonne nouvelle : ${echapper(c.restaurantNom)} a accepté votre demande — <strong>${echapper(rappel(c))}</strong>.`,
+    ligneMinimum(c),
+    quoi,
+    `C'est ici : ${echapper(lien)}`,
+    garantie.echeance
+      ? `La salle vous est réservée jusqu'au ${echapper(garantie.echeance)}. Passé ce délai, elle repart à la réservation.`
+      : `La salle vous est réservée le temps de cette formalité.`,
+  ];
+
+  return {
+    sujet: sujet(
+      `${garantie.caution ? "Carte à enregistrer" : "Acompte à régler"} — ${c.restaurantNom}`,
+    ),
+    texte: texteDe(lignes, c),
+    html: enveloppe(lignes, c.restaurantNom),
+  };
+}
+
+/**
  * Le rappel de la veille.
  *
  * Ce n'est pas une politesse : c'est le deuxième levier sur le no-show,

@@ -4,6 +4,7 @@ import { envoyerCourriel } from "@/lib/courriel/envoyer";
 import {
   alerteAnnulationClient,
   alerteRestaurateur,
+  lienDePaiement,
   demandeRecue,
   reservationConfirmee,
   reservationRefusee,
@@ -31,7 +32,11 @@ export type Genre =
   /** Le client a rendu sa table : on prévient la maison. */
   | "alerte_annulation"
   /** Le rappel de la veille, envoyé au client. */
-  | "rappel";
+  | "rappel"
+  /** Le lien qui confirmera la réservation : acompte ou empreinte. */
+  | "paiement"
+  /** La relance automatique, avant que l'option n'expire. */
+  | "relance_paiement";
 
 /**
  * Pose la trace AVANT d'envoyer. Dans l'autre sens, deux requêtes
@@ -224,4 +229,60 @@ export async function prevenirAnnulationClient({
       resultat.erreur ?? "inconnue",
     );
   }
+}
+
+/**
+ * Envoie au client le lien qui confirmera sa réservation.
+ *
+ * Deux usages, et le second explique le paramètre `unique`.
+ *
+ * À l'acceptation, le message part une fois : la trace et sa contrainte
+ * d'unicité s'en portent garantes. Mais le restaurateur doit aussi
+ * pouvoir relancer depuis son carnet — un client qui n'a pas payé au bout
+ * de deux jours n'a souvent rien vu passer. Une relance est un geste
+ * délibéré : elle ne se heurte pas au garde-fou du premier envoi.
+ */
+export async function envoyerLienDePaiement({
+  supabase,
+  reservationId,
+  contexte,
+  destinataire,
+  repondreA,
+  lien,
+  garantie,
+  unique,
+}: {
+  supabase: SupabaseClient;
+  reservationId: string;
+  contexte: Contexte;
+  destinataire: string;
+  repondreA?: string;
+  lien: string;
+  garantie: { montant: string; caution: boolean; echeance: string | null };
+  /** Vrai au premier envoi, faux pour une relance demandée à la main. */
+  unique: boolean;
+}): Promise<{ envoye: boolean; erreur: string | null }> {
+  const genre: Genre = "paiement";
+
+  if (unique) {
+    if (!(await reserverLEnvoi(supabase, reservationId, genre, destinataire))) {
+      return { envoye: false, erreur: null };
+    }
+  }
+
+  const resultat = await envoyerCourriel({
+    destinataire,
+    repondreA,
+    ...lienDePaiement(contexte, lien, garantie),
+  });
+
+  if (!resultat.envoye && unique) {
+    await noterLEchec(
+      supabase,
+      reservationId,
+      genre,
+      resultat.erreur ?? "inconnue",
+    );
+  }
+  return resultat;
 }

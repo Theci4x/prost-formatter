@@ -3,6 +3,7 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { jetonValide } from "@/lib/limites/publiques";
 import { rattraperCourriels } from "@/lib/courriel/rattrapage";
 import { rappelerLesReservations } from "@/lib/courriel/rappel";
+import { relancerLesPaiements } from "@/lib/courriel/relances";
 
 // Les options échues ne bloquent déjà plus la jauge — le moteur de
 // disponibilité les ignore. Cette tâche ne fait que le dire : sans elle, une
@@ -60,5 +61,18 @@ export async function GET(request: Request) {
       `sur ${rappels.concernees} table(s) de demain`,
   );
 
-  return NextResponse.json({ expirees, courriels, rappels });
+  // Les relances viennent après l'expiration des options : celles qui
+  // viennent de tomber ne doivent pas recevoir un rappel de payer une
+  // salle qu'elles n'ont plus.
+  const relances = await relancerLesPaiements({
+    supabase,
+    maintenant: new Date(),
+  });
+  console.log(
+    `[cron/options-expirees] relances : ${relances.envoyees} envoyée(s), ` +
+      `${relances.ignorees} ignorée(s) sur ${relances.concernees} option(s) ` +
+      `proche(s) de l'échéance`,
+  );
+
+  return NextResponse.json({ expirees, courriels, rappels, relances });
 }

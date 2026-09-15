@@ -112,8 +112,18 @@ export function aRetenter(
     // Un rappel ne vaut que pour une table encore debout : celle qui a
     // été annulée entre-temps n'a plus personne à faire venir.
     rappel: ["confirmee"],
+    // Le lien de paiement ne se rattrape pas : il porte un jeton et une
+    // échéance que cette tâche n'a pas sous la main, et un lien
+    // reconstruit de travers vaut moins que pas de lien du tout. Le
+    // carnet le relance à la main, et la tâche de nuit s'en charge.
+    paiement: [],
+    relance_paiement: [],
   };
-  if (!attendu[ligne.genre].includes(reservation.statut)) {
+  const statutsAcceptes = attendu[ligne.genre];
+  if (statutsAcceptes.length === 0) {
+    return { retenter: false, motif: "ce message ne se rejoue pas" };
+  }
+  if (!statutsAcceptes.includes(reservation.statut)) {
     return { retenter: false, motif: `statut devenu « ${reservation.statut} »` };
   }
 
@@ -125,7 +135,7 @@ export function messageDe(
   genre: Genre,
   contexte: Contexte,
   lien: string,
-): Message {
+): Message | null {
   switch (genre) {
     case "recue":
       return demandeRecue(contexte);
@@ -141,6 +151,13 @@ export function messageDe(
       return alerteAnnulationClient(contexte, lien);
     case "rappel":
       return rappelReservation(contexte);
+    // Écartés en amont par aRetenter : ils ne se reconstruisent pas sans
+    // leur jeton. Le cas est là pour que l'exhaustivité soit vérifiée par
+    // le compilateur, et qu'un genre ajouté demain ne passe pas au
+    // travers.
+    case "paiement":
+    case "relance_paiement":
+      return null;
   }
 }
 

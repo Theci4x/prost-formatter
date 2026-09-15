@@ -21,7 +21,11 @@ import { libelleAcompte } from "@/lib/reservations/acompte";
 import { libelleCaution } from "@/lib/reservations/caution";
 import { absencesDuClient, libelleAbsences } from "@/lib/reservations/absence";
 import { siteUrl } from "@/lib/site-url";
-import { annulerReservation, constaterAbsence } from "./actions";
+import {
+  annulerReservation,
+  constaterAbsence,
+  relancerPaiement,
+} from "./actions";
 import { BoutonAction } from "@/components/reservations/BoutonAction";
 import { NoteInterne } from "@/components/reservations/NoteInterne";
 import { formatHeure, type Espace, type Service } from "@/types/reservation";
@@ -44,6 +48,8 @@ type Demande = {
   /** Engagement de consommation, figé à la réservation. */
   minimum_consommation_centimes: number | null;
   minimum_consommation_ht: boolean | null;
+  /** Dernière relance envoyée au client pour son paiement. */
+  derniere_relance_le: string | null;
   client_nom: string;
   client_email: string;
   client_telephone: string | null;
@@ -88,6 +94,16 @@ function formatDate(date: string): string {
     weekday: "long",
     day: "numeric",
     month: "long",
+  });
+}
+
+/** « 18 septembre à 14h05 » : assez précis pour ne pas relancer deux fois. */
+function formatRelance(iso: string): string {
+  return new Date(iso).toLocaleString("fr-FR", {
+    day: "numeric",
+    month: "long",
+    hour: "numeric",
+    minute: "2-digit",
   });
 }
 
@@ -292,13 +308,34 @@ function Ligne({
             {attendLeClient && demande.paiement_token && (
               <>
                 <span className="text-xs text-zinc-600">
+                  {/* Le lien part tout seul à l'acceptation : ce champ
+                      n'est plus le seul moyen de le transmettre, mais il
+                      sert encore — par SMS, par WhatsApp, ou quand le
+                      client jure n'avoir rien reçu. */}
                   {demande.caution_statut === "attendue"
-                    ? "Envoie ce lien à ton client : il enregistrera sa carte, rien ne sera prélevé."
-                    : "Envoie ce lien à ton client : il paiera sur ton compte Stripe, sans commission."}
+                    ? "Ton client a reçu ce lien par e-mail : il enregistrera sa carte, rien ne sera prélevé."
+                    : "Ton client a reçu ce lien par e-mail : il paiera sur ton compte Stripe, sans commission."}
                 </span>
                 <LienAcompte
                   lien={`${site}/paiement/${demande.paiement_token}`}
                 />
+                <div className="flex flex-wrap items-center gap-3">
+                  <BoutonAction
+                    action={relancerPaiement}
+                    champs={{
+                      reservation_id: demande.id,
+                      restaurant_id: restaurantId,
+                    }}
+                    libelle="Relancer par e-mail"
+                    enCours="Envoi…"
+                    className="rounded-md border border-brand-navy/30 bg-white px-3 py-1.5 text-xs font-medium text-brand-navy hover:border-brand-navy"
+                  />
+                  {demande.derniere_relance_le && (
+                    <span className="text-xs text-zinc-500">
+                      Relancé le {formatRelance(demande.derniere_relance_le)}
+                    </span>
+                  )}
+                </div>
               </>
             )}
 

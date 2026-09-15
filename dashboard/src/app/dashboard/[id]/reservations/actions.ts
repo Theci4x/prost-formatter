@@ -20,6 +20,7 @@ import {
 } from "@/lib/reservations/absence";
 import { siteUrl } from "@/lib/site-url";
 import {
+  envoyerLienDePaiement,
   prevenirClient,
   prevenirRefus,
 } from "@/lib/courriel/reservation";
@@ -562,6 +563,9 @@ type ReservationComplete = {
   client_nom: string | null;
   client_email: string | null;
   annulation_token: string | null;
+  minimum_consommation_centimes: number | null;
+  minimum_consommation_ht: boolean | null;
+  derniere_relance_le: string | null;
 };
 
 /**
@@ -622,11 +626,26 @@ async function contexteCourriel(reservation: ReservationComplete): Promise<{
       lienAnnulation: reservation.annulation_token
         ? `${siteUrl()}/annuler/${reservation.annulation_token}`
         : null,
+      minimumConsommation: reservation.minimum_consommation_centimes
+        ? `${(reservation.minimum_consommation_centimes / 100).toLocaleString("fr-FR")} € ${reservation.minimum_consommation_ht === false ? "TTC" : "HT"}`
+        : null,
     },
   };
 }
 
 export type DecisionState = { error: string | null };
+
+/** « samedi 20 septembre à 18h », pour annoncer une échéance. */
+function echeanceLisible(iso: string | null): string | null {
+  if (!iso) return null;
+  return new Date(iso).toLocaleString("fr-FR", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
 
 /**
  * Confirme une demande après avoir revérifié la disponibilité. Entre le
@@ -753,9 +772,35 @@ export async function accepterDemande(
     return { error: "L'enregistrement a échoué. Réessaie dans un instant." };
   }
 
-  // Le client n'apprend rien tout seul. Une acceptation qui confirme se
-  // dit ; une acceptation qui réclame un acompte se dit aussi, mais par le
-  // lien de paiement, qui part ailleurs.
+  // Une acceptation qui réclame de l'argent doit partir avec le moyen de
+  // le donner. Sans ce message, le restaurateur acceptait, Klarr
+  // fabriquait un lien — et le laissait dans le tableau de bord, à charge
+  // pour lui de le recopier à la main. Le client attendait sans rien
+  // savoir, et l'option expirait.
+  if (garantie.exigee) {
+    const envoi = await contexteCourriel(reservation);
+    const jetonPaiement =
+      ("paiement_token" in jeton ? jeton.paiement_token : null) ??
+      reservation.paiement_token;
+    if (envoi && jetonPaiement) {
+      const centimes = garantie.acompteCentimes || garantie.cautionCentimes;
+      await envoyerLienDePaiement({
+        supabase: envoi.service,
+        reservationId: reservation.id,
+        contexte: envoi.contexte,
+        destinataire: envoi.destinataire,
+        repondreA: envoi.repondreA,
+        lien: `${siteUrl()}/paiement/${jetonPaiement}`,
+        garantie: {
+          montant: `${(centimes / 100).toLocaleString("fr-FR")} €`,
+          caution: garantie.acompteCentimes === 0,
+          echeance: echeanceLisible(engagement.option_expire_le),
+        },
+        unique: true,
+      });
+    }
+  }
+
   if (!garantie.exigee) {
     const envoi = await contexteCourriel(reservation);
     if (envoi) {
@@ -1460,5 +1505,102 @@ export async function constaterAbsence(
 
   revalidatePath(`/dashboard/${restaurantId}/reservations`);
   revalidatePath(`/dashboard/${restaurantId}/service`);
+  return { error: null };
+}
+
+/** En deçà, on refuse de relancer : trois messages en dix minutes agacent. */
+const DELAI_RELANCE_MINUTES = 30;
+
+/**
+ * Renvoie au client le lien de paiement de sa réservation.
+ *
+ * Geste délibéré du restaurateur, donc pas soumis au garde-fou du premier
+ * envoi : on relance parce qu'on a constaté que rien n'arrivait. Mais
+ * pas plus d'une fois par demi-heure — un client relancé trois fois en
+ * dix minutes ne paie pas plus vite, il bloque l'expéditeur.
+ */
+export async function relancerPaiement(
+  _prevState: DecisionState,
+  formData: FormData,
+): Promise<DecisionState> {
+  const reservationId = texte(formData.get("reservation_id"));
+  const restaurantId = texte(formData.get("restaurant_id"));
+
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("restaurant_reservations")
+    .select("*")
+    .eq("id", reservationId)
+    .maybeSingle();
+
+  const reservation = data as ReservationComplete | null;
+  if (!reservation) return { error: "Cette réservation n'existe plus." };
+  if (!reservation.paiement_token) {
+    return { error: "Cette réservation n'attend aucun paiement." };
+  }
+
+  const derniere = reservation.derniere_relance_le
+    ? new Date(reservation.derniere_relance_le).getTime()
+    : 0;
+  if (Date.now() - derniere < DELAI_RELANCE_MINUTES * 60 * 1000) {
+    return {
+      error: `Tu viens de relancer ce client. Laisse-lui au moins ${DELAI_RELANCE_MINUTES} minutes.`,
+    };
+  }
+
+  const espaceResult = await supabase
+    .from("restaurant_espaces")
+    .select("*")
+    .eq("id", reservation.espace_id)
+    .maybeSingle();
+  const espace = espaceResult.data as Espace | null;
+  if (!espace) return { error: "L'espace de cette réservation a été supprimé." };
+
+  // Le montant vient de la réservation, pas de l'espace : c'est celui qui
+  // a été figé à l'acceptation, et donc celui que le client a déjà lu.
+  const centimes =
+    (reservation as unknown as { acompte_centimes: number | null })
+      .acompte_centimes ||
+    (reservation as unknown as { caution_centimes: number | null })
+      .caution_centimes;
+  if (!centimes) return { error: "Aucun montant n'est attendu." };
+
+  const envoi = await contexteCourriel(reservation);
+  if (!envoi) {
+    return { error: "Ce client n'a pas laissé d'adresse e-mail." };
+  }
+
+  const resultat = await envoyerLienDePaiement({
+    supabase: envoi.service,
+    reservationId: reservation.id,
+    contexte: envoi.contexte,
+    destinataire: envoi.destinataire,
+    repondreA: envoi.repondreA,
+    lien: `${siteUrl()}/paiement/${reservation.paiement_token}`,
+    garantie: {
+      montant: `${(centimes / 100).toLocaleString("fr-FR")} €`,
+      caution:
+        !(reservation as unknown as { acompte_centimes: number | null })
+          .acompte_centimes,
+      echeance: echeanceLisible(reservation.option_expire_le),
+    },
+    unique: false,
+  });
+
+  if (!resultat.envoye) {
+    return {
+      error:
+        resultat.erreur === "Envoi non configuré."
+          ? "L'envoi d'e-mails n'est pas encore configuré. Copie le lien et envoie-le toi-même."
+          : "La relance n'est pas partie. Réessaie dans un instant.",
+    };
+  }
+
+  await envoi.service
+    .from("restaurant_reservations")
+    .update({ derniere_relance_le: new Date().toISOString() })
+    .eq("id", reservation.id);
+
+  revalidatePath(`/dashboard/${restaurantId}/reservations`);
   return { error: null };
 }
