@@ -33,11 +33,19 @@ export const RESUME_MODULE: Record<Module, string> = {
 /**
  * La période d'essai, à compter de la création de l'établissement.
  *
- * Un restaurateur ne juge pas Klarr en trois jours : il lui faut voir
- * passer deux week-ends, et une fiche Google ne bouge pas plus vite. Un
- * essai trop court ferait partir ceux qui auraient payé.
+ * Quatorze jours : deux week-ends, le minimum pour juger un carnet de
+ * réservations.
+ *
+ * Pas trente, et la raison tient au module visibilité. Les réservations
+ * ne s'emportent pas — on cesse de payer, la page s'éteint. La
+ * visibilité, si : en un mois on fait remonter sa fiche Google, on
+ * publie sa carte, on structure ses données, et on part en gardant le
+ * bénéfice. L'essai gratuit y coûte bien plus que le mois non facturé.
+ *
+ * La générosité passe donc par `acces_offert_jusqu_au`, accordé au cas
+ * par cas : un geste choisi, pas un cadeau automatique à des inconnus.
  */
-export const ESSAI_JOURS = 30;
+export const ESSAI_JOURS = 14;
 
 export type EtatAbonnement = {
   module: Module;

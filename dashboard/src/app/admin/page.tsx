@@ -3,6 +3,8 @@ import Link from "next/link";
 import { requireAdmin } from "@/lib/admin";
 import { createServiceClient } from "@/lib/supabase/service";
 import { KlarrMark, KlarrWordmark } from "@/components/brand/KlarrMark";
+import { offrirAcces } from "./actions";
+import { calculerAcces } from "@/lib/abonnement/modules";
 
 export const metadata: Metadata = {
   title: "Administration — Klarr",
@@ -33,10 +35,12 @@ type RestaurantRow = {
   nom: string;
   adresse: string | null;
   created_at: string;
+  acces_offert_jusqu_au: string | null;
 };
 
 type SubscriptionRow = {
   restaurant_id: string;
+  module?: string;
   status: string;
   current_period_end: string | null;
 };
@@ -96,12 +100,12 @@ export default async function AdminPage() {
         .limit(20),
       supabase
         .from("restaurants")
-        .select("id, nom, adresse, created_at")
+        .select("id, nom, adresse, created_at, acces_offert_jusqu_au")
         .order("created_at", { ascending: false })
         .limit(20),
       supabase
         .from("restaurant_subscriptions")
-        .select("restaurant_id, status, current_period_end"),
+        .select("restaurant_id, module, status, current_period_end"),
       supabase.auth.admin.listUsers({ page: 1, perPage: 1 }),
     ]);
 
@@ -228,6 +232,8 @@ export default async function AdminPage() {
                   <th className="px-5 py-3 font-semibold">Nom</th>
                   <th className="px-5 py-3 font-semibold">Adresse</th>
                   <th className="px-5 py-3 font-semibold">Abonnement</th>
+                  <th className="px-5 py-3 font-semibold">Accès</th>
+                  <th className="px-5 py-3 font-semibold">Offert jusqu&apos;au</th>
                   <th className="px-5 py-3 font-semibold">Créé le</th>
                 </tr>
               </thead>
@@ -236,6 +242,20 @@ export default async function AdminPage() {
                   const subscription = subscriptionRows.find(
                     (s) => s.restaurant_id === restaurant.id,
                   );
+                  const acces = calculerAcces({
+                    abonnements: subscriptionRows
+                      .filter((s) => s.restaurant_id === restaurant.id)
+                      .map((s) => ({
+                        module:
+                          s.module === "reservations"
+                            ? "reservations"
+                            : "visibilite",
+                        status: s.status,
+                      })),
+                    creeLe: restaurant.created_at,
+                    accesOffertJusquAu: restaurant.acces_offert_jusqu_au,
+                    maintenant: new Date(),
+                  });
                   return (
                     <tr key={restaurant.id}>
                       <td className="font-medium text-zinc-900">
@@ -259,6 +279,66 @@ export default async function AdminPage() {
                         ) : (
                           <span className="text-xs text-zinc-400">aucun</span>
                         )}
+                      </td>
+                      <td className="whitespace-nowrap">
+                        {/* Ce que voit réellement le restaurateur, une
+                            fois l'essai, les faveurs et les paiements
+                            additionnés. C'est cette colonne-là qu'on
+                            regarde quand il appelle. */}
+                        <span className="flex flex-col text-xs">
+                          <span
+                            className={
+                              acces.ouvert.visibilite
+                                ? "text-emerald-700"
+                                : "text-zinc-400"
+                            }
+                          >
+                            {acces.ouvert.visibilite ? "✓" : "✕"} visibilité
+                          </span>
+                          <span
+                            className={
+                              acces.ouvert.reservations
+                                ? "text-emerald-700"
+                                : "text-zinc-400"
+                            }
+                          >
+                            {acces.ouvert.reservations ? "✓" : "✕"} réservations
+                          </span>
+                          {acces.enEssai && acces.joursRestants !== null && (
+                            <span className="text-brand-navy">
+                              essai, {acces.joursRestants} j
+                            </span>
+                          )}
+                        </span>
+                      </td>
+                      <td>
+                        {/* Le même champ donne et reprend : vidé, il
+                            retire la faveur. Pas de second bouton à
+                            côté, qu'on cliquerait de travers. */}
+                        <form
+                          action={offrirAcces}
+                          className="flex items-center gap-2"
+                        >
+                          <input
+                            type="hidden"
+                            name="restaurant_id"
+                            value={restaurant.id}
+                          />
+                          <input
+                            type="date"
+                            name="jusqu_au"
+                            defaultValue={
+                              restaurant.acces_offert_jusqu_au ?? ""
+                            }
+                            className="rounded-md border border-zinc-300 px-2 py-1 text-xs outline-none focus:border-brand-navy"
+                          />
+                          <button
+                            type="submit"
+                            className="rounded-md border border-zinc-300 px-2 py-1 text-xs font-medium text-zinc-700 hover:border-brand-navy hover:text-brand-navy"
+                          >
+                            Appliquer
+                          </button>
+                        </form>
                       </td>
                       <td className="whitespace-nowrap text-zinc-500">
                         {formatDate(restaurant.created_at)}

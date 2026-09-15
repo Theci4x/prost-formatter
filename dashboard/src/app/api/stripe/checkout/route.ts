@@ -72,6 +72,11 @@ export async function GET(request: NextRequest) {
     // les moyens de paiement disponibles (carte, SEPA...) selon le pays et
     // la devise du client.
     line_items: [{ price, quantity: 1 }],
+    // Les codes promotionnels se créent et se révoquent chez Stripe, pas
+    // ici : un système maison demanderait sa table, son écran, ses règles
+    // de cumul et ses dates de validité — tout ce que Stripe fait déjà, et
+    // qui se retrouverait sur la facture sans qu'on ait rien à écrire.
+    allow_promotion_codes: true,
     customer_email: user.email,
     client_reference_id: restaurantId,
     subscription_data: {

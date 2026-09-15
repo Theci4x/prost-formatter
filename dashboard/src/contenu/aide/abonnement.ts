@@ -23,9 +23,9 @@ Deux modules, **achetables séparément**, et un abonnement par établissement :
 
 Tu peux prendre l'un sans l'autre. Un second établissement a son propre carnet, sa propre fiche Google et sa propre clientèle : il prend donc ses propres abonnements.
 
-## Les trente premiers jours
+## Les quinze premiers jours
 
-Tout est ouvert pendant **30 jours** à la création d'un établissement, sans carte à donner. Le compte à rebours s'affiche sur l'écran Abonnement.
+Tout est ouvert pendant **14 jours** à la création d'un établissement, sans carte à donner. Le compte à rebours s'affiche sur l'écran Abonnement.
 
 Passé ce délai, les sections d'un module non souscrit se grisent dans le tableau de bord. Ce que tu as saisi reste intact et te reste accessible : la fiche de ton établissement, ton équipe, tes connexions et cette page ne se ferment jamais.
 
