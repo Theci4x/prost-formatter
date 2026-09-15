@@ -19,6 +19,14 @@ export type Espace = {
   // À partir de combien de convives la garantie se déclenche. NULL quand
   // elle s'applique dès le premier.
   garantie_seuil_couverts: number | null;
+  /**
+   * Minimum de consommation pour privatiser, en centimes. NULL quand il
+   * n'y en a pas. Ce n'est pas une garantie : rien n'est encaissé ni
+   * bloqué, c'est un engagement annoncé qui s'honore à table.
+   */
+  minimum_consommation_centimes: number | null;
+  /** Vrai quand le montant s'entend hors taxes. */
+  minimum_consommation_ht: boolean;
 };
 
 export type Service = {
@@ -109,6 +117,9 @@ export type EspaceValeurs = {
   // À partir de combien de convives la garantie s'applique. Vide = dès le
   // premier.
   seuil: string;
+  /** Minimum de consommation en euros, tel que tapé. Vide = aucun. */
+  minimumConsommation: string;
+  minimumConsommationHt: boolean;
   // Ce que l'espace réclame : rien, un acompte, ou une carte en garantie.
   garantie: "aucune" | "acompte" | "caution";
 };
@@ -125,6 +136,8 @@ export const ESPACE_VIDE: EspaceValeurs = {
   caution: "",
   cautionMode: "forfait",
   seuil: "",
+  minimumConsommation: "",
+  minimumConsommationHt: true,
   garantie: "aucune",
 };
 

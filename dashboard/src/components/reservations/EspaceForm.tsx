@@ -260,6 +260,41 @@ function Champs({
                 </div>
               )}
             </fieldset>
+
+            {/* Le minimum de consommation n'est pas une garantie : rien
+                n'est encaissé ni bloqué. C'est un engagement annoncé, qui
+                s'honore à table — et qui doit donc se lire avant de
+                réserver, pas se découvrir à l'addition. */}
+            <label className={label} htmlFor={`${prefixe}-minimum-conso`}>
+              Minimum de consommation{" "}
+              <span className="font-normal text-zinc-400">(facultatif)</span>
+              <span className="flex flex-wrap items-center gap-2">
+                <input
+                  id={`${prefixe}-minimum-conso`}
+                  name="minimum_consommation"
+                  inputMode="decimal"
+                  defaultValue={valeurs.minimumConsommation}
+                  placeholder="1000"
+                  className={`${champ} max-w-32`}
+                />
+                <span className="text-sm text-zinc-500">€</span>
+                <select
+                  name="minimum_consommation_tva"
+                  defaultValue={valeurs.minimumConsommationHt ? "ht" : "ttc"}
+                  className={`${champ} max-w-28`}
+                >
+                  <option value="ht">HT</option>
+                  <option value="ttc">TTC</option>
+                </select>
+              </span>
+              <span className="text-xs font-normal text-zinc-500">
+                Le client s&apos;engage à consommer au moins ce montant. Rien
+                n&apos;est encaissé : c&apos;est annoncé avant la
+                réservation, et ça se règle à l&apos;addition. Une
+                privatisation d&apos;entreprise se négocie en HT, un
+                anniversaire en TTC.
+              </span>
+            </label>
           </>
         )}
       </div>
@@ -319,6 +354,8 @@ function valeursDe(espace: Espace): EspaceValeurs {
     seuil: espace.garantie_seuil_couverts
       ? String(espace.garantie_seuil_couverts)
       : "",
+    minimumConsommation: euros(espace.minimum_consommation_centimes),
+    minimumConsommationHt: espace.minimum_consommation_ht ?? true,
     garantie: espace.acompte_centimes
       ? "acompte"
       : espace.caution_centimes

@@ -26,6 +26,12 @@ export type Contexte = {
    * le plus souvent ne se règle pas, et la table reste vide.
    */
   lienAnnulation?: string | null;
+  /**
+   * L'engagement de consommation, tel qu'il a été annoncé. Il figure
+   * dans le message parce qu'un engagement qu'on ne peut pas relire se
+   * conteste à l'addition.
+   */
+  minimumConsommation?: string | null;
 };
 
 export type Message = { sujet: string; texte: string; html: string };
@@ -83,6 +89,13 @@ function enveloppe(corps: string[], signature: string): string {
  * La phrase qui rend la table. Elle vient en dernier et sans emphase :
  * on ne pousse personne à annuler, on rend juste la chose possible.
  */
+/** L'engagement pris, rappelé au client. Vide quand il n'y en a pas. */
+function ligneMinimum(c: Contexte): string {
+  return c.minimumConsommation
+    ? `Minimum de consommation convenu : <strong>${echapper(c.minimumConsommation)}</strong>. Rien n'a été encaissé : ce montant se règle sur place.`
+    : "";
+}
+
 function ligneAnnulation(c: Contexte): string {
   return c.lienAnnulation
     ? `Un empêchement ? Rends ta table en un clic : ${echapper(c.lienAnnulation)}`
@@ -96,6 +109,7 @@ export function demandeRecue(c: Contexte): Message {
   const lignes = [
     `Bonjour ${echapper(c.clientNom)},`,
     `Nous avons bien reçu ${quoi} chez ${echapper(c.restaurantNom)} : <strong>${echapper(rappel(c))}</strong>.`,
+    ligneMinimum(c),
     `Elle n'est pas encore confirmée — le restaurant revient vers vous très vite. Vous recevrez un second message dès que ce sera fait.`,
     ligneAnnulation(c) || `Si vos plans changent, répondez simplement à cet e-mail.`,
   ];
@@ -111,6 +125,7 @@ export function reservationConfirmee(c: Contexte): Message {
   const lignes = [
     `Bonjour ${echapper(c.clientNom)},`,
     `Votre table est confirmée chez ${echapper(c.restaurantNom)} : <strong>${echapper(rappel(c))}</strong>.`,
+    ligneMinimum(c),
     c.restaurantAdresse
       ? `L'adresse : ${echapper(c.restaurantAdresse)}.`
       : `À très bientôt.`,

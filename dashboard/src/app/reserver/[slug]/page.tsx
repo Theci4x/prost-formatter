@@ -15,6 +15,7 @@ import {
   type Reservation,
 } from "@/lib/reservations/disponibilite";
 import { offrePrivatisation, propositions } from "@/lib/reservations/choix";
+import { conditionsPrivatisation } from "@/lib/reservations/conditions";
 import Image from "next/image";
 import { DemandeForm } from "@/components/reservations/DemandeForm";
 import { BandePhotos } from "@/components/reservations/BandePhotos";
@@ -113,6 +114,42 @@ export async function generateMetadata({
       ...(image ? { images: [image] } : {}),
     },
   };
+}
+
+/**
+ * Ce que le client s'engage à accepter, avant d'envoyer sa demande.
+ *
+ * Il n'existait nulle part : la demande partait, la salle était tenue, et
+ * l'acompte se découvrait plusieurs jours plus tard, à l'acceptation. On
+ * perdait le client à l'étape du paiement, après lui avoir bloqué une
+ * salle pour rien.
+ */
+function Conditions({
+  espace,
+  couverts,
+}: {
+  espace: Espace;
+  couverts: number;
+}) {
+  const conditions = conditionsPrivatisation(espace, couverts);
+  if (conditions.length === 0) return null;
+
+  return (
+    <div className="mt-3 flex flex-col gap-2 rounded-xl border border-emerald-200/70 bg-emerald-50/70 p-4">
+      {conditions.map((condition) => (
+        <div key={condition.libelle} className="flex flex-col gap-0.5">
+          <span className="text-sm font-medium text-emerald-900">
+            {condition.libelle}
+          </span>
+          {condition.precision && (
+            <span className="text-xs leading-relaxed text-emerald-800">
+              {condition.precision}
+            </span>
+          )}
+        </div>
+      ))}
+    </div>
+  );
 }
 
 function dateDuJour(): string {
@@ -536,6 +573,10 @@ export default async function ReserverPage({
                         espaceNom={espaceDemande.nom}
                         restaurantNom={restaurant.nom}
                       />
+                      {/* Les conditions se lisent avant le bouton, pas
+                          après l'envoi. */}
+                      <Conditions espace={espaceDemande} couverts={couverts} />
+
                       {demandee?.peutEtrePrivatise ? (
                         <DemandeForm
                           slug={slug}
@@ -651,6 +692,11 @@ export default async function ReserverPage({
                               }
                               espaceNom={dispo.espace.nom}
                               restaurantNom={restaurant.nom}
+                            />
+
+                            <Conditions
+                              espace={dispo.espace}
+                              couverts={couverts}
                             />
 
                             <DemandeForm

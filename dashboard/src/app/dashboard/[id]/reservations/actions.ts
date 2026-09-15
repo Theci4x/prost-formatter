@@ -111,6 +111,9 @@ function lireEspace(formData: FormData): EspaceValeurs {
         ? "par_couvert"
         : "forfait",
     seuil: texte(formData.get("garantie_seuil")),
+    minimumConsommation: texte(formData.get("minimum_consommation")),
+    minimumConsommationHt:
+      texte(formData.get("minimum_consommation_tva")) !== "ttc",
     garantie: lireGarantie(texte(formData.get("garantie"))),
   };
 }
@@ -189,6 +192,26 @@ function validerEspace(
     };
   }
 
+  // Le minimum de consommation n'est pas une garantie : rien n'est
+  // encaissé ni bloqué. Il vit donc à côté de l'acompte et de la caution,
+  // et peut se cumuler avec eux — une salle peut demander 500 € d'acompte
+  // et annoncer 3 000 € de minimum, ce sont deux choses différentes.
+  const minimumConsommation = valeurs.minimumConsommation
+    ? enCentimes(valeurs.minimumConsommation)
+    : null;
+  if (valeurs.minimumConsommation && minimumConsommation === null) {
+    return {
+      erreur:
+        "Le minimum de consommation doit être un montant en euros, par exemple 1000.",
+    };
+  }
+  if (minimumConsommation && !valeurs.privatisable) {
+    return {
+      erreur:
+        "Le minimum de consommation ne s'applique qu'aux privatisations : coche « privatisation », ou laisse le champ vide.",
+    };
+  }
+
   return {
     donnees: {
       nom: valeurs.nom,
@@ -196,6 +219,10 @@ function validerEspace(
       capacite,
       privatisation_minimum: valeurs.privatisable ? minimum : null,
       accepte_table: valeurs.accepteTable,
+      minimum_consommation_centimes: valeurs.privatisable
+        ? minimumConsommation
+        : null,
+      minimum_consommation_ht: valeurs.minimumConsommationHt,
       acompte_centimes: valeurs.privatisable ? acompteCentimes : null,
       acompte_mode: valeurs.acompteMode,
       caution_centimes: valeurs.privatisable ? cautionCentimes : null,

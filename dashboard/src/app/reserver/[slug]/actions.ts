@@ -289,6 +289,14 @@ export async function demanderReservation(
     // et une date d'expiration traînante la ferait disparaître du carnet.
     option_expire_le: confirmee ? null : expiration.toISOString(),
     annulation_token: annulation,
+    // Recopié depuis l'espace, et non relu plus tard : ce qui a été
+    // annoncé au client sur la page ne doit pas changer si le
+    // restaurateur révise son tarif la semaine suivante.
+    minimum_consommation_centimes:
+      type === "privatisation"
+        ? (espace.minimum_consommation_centimes ?? null)
+        : null,
+    minimum_consommation_ht: espace.minimum_consommation_ht ?? true,
   }).select("id").maybeSingle();
 
   if (error) {
@@ -310,6 +318,10 @@ export async function demanderReservation(
       serviceNom: service.nom,
       type,
       lienAnnulation: `${siteUrl()}/annuler/${annulation}`,
+      minimumConsommation:
+        type === "privatisation" && espace.minimum_consommation_centimes
+          ? `${(espace.minimum_consommation_centimes / 100).toLocaleString("fr-FR")} € ${espace.minimum_consommation_ht ? "HT" : "TTC"}`
+          : null,
     };
     await Promise.all([
       prevenirClient({

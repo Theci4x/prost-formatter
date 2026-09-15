@@ -41,6 +41,9 @@ type Demande = {
   annulee_par: string | null;
   /** Renseignée quand la table est restée vide. */
   absence_constatee_le: string | null;
+  /** Engagement de consommation, figé à la réservation. */
+  minimum_consommation_centimes: number | null;
+  minimum_consommation_ht: boolean | null;
   client_nom: string;
   client_email: string;
   client_telephone: string | null;
@@ -202,6 +205,19 @@ function Ligne({
       {demande.message && (
         <p className="rounded-xl bg-zinc-50 px-4 py-3 text-sm text-zinc-600">
           {demande.message}
+        </p>
+      )}
+
+      {/* L'engagement pris par le client, tel qu'il l'a lu. C'est ce
+          qu'il faudra lui rappeler à table, et il vaut mieux l'avoir
+          sous les yeux que dans sa mémoire. */}
+      {demande.minimum_consommation_centimes && (
+        <p className="rounded-xl bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
+          Minimum de consommation annoncé :{" "}
+          {(demande.minimum_consommation_centimes / 100).toLocaleString(
+            "fr-FR",
+          )}{" "}
+          € {demande.minimum_consommation_ht === false ? "TTC" : "HT"}
         </p>
       )}
 
