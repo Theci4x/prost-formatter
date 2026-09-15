@@ -88,7 +88,7 @@ L'extraction. Sans conduit jusqu'en toiture, pas de cuisine chaude — et ça ne
 - **Formation HACCP** : au moins une personne formée à l'hygiène alimentaire dans l'établissement — [et le classeur qu'on achète ne vous protège de rien](/blog/haccp-plan-maitrise-sanitaire-restaurant).
 - **Permis d'exploitation** et **licence** si vous servez de l'alcool, à déclarer en mairie — [et la licence IV n'est pas celle qu'il vous faut](/blog/permis-exploitation-licence-restaurant).
 - **SACEM et SPRE** si vous diffusez de la musique — [deux droits, une seule facture, et le piège Spotify](/blog/sacem-spre-restaurant-musique).
-- **Autorisation d'occupation du domaine public** pour une terrasse.
+- **Autorisation d'occupation du domaine public** pour une terrasse — [et elle ne se vend pas avec le fonds](/blog/terrasse-restaurant-autorisation-domaine-public).
 - **Passage de la commission de sécurité** selon votre catégorie d'ERP.
 
 ### Le jour de l'ouverture
