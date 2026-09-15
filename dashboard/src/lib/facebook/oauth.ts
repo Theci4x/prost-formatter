@@ -1,15 +1,26 @@
-// Meta Graph API — nécessite une App Meta (developers.facebook.com) avec le
-// produit "Facebook Login for Business". Ce produit route toute tentative
-// de connexion via une simple redirection (`/dialog/oauth`) vers un flux de
-// sélection de portefeuille business qui échoue silencieusement
-// (`selected_business_id` vide) : Meta documente le SDK JavaScript
-// (`FB.login({ config_id })`) comme seule méthode fiable pour ce produit.
-// C'est le composant client `FacebookConnectButton` qui initie la
-// connexion et récupère directement un token utilisateur (flux implicite,
-// pas d'échange de code — le "code" du flux serveur suppose un redirect_uri
-// que le relais interne du SDK ne respecte pas, ce qui fait échouer
-// l'échange) ; ce module se charge de l'échange en token longue durée et
-// des appels Graph API, côté serveur.
+// Meta Graph API — nécessite une App Meta (developers.facebook.com).
+//
+// Deux flux de connexion mènent ici, et l'un n'est pas un luxe :
+//
+// « Facebook Login for Business » (`FB.login({ config_id })`) est celui de
+// la production. Meta route toute tentative de connexion par simple
+// redirection (`/dialog/oauth`) vers un écran de sélection de portefeuille
+// qui échoue silencieusement (`selected_business_id` vide) : le SDK
+// JavaScript est la seule méthode fiable pour ce produit. Mais il réclame
+// que l'App appartienne à un portefeuille business, ce qui suppose une
+// société vérifiée — donc un Kbis, donc des semaines.
+//
+// Le flux classique (`FB.login({ scope })`) demande les mêmes
+// autorisations sans portefeuille ni vérification, du moment que le compte
+// est administrateur de l'App. Il sert à travailler avant que la
+// vérification aboutisse ; le bouton y retombe tout seul quand aucun
+// `config_id` n'est configuré.
+//
+// Dans les deux cas le navigateur ne rapporte qu'un token utilisateur de
+// courte durée (flux implicite — pas d'échange de code, le « code » du flux
+// serveur suppose un redirect_uri que le relais interne du SDK ne respecte
+// pas). Le secret d'App ne pouvant pas vivre côté navigateur, l'échange en
+// token longue durée et les appels Graph API se font ici, côté serveur.
 const GRAPH_VERSION = "v21.0";
 const GRAPH_BASE_URL = `https://graph.facebook.com/${GRAPH_VERSION}`;
 

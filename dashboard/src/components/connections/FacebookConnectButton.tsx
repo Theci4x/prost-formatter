@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 type FacebookLoginResponse = {
+  status?: string;
   authResponse?: { accessToken?: string };
 };
 
@@ -21,6 +22,27 @@ declare global {
 }
 
 const SDK_SCRIPT_ID = "facebook-jssdk";
+
+/**
+ * Les autorisations du flux classique.
+ *
+ * "Facebook Login for Business" (le flux par `config_id`) porte ses
+ * autorisations dans la configuration, côté Meta. Mais ce produit exige que
+ * l'App appartienne à un portefeuille business vérifié : tant que celui-ci
+ * n'existe pas, aucune configuration n'est créable, donc aucun `config_id`.
+ * Le flux classique, lui, demande ses autorisations ici même et fonctionne
+ * dès le mode développement, avec les comptes administrateurs de l'App.
+ *
+ * La liste tient à ce que le code lit réellement : les Pages et leurs
+ * statistiques, les Pages détenues par un portefeuille, le compte Instagram
+ * professionnel rattaché. Rien pour publier — Klarr ne publie pas.
+ */
+const SCOPES_CLASSIQUES = [
+  "pages_show_list",
+  "pages_read_engagement",
+  "business_management",
+  "instagram_basic",
+].join(",");
 
 function loadFacebookSdk(appId: string) {
   if (document.getElementById(SDK_SCRIPT_ID)) return;
@@ -105,10 +127,8 @@ export function FacebookConnectButton({
     setError(null);
     setPageOptions(null);
 
-    if (!appId || !configId) {
-      setError(
-        "Configuration Facebook manquante (NEXT_PUBLIC_FACEBOOK_APP_ID / NEXT_PUBLIC_FACEBOOK_LOGIN_CONFIG_ID).",
-      );
+    if (!appId) {
+      setError("Configuration Facebook manquante (NEXT_PUBLIC_FACEBOOK_APP_ID).");
       return;
     }
     if (!window.FB) {
@@ -116,17 +136,31 @@ export function FacebookConnectButton({
       return;
     }
 
-    window.FB.login(
-      (response) => {
-        const token = response.authResponse?.accessToken;
-        if (!token) {
-          setError("Connexion annulée ou refusée.");
-          return;
-        }
-        exchange(token);
-      },
-      { config_id: configId },
-    );
+    // Deux flux pour une seule App. Avec un `config_id`, c'est "Login for
+    // Business" — celui qu'on veut en production, parce que le restaurateur
+    // y choisit son portefeuille et ses Pages dans l'écran de Meta. Sans
+    // lui, on retombe sur le flux classique : moins joli, mais il marche
+    // sans portefeuille business, donc sans attendre la vérification.
+    const parametres: Record<string, unknown> = configId
+      ? { config_id: configId }
+      : { scope: SCOPES_CLASSIQUES, return_scopes: true };
+
+    window.FB.login((response) => {
+      const token = response.authResponse?.accessToken;
+      if (!token) {
+        // `status` vaut la peine d'être dit : "unknown" sur une fenêtre
+        // fermée, "not_authorized" sur un refus d'autorisations. Sans lui
+        // le restaurateur relance dix fois le même geste sans savoir ce
+        // qui a manqué.
+        setError(
+          response.status === "not_authorized"
+            ? "Les autorisations ont été refusées. Relance la connexion et accepte l'accès aux Pages."
+            : "Connexion annulée. La fenêtre Facebook s'est fermée avant la fin.",
+        );
+        return;
+      }
+      exchange(token);
+    }, parametres);
   }
 
   if (pageOptions && accessToken) {
@@ -164,7 +198,11 @@ export function FacebookConnectButton({
       >
         {loading ? "Connexion..." : label}
       </button>
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && (
+        <p className="text-sm text-red-600" role="alert">
+          {error}
+        </p>
+      )}
     </div>
   );
 }
