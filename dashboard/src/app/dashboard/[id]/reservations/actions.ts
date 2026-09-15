@@ -14,6 +14,10 @@ import {
 } from "@/lib/reservations/garantie";
 import { montantDebitable } from "@/lib/reservations/caution";
 import { jetonAnnulation } from "@/lib/reservations/annulation";
+import {
+  peutConstaterAbsence,
+  type ReservationAbsence,
+} from "@/lib/reservations/absence";
 import { siteUrl } from "@/lib/site-url";
 import {
   prevenirClient,
@@ -1335,4 +1339,52 @@ export async function enregistrerConfirmation(
 
   revalidatePath(`/dashboard/${restaurantId}/reservations/configuration`);
   return { error: null, ok: true };
+}
+
+/**
+ * Constate — ou retire — l'absence d'un client.
+ *
+ * Passe par la session : c'est la RLS qui vérifie que la réservation est
+ * bien dans un restaurant qu'on gère. Et le constat porte l'identifiant
+ * de qui l'a coché, parce qu'en brigade « ils ne sont jamais venus » se
+ * discute le lendemain.
+ */
+export async function constaterAbsence(formData: FormData): Promise<void> {
+  const reservationId = texte(formData.get("reservation_id"));
+  const restaurantId = texte(formData.get("restaurant_id"));
+  // Le bouton dit ce qu'il fait : cocher, ou décocher.
+  const retirer = formData.get("retirer") === "1";
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const { data } = await supabase
+    .from("restaurant_reservations")
+    .select("id, date_reservation, statut, absence_constatee_le")
+    .eq("id", reservationId)
+    .maybeSingle();
+
+  const reservation = data as ReservationAbsence & { id: string } | null;
+  if (!reservation) return;
+
+  // Retirer un constat ne se refuse jamais : on a pu cocher à tort, et un
+  // constat qu'on ne peut pas défaire serait un piège.
+  if (!retirer && !peutConstaterAbsence(reservation, new Date()).possible) {
+    return;
+  }
+
+  const { error } = await supabase
+    .from("restaurant_reservations")
+    .update({
+      absence_constatee_le: retirer ? null : new Date().toISOString(),
+      absence_constatee_par: retirer ? null : (user?.id ?? null),
+    })
+    .eq("id", reservationId);
+
+  if (error) console.error("[constaterAbsence]", error);
+
+  revalidatePath(`/dashboard/${restaurantId}/reservations`);
+  revalidatePath(`/dashboard/${restaurantId}/service`);
 }

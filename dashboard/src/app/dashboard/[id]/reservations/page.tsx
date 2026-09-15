@@ -19,8 +19,13 @@ import { LienAcompte } from "@/components/reservations/LienAcompte";
 import { GestionCaution } from "@/components/reservations/GestionCaution";
 import { libelleAcompte } from "@/lib/reservations/acompte";
 import { libelleCaution } from "@/lib/reservations/caution";
+import { absencesDuClient, libelleAbsences } from "@/lib/reservations/absence";
 import { siteUrl } from "@/lib/site-url";
-import { annulerReservation, enregistrerNote } from "./actions";
+import {
+  annulerReservation,
+  constaterAbsence,
+  enregistrerNote,
+} from "./actions";
 import { formatHeure, type Espace, type Service } from "@/types/reservation";
 import type { Restaurant } from "@/types/restaurant";
 
@@ -35,6 +40,8 @@ type Demande = {
   statut: "demande" | "confirmee" | "refusee" | "annulee" | "expiree";
   /** « client » quand c'est lui qui a rendu la table, « restaurant » sinon. */
   annulee_par: string | null;
+  /** Renseignée quand la table est restée vide. */
+  absence_constatee_le: string | null;
   client_nom: string;
   client_email: string;
   client_telephone: string | null;
@@ -98,12 +105,18 @@ function Ligne({
   espace,
   service,
   site,
+  absencesPassees = 0,
+  constatable = false,
 }: {
   demande: Demande;
   restaurantId: string;
   espace: Espace | undefined;
   service: Service | undefined;
   site: string;
+  /** Absences déjà constatées pour ce client, celle-ci exceptée. */
+  absencesPassees?: number;
+  /** Le service a eu lieu : on peut dire si la table est restée vide. */
+  constatable?: boolean;
 }) {
   const restant = delaiRestant(demande.option_expire_le);
   // Une option échue reste décidable : le restaurateur rappelle le client
@@ -122,6 +135,15 @@ function Ligne({
             <span className="ml-2 font-normal text-zinc-500">
               {demande.couverts} couvert{demande.couverts > 1 ? "s" : ""}
             </span>
+            {/* L'historique se lit à côté du nom, au moment où le
+                restaurateur décide. Placé ailleurs, il arriverait après
+                la décision — donc trop tard pour servir à quelque
+                chose. */}
+            {libelleAbsences(absencesPassees) && (
+              <span className="ml-2 rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-800">
+                {libelleAbsences(absencesPassees)}
+              </span>
+            )}
           </span>
           <span className="text-sm text-zinc-500 first-letter:capitalize">
             {formatDate(demande.date_reservation)}
@@ -182,6 +204,40 @@ function Ligne({
         <p className="rounded-xl bg-zinc-50 px-4 py-3 text-sm text-zinc-600">
           {demande.message}
         </p>
+      )}
+
+      {/* Le constat d'absence n'apparaît qu'une fois le service passé :
+          proposé la veille, il ne voudrait rien dire. */}
+      {(constatable || demande.absence_constatee_le) && (
+        <form action={constaterAbsence} className="flex items-center gap-3">
+          <input type="hidden" name="reservation_id" value={demande.id} />
+          <input type="hidden" name="restaurant_id" value={restaurantId} />
+          <input
+            type="hidden"
+            name="retirer"
+            value={demande.absence_constatee_le ? "1" : "0"}
+          />
+          {demande.absence_constatee_le ? (
+            <>
+              <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-900">
+                Table restée vide
+              </span>
+              <button
+                type="submit"
+                className="text-xs text-zinc-500 hover:text-zinc-900"
+              >
+                Retirer ce constat
+              </button>
+            </>
+          ) : (
+            <button
+              type="submit"
+              className="text-xs font-medium text-zinc-500 hover:text-amber-800"
+            >
+              Ils ne sont pas venus
+            </button>
+          )}
+        </form>
       )}
 
       {(() => {
@@ -415,6 +471,10 @@ export default async function ReservationsPage({
         (reservation) => reservation.date_reservation === jour,
       )
     : [];
+  // Un service passé se constate ; un service à venir, non. La date du
+  // jour suffit : inutile d'attendre minuit pour saisir un service du
+  // soir qu'on vient de terminer.
+  const journeePassee = Boolean(jour && jour <= aujourdhui);
 
   return (
     <div className="flex flex-1 flex-col gap-8 px-6 py-8">
@@ -491,6 +551,11 @@ export default async function ReservationsPage({
                     ? parService.get(demande.service_id)
                     : undefined
                 }
+                absencesPassees={absencesDuClient(
+                  demande.client_email,
+                  demande.id,
+                  reservations,
+                )}
               />
             ))}
           </ul>
@@ -527,6 +592,11 @@ export default async function ReservationsPage({
                     ? parService.get(demande.service_id)
                     : undefined
                 }
+                absencesPassees={absencesDuClient(
+                  demande.client_email,
+                  demande.id,
+                  reservations,
+                )}
               />
             ))}
           </ul>
@@ -566,11 +636,19 @@ export default async function ReservationsPage({
                   demande={demande}
                   restaurantId={id}
                   site={site}
-                espace={parEspace.get(demande.espace_id)}
+                  espace={parEspace.get(demande.espace_id)}
                   service={
                     demande.service_id
                       ? parService.get(demande.service_id)
                       : undefined
+                  }
+                  absencesPassees={absencesDuClient(
+                    demande.client_email,
+                    demande.id,
+                    reservations,
+                  )}
+                  constatable={
+                    journeePassee && demande.statut === "confirmee"
                   }
                 />
               ))}

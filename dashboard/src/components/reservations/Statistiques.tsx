@@ -222,6 +222,30 @@ export function Statistiques({
         />
       </div>
 
+      {/* Les absences n'apparaissent que s'il y en a. Une tuile à zéro
+          tous les mois deviendrait du décor, et c'est le genre de chiffre
+          qu'on veut voir le jour où il monte. */}
+      {stats.absences > 0 && (
+        <div className="rounded-2xl border border-amber-200/70 bg-amber-50/60 p-5">
+          <p className="text-sm text-amber-900">
+            <span className="font-semibold">
+              {stats.absences} table{stats.absences > 1 ? "s" : ""} restée
+              {stats.absences > 1 ? "s" : ""} vide
+              {stats.absences > 1 ? "s" : ""}
+            </span>{" "}
+            — {stats.couvertsPerdus} couvert
+            {stats.couvertsPerdus > 1 ? "s" : ""} perdu
+            {stats.couvertsPerdus > 1 ? "s" : ""}, soit{" "}
+            {pourcent(stats.tauxAbsence)} des réservations confirmées.
+          </p>
+          <p className="mt-1 text-xs text-amber-800">
+            Constatées à la main depuis le carnet du jour. Au-delà de
+            quelques pour cent, une caution à partir d&apos;un certain
+            nombre de convives règle la question sans fâcher personne.
+          </p>
+        </div>
+      )}
+
       <div className="grid gap-4 lg:grid-cols-2">
         <Barres
           titre="Couverts par jour de la semaine"

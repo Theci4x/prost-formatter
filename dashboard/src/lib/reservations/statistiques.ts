@@ -5,6 +5,8 @@ export type LigneStat = {
   type: "table" | "privatisation";
   statut: "demande" | "confirmee" | "refusee" | "annulee" | "expiree";
   origine: "client" | "restaurateur";
+  /** Renseignée quand la table est restée vide. Colonne récente. */
+  absence_constatee_le?: string | null;
 };
 
 export type Statistiques = {
@@ -24,6 +26,15 @@ export type Statistiques = {
   parEspace: { espaceId: string; reservations: number; couverts: number }[];
   parType: { table: number; privatisation: number };
   parOrigine: { client: number; restaurateur: number };
+  /**
+   * Les tables confirmées que personne n'a honorées, et les couverts
+   * qu'elles ont coûtés. Comptées parmi les confirmées, pas en plus :
+   * c'est bien une part de ce qui a été vendu qui n'est pas venue.
+   */
+  absences: number;
+  couvertsPerdus: number;
+  /** Part des tables confirmées restées vides. Null sans confirmée. */
+  tauxAbsence: number | null;
 };
 
 function jourIso(date: string): number {
@@ -59,6 +70,11 @@ export function computeStatistiques(
   >();
   const parType = { table: 0, privatisation: 0 };
   const parOrigine = { client: 0, restaurateur: 0 };
+  const manquees = confirmees.filter((ligne) => ligne.absence_constatee_le);
+  const couvertsPerdus = manquees.reduce(
+    (total, ligne) => total + ligne.couverts,
+    0,
+  );
 
   for (const ligne of confirmees) {
     const jour = jourIso(ligne.date_reservation);
@@ -114,6 +130,9 @@ export function computeStatistiques(
       .sort((a, b) => b.couverts - a.couverts),
     parType,
     parOrigine,
+    absences: manquees.length,
+    couvertsPerdus,
+    tauxAbsence: confirmees.length ? manquees.length / confirmees.length : null,
   };
 }
 
