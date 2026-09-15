@@ -6,6 +6,13 @@ import { AlertsPanel } from "@/components/dashboard/AlertsPanel";
 import { fetchAlerts } from "@/lib/reputation/alerts";
 import { peutGerer, roleSur, type Role } from "@/lib/equipe/roles";
 import type { Restaurant } from "@/types/restaurant";
+import { chargerAcces } from "@/lib/abonnement/acces";
+import {
+  ACCES_COMPLET,
+  LIBELLE_MODULE,
+  moduleDeLaSection,
+  PRIX_MODULE,
+} from "@/lib/abonnement/modules";
 
 // Ce que chaque rôle peut ouvrir. La base refuse déjà le reste ; ceci évite
 // de proposer une porte fermée, qu'un serveur prendrait pour une panne.
@@ -150,6 +157,17 @@ export default async function DashboardPage() {
     ),
   );
 
+  // Ce que chaque établissement a payé. Un abonnement ne couvre jamais
+  // deux maisons : chacune a son carnet, sa fiche Google et sa clientèle.
+  const acces = new Map(
+    await Promise.all(
+      restaurants.map(
+        async (restaurant) =>
+          [restaurant.id, await chargerAcces(restaurant.id, supabase)] as const,
+      ),
+    ),
+  );
+
   return (
     <div className="flex flex-1 flex-col gap-6 px-6 py-8">
       <div className="flex items-center justify-between">
@@ -241,7 +259,40 @@ export default async function DashboardPage() {
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {FEATURE_LINKS.filter((feature) =>
                   accessible(feature.minimum, roles.get(restaurant.id) ?? null),
-                ).map((feature) => (
+                ).map((feature) => {
+                  const requis = moduleDeLaSection(feature.href);
+                  const ferme = requis
+                    ? !(acces.get(restaurant.id) ?? ACCES_COMPLET).ouvert[requis]
+                    : false;
+
+                  // Fermée, la case n'est plus un lien : elle se voit,
+                  // elle dit pourquoi, et elle ne mène nulle part. Un
+                  // lien grisé qu'on peut quand même suivre est pire
+                  // qu'un lien barré — on clique, et on tombe.
+                  if (ferme) {
+                    return (
+                      <div
+                        key={feature.href}
+                        aria-disabled="true"
+                        title={`Inclus dans ${LIBELLE_MODULE[requis!]} — ${PRIX_MODULE[requis!]}`}
+                        className="flex cursor-not-allowed items-start gap-3 rounded-xl border border-dashed border-zinc-300 bg-zinc-50 p-4"
+                      >
+                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-zinc-200 text-zinc-400">
+                          {feature.icon}
+                        </span>
+                        <span className="flex min-w-0 flex-col gap-0.5">
+                          <span className="text-sm font-medium text-zinc-400">
+                            {feature.label}
+                          </span>
+                          <span className="text-xs text-zinc-400">
+                            {LIBELLE_MODULE[requis!]} — {PRIX_MODULE[requis!]}
+                          </span>
+                        </span>
+                      </div>
+                    );
+                  }
+
+                  return (
                   <Link
                     key={feature.href}
                     href={`/dashboard/${restaurant.id}/${feature.href}`}
@@ -259,7 +310,8 @@ export default async function DashboardPage() {
                       </span>
                     </span>
                   </Link>
-                ))}
+                  );
+                })}
               </div>
             </li>
           ))}

@@ -16,10 +16,20 @@ export const article: Article = {
 
 ## Ce que tu paies
 
-Un abonnement mensuel par établissement :
+Deux modules, **achetables séparément**, et un abonnement par établissement :
 
-- **Klarr — 45 € TTC par mois** : ta fiche Google, tes avis, ta visibilité, ta carte, tes photos.
-- **Réservations — 35 € TTC par mois** : la page de réservation, l'écran de service, le plan de salle, les acomptes et les cautions.
+- **Klarr — 45 € TTC par mois** : ta fiche Google, tes avis, ta visibilité, ta carte, tes photos et ton site vitrine.
+- **Réservations — 35 € TTC par mois** : la page de réservation, le carnet, l'écran de service, le plan de salle, les acomptes et les cautions.
+
+Tu peux prendre l'un sans l'autre. Un second établissement a son propre carnet, sa propre fiche Google et sa propre clientèle : il prend donc ses propres abonnements.
+
+## Les trente premiers jours
+
+Tout est ouvert pendant **30 jours** à la création d'un établissement, sans carte à donner. Le compte à rebours s'affiche sur l'écran Abonnement.
+
+Passé ce délai, les sections d'un module non souscrit se grisent dans le tableau de bord. Ce que tu as saisi reste intact et te reste accessible : la fiche de ton établissement, ton équipe, tes connexions et cette page ne se ferment jamais.
+
+Attention en revanche à tes adresses publiques : **ta page de réservation dépend du module Réservations, ton site vitrine du module Klarr.** Sans le module, l'adresse ne répond plus — mieux vaut ça qu'un client qui réserve dans un carnet que tu ne peux plus ouvrir.
 
 ## Ce que tu ne paies pas
 

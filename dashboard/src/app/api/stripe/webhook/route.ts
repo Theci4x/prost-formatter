@@ -7,12 +7,20 @@ async function upsertSubscription(subscription: Stripe.Subscription) {
   const restaurantId = subscription.metadata.restaurant_id;
   if (!restaurantId) return;
 
+  // Les abonnements souscrits avant l'existence des modules n'en portent
+  // pas : ce sont ceux de la visibilité, le seul produit d'alors.
+  const paye =
+    subscription.metadata.module === "reservations"
+      ? "reservations"
+      : "visibilite";
+
   const supabase = createServiceClient();
   const currentPeriodEnd = subscription.items.data[0]?.current_period_end;
 
   await supabase.from("restaurant_subscriptions").upsert(
     {
       restaurant_id: restaurantId,
+      module: paye,
       stripe_customer_id: subscription.customer as string,
       stripe_subscription_id: subscription.id,
       status: subscription.status,
@@ -21,7 +29,7 @@ async function upsertSubscription(subscription: Stripe.Subscription) {
         : null,
       updated_at: new Date().toISOString(),
     },
-    { onConflict: "restaurant_id" },
+    { onConflict: "restaurant_id,module" },
   );
 }
 

@@ -7,6 +7,7 @@ import { deconnecterStripe } from "./actions";
 import type { Restaurant } from "@/types/restaurant";
 import type { StripeConnexion } from "@/types/stripe";
 import { exiger } from "@/lib/equipe/roles";
+import { exigerModule } from "@/lib/abonnement/acces";
 
 const MOTIFS: Record<string, string> = {
   annule: "Connexion annulée : rien n'a été relié.",
@@ -27,6 +28,7 @@ export default async function PaiementsPage({
 }) {
   const { id } = await params;
   await exiger(id, "gerant");
+  await exigerModule(id, "reservations");
   const query = await searchParams;
   const supabase = await createClient();
 

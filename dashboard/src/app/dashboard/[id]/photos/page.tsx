@@ -8,6 +8,7 @@ import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
 import type { Restaurant } from "@/types/restaurant";
 import type { RestaurantPhoto } from "@/types/photo";
 import { exiger } from "@/lib/equipe/roles";
+import { exigerModule } from "@/lib/abonnement/acces";
 
 export default async function PhotosPage({
   params,
@@ -16,6 +17,7 @@ export default async function PhotosPage({
 }) {
   const { id } = await params;
   await exiger(id, "gerant");
+  await exigerModule(id, "visibilite");
 
   const supabase = await createClient();
 

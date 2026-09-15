@@ -28,6 +28,7 @@ import { DonneesStructurees } from "@/components/seo/DonneesStructurees";
 import { restaurantSchema } from "@/lib/seo/donnees-structurees";
 import { reseauxPublics } from "@/lib/seo/reseaux";
 import { siteUrl } from "@/lib/site-url";
+import { chargerAcces } from "@/lib/abonnement/acces";
 
 type Params = { slug: string };
 type Query = {
@@ -139,6 +140,13 @@ export default async function ReserverPage({
 
   const restaurant = await chargerRestaurant(slug);
   if (!restaurant) notFound();
+
+  // Sans le module Réservations, la page se ferme. La laisser ouverte
+  // serait pire que de la fermer : les demandes arriveraient dans un
+  // carnet auquel le restaurateur n'a plus accès, et les clients se
+  // présenteraient un soir où personne ne les attend.
+  const acces = await chargerAcces(restaurant.id, createServiceClient());
+  if (!acces.ouvert.reservations) notFound();
 
   const date =
     query.date && /^\d{4}-\d{2}-\d{2}$/.test(query.date)

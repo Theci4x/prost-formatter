@@ -6,6 +6,7 @@ import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
 import type { Restaurant } from "@/types/restaurant";
 import type { RestaurantKeyword } from "@/types/keyword";
 import { exiger } from "@/lib/equipe/roles";
+import { exigerModule } from "@/lib/abonnement/acces";
 
 export default async function SeoPage({
   params,
@@ -14,6 +15,7 @@ export default async function SeoPage({
 }) {
   const { id } = await params;
   await exiger(id, "gerant");
+  await exigerModule(id, "visibilite");
 
   const supabase = await createClient();
 

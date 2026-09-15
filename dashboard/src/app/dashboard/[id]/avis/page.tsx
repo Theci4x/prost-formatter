@@ -9,6 +9,7 @@ import { PlatformReviewsCard } from "@/components/reviews/PlatformReviewsCard";
 import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
 import type { Restaurant } from "@/types/restaurant";
 import { exiger } from "@/lib/equipe/roles";
+import { exigerModule } from "@/lib/abonnement/acces";
 
 export default async function AvisPage({
   params,
@@ -17,6 +18,7 @@ export default async function AvisPage({
 }) {
   const { id } = await params;
   await exiger(id, "gerant");
+  await exigerModule(id, "visibilite");
 
   const supabase = await createClient();
   const { data: restaurantData } = await supabase

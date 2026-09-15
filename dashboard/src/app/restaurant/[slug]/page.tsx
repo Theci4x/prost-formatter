@@ -19,6 +19,7 @@ import {
   horairesRenseignes,
 } from "@/lib/site/horaires";
 import { siteUrl } from "@/lib/site-url";
+import { chargerAcces } from "@/lib/abonnement/acces";
 import type { RestaurantPhoto } from "@/types/photo";
 import type { Espace, Service } from "@/types/reservation";
 import type { Horaires } from "@/types/restaurant";
@@ -60,6 +61,12 @@ async function chargerVitrine(slug: string): Promise<Vitrine | null> {
   const restaurant = data as (Vitrine & { site_publie?: boolean }) | null;
   // Publier est un choix : tant qu'il n'est pas fait, l'adresse n'existe pas.
   if (!restaurant?.site_publie) return null;
+
+  // Le site vitrine fait partie du module visibilité : sans lui, l'adresse
+  // ne répond plus.
+  const acces = await chargerAcces(restaurant.id, supabase);
+  if (!acces.ouvert.visibilite) return null;
+
   return restaurant;
 }
 

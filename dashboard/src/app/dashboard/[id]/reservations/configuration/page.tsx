@@ -27,6 +27,7 @@ import type { Restaurant } from "@/types/restaurant";
 import type { RestaurantPhoto } from "@/types/photo";
 import { siteUrl } from "@/lib/site-url";
 import { exiger } from "@/lib/equipe/roles";
+import { exigerModule } from "@/lib/abonnement/acces";
 
 function Supprimer({
   id,
@@ -109,6 +110,7 @@ export default async function ConfigurationReservationsPage({
 }) {
   const { id } = await params;
   await exiger(id, "gerant");
+  await exigerModule(id, "reservations");
   const supabase = await createClient();
 
   const [

@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
 import { ExperienceForm } from "@/components/experiences/ExperienceForm";
 import { exiger } from "@/lib/equipe/roles";
+import { exigerModule } from "@/lib/abonnement/acces";
 import { chargerFermetures } from "@/lib/reservations/fermetures";
 import { formatEuros } from "@/lib/reservations/acompte";
 import { prochainesSeances } from "@/lib/experiences/seances";
@@ -34,6 +35,7 @@ export default async function ExperiencesPage({
 }) {
   const { id } = await params;
   await exiger(id, "gerant");
+  await exigerModule(id, "reservations");
   const supabase = await createClient();
   const aujourdhui = new Date().toISOString().slice(0, 10);
 

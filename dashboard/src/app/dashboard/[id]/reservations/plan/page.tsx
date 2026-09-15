@@ -8,6 +8,7 @@ import { brouillonDe } from "@/lib/reservations/plan-edition";
 import type { Repere, TableSalle } from "@/types/plan";
 import type { Espace } from "@/types/reservation";
 import type { Restaurant } from "@/types/restaurant";
+import { exigerModule } from "@/lib/abonnement/acces";
 
 export default async function PlanPage({
   params,
@@ -18,6 +19,7 @@ export default async function PlanPage({
   // Dessiner la salle est de la configuration : le rôle « service » place
   // les clients sur l'écran de service, il ne redessine pas le plan.
   await exiger(id, "gerant");
+  await exigerModule(id, "reservations");
 
   const supabase = await createClient();
   const [restaurantResult, espacesResult, tablesResult, reperesResult] =

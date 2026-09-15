@@ -7,6 +7,7 @@ import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
 import type { Restaurant } from "@/types/restaurant";
 import type { TikTokConnection } from "@/types/tiktok";
 import { exiger } from "@/lib/equipe/roles";
+import { exigerModule } from "@/lib/abonnement/acces";
 
 export default async function TikTokPage({
   params,
@@ -17,6 +18,7 @@ export default async function TikTokPage({
 }) {
   const { id } = await params;
   await exiger(id, "gerant");
+  await exigerModule(id, "visibilite");
   const { connected, error } = await searchParams;
 
   const supabase = await createClient();

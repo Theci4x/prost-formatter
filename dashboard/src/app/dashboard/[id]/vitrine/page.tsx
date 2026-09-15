@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
 import { basculerVitrine } from "@/app/dashboard/actions";
 import { exiger } from "@/lib/equipe/roles";
+import { exigerModule } from "@/lib/abonnement/acces";
 import { siteUrl } from "@/lib/site-url";
 import { horairesRenseignes } from "@/lib/site/horaires";
 import type { Restaurant } from "@/types/restaurant";
@@ -15,6 +16,7 @@ export default async function VitrinePage({
 }) {
   const { id } = await params;
   await exiger(id, "gerant");
+  await exigerModule(id, "visibilite");
 
   const supabase = await createClient();
   const [restaurantResult, photosResult, platsResult] = await Promise.all([

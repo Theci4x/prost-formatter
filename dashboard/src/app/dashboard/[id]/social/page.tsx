@@ -6,6 +6,7 @@ import { FacebookConnectButton } from "@/components/connections/FacebookConnectB
 import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
 import type { Restaurant } from "@/types/restaurant";
 import { exiger } from "@/lib/equipe/roles";
+import { exigerModule } from "@/lib/abonnement/acces";
 
 export default async function SocialPage({
   params,
@@ -16,6 +17,7 @@ export default async function SocialPage({
 }) {
   const { id } = await params;
   await exiger(id, "gerant");
+  await exigerModule(id, "visibilite");
   const { connected } = await searchParams;
 
   const supabase = await createClient();

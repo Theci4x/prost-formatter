@@ -16,6 +16,7 @@ import { carteOrganisee, formatPrix } from "@/lib/menu/carte";
 import { aTraduire, traductionCaduque } from "@/lib/menu/traduction";
 import { qrSvg, urlCarte } from "@/lib/menu/qr";
 import { exiger } from "@/lib/equipe/roles";
+import { exigerModule } from "@/lib/abonnement/acces";
 import type { MenuItem } from "@/types/menu";
 import type { Restaurant } from "@/types/restaurant";
 
@@ -55,6 +56,7 @@ export default async function MenuPage({
 }) {
   const { id } = await params;
   await exiger(id, "gerant");
+  await exigerModule(id, "visibilite");
 
   const supabase = await createClient();
   const [restaurantResult, itemsResult] = await Promise.all([

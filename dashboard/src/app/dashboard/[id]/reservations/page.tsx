@@ -28,6 +28,7 @@ import {
 } from "./actions";
 import { formatHeure, type Espace, type Service } from "@/types/reservation";
 import type { Restaurant } from "@/types/restaurant";
+import { exigerModule } from "@/lib/abonnement/acces";
 
 type Demande = {
   id: string;
@@ -363,6 +364,7 @@ export default async function ReservationsPage({
   searchParams: Promise<{ mois?: string; jour?: string; jours?: string }>;
 }) {
   const { id } = await params;
+  await exigerModule(id, "reservations");
   const query = await searchParams;
   const supabase = await createClient();
 

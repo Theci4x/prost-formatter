@@ -14,6 +14,7 @@ import type {
   AiVisibilityQuestion,
 } from "@/types/ai-visibility";
 import { exiger } from "@/lib/equipe/roles";
+import { exigerModule } from "@/lib/abonnement/acces";
 
 export default async function VisibiliteIaPage({
   params,
@@ -22,6 +23,7 @@ export default async function VisibiliteIaPage({
 }) {
   const { id } = await params;
   await exiger(id, "gerant");
+  await exigerModule(id, "visibilite");
 
   const supabase = await createClient();
 

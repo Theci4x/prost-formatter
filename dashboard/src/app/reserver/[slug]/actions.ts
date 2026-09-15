@@ -22,6 +22,7 @@ import {
 } from "@/lib/courriel/reservation";
 import type { Contexte } from "@/lib/courriel/messages";
 import { siteUrl } from "@/lib/site-url";
+import { chargerAcces } from "@/lib/abonnement/acces";
 import {
   disponibiliteEspace,
   heuresDArrivee,
@@ -120,6 +121,18 @@ export async function demanderReservation(
   const restaurant = ((complet.data ?? replis?.data) ??
     null) as Etablissement | null;
   if (!restaurant) return { error: "Établissement introuvable." };
+
+  // Le formulaire a pu être chargé avant la fermeture du module, ou
+  // rejoué depuis une console : l'action est une porte publique, elle se
+  // vérifie elle-même.
+  const acces = await chargerAcces(restaurant.id, supabase);
+  if (!acces.ouvert.reservations) {
+    return {
+      error:
+        "Cet établissement ne prend plus de réservation en ligne. " +
+        "Appelle-le directement.",
+    };
+  }
 
   // Une demande pose une option de 48 heures : elle bloque des couverts.
   // Sans compteur, un script les bloque tous et met les réservations en

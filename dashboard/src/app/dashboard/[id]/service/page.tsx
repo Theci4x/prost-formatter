@@ -30,6 +30,7 @@ import {
   type Service,
 } from "@/types/reservation";
 import type { Restaurant } from "@/types/restaurant";
+import { exigerModule } from "@/lib/abonnement/acces";
 
 type Ligne = Reservation & {
   client_nom: string;
@@ -62,6 +63,7 @@ export default async function ServicePage({
   searchParams: Promise<{ jour?: string }>;
 }) {
   const { id } = await params;
+  await exigerModule(id, "reservations");
   const query = await searchParams;
   const supabase = await createClient();
 
