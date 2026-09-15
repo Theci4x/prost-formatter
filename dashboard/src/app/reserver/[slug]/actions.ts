@@ -85,23 +85,39 @@ export async function demanderReservation(
 
   const supabase = createServiceClient();
 
-  const { data: restaurantData } = await supabase
-    .from("restaurants")
-    // Les colonnes de confirmation et de contact viennent de migrations
-    // récentes : on les lit avec un défaut, pour qu'un déploiement en
-    // avance sur la base ne casse pas la prise de réservation.
-    .select("id, nom, adresse, email_contact, confirmation_auto, confirmation_auto_delai_heures")
-    .eq("slug_reservation", slug)
-    .maybeSingle();
-
-  const restaurant = restaurantData as {
+  // Les colonnes de confirmation et de contact viennent de la migration
+  // 0038. Demander une colonne absente ne renvoie pas un champ vide : la
+  // requête entière est refusée, et la prise de réservation tomberait sur
+  // « établissement introuvable » pour tout le monde. On retente donc sans
+  // elles — le temps qu'une migration passe, un déploiement en avance
+  // confirme moins, mais il réserve.
+  type Etablissement = {
     id: string;
     nom: string;
     adresse: string | null;
-    email_contact: string | null;
-    confirmation_auto: boolean | null;
-    confirmation_auto_delai_heures: number | null;
-  } | null;
+    email_contact?: string | null;
+    confirmation_auto?: boolean | null;
+    confirmation_auto_delai_heures?: number | null;
+  };
+
+  const complet = await supabase
+    .from("restaurants")
+    .select(
+      "id, nom, adresse, email_contact, confirmation_auto, confirmation_auto_delai_heures",
+    )
+    .eq("slug_reservation", slug)
+    .maybeSingle();
+
+  const replis = complet.data
+    ? null
+    : await supabase
+        .from("restaurants")
+        .select("id, nom, adresse")
+        .eq("slug_reservation", slug)
+        .maybeSingle();
+
+  const restaurant = ((complet.data ?? replis?.data) ??
+    null) as Etablissement | null;
   if (!restaurant) return { error: "Établissement introuvable." };
 
   // Une demande pose une option de 48 heures : elle bloque des couverts.
@@ -288,7 +304,7 @@ export async function demanderReservation(
         supabase,
         reservationId,
         contexte,
-        destinataire: restaurant.email_contact,
+        destinataire: restaurant.email_contact ?? null,
         lien: `${siteUrl()}/dashboard/${restaurant.id}/reservations`,
         confirmee,
       }),
