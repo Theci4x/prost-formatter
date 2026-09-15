@@ -10,10 +10,26 @@ export const JOURS_SEMAINE = [
 
 export type JourSemaine = (typeof JOURS_SEMAINE)[number];
 
+/** Une plage continue : « 12:00 » → « 15:00 ». */
+export type Plage = {
+  ouverture: string; // "HH:MM"
+  fermeture: string; // "HH:MM"
+};
+
 export type HoraireJour = {
   ferme: boolean;
   ouverture: string; // "HH:MM"
   fermeture: string; // "HH:MM"
+  /**
+   * La seconde plage, quand la maison ferme entre deux services — midi
+   * puis soir, le cas le plus courant en France. Absente ou nulle quand
+   * le service est continu.
+   *
+   * Ajoutée après coup, donc facultative : les fiches déjà saisies n'en
+   * ont pas, et une fiche sans coupure ne doit pas avoir à en porter une
+   * vide.
+   */
+  seconde?: Plage | null;
 };
 
 export type Horaires = Partial<Record<JourSemaine, HoraireJour>>;

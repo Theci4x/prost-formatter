@@ -9,18 +9,76 @@ export type RestaurantFormState = {
   error: string | null;
 };
 
-// Reconstruit l'objet horaires a partir des champs
-// `horaire_<jour>_ferme/ouverture/fermeture` soumis par RestaurantForm.
-function parseHoraires(formData: FormData): Horaires {
+const JOUR_LISIBLE: Record<string, string> = {
+  lundi: "lundi",
+  mardi: "mardi",
+  mercredi: "mercredi",
+  jeudi: "jeudi",
+  vendredi: "vendredi",
+  samedi: "samedi",
+  dimanche: "dimanche",
+};
+
+/**
+ * Reconstruit l'objet horaires à partir des champs
+ * `horaire_<jour>_ferme/ouverture/fermeture` soumis par RestaurantForm,
+ * et de la seconde plage quand la coupure est cochée.
+ *
+ * Une coupure incohérente est refusée plutôt que corrigée en silence :
+ * « 12h – 15h et 11h – 14h » n'est pas une faute de frappe qu'on devine,
+ * et l'afficher tel quel sur la devanture ferait venir des gens à
+ * l'heure où la maison est vide.
+ */
+function parseHoraires(formData: FormData): {
+  horaires: Horaires;
+  erreur: string | null;
+} {
   const horaires: Horaires = {};
   for (const jour of JOURS_SEMAINE) {
+    const ferme = formData.get(`horaire_${jour}_ferme`) === "on";
+    const ouverture =
+      (formData.get(`horaire_${jour}_ouverture`) as string) || "09:00";
+    const fermeture =
+      (formData.get(`horaire_${jour}_fermeture`) as string) || "22:00";
+
+    const coupure = !ferme && formData.get(`horaire_${jour}_coupure`) === "on";
+    const ouverture2 = (formData.get(`horaire_${jour}_ouverture2`) as string) || "";
+    const fermeture2 = (formData.get(`horaire_${jour}_fermeture2`) as string) || "";
+
+    if (coupure) {
+      if (!ouverture2 || !fermeture2) {
+        return {
+          horaires,
+          erreur: `Renseigne les heures du second service du ${JOUR_LISIBLE[jour]}, ou décoche la coupure.`,
+        };
+      }
+      // Les heures se comparent comme du texte : « HH:MM » se range dans
+      // l'ordre chronologique, et c'est vrai tant qu'on reste dans la
+      // journée — ce qui est le cas d'une coupure.
+      if (ouverture2 <= fermeture) {
+        return {
+          horaires,
+          erreur: `Le second service du ${JOUR_LISIBLE[jour]} doit commencer après la fermeture du premier.`,
+        };
+      }
+      if (fermeture2 <= ouverture2) {
+        return {
+          horaires,
+          erreur: `Le second service du ${JOUR_LISIBLE[jour]} se termine avant d'avoir commencé.`,
+        };
+      }
+    }
+
     horaires[jour] = {
-      ferme: formData.get(`horaire_${jour}_ferme`) === "on",
-      ouverture: (formData.get(`horaire_${jour}_ouverture`) as string) || "09:00",
-      fermeture: (formData.get(`horaire_${jour}_fermeture`) as string) || "22:00",
+      ferme,
+      ouverture,
+      fermeture,
+      seconde: coupure
+        ? { ouverture: ouverture2, fermeture: fermeture2 }
+        : null,
     };
   }
-  return horaires;
+  return { horaires, erreur: null };
 }
 
 export async function createRestaurant(
@@ -32,6 +90,9 @@ export async function createRestaurant(
   const telephone = formData.get("telephone") as string;
   const siteWeb = formData.get("site_web") as string;
   const description = formData.get("description") as string;
+
+  const { horaires, erreur } = parseHoraires(formData);
+  if (erreur) return { error: erreur };
 
   const supabase = await createClient();
   const {
@@ -47,7 +108,7 @@ export async function createRestaurant(
     telephone: telephone || null,
     site_web: siteWeb || null,
     description: description || null,
-    horaires: parseHoraires(formData),
+    horaires,
     proprietaire_id: user.id,
   });
 
@@ -70,6 +131,9 @@ export async function updateRestaurant(
   const siteWeb = formData.get("site_web") as string;
   const description = formData.get("description") as string;
 
+  const { horaires, erreur } = parseHoraires(formData);
+  if (erreur) return { error: erreur };
+
   const supabase = await createClient();
 
   // La RLS ("restaurants_update_own") garantit qu'on ne peut modifier que
@@ -82,7 +146,7 @@ export async function updateRestaurant(
       telephone: telephone || null,
       site_web: siteWeb || null,
       description: description || null,
-      horaires: parseHoraires(formData),
+      horaires,
     })
     .eq("id", id);
 

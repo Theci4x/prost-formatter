@@ -2,6 +2,7 @@ import {
   JOURS_SEMAINE,
   type Horaires,
   type JourSemaine,
+  type Plage,
 } from "@/types/restaurant";
 
 /**
@@ -24,6 +25,12 @@ export type PlageHoraire = {
   /** Null quand l'établissement est fermé sur toute la plage. */
   ouverture: string | null;
   fermeture: string | null;
+  /**
+   * La seconde plage du jour, quand il y a coupure. « 12h – 15h et 19h –
+   * 23h » est la norme française : l'écrire « 12h – 23h » ferait venir
+   * quelqu'un à 17h devant une porte close.
+   */
+  seconde: Plage | null;
 };
 
 /** « 09:00 » devient « 9h », « 19:30 » devient « 19h30 ». */
@@ -34,9 +41,18 @@ export function heureLisible(heure: string): string {
   return m && m !== "00" ? `${heures}h${m}` : `${heures}h`;
 }
 
-/** Ce qui distingue deux journées : fermée, ou ouverte aux mêmes heures. */
+/**
+ * Ce qui distingue deux journées : fermée, ou ouverte aux mêmes heures —
+ * coupure comprise. Un mardi en continu et un mercredi en coupure ne se
+ * regroupent pas, même si le premier service est identique.
+ */
 function memeJournee(a: PlageHoraire, b: PlageHoraire): boolean {
-  return a.ouverture === b.ouverture && a.fermeture === b.fermeture;
+  return (
+    a.ouverture === b.ouverture &&
+    a.fermeture === b.fermeture &&
+    (a.seconde?.ouverture ?? null) === (b.seconde?.ouverture ?? null) &&
+    (a.seconde?.fermeture ?? null) === (b.seconde?.fermeture ?? null)
+  );
 }
 
 export function plagesHoraires(horaires: Horaires): PlageHoraire[] {
@@ -50,6 +66,7 @@ export function plagesHoraires(horaires: Horaires): PlageHoraire[] {
       fin: jour,
       ouverture: ferme ? null : jourHoraire.ouverture,
       fermeture: ferme ? null : jourHoraire.fermeture,
+      seconde: ferme ? null : (jourHoraire.seconde ?? null),
     };
   });
 
@@ -79,7 +96,11 @@ export function intitulePlage(plage: PlageHoraire): string {
 /** Les heures d'une plage, ou la mention de fermeture. */
 export function heuresPlage(plage: PlageHoraire, ferme = "Fermé"): string {
   if (!plage.ouverture || !plage.fermeture) return ferme;
-  return `${heureLisible(plage.ouverture)} – ${heureLisible(plage.fermeture)}`;
+  const continu = `${heureLisible(plage.ouverture)} – ${heureLisible(plage.fermeture)}`;
+  if (!plage.seconde) return continu;
+  // « et » plutôt qu'une virgule : une virgule entre deux plages horaires
+  // se lit comme une énumération de jours quand on survole la page.
+  return `${continu} et ${heureLisible(plage.seconde.ouverture)} – ${heureLisible(plage.seconde.fermeture)}`;
 }
 
 /** Vrai si la fiche annonce au moins un jour d'ouverture. */
