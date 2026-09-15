@@ -158,9 +158,15 @@ export function DemandeForm({
         </button>
       </div>
 
+      {/* La confirmation se décide côté serveur, avec les réglages de
+          l'établissement, l'heure et le type : la page publique ne les
+          connaît pas et ne doit pas les deviner. On annonce donc ce qui
+          est vrai dans tous les cas — un e-mail part tout de suite —,
+          sauf pour la privatisation, qui passe toujours par le patron. */}
       <p className="text-xs text-zinc-400">
-        Ta demande n&apos;est pas encore confirmée : l&apos;établissement la
-        valide sous 48 h. Aucun paiement n&apos;est demandé à cette étape.
+        {type === "privatisation"
+          ? "Une privatisation est validée par l'établissement : tu reçois un e-mail de suivi tout de suite, puis sa réponse. Aucun paiement n'est demandé à cette étape."
+          : "Tu reçois un e-mail immédiatement : ta confirmation si la table est acquise, l'accusé de réception de ta demande sinon. Aucun paiement n'est demandé à cette étape."}
       </p>
     </form>
   );

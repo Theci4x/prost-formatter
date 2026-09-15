@@ -13,6 +13,11 @@ import {
   garantieRequise,
 } from "@/lib/reservations/garantie";
 import { montantDebitable } from "@/lib/reservations/caution";
+import {
+  prevenirClient,
+  prevenirRefus,
+} from "@/lib/courriel/reservation";
+import type { Contexte } from "@/lib/courriel/messages";
 import { debiterCaution } from "@/lib/stripe/caution";
 import {
   disponibiliteEspace,
@@ -521,7 +526,66 @@ type ReservationComplete = {
   // Déjà rempli si le client a reçu un lien de paiement lors d'une
   // acceptation précédente.
   paiement_token: string | null;
+  client_nom: string | null;
+  client_email: string | null;
 };
+
+/**
+ * Ce qu'il faut pour écrire au client d'une réservation : le nom de la
+ * maison, l'heure, l'adresse à laquelle il répondra.
+ *
+ * Lu avec la clé de service, et pas avec la session du restaurateur : la
+ * table des envois est fermée par RLS — aucune politique, donc aucun accès
+ * depuis un compte. C'est voulu : ces lignes n'appartiennent à personne
+ * d'autre qu'au serveur.
+ */
+async function contexteCourriel(reservation: ReservationComplete): Promise<{
+  service: ReturnType<typeof createServiceClient>;
+  contexte: Contexte;
+  destinataire: string;
+  repondreA?: string;
+} | null> {
+  if (!reservation.client_email) return null;
+
+  const service = createServiceClient();
+  const [restaurantResult, serviceResult] = await Promise.all([
+    service
+      .from("restaurants")
+      .select("nom, adresse, email_contact")
+      .eq("id", reservation.restaurant_id)
+      .maybeSingle(),
+    reservation.service_id
+      ? service
+          .from("restaurant_services")
+          .select("nom")
+          .eq("id", reservation.service_id)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+  ]);
+
+  const restaurant = restaurantResult.data as {
+    nom: string;
+    adresse: string | null;
+    email_contact: string | null;
+  } | null;
+  if (!restaurant) return null;
+
+  return {
+    service,
+    destinataire: reservation.client_email,
+    repondreA: restaurant.email_contact ?? undefined,
+    contexte: {
+      restaurantNom: restaurant.nom,
+      restaurantAdresse: restaurant.adresse,
+      clientNom: reservation.client_nom ?? "",
+      date: reservation.date_reservation,
+      heure: reservation.heure_arrivee?.slice(0, 5) ?? null,
+      couverts: reservation.couverts,
+      serviceNom: (serviceResult.data as { nom: string } | null)?.nom ?? null,
+      type: reservation.type,
+    },
+  };
+}
 
 export type DecisionState = { error: string | null };
 
@@ -650,6 +714,23 @@ export async function accepterDemande(
     return { error: "L'enregistrement a échoué. Réessaie dans un instant." };
   }
 
+  // Le client n'apprend rien tout seul. Une acceptation qui confirme se
+  // dit ; une acceptation qui réclame un acompte se dit aussi, mais par le
+  // lien de paiement, qui part ailleurs.
+  if (!garantie.exigee) {
+    const envoi = await contexteCourriel(reservation);
+    if (envoi) {
+      await prevenirClient({
+        supabase: envoi.service,
+        reservationId: reservation.id,
+        contexte: envoi.contexte,
+        destinataire: envoi.destinataire,
+        repondreA: envoi.repondreA,
+        confirmee: true,
+      });
+    }
+  }
+
   revalidatePath(`/dashboard/${reservation.restaurant_id}/reservations`);
   revalidatePath(`/dashboard/${reservation.restaurant_id}/service`);
   return { error: null };
@@ -663,12 +744,37 @@ async function changerStatut(
   const restaurantId = formData.get("restaurant_id") as string;
 
   const supabase = await createClient();
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("restaurant_reservations")
     .update({ statut, option_expire_le: null })
-    .eq("id", reservationId);
+    .eq("id", reservationId)
+    .select("*")
+    .maybeSingle();
 
-  if (error) console.error("[changerStatut]", statut, error);
+  if (error) {
+    console.error("[changerStatut]", statut, error);
+    revalidatePath(`/dashboard/${restaurantId}/reservations`);
+    return;
+  }
+
+  // Un client qui n'est pas prévenu se présente. C'est le cas où le
+  // silence coûte le plus cher — à lui comme à la maison, qui doit
+  // l'éconduire sur le pas de la porte.
+  const reservation = data as ReservationComplete | null;
+  if (reservation) {
+    const envoi = await contexteCourriel(reservation);
+    if (envoi) {
+      await prevenirRefus({
+        supabase: envoi.service,
+        reservationId: reservation.id,
+        contexte: envoi.contexte,
+        destinataire: envoi.destinataire,
+        repondreA: envoi.repondreA,
+        motif: statut,
+      });
+    }
+  }
+
   revalidatePath(`/dashboard/${restaurantId}/reservations`);
 }
 
@@ -1170,4 +1276,48 @@ export async function libererCaution(formData: FormData) {
   if (error) console.error("[libererCaution]", error);
 
   rafraichir(restaurantId);
+}
+
+export type ConfirmationState = { error: string | null; ok: boolean };
+
+/**
+ * Le réglage de confirmation, et l'adresse qui reçoit les réservations.
+ *
+ * Passe par le client utilisateur, pas le client de service : c'est la
+ * politique de sécurité de la base qui vérifie que ce restaurant est bien
+ * le sien, pas une condition écrite ici qu'on pourrait oublier.
+ */
+export async function enregistrerConfirmation(
+  _prevState: ConfirmationState,
+  formData: FormData,
+): Promise<ConfirmationState> {
+  const restaurantId = texte(formData.get("restaurant_id"));
+  const auto = formData.get("confirmation_auto") === "on";
+  const delai = Number(texte(formData.get("confirmation_auto_delai_heures")));
+  const email = texte(formData.get("email_contact"));
+
+  if (!Number.isInteger(delai) || delai < 0 || delai > 336) {
+    return { error: "Le délai doit être un nombre d'heures, entre 0 et 336.", ok: false };
+  }
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return { error: "Cette adresse e-mail ne semble pas valide.", ok: false };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("restaurants")
+    .update({
+      confirmation_auto: auto,
+      confirmation_auto_delai_heures: delai,
+      email_contact: email || null,
+    })
+    .eq("id", restaurantId);
+
+  if (error) {
+    console.error("[enregistrerConfirmation]", error);
+    return { error: "L'enregistrement a échoué. Réessaie dans un instant.", ok: false };
+  }
+
+  revalidatePath(`/dashboard/${restaurantId}/reservations/configuration`);
+  return { error: null, ok: true };
 }

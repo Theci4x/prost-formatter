@@ -13,6 +13,14 @@ import {
   secretEmpreinte,
 } from "@/lib/limites/publiques";
 import { chargerFermetures } from "@/lib/reservations/fermetures";
+import { decisionAutomatique } from "@/lib/reservations/confirmation";
+import { garantieRequise } from "@/lib/reservations/garantie";
+import {
+  prevenirClient,
+  prevenirRestaurateur,
+} from "@/lib/courriel/reservation";
+import type { Contexte } from "@/lib/courriel/messages";
+import { siteUrl } from "@/lib/site-url";
 import {
   disponibiliteEspace,
   heuresDArrivee,
@@ -79,11 +87,21 @@ export async function demanderReservation(
 
   const { data: restaurantData } = await supabase
     .from("restaurants")
-    .select("id")
+    // Les colonnes de confirmation et de contact viennent de migrations
+    // récentes : on les lit avec un défaut, pour qu'un déploiement en
+    // avance sur la base ne casse pas la prise de réservation.
+    .select("id, nom, adresse, email_contact, confirmation_auto, confirmation_auto_delai_heures")
     .eq("slug_reservation", slug)
     .maybeSingle();
 
-  const restaurant = restaurantData as { id: string } | null;
+  const restaurant = restaurantData as {
+    id: string;
+    nom: string;
+    adresse: string | null;
+    email_contact: string | null;
+    confirmation_auto: boolean | null;
+    confirmation_auto_delai_heures: number | null;
+  } | null;
   if (!restaurant) return { error: "Établissement introuvable." };
 
   // Une demande pose une option de 48 heures : elle bloque des couverts.
@@ -197,7 +215,24 @@ export async function demanderReservation(
     maintenant.getTime() + OPTION_HEURES * 60 * 60 * 1000,
   );
 
-  const { error } = await supabase.from("restaurant_reservations").insert({
+  // Confirmer ou non, sans jamais court-circuiter la garantie : une
+  // privatisation qui réclame un acompte reste une option jusqu'au
+  // paiement, quel que soit le réglage.
+  const decision = decisionAutomatique({
+    regles: {
+      confirmation_auto: restaurant.confirmation_auto ?? true,
+      confirmation_auto_delai_heures:
+        restaurant.confirmation_auto_delai_heures ?? 24,
+    },
+    service,
+    date,
+    type,
+    garantie: garantieRequise(espace, type, couverts),
+    maintenant,
+  });
+  const confirmee = decision.statut === "confirmee";
+
+  const { data: creee, error } = await supabase.from("restaurant_reservations").insert({
     restaurant_id: restaurant.id,
     espace_id: espace.id,
     service_id: service.id,
@@ -205,7 +240,7 @@ export async function demanderReservation(
     heure_arrivee: heure,
     couverts,
     type,
-    statut: "demande",
+    statut: decision.statut,
     // Écrit explicitement plutôt que laissé au défaut de la base : la
     // provenance se lit dans le tableau de bord, elle ne doit pas dépendre
     // d'un réglage de schéma.
@@ -216,13 +251,49 @@ export async function demanderReservation(
     occasion: occasion || null,
     message: message || null,
     accepte_communications: accepteCommunications,
-    option_expire_le: expiration.toISOString(),
-  });
+    // Une réservation confirmée ne pose plus d'option : elle est acquise,
+    // et une date d'expiration traînante la ferait disparaître du carnet.
+    option_expire_le: confirmee ? null : expiration.toISOString(),
+  }).select("id").maybeSingle();
 
   if (error) {
     console.error("[demanderReservation]", error);
     return { error: "L'envoi a échoué. Réessaie dans un instant." };
   }
 
-  redirect(`/reserver/${slug}/merci`);
+  // Les e-mails viennent après l'enregistrement, et n'en défont rien : la
+  // table est prise, même si le fournisseur d'e-mails est en panne.
+  const reservationId = (creee as { id: string } | null)?.id;
+  if (reservationId) {
+    const contexte: Contexte = {
+      restaurantNom: restaurant.nom,
+      restaurantAdresse: restaurant.adresse,
+      clientNom: nom,
+      date,
+      heure,
+      couverts,
+      serviceNom: service.nom,
+      type,
+    };
+    await Promise.all([
+      prevenirClient({
+        supabase,
+        reservationId,
+        contexte,
+        destinataire: email,
+        repondreA: restaurant.email_contact ?? undefined,
+        confirmee,
+      }),
+      prevenirRestaurateur({
+        supabase,
+        reservationId,
+        contexte,
+        destinataire: restaurant.email_contact,
+        lien: `${siteUrl()}/dashboard/${restaurant.id}/reservations`,
+        confirmee,
+      }),
+    ]);
+  }
+
+  redirect(`/reserver/${slug}/merci?confirmee=${confirmee ? "1" : "0"}`);
 }

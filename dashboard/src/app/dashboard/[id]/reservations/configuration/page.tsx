@@ -11,6 +11,7 @@ import { IdentitePublique } from "@/components/reservations/IdentitePublique";
 import { ServiceForm } from "@/components/reservations/ServiceForm";
 import { ServiceModifiable } from "@/components/reservations/ServiceModifiable";
 import { FermetureForm } from "@/components/reservations/FermetureForm";
+import { ReglesConfirmation } from "@/components/reservations/ReglesConfirmation";
 import {
   activerPageReservation,
   removeEspace,
@@ -168,6 +169,11 @@ export default async function ConfigurationReservationsPage({
     logo_url?: string | null;
     mentions_legales?: string | null;
     site_publie?: boolean | null;
+    // Colonnes de la migration 0038 : lues avec un défaut, pour qu'un
+    // déploiement en avance sur la base n'efface pas cet écran.
+    confirmation_auto?: boolean | null;
+    confirmation_auto_delai_heures?: number | null;
+    email_contact?: string | null;
   };
   const slug = publique.slug_reservation;
   const site = siteUrl();
@@ -287,6 +293,26 @@ export default async function ConfigurationReservationsPage({
         )}
 
         <ServiceForm restaurantId={id} />
+      </section>
+
+      <section className="flex flex-col gap-4">
+        <div className="flex flex-col gap-1">
+          <h2 className="text-base font-semibold text-zinc-900">
+            Confirmations et e-mails
+          </h2>
+          <p className="text-sm text-zinc-500">
+            Qui valide les réservations, et où elles arrivent. Le client est
+            prévenu par e-mail dans tous les cas : confirmation immédiate si
+            Klarr confirme, accusé de réception sinon.
+          </p>
+        </div>
+
+        <ReglesConfirmation
+          restaurantId={id}
+          auto={publique.confirmation_auto ?? true}
+          delaiHeures={publique.confirmation_auto_delai_heures ?? 24}
+          emailContact={publique.email_contact ?? null}
+        />
       </section>
 
       <section className="flex flex-col gap-4">
