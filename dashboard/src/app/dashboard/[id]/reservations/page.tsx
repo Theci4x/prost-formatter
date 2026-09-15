@@ -21,11 +21,9 @@ import { libelleAcompte } from "@/lib/reservations/acompte";
 import { libelleCaution } from "@/lib/reservations/caution";
 import { absencesDuClient, libelleAbsences } from "@/lib/reservations/absence";
 import { siteUrl } from "@/lib/site-url";
-import {
-  annulerReservation,
-  constaterAbsence,
-  enregistrerNote,
-} from "./actions";
+import { annulerReservation, constaterAbsence } from "./actions";
+import { BoutonAction } from "@/components/reservations/BoutonAction";
+import { NoteInterne } from "@/components/reservations/NoteInterne";
 import { formatHeure, type Espace, type Service } from "@/types/reservation";
 import type { Restaurant } from "@/types/restaurant";
 import { exigerModule } from "@/lib/abonnement/acces";
@@ -210,35 +208,32 @@ function Ligne({
       {/* Le constat d'absence n'apparaît qu'une fois le service passé :
           proposé la veille, il ne voudrait rien dire. */}
       {(constatable || demande.absence_constatee_le) && (
-        <form action={constaterAbsence} className="flex items-center gap-3">
-          <input type="hidden" name="reservation_id" value={demande.id} />
-          <input type="hidden" name="restaurant_id" value={restaurantId} />
-          <input
-            type="hidden"
-            name="retirer"
-            value={demande.absence_constatee_le ? "1" : "0"}
-          />
-          {demande.absence_constatee_le ? (
-            <>
-              <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-900">
-                Table restée vide
-              </span>
-              <button
-                type="submit"
-                className="text-xs text-zinc-500 hover:text-zinc-900"
-              >
-                Retirer ce constat
-              </button>
-            </>
-          ) : (
-            <button
-              type="submit"
-              className="text-xs font-medium text-zinc-500 hover:text-amber-800"
-            >
-              Ils ne sont pas venus
-            </button>
+        <div className="flex flex-wrap items-center gap-3">
+          {demande.absence_constatee_le && (
+            <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-900">
+              Table restée vide
+            </span>
           )}
-        </form>
+          <BoutonAction
+            action={constaterAbsence}
+            champs={{
+              reservation_id: demande.id,
+              restaurant_id: restaurantId,
+              retirer: demande.absence_constatee_le ? "1" : "0",
+            }}
+            libelle={
+              demande.absence_constatee_le
+                ? "Retirer ce constat"
+                : "Ils ne sont pas venus"
+            }
+            enCours="Enregistrement…"
+            className={
+              demande.absence_constatee_le
+                ? "text-xs text-zinc-500 hover:text-zinc-900"
+                : "text-xs font-medium text-zinc-500 hover:text-amber-800"
+            }
+          />
+        </div>
       )}
 
       {(() => {
@@ -310,48 +305,24 @@ function Ligne({
         />
       ) : (
         demande.statut === "confirmee" && (
-          <form action={annulerReservation} className="w-fit">
-            <input type="hidden" name="reservation_id" value={demande.id} />
-            <input type="hidden" name="restaurant_id" value={restaurantId} />
-            <button
-              type="submit"
-              className="text-sm font-medium text-red-600 hover:text-red-800"
-            >
-              Annuler cette réservation
-            </button>
-          </form>
+          <BoutonAction
+            action={annulerReservation}
+            champs={{
+              reservation_id: demande.id,
+              restaurant_id: restaurantId,
+            }}
+            libelle="Annuler cette réservation"
+            enCours="Annulation…"
+            className="w-fit text-sm font-medium text-red-600 hover:text-red-800"
+          />
         )
       )}
 
-      <form
-        action={enregistrerNote}
-        className="flex flex-wrap items-end gap-3 border-t border-zinc-100 pt-4"
-      >
-        <input type="hidden" name="reservation_id" value={demande.id} />
-        <input type="hidden" name="restaurant_id" value={restaurantId} />
-        <label
-          className="flex min-w-60 flex-1 flex-col gap-1 text-sm font-medium text-zinc-700"
-          htmlFor={`note-${demande.id}`}
-        >
-          Note interne{" "}
-          <span className="font-normal text-zinc-400">
-            (jamais visible du client)
-          </span>
-          <input
-            id={`note-${demande.id}`}
-            name="note_interne"
-            defaultValue={demande.note_interne ?? ""}
-            placeholder="Allergie aux fruits de mer, arrive à 19h30…"
-            className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-brand-navy"
-          />
-        </label>
-        <button
-          type="submit"
-          className="rounded-md border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
-        >
-          Enregistrer
-        </button>
-      </form>
+      <NoteInterne
+        reservationId={demande.id}
+        restaurantId={restaurantId}
+        note={demande.note_interne ?? null}
+      />
     </li>
   );
 }

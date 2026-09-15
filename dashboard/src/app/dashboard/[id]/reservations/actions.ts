@@ -751,7 +751,7 @@ export async function accepterDemande(
 async function changerStatut(
   formData: FormData,
   statut: "refusee" | "annulee",
-) {
+): Promise<DecisionState> {
   const reservationId = formData.get("reservation_id") as string;
   const restaurantId = formData.get("restaurant_id") as string;
 
@@ -768,8 +768,24 @@ async function changerStatut(
 
   if (error) {
     console.error("[changerStatut]", statut, error);
-    revalidatePath(`/dashboard/${restaurantId}/reservations`);
-    return;
+    // Le journal du serveur ne sert qu'à nous. Sans cette phrase, le
+    // restaurateur clique, la page se recharge inchangée, et il n'a
+    // aucun moyen de savoir si c'est fait ou raté.
+    return {
+      error:
+        statut === "annulee"
+          ? "L'annulation a échoué. Réessaie dans un instant."
+          : "Le refus a échoué. Réessaie dans un instant.",
+    };
+  }
+
+  // Une mise à jour qui ne touche aucune ligne n'est pas une erreur pour
+  // la base : c'est le cas d'une réservation déjà tranchée ailleurs, ou
+  // d'un identifiant que la RLS ne laisse pas voir.
+  if (!data) {
+    return {
+      error: "Cette réservation n'existe plus, ou a déjà été traitée.",
+    };
   }
 
   // Un client qui n'est pas prévenu se présente. C'est le cas où le
@@ -791,18 +807,29 @@ async function changerStatut(
   }
 
   revalidatePath(`/dashboard/${restaurantId}/reservations`);
+  revalidatePath(`/dashboard/${restaurantId}/service`);
+  return { error: null };
 }
 
-export async function refuserDemande(formData: FormData) {
-  await changerStatut(formData, "refusee");
+export async function refuserDemande(
+  _prevState: DecisionState,
+  formData: FormData,
+): Promise<DecisionState> {
+  return changerStatut(formData, "refusee");
 }
 
-export async function annulerReservation(formData: FormData) {
-  await changerStatut(formData, "annulee");
+export async function annulerReservation(
+  _prevState: DecisionState,
+  formData: FormData,
+): Promise<DecisionState> {
+  return changerStatut(formData, "annulee");
 }
 
 /** Note privée du restaurateur, jamais montrée au client. */
-export async function enregistrerNote(formData: FormData) {
+export async function enregistrerNote(
+  _prevState: DecisionState,
+  formData: FormData,
+): Promise<DecisionState> {
   const reservationId = formData.get("reservation_id") as string;
   const restaurantId = formData.get("restaurant_id") as string;
   const note = ((formData.get("note_interne") as string) ?? "").trim();
@@ -813,8 +840,14 @@ export async function enregistrerNote(formData: FormData) {
     .update({ note_interne: note || null })
     .eq("id", reservationId);
 
-  if (error) console.error("[enregistrerNote]", error);
+  if (error) {
+    console.error("[enregistrerNote]", error);
+    return { error: "La note n'a pas pu être enregistrée." };
+  }
+
   revalidatePath(`/dashboard/${restaurantId}/reservations`);
+  revalidatePath(`/dashboard/${restaurantId}/service`);
+  return { error: null };
 }
 
 // — Réservation saisie par le restaurateur —
@@ -1349,7 +1382,10 @@ export async function enregistrerConfirmation(
  * de qui l'a coché, parce qu'en brigade « ils ne sont jamais venus » se
  * discute le lendemain.
  */
-export async function constaterAbsence(formData: FormData): Promise<void> {
+export async function constaterAbsence(
+  _prevState: DecisionState,
+  formData: FormData,
+): Promise<DecisionState> {
   const reservationId = texte(formData.get("reservation_id"));
   const restaurantId = texte(formData.get("restaurant_id"));
   // Le bouton dit ce qu'il fait : cocher, ou décocher.
@@ -1366,13 +1402,16 @@ export async function constaterAbsence(formData: FormData): Promise<void> {
     .eq("id", reservationId)
     .maybeSingle();
 
-  const reservation = data as ReservationAbsence & { id: string } | null;
-  if (!reservation) return;
+  const reservation = data as (ReservationAbsence & { id: string }) | null;
+  if (!reservation) {
+    return { error: "Cette réservation n'existe plus." };
+  }
 
   // Retirer un constat ne se refuse jamais : on a pu cocher à tort, et un
   // constat qu'on ne peut pas défaire serait un piège.
-  if (!retirer && !peutConstaterAbsence(reservation, new Date()).possible) {
-    return;
+  if (!retirer) {
+    const verdict = peutConstaterAbsence(reservation, new Date());
+    if (!verdict.possible) return { error: verdict.motif };
   }
 
   const { error } = await supabase
@@ -1383,8 +1422,16 @@ export async function constaterAbsence(formData: FormData): Promise<void> {
     })
     .eq("id", reservationId);
 
-  if (error) console.error("[constaterAbsence]", error);
+  if (error) {
+    console.error("[constaterAbsence]", error);
+    return {
+      error: retirer
+        ? "Le retrait du constat a échoué. Réessaie dans un instant."
+        : "Le constat n'a pas pu être enregistré. Réessaie dans un instant.",
+    };
+  }
 
   revalidatePath(`/dashboard/${restaurantId}/reservations`);
   revalidatePath(`/dashboard/${restaurantId}/service`);
+  return { error: null };
 }

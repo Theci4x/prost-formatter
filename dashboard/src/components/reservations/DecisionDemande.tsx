@@ -20,6 +20,12 @@ export function DecisionDemande({
     accepterDemande,
     initialState,
   );
+  // Le refus a son propre état : sans lui, une erreur de refus
+  // s'afficherait sous le bouton Accepter, ou nulle part.
+  const [refus, actionRefus, refusEnCours] = useActionState(
+    refuserDemande,
+    initialState,
+  );
 
   return (
     <div className="flex flex-col gap-2">
@@ -35,21 +41,26 @@ export function DecisionDemande({
           </button>
         </form>
 
-        <form action={refuserDemande}>
+        <form action={actionRefus}>
           <input type="hidden" name="reservation_id" value={reservationId} />
           <input type="hidden" name="restaurant_id" value={restaurantId} />
           <button
             type="submit"
-            className="rounded-md border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-600 transition-colors hover:border-red-300 hover:text-red-700"
+            disabled={refusEnCours}
+            className="rounded-md border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-600 transition-colors hover:border-red-300 hover:text-red-700 disabled:opacity-50"
           >
-            Refuser
+            {refusEnCours ? "Refus…" : "Refuser"}
           </button>
         </form>
       </div>
 
       {/* Le créneau a pu être pris entre l'arrivée de la demande et le clic :
           le refus vient du recalcul de disponibilité, pas d'une erreur. */}
-      {state.error && <p className="text-sm text-red-600">{state.error}</p>}
+      {(state.error || refus.error) && (
+        <p className="text-sm text-red-600" role="alert">
+          {state.error ?? refus.error}
+        </p>
+      )}
     </div>
   );
 }
