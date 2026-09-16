@@ -8,7 +8,7 @@ import {
 import { LIBELLE_BOUTON, LONGUEUR_MAX } from "@/lib/posts/regles";
 import type { RestaurantPhoto } from "@/types/photo";
 
-const initial: PostState = { error: null, enregistre: false };
+const initial: PostState = { error: null, enregistre: false, version: 0 };
 
 /**
  * Rédiger une publication Google.
@@ -25,11 +25,6 @@ export function FormulairePost({
   photos: RestaurantPhoto[];
 }) {
   const [state, action, pending] = useActionState(programmerPost, initial);
-  const [texte, setTexte] = useState("");
-  const [bouton, setBouton] = useState("");
-  const [photoId, setPhotoId] = useState("");
-
-  const trop = texte.trim().length > LONGUEUR_MAX;
 
   return (
     <form
@@ -37,6 +32,37 @@ export function FormulairePost({
       className="flex flex-col gap-4 rounded-2xl border border-zinc-200 bg-white p-5"
     >
       <input type="hidden" name="restaurant_id" value={restaurantId} />
+      {/* La clé remonte les champs à chaque enregistrement, et les vide
+          avec eux : on programme cinq publications d'affilée le lundi
+          matin, pas une seule — garder le texte de la précédente serait
+          un piège à chaque fois. */}
+      <Champs
+        key={state.version}
+        photos={photos}
+        pending={pending}
+        state={state}
+      />
+    </form>
+  );
+}
+
+function Champs({
+  photos,
+  pending,
+  state,
+}: {
+  photos: RestaurantPhoto[];
+  pending: boolean;
+  state: PostState;
+}) {
+  const [texte, setTexte] = useState("");
+  const [bouton, setBouton] = useState("");
+  const [photoId, setPhotoId] = useState("");
+
+  const trop = texte.trim().length > LONGUEUR_MAX;
+
+  return (
+    <>
       <input type="hidden" name="photo_id" value={photoId} />
 
       <label className="flex flex-col gap-1 text-sm font-medium text-zinc-700">
@@ -147,6 +173,6 @@ export function FormulairePost({
           )
         )}
       </div>
-    </form>
+    </>
   );
 }

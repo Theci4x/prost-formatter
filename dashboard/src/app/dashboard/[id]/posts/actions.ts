@@ -5,18 +5,35 @@ import { createClient } from "@/lib/supabase/server";
 import { exiger } from "@/lib/equipe/roles";
 import { valider, type Bouton } from "@/lib/posts/regles";
 
-export type PostState = { error: string | null; enregistre: boolean };
+export type PostState = {
+  error: string | null;
+  enregistre: boolean;
+  /**
+   * Incrémenté à chaque publication enregistrée.
+   *
+   * Le geste réel est d'en programmer cinq d'affilée, le lundi matin, pour
+   * la semaine. Sans ce compteur, le formulaire garderait le texte du
+   * précédent — « enregistre » resterait vrai d'un envoi au suivant, et
+   * rien ne dirait au champ de se vider.
+   */
+  version: number;
+};
 
 const BOUTONS: Bouton[] = ["reserver", "appeler", "en_savoir_plus"];
 
 export async function programmerPost(
-  _prevState: PostState,
+  prevState: PostState,
   formData: FormData,
 ): Promise<PostState> {
+  const version = prevState.version;
+  const echec = (error: string): PostState => ({
+    error,
+    enregistre: false,
+    version,
+  });
+
   const restaurantId = String(formData.get("restaurant_id") ?? "");
-  if (!restaurantId) {
-    return { error: "Établissement inconnu.", enregistre: false };
-  }
+  if (!restaurantId) return echec("Établissement inconnu.");
 
   const texte = String(formData.get("texte") ?? "");
   const quand = String(formData.get("publier_le") ?? "");
@@ -35,7 +52,7 @@ export async function programmerPost(
     { texte, publierLe, bouton, boutonUrl: boutonUrl || null },
     new Date(),
   );
-  if (erreur) return { error: erreur, enregistre: false };
+  if (erreur) return echec(erreur);
 
   await exiger(restaurantId, "gerant");
 
@@ -51,11 +68,11 @@ export async function programmerPost(
 
   if (error) {
     console.error("[posts/programmer]", error.message);
-    return { error: "Enregistrement impossible. Réessaie.", enregistre: false };
+    return echec("Enregistrement impossible. Réessaie.");
   }
 
   revalidatePath(`/dashboard/${restaurantId}/posts`);
-  return { error: null, enregistre: true };
+  return { error: null, enregistre: true, version: version + 1 };
 }
 
 export async function annulerPost(formData: FormData): Promise<void> {
