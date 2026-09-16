@@ -80,6 +80,13 @@ const FEATURE_LINKS: {
     minimum: "gerant",
   },
   {
+    href: "faq",
+    label: "Questions fréquentes",
+    resume: "Ce qu'on te demande au téléphone, répondu une fois pour toutes.",
+    icon: dashboardIcons.visibiliteIa,
+    minimum: "gerant",
+  },
+  {
     href: "visibilite-ia",
     label: "Visibilité IA",
     resume: "Es-tu cité quand on demande à une IA où dîner ?",
@@ -205,8 +212,8 @@ export default async function DashboardPage() {
               Aucun restaurant pour le moment.
             </p>
             <p className="text-sm text-zinc-500">
-              Ajoute ton premier restaurant pour commencer à gérer sa
-              présence en ligne.
+              Ajoute ton premier restaurant pour commencer à gérer sa présence
+              en ligne.
             </p>
           </div>
           <Link
@@ -262,7 +269,9 @@ export default async function DashboardPage() {
                 ).map((feature) => {
                   const requis = moduleDeLaSection(feature.href);
                   const ferme = requis
-                    ? !(acces.get(restaurant.id) ?? ACCES_COMPLET).ouvert[requis]
+                    ? !(acces.get(restaurant.id) ?? ACCES_COMPLET).ouvert[
+                        requis
+                      ]
                     : false;
 
                   // Fermée, la case n'est plus un lien : elle se voit,
@@ -293,23 +302,23 @@ export default async function DashboardPage() {
                   }
 
                   return (
-                  <Link
-                    key={feature.href}
-                    href={`/dashboard/${restaurant.id}/${feature.href}`}
-                    className="group flex items-start gap-3 rounded-xl border border-zinc-200/70 bg-white p-4 transition-colors hover:border-brand-navy"
-                  >
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-orange-soft text-brand-navy transition-colors group-hover:bg-brand-navy group-hover:text-white">
-                      {feature.icon}
-                    </span>
-                    <span className="flex min-w-0 flex-col gap-0.5">
-                      <span className="text-sm font-medium text-zinc-900">
-                        {feature.label}
+                    <Link
+                      key={feature.href}
+                      href={`/dashboard/${restaurant.id}/${feature.href}`}
+                      className="group flex items-start gap-3 rounded-xl border border-zinc-200/70 bg-white p-4 transition-colors hover:border-brand-navy"
+                    >
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-orange-soft text-brand-navy transition-colors group-hover:bg-brand-navy group-hover:text-white">
+                        {feature.icon}
                       </span>
-                      <span className="text-xs leading-relaxed text-zinc-500">
-                        {feature.resume}
+                      <span className="flex min-w-0 flex-col gap-0.5">
+                        <span className="text-sm font-medium text-zinc-900">
+                          {feature.label}
+                        </span>
+                        <span className="text-xs leading-relaxed text-zinc-500">
+                          {feature.resume}
+                        </span>
                       </span>
-                    </span>
-                  </Link>
+                    </Link>
                   );
                 })}
               </div>

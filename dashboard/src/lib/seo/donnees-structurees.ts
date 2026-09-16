@@ -253,3 +253,47 @@ export function filAriane(
     })),
   };
 }
+
+export type QuestionFrequente = {
+  question: string;
+  reponse: string;
+};
+
+/**
+ * Le balisage FAQPage.
+ *
+ * C'est celui que les moteurs de réponse citent le plus volontiers, et
+ * presque mot pour mot : une question posée telle qu'un client la pose,
+ * une réponse courte, et la source devient l'établissement plutôt qu'un
+ * agrégateur qui aura deviné.
+ *
+ * Google refuse une FAQPage dont une entrée est incomplète — et il refuse
+ * alors la page entière, pas la seule entrée. Les paires incomplètes sont
+ * donc écartées ici plutôt que déclarées.
+ */
+export function faqSchema({
+  questions,
+  url,
+}: {
+  questions: QuestionFrequente[];
+  url: string;
+}): Record<string, unknown> | null {
+  const retenues = questions.filter(
+    (q) => q.question.trim().length > 0 && q.reponse.trim().length > 0,
+  );
+  if (retenues.length === 0) return null;
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    url,
+    mainEntity: retenues.map((q) => ({
+      "@type": "Question",
+      name: q.question.trim(),
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: q.reponse.trim(),
+      },
+    })),
+  };
+}

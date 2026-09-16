@@ -8,10 +8,15 @@ import { CouvertureVitrine } from "@/components/reservations/CouvertureVitrine";
 import { BandePhotos } from "@/components/reservations/BandePhotos";
 import { SignatureKlarr } from "@/components/brand/SignatureKlarr";
 import { DonneesStructurees } from "@/components/seo/DonneesStructurees";
-import { restaurantSchema } from "@/lib/seo/donnees-structurees";
+import {
+  restaurantSchema,
+  faqSchema,
+  type QuestionFrequente,
+} from "@/lib/seo/donnees-structurees";
 import { reseauxPublics } from "@/lib/seo/reseaux";
 import { fluxInstagram } from "@/lib/vitrine/instagram";
 import { FluxInstagram } from "@/components/reservations/FluxInstagram";
+import { QuestionsFrequentes } from "@/components/seo/QuestionsFrequentes";
 import { cartePubliee } from "@/lib/menu/publication";
 import { carteOrganisee, formatPrix } from "@/lib/menu/carte";
 import {
@@ -196,6 +201,7 @@ export default async function VitrinePage({
     carte,
     reseaux,
     instagram,
+    faqResult,
   ] = await Promise.all([
     supabase
       .from("restaurant_photos")
@@ -224,9 +230,16 @@ export default async function VitrinePage({
     cartePubliee(supabase, restaurant.id),
     reseauxPublics(supabase, restaurant.id, restaurant.site_web),
     fluxInstagram(supabase, restaurant.id),
+    supabase
+      .from("restaurant_faq")
+      .select("question, reponse")
+      .eq("restaurant_id", restaurant.id)
+      .order("ordre")
+      .order("created_at"),
   ]);
 
   const photos = (photosResult.data ?? []) as RestaurantPhoto[];
+  const questions = (faqResult.data ?? []) as QuestionFrequente[];
   const espaces = (espacesResult.data ?? []) as Espace[];
   const services = (servicesResult.data ?? []) as Service[];
   const nomEspace = new Map(espaces.map((espace) => [espace.id, espace.nom]));
@@ -341,6 +354,16 @@ export default async function VitrinePage({
             note: reputation?.note ? Number(reputation.note) : null,
             nombreAvis: reputation?.nombre_avis ?? null,
             reseaux,
+          })}
+        />
+
+        {/* Un second bloc plutôt qu'une propriété du premier : une
+            FAQPage est une page à part entière aux yeux de schema.org,
+            et l'imbriquer dans le Restaurant la rendrait invisible. */}
+        <DonneesStructurees
+          donnees={faqSchema({
+            questions,
+            url: `${siteUrl()}/restaurant/${slug}`,
           })}
         />
 
@@ -586,6 +609,8 @@ export default async function VitrinePage({
             </p>
           </div>
         )}
+        <QuestionsFrequentes questions={questions} />
+
         <SignatureKlarr
           texte="Site et réservations propulsés par"
           className="mx-auto max-w-3xl"
