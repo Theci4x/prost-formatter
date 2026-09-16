@@ -98,8 +98,9 @@ export default async function Home() {
           justifyContent: "space-between",
           maxWidth: 1180,
           margin: "0 auto",
-          padding: "28px 32px",
+          gap: 12,
         }}
+        className="px-5 py-6 sm:px-8 sm:py-7"
       >
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <KlarrMark size={28} />
@@ -142,19 +143,31 @@ export default async function Home() {
             Connexion
           </Link>
         </div>
-        <Link
-          href="/login"
-          style={{
-            background: "var(--ink)",
-            color: "var(--paper)",
-            fontSize: 14,
-            fontWeight: 600,
-            padding: "11px 20px",
-            borderRadius: 8,
-          }}
-        >
-          Essayer gratuitement
-        </Link>
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <Link
+            href="/login"
+            className="sm:hidden"
+            style={{ fontSize: 14, fontWeight: 500, color: "var(--ink-soft)" }}
+          >
+            Connexion
+          </Link>
+          <Link
+            href="/login"
+            className="whitespace-nowrap px-4 py-2.5 sm:px-5"
+            style={{
+              background: "var(--ink)",
+              color: "var(--paper)",
+              fontSize: 14,
+              fontWeight: 600,
+              borderRadius: 8,
+            }}
+          >
+            {/* « gratuitement » ne tient pas à côté de « Connexion » sur un
+                téléphone étroit, et le bouton sortait de l'écran. */}
+            <span className="sm:hidden">Essayer</span>
+            <span className="hidden sm:inline">Essayer gratuitement</span>
+          </Link>
+        </div>
       </div>
 
       {/* HERO */}
