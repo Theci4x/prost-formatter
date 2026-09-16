@@ -42,8 +42,10 @@ function parseHoraires(formData: FormData): {
       (formData.get(`horaire_${jour}_fermeture`) as string) || "22:00";
 
     const coupure = !ferme && formData.get(`horaire_${jour}_coupure`) === "on";
-    const ouverture2 = (formData.get(`horaire_${jour}_ouverture2`) as string) || "";
-    const fermeture2 = (formData.get(`horaire_${jour}_fermeture2`) as string) || "";
+    const ouverture2 =
+      (formData.get(`horaire_${jour}_ouverture2`) as string) || "";
+    const fermeture2 =
+      (formData.get(`horaire_${jour}_fermeture2`) as string) || "";
 
     if (coupure) {
       if (!ouverture2 || !fermeture2) {
@@ -90,6 +92,7 @@ export async function createRestaurant(
   const telephone = formData.get("telephone") as string;
   const siteWeb = formData.get("site_web") as string;
   const description = formData.get("description") as string;
+  const typeCuisine = formData.get("type_cuisine") as string;
 
   const { horaires, erreur } = parseHoraires(formData);
   if (erreur) return { error: erreur };
@@ -108,6 +111,7 @@ export async function createRestaurant(
     telephone: telephone || null,
     site_web: siteWeb || null,
     description: description || null,
+    type_cuisine: typeCuisine?.trim() || null,
     horaires,
     proprietaire_id: user.id,
   });
@@ -130,6 +134,7 @@ export async function updateRestaurant(
   const telephone = formData.get("telephone") as string;
   const siteWeb = formData.get("site_web") as string;
   const description = formData.get("description") as string;
+  const typeCuisine = formData.get("type_cuisine") as string;
 
   const { horaires, erreur } = parseHoraires(formData);
   if (erreur) return { error: erreur };
@@ -146,6 +151,7 @@ export async function updateRestaurant(
       telephone: telephone || null,
       site_web: siteWeb || null,
       description: description || null,
+      type_cuisine: typeCuisine?.trim() || null,
       horaires,
     })
     .eq("id", id);

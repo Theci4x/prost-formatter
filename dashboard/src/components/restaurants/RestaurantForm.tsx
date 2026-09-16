@@ -114,6 +114,30 @@ export function RestaurantForm({
 
       <div className="flex flex-col gap-1.5">
         <label
+          htmlFor="type_cuisine"
+          className="text-sm font-medium text-zinc-700"
+        >
+          Type de cuisine{" "}
+          <span className="font-normal text-zinc-400">
+            (ce que cherchent Google et les assistants)
+          </span>
+        </label>
+        <input
+          id="type_cuisine"
+          name="type_cuisine"
+          type="text"
+          placeholder="Allemande, brasserie"
+          defaultValue={restaurant?.type_cuisine ?? ""}
+          className="rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-zinc-500"
+        />
+        <p className="text-xs text-zinc-500">
+          Sépare par des virgules. C&apos;est ce qui permet d&apos;être proposé
+          sur « restaurant allemand près de République ».
+        </p>
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <label
           htmlFor="description"
           className="text-sm font-medium text-zinc-700"
         >
@@ -138,7 +162,10 @@ export function RestaurantForm({
         </p>
         <div className="flex flex-col gap-2 rounded-md border border-zinc-200 p-3">
           {JOURS_SEMAINE.map((jour) => (
-            <div key={jour} className="flex flex-col gap-1.5 border-b border-zinc-100 pb-2 last:border-0 last:pb-0">
+            <div
+              key={jour}
+              className="flex flex-col gap-1.5 border-b border-zinc-100 pb-2 last:border-0 last:pb-0"
+            >
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
                 <span className="w-24 shrink-0 text-sm text-zinc-700">
                   {JOUR_LABELS[jour]}
@@ -149,7 +176,10 @@ export function RestaurantForm({
                     name={`horaire_${jour}_ferme`}
                     checked={fermes[jour]}
                     onChange={(e) =>
-                      setFermes((prev) => ({ ...prev, [jour]: e.target.checked }))
+                      setFermes((prev) => ({
+                        ...prev,
+                        [jour]: e.target.checked,
+                      }))
                     }
                   />
                   Fermé
@@ -157,7 +187,9 @@ export function RestaurantForm({
                 <input
                   type="time"
                   name={`horaire_${jour}_ouverture`}
-                  defaultValue={restaurant?.horaires?.[jour]?.ouverture ?? "09:00"}
+                  defaultValue={
+                    restaurant?.horaires?.[jour]?.ouverture ?? "09:00"
+                  }
                   disabled={fermes[jour]}
                   className="rounded-md border border-zinc-300 px-2 py-1 text-sm outline-none focus:border-zinc-500 disabled:opacity-40"
                 />
@@ -165,7 +197,9 @@ export function RestaurantForm({
                 <input
                   type="time"
                   name={`horaire_${jour}_fermeture`}
-                  defaultValue={restaurant?.horaires?.[jour]?.fermeture ?? "22:00"}
+                  defaultValue={
+                    restaurant?.horaires?.[jour]?.fermeture ?? "22:00"
+                  }
                   disabled={fermes[jour]}
                   className="rounded-md border border-zinc-300 px-2 py-1 text-sm outline-none focus:border-zinc-500 disabled:opacity-40"
                 />
@@ -176,7 +210,10 @@ export function RestaurantForm({
                     checked={coupures[jour]}
                     disabled={fermes[jour]}
                     onChange={(e) =>
-                      setCoupures((prev) => ({ ...prev, [jour]: e.target.checked }))
+                      setCoupures((prev) => ({
+                        ...prev,
+                        [jour]: e.target.checked,
+                      }))
                     }
                   />
                   Coupure
@@ -193,7 +230,8 @@ export function RestaurantForm({
                     type="time"
                     name={`horaire_${jour}_ouverture2`}
                     defaultValue={
-                      restaurant?.horaires?.[jour]?.seconde?.ouverture ?? "19:00"
+                      restaurant?.horaires?.[jour]?.seconde?.ouverture ??
+                      "19:00"
                     }
                     className="rounded-md border border-zinc-300 px-2 py-1 text-sm outline-none focus:border-zinc-500"
                   />
@@ -202,7 +240,8 @@ export function RestaurantForm({
                     type="time"
                     name={`horaire_${jour}_fermeture2`}
                     defaultValue={
-                      restaurant?.horaires?.[jour]?.seconde?.fermeture ?? "23:00"
+                      restaurant?.horaires?.[jour]?.seconde?.fermeture ??
+                      "23:00"
                     }
                     className="rounded-md border border-zinc-300 px-2 py-1 text-sm outline-none focus:border-zinc-500"
                   />

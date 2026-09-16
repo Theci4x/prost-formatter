@@ -47,7 +47,9 @@ async function chargerRestaurant(slug: string) {
     // Page publique : on ne lit que ce qui doit s'y afficher. Et surtout
     // rien de récent — une colonne ajoutée par une migration pas encore
     // passée ferait échouer toute la requête, donc toute la page.
-    .select("id, nom, adresse, description, logo_url, mentions_legales, site_web")
+    .select(
+      "id, nom, adresse, description, logo_url, mentions_legales, site_web",
+    )
     .eq("slug_reservation", slug)
     .maybeSingle();
 
@@ -65,6 +67,8 @@ async function chargerRestaurant(slug: string) {
     logo_url: string | null;
     mentions_legales: string | null;
     site_web: string | null;
+    /** Ce que sert la maison. Colonne récente, donc facultative. */
+    type_cuisine?: string | null;
   } | null;
 }
 
@@ -363,7 +367,11 @@ export default async function ReserverPage({
               adresse: restaurant.adresse,
               description: restaurant.description,
               logoUrl: restaurant.logo_url,
+              typeCuisine: restaurant.type_cuisine,
             },
+            // On n'atteint cette page que par le slug de réservation :
+            // la page est donc ouverte, et la table se retient en ligne.
+            accepteReservations: true,
             services,
             espaces,
             carte,
@@ -582,7 +590,7 @@ export default async function ReserverPage({
                           slug={slug}
                           espaceId={espaceDemande.id}
                           serviceId={creneau.service.id}
-                        heure={creneau.heure}
+                          heure={creneau.heure}
                           date={date}
                           couverts={couverts}
                           type="privatisation"
@@ -606,8 +614,8 @@ export default async function ReserverPage({
                                 href={`?date=${date}&couverts=${espaceDemande.privatisation_minimum}&espace=${espaceDemande.id}`}
                                 className="w-fit text-sm font-medium text-brand-orange hover:underline"
                               >
-                                Voir pour{" "}
-                                {espaceDemande.privatisation_minimum} convives
+                                Voir pour {espaceDemande.privatisation_minimum}{" "}
+                                convives
                               </a>
                             )}
                         </div>
@@ -615,106 +623,108 @@ export default async function ReserverPage({
                     </div>
                   ) : (
                     <>
-                  {/* Réserver une table : l'action ordinaire, celle que
+                      {/* Réserver une table : l'action ordinaire, celle que
                       quatre-vingt-dix-neuf clients sur cent viennent
                       faire. Aucune salle à choisir — le client n'a aucun
                       moyen de savoir laquelle lui convient, c'est
                       l'établissement qui place, comme au téléphone. */}
-                  {table ? (
-                    <div className="rounded-xl border border-zinc-200 bg-zinc-50/70 p-4">
-                      <p className="font-medium text-zinc-900">
-                        Une table pour {couverts} convive
-                        {couverts > 1 ? "s" : ""}
-                      </p>
-                      <p className="mt-1 text-sm text-zinc-500">
-                        Placée par l&apos;établissement, comme au téléphone.
-                        {placesMax > couverts &&
-                          ` Il reste de la place jusqu'à ${placesMax} convives.`}
-                      </p>
-                      <DemandeForm
-                        slug={slug}
-                        espaceId={table.espace.id}
-                        serviceId={creneau.service.id}
-                        heure={creneau.heure}
-                        date={date}
-                        couverts={couverts}
-                        type="table"
-                        libelle="Réserver une table"
-                        restaurantNom={restaurant.nom}
-                        principal
-                      />
-                    </div>
-                  ) : (
-                    // Sans motif, rien : un cadre vide inquiète plus qu'il
-                    // n'informe, et la privatisation en dessous parle.
-                    raison && (
-                      <p className="rounded-xl border border-dashed border-zinc-200 p-4 text-sm text-zinc-500">
-                        {raison}
-                      </p>
-                    )
-                  )}
+                      {table ? (
+                        <div className="rounded-xl border border-zinc-200 bg-zinc-50/70 p-4">
+                          <p className="font-medium text-zinc-900">
+                            Une table pour {couverts} convive
+                            {couverts > 1 ? "s" : ""}
+                          </p>
+                          <p className="mt-1 text-sm text-zinc-500">
+                            Placée par l&apos;établissement, comme au téléphone.
+                            {placesMax > couverts &&
+                              ` Il reste de la place jusqu'à ${placesMax} convives.`}
+                          </p>
+                          <DemandeForm
+                            slug={slug}
+                            espaceId={table.espace.id}
+                            serviceId={creneau.service.id}
+                            heure={creneau.heure}
+                            date={date}
+                            couverts={couverts}
+                            type="table"
+                            libelle="Réserver une table"
+                            restaurantNom={restaurant.nom}
+                            principal
+                          />
+                        </div>
+                      ) : (
+                        // Sans motif, rien : un cadre vide inquiète plus qu'il
+                        // n'informe, et la privatisation en dessous parle.
+                        raison && (
+                          <p className="rounded-xl border border-dashed border-zinc-200 p-4 text-sm text-zinc-500">
+                            {raison}
+                          </p>
+                        )
+                      )}
 
-                  {/* Privatiser : un autre métier, donc une autre section.
+                      {/* Privatiser : un autre métier, donc une autre section.
                       Ici la salle EST le sujet : le client la choisit, et
                       il a besoin de la voir. */}
-                  {privatisations.length > 0 && (
-                    <div className="rounded-xl border border-zinc-200 bg-zinc-50/70 p-4">
-                      <p className="font-medium text-zinc-900">
-                        Privatiser un espace
-                      </p>
-                      <p className="mt-1 text-sm text-zinc-500">
-                        L&apos;espace est à vous seuls pendant tout le service.
-                      </p>
+                      {privatisations.length > 0 && (
+                        <div className="rounded-xl border border-zinc-200 bg-zinc-50/70 p-4">
+                          <p className="font-medium text-zinc-900">
+                            Privatiser un espace
+                          </p>
+                          <p className="mt-1 text-sm text-zinc-500">
+                            L&apos;espace est à vous seuls pendant tout le
+                            service.
+                          </p>
 
-                      <ul className="mt-3 flex flex-col gap-3">
-                        {privatisations.map((dispo) => (
-                          <li
-                            key={dispo.espace.id}
-                            className="rounded-lg border border-zinc-200 bg-white p-4"
-                          >
-                            <div className="flex flex-wrap items-baseline justify-between gap-2">
-                              <span className="font-medium text-zinc-900">
-                                {dispo.espace.nom}
-                              </span>
-                              <span className="text-sm text-zinc-500">
-                                Jusqu&apos;à {dispo.espace.capacite} couverts
-                              </span>
-                            </div>
-                            {dispo.espace.description && (
-                              <p className="mt-1 text-sm text-zinc-500">
-                                {dispo.espace.description}
-                              </p>
-                            )}
+                          <ul className="mt-3 flex flex-col gap-3">
+                            {privatisations.map((dispo) => (
+                              <li
+                                key={dispo.espace.id}
+                                className="rounded-lg border border-zinc-200 bg-white p-4"
+                              >
+                                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                                  <span className="font-medium text-zinc-900">
+                                    {dispo.espace.nom}
+                                  </span>
+                                  <span className="text-sm text-zinc-500">
+                                    Jusqu&apos;à {dispo.espace.capacite}{" "}
+                                    couverts
+                                  </span>
+                                </div>
+                                {dispo.espace.description && (
+                                  <p className="mt-1 text-sm text-zinc-500">
+                                    {dispo.espace.description}
+                                  </p>
+                                )}
 
-                            <BandePhotos
-                              photos={
-                                photosParEspace.get(dispo.espace.id) ?? []
-                              }
-                              espaceNom={dispo.espace.nom}
-                              restaurantNom={restaurant.nom}
-                            />
+                                <BandePhotos
+                                  photos={
+                                    photosParEspace.get(dispo.espace.id) ?? []
+                                  }
+                                  espaceNom={dispo.espace.nom}
+                                  restaurantNom={restaurant.nom}
+                                />
 
-                            <Conditions
-                              espace={dispo.espace}
-                              couverts={couverts}
-                            />
+                                <Conditions
+                                  espace={dispo.espace}
+                                  couverts={couverts}
+                                />
 
-                            <DemandeForm
-                              slug={slug}
-                              espaceId={dispo.espace.id}
-                              serviceId={creneau.service.id}
-                        heure={creneau.heure}
-                              date={date}
-                              couverts={couverts}
-                              type="privatisation"
-                              libelle={`Privatiser ${dispo.espace.nom}`}
-                              restaurantNom={restaurant.nom}
-                            />
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
+                                <DemandeForm
+                                  slug={slug}
+                                  espaceId={dispo.espace.id}
+                                  serviceId={creneau.service.id}
+                                  heure={creneau.heure}
+                                  date={date}
+                                  couverts={couverts}
+                                  type="privatisation"
+                                  libelle={`Privatiser ${dispo.espace.nom}`}
+                                  restaurantNom={restaurant.nom}
+                                />
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
                     </>
                   )}
                 </div>

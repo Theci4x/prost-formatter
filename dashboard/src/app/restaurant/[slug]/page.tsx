@@ -39,6 +39,8 @@ type Vitrine = {
   site_web: string | null;
   horaires: Horaires;
   slug_reservation: string;
+  /** Ce que sert la maison. Colonne récente, donc facultative. */
+  type_cuisine?: string | null;
   /** La photo qui ouvre la page. Colonne récente, donc facultative. */
   photo_couverture_id?: string | null;
 };
@@ -326,7 +328,11 @@ export default async function VitrinePage({
               description: restaurant.description,
               logoUrl: restaurant.logo_url,
               telephone: restaurant.telephone,
+              typeCuisine: restaurant.type_cuisine,
             },
+            // On n'atteint cette page que par le slug de réservation :
+            // la page est donc ouverte, et la table se retient en ligne.
+            accepteReservations: true,
             services,
             espaces,
             carte: carte.items,

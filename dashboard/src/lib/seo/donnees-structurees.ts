@@ -22,7 +22,25 @@ export type Etablissement = {
   description: string | null;
   telephone?: string | null;
   logoUrl?: string | null;
+  /** « Allemande, brasserie » — tel que le restaurateur l'a écrit. */
+  typeCuisine?: string | null;
 };
+
+/**
+ * Les cuisines, telles que schema.org les attend.
+ *
+ * Le champ est saisi en texte libre — « Allemande, brasserie » — parce
+ * qu'aucune liste fermée ne rend justice à la réalité d'une carte. La
+ * virgule y sépare naturellement deux mentions ; on la respecte plutôt
+ * que de livrer une chaîne unique qu'aucun moteur ne saura découper.
+ */
+function cuisinesSchema(brut: string | null | undefined): string[] {
+  if (!brut) return [];
+  return brut
+    .split(/[,;/]/)
+    .map((mot) => mot.trim())
+    .filter((mot) => mot.length > 0);
+}
 
 /** Convention schema.org : « Monday », « Tuesday »… depuis l'ISO 1–7. */
 const JOURS_SCHEMA = [
@@ -94,6 +112,7 @@ export function restaurantSchema({
   note,
   nombreAvis,
   reseaux = [],
+  accepteReservations = false,
 }: {
   etablissement: Etablissement;
   services: Service[];
@@ -105,10 +124,15 @@ export function restaurantSchema({
   nombreAvis?: number | null;
   /** Site, page Facebook, comptes Instagram et TikTok du restaurant. */
   reseaux?: string[];
+  /** Vrai quand la page de réservation est ouverte au public. */
+  accepteReservations?: boolean;
 }): Record<string, unknown> {
   const horaires = horairesSchema(services);
   const prix = fourchettePrix(carte);
-  const capacite = espaces.reduce((total, espace) => total + espace.capacite, 0);
+  const capacite = espaces.reduce(
+    (total, espace) => total + espace.capacite,
+    0,
+  );
 
   const schema: Record<string, unknown> = {
     "@context": "https://schema.org",
@@ -145,6 +169,13 @@ export function restaurantSchema({
   }
   if (horaires.length > 0) schema.openingHoursSpecification = horaires;
   if (prix) schema.priceRange = prix;
+  // Ce que sert la maison, et si l'on peut y retenir une table : les deux
+  // critères sur lesquels se trie une recommandation.
+  const cuisines = cuisinesSchema(etablissement.typeCuisine);
+  if (cuisines.length > 0) {
+    schema.servesCuisine = cuisines.length === 1 ? cuisines[0] : cuisines;
+  }
+  schema.acceptsReservations = accepteReservations;
   if (capacite > 0) schema.maximumAttendeeCapacity = capacite;
   // Une note ne se déclare que si elle repose sur des avis réellement relevés.
   if (note && nombreAvis && nombreAvis > 0) {

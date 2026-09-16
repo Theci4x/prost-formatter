@@ -41,6 +41,11 @@ export type Restaurant = {
   telephone: string | null;
   site_web: string | null;
   description: string | null;
+  // « Allemande », « Bistrot, cuisine française »… Texte libre : la liste
+  // fermée des cuisines n'existe nulle part, et forcer un restaurateur à
+  // choisir entre « brasserie » et « traditionnel » produirait surtout des
+  // fiches mal rangées.
+  type_cuisine: string | null;
   horaires: Horaires;
   proprietaire_id: string;
   // Adresse publique de la page de réservation. NULL tant que le
