@@ -172,6 +172,7 @@ export const MODULE_DE_LA_SECTION: Record<string, Module> = {
   faq: "visibilite",
   "visibilite-ia": "visibilite",
   google: "visibilite",
+  posts: "visibilite",
   social: "visibilite",
   tiktok: "visibilite",
   reservations: "reservations",

@@ -80,6 +80,13 @@ const FEATURE_LINKS: {
     minimum: "gerant",
   },
   {
+    href: "posts",
+    label: "Publications Google",
+    resume: "Écris tes posts à l'avance, Klarr les publie.",
+    icon: dashboardIcons.google,
+    minimum: "gerant",
+  },
+  {
     href: "faq",
     label: "Questions fréquentes",
     resume: "Ce qu'on te demande au téléphone, répondu une fois pour toutes.",

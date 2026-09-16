@@ -19,7 +19,9 @@ export async function listAccounts(
   });
 
   if (!res.ok) {
-    throw new Error(`Google accounts.list a échoué : ${res.status} ${await res.text()}`);
+    throw new Error(
+      `Google accounts.list a échoué : ${res.status} ${await res.text()}`,
+    );
   }
 
   const data = (await res.json()) as {
@@ -42,7 +44,9 @@ export async function listLocations(
   accessToken: string,
   accountName: string,
 ): Promise<GoogleLocation[]> {
-  const url = new URL(`${BUSINESS_INFORMATION_BASE_URL}/${accountName}/locations`);
+  const url = new URL(
+    `${BUSINESS_INFORMATION_BASE_URL}/${accountName}/locations`,
+  );
   url.searchParams.set("readMask", "name,title,storefrontAddress");
 
   const res = await fetch(url, {
@@ -50,7 +54,9 @@ export async function listLocations(
   });
 
   if (!res.ok) {
-    throw new Error(`Google locations.list a échoué : ${res.status} ${await res.text()}`);
+    throw new Error(
+      `Google locations.list a échoué : ${res.status} ${await res.text()}`,
+    );
   }
 
   const data = (await res.json()) as {
@@ -65,9 +71,78 @@ export async function listLocations(
     name: l.name,
     title: l.title,
     address: l.storefrontAddress
-      ? [...(l.storefrontAddress.addressLines ?? []), l.storefrontAddress.locality]
+      ? [
+          ...(l.storefrontAddress.addressLines ?? []),
+          l.storefrontAddress.locality,
+        ]
           .filter(Boolean)
           .join(", ")
       : null,
   }));
+}
+
+// L'API de publication (Business Profile v4) est distincte des deux
+// précédentes, et Google n'en ouvre l'accès que sur dossier : jusque-là,
+// le quota du projet reste à zéro et chaque appel répond 403. Le code
+// complet vit donc ici en attendant, et la file d'attente se videra sans
+// qu'on y retouche le jour où l'accès est accordé.
+const BUSINESS_V4_BASE_URL = "https://mybusiness.googleapis.com/v4";
+
+export type PostLocal = {
+  texte: string;
+  /** L'adresse publique de la photo. Google va la chercher lui-même. */
+  photoUrl?: string | null;
+  bouton?: { action: string; url?: string | null } | null;
+};
+
+/**
+ * Publie sur la fiche établissement.
+ *
+ * La photo n'est pas téléversée : elle vit déjà dans Klarr, servie par une
+ * adresse publique, et Google sait aller la chercher. Deux copies de la
+ * même image ne rendraient service à personne.
+ */
+export async function publierPostLocal(
+  accessToken: string,
+  accountName: string,
+  locationName: string,
+  post: PostLocal,
+): Promise<string> {
+  // « locations/123 » côté API récente, « accounts/x/locations/123 » ici.
+  const locationId = locationName.replace(/^locations\//, "");
+  const chemin = `${accountName}/locations/${locationId}/localPosts`;
+
+  const corps: Record<string, unknown> = {
+    languageCode: "fr",
+    summary: post.texte,
+    topicType: "STANDARD",
+  };
+  if (post.photoUrl) {
+    corps.media = [{ mediaFormat: "PHOTO", sourceUrl: post.photoUrl }];
+  }
+  if (post.bouton) {
+    corps.callToAction = {
+      actionType: post.bouton.action,
+      ...(post.bouton.url ? { url: post.bouton.url } : {}),
+    };
+  }
+
+  const res = await fetch(`${BUSINESS_V4_BASE_URL}/${chemin}`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(corps),
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    throw new Error(
+      `Google localPosts a échoué : ${res.status} ${await res.text()}`,
+    );
+  }
+
+  const data = (await res.json()) as { name?: string };
+  return data.name ?? "";
 }

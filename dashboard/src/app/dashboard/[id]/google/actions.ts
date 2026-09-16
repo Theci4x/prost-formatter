@@ -19,6 +19,7 @@ export async function selectGoogleLocation(formData: FormData) {
   const restaurantId = formData.get("restaurant_id") as string;
   const locationName = formData.get("location_name") as string;
   const locationTitle = formData.get("location_title") as string;
+  const accountName = formData.get("account_name") as string;
 
   const supabase = await createClient();
   // La RLS ("gbc_update_own") garantit que seule la connexion du
@@ -28,6 +29,7 @@ export async function selectGoogleLocation(formData: FormData) {
     .update({
       location_name: locationName,
       location_title: locationTitle,
+      account_name: accountName || null,
       updated_at: new Date().toISOString(),
     })
     .eq("restaurant_id", restaurantId);

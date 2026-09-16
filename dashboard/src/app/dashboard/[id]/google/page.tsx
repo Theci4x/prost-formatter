@@ -1,7 +1,11 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getValidAccessToken } from "@/lib/google/connection";
-import { listAccounts, listLocations, type GoogleLocation } from "@/lib/google/business";
+import {
+  listAccounts,
+  listLocations,
+  type GoogleLocation,
+} from "@/lib/google/business";
 import { disconnectGoogle, selectGoogleLocation } from "./actions";
 import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
 import type { Restaurant } from "@/types/restaurant";
@@ -43,17 +47,24 @@ export default async function GoogleConnectionPage({
     .maybeSingle();
 
   const connection = connectionData as
-    | (GoogleBusinessConnection & { access_token: string; refresh_token: string })
+    | (GoogleBusinessConnection & {
+        access_token: string;
+        refresh_token: string;
+      })
     | null;
 
-  const locations: GoogleLocation[] = [];
+  const locations: (GoogleLocation & { accountName: string })[] = [];
   let locationsError: string | null = null;
   if (connection && !connection.location_name) {
     try {
       const accessToken = await getValidAccessToken(supabase, connection);
       const accounts = await listAccounts(accessToken);
       for (const account of accounts) {
-        locations.push(...(await listLocations(accessToken, account.name)));
+        // Le compte voyage avec sa fiche : la liste en agrège plusieurs, et
+        // publier demande le chemin complet, compte compris.
+        for (const fiche of await listLocations(accessToken, account.name)) {
+          locations.push({ ...fiche, accountName: account.name });
+        }
       }
       if (locations.length === 0) {
         locationsError =
@@ -160,6 +171,11 @@ export default async function GoogleConnectionPage({
                       type="hidden"
                       name="location_title"
                       value={location.title}
+                    />
+                    <input
+                      type="hidden"
+                      name="account_name"
+                      value={location.accountName}
                     />
                     <button
                       type="submit"

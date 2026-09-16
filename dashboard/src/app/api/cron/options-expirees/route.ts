@@ -4,6 +4,7 @@ import { jetonValide } from "@/lib/limites/publiques";
 import { rattraperCourriels } from "@/lib/courriel/rattrapage";
 import { rappelerLesReservations } from "@/lib/courriel/rappel";
 import { relancerLesPaiements } from "@/lib/courriel/relances";
+import { publierLesPosts } from "@/lib/posts/publication";
 
 // Les options échues ne bloquent déjà plus la jauge — le moteur de
 // disponibilité les ignore. Cette tâche ne fait que le dire : sans elle, une
@@ -29,7 +30,10 @@ export async function GET(request: Request) {
 
   if (error) {
     console.error("[cron/options-expirees]", error);
-    return NextResponse.json({ error: "mise à jour impossible" }, { status: 500 });
+    return NextResponse.json(
+      { error: "mise à jour impossible" },
+      { status: 500 },
+    );
   }
 
   const expirees = data?.length ?? 0;
@@ -42,7 +46,10 @@ export async function GET(request: Request) {
   // puisqu'il vient après — et `/api/cron/courriels-en-echec` reste
   // appelable seul, pour un rattrapage à la demande ou le jour où l'on
   // passe à un forfait qui autorise l'heure.
-  const courriels = await rattraperCourriels({ supabase, maintenant: new Date() });
+  const courriels = await rattraperCourriels({
+    supabase,
+    maintenant: new Date(),
+  });
   console.log(
     `[cron/options-expirees] courriels : ${courriels.renvoyes} renvoyé(s), ` +
       `${courriels.echoues} en échec, ${courriels.abandonnes} abandonné(s)`,
@@ -74,5 +81,14 @@ export async function GET(request: Request) {
       `proche(s) de l'échéance`,
   );
 
-  return NextResponse.json({ expirees, courriels, rappels, relances });
+  // Les publications en dernier : elles ne dépendent d'aucun des
+  // balayages précédents, et un échec chez Google ne doit pas retarder
+  // des courriels dont dépendent des réservations.
+  const posts = await publierLesPosts({ supabase, maintenant: new Date() });
+  console.log(
+    `[cron/options-expirees] posts : ${posts.publies} publié(s), ` +
+      `${posts.reportes} reporté(s) sur ${posts.echus} échu(s)`,
+  );
+
+  return NextResponse.json({ expirees, courriels, rappels, relances, posts });
 }
