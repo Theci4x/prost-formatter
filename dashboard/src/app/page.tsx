@@ -24,7 +24,6 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
-
 const instrumentSerif = Instrument_Serif({
   weight: "400",
   style: ["normal", "italic"],
@@ -114,10 +113,7 @@ export default async function Home() {
             Klarr
           </span>
         </div>
-        <div
-          className="hidden gap-9 sm:flex"
-          style={{ alignItems: "center" }}
-        >
+        <div className="hidden gap-9 sm:flex" style={{ alignItems: "center" }}>
           <a
             href="#benefices"
             style={{ fontSize: 14, fontWeight: 500, color: "var(--ink-soft)" }}
@@ -185,314 +181,319 @@ export default async function Home() {
             padding: "56px 32px 100px",
           }}
         >
-        <div
-          style={{
-            flex: "1 1 480px",
-            display: "flex",
-            flexDirection: "column",
-            gap: 26,
-            minWidth: 0,
-          }}
-        >
           <div
             style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 8,
-              alignSelf: "flex-start",
-              background: "var(--accent-soft)",
-              border: "1px solid var(--line)",
-              borderRadius: 100,
-              padding: "6px 14px 6px 10px",
-            }}
-          >
-            <div
-              style={{
-                width: 6,
-                height: 6,
-                borderRadius: "50%",
-                background: "var(--accent)",
-              }}
-            />
-            <span
-              style={{
-                fontSize: 12.5,
-                fontWeight: 600,
-                color: "var(--ink-soft)",
-                letterSpacing: "0.02em",
-              }}
-            >
-              Pensé pour les restaurateurs indépendants et petits groupes
-            </span>
-          </div>
-          <h1
-            style={{
-              fontFamily: "var(--font-instrument-serif), Georgia, serif",
-              fontWeight: 400,
-              margin: 0,
-              fontSize: 56,
-              lineHeight: 1.08,
-              letterSpacing: "-0.01em",
-              textWrap: "pretty",
-            }}
-          >
-            On vous montre ce que voient vos clients.{" "}
-            <em style={{ fontStyle: "italic", color: "var(--accent-dark)" }}>
-              Pas ce qui vous fait plaisir
-            </em>
-            .
-          </h1>
-          <p
-            style={{
-              margin: 0,
-              fontSize: 18,
-              lineHeight: 1.6,
-              color: "var(--ink-soft)",
-              maxWidth: 480,
-            }}
-          >
-            Klarr suit votre fiche Google, vos avis et votre visibilité dans
-            les réponses des IA. Chaque chiffre vient avec la donnée brute
-            derrière, que vous pouvez vérifier vous-même.
-          </p>
-          <div
-            style={{
+              flex: "1 1 480px",
               display: "flex",
-              alignItems: "center",
-              gap: 20,
-              marginTop: 8,
+              flexDirection: "column",
+              gap: 26,
+              minWidth: 0,
             }}
           >
-            <Link
-              href="/test-presence-google"
-              style={{
-                background: "var(--ink)",
-                color: "var(--paper)",
-                fontSize: 15,
-                fontWeight: 600,
-                padding: "14px 26px",
-                borderRadius: 9,
-              }}
-            >
-              Voir ma fiche
-            </Link>
-            <a
-              href="#benefices"
-              style={{
-                fontSize: 15,
-                fontWeight: 600,
-                color: "var(--ink)",
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-              }}
-            >
-              Voir comment ça marche
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M5 12h14M13 5l7 7-7 7" />
-              </svg>
-            </a>
-          </div>
-        </div>
-
-        <div
-          style={{
-            flex: "1 1 420px",
-            minWidth: 0,
-            width: "100%",
-            position: "relative",
-          }}
-        >
-          <Tilt>
-            <FloatingChip depth={80} style={{ top: -18, left: -14 }}>
-              <span style={{ color: "var(--accent-dark)" }}>✓</span>
-              Cité par ChatGPT
-            </FloatingChip>
-            <FloatingChip depth={55} style={{ bottom: -20, right: -10 }}>
-              <span style={{ color: "var(--accent)" }}>★</span>
-              4,6 — 128 avis
-            </FloatingChip>
             <div
               style={{
-                background: "var(--paper)",
-                border: "1px solid var(--line)",
-                borderRadius: 16,
-                boxShadow: "0 40px 80px -30px oklch(20% 0.02 60 / 38%)",
-                overflow: "hidden",
-              }}
-            >
-            <div
-              style={{
-                display: "flex",
+                display: "inline-flex",
                 alignItems: "center",
                 gap: 8,
-                padding: "14px 18px",
-                borderBottom: "1px solid var(--line)",
+                alignSelf: "flex-start",
+                background: "var(--accent-soft)",
+                border: "1px solid var(--line)",
+                borderRadius: 100,
+                padding: "6px 14px 6px 10px",
               }}
             >
               <div
                 style={{
-                  width: 9,
-                  height: 9,
+                  width: 6,
+                  height: 6,
                   borderRadius: "50%",
-                  background: "var(--line)",
-                }}
-              />
-              <div
-                style={{
-                  width: 9,
-                  height: 9,
-                  borderRadius: "50%",
-                  background: "var(--line)",
-                }}
-              />
-              <div
-                style={{
-                  width: 9,
-                  height: 9,
-                  borderRadius: "50%",
-                  background: "var(--line)",
+                  background: "var(--accent)",
                 }}
               />
               <span
                 style={{
-                  fontSize: 12,
+                  fontSize: 12.5,
+                  fontWeight: 600,
                   color: "var(--ink-soft)",
-                  marginLeft: 8,
+                  letterSpacing: "0.02em",
                 }}
               >
-                Mes restaurants
+                Pensé pour les restaurateurs indépendants et petits groupes
               </span>
             </div>
-            <div
+            <h1
               style={{
-                padding: 20,
-                display: "flex",
-                flexDirection: "column",
-                gap: 12,
+                fontFamily: "var(--font-instrument-serif), Georgia, serif",
+                fontWeight: 400,
+                margin: 0,
+                fontSize: 56,
+                lineHeight: 1.08,
+                letterSpacing: "-0.01em",
+                textWrap: "pretty",
               }}
             >
+              Vos réservations sans commission.{" "}
+              <em style={{ fontStyle: "italic", color: "var(--accent-dark)" }}>
+                Votre visibilité sans y penser
+              </em>
+              .
+            </h1>
+            <p
+              style={{
+                margin: 0,
+                fontSize: 18,
+                lineHeight: 1.6,
+                color: "var(--ink-soft)",
+                maxWidth: 480,
+              }}
+            >
+              Le carnet, la vitrine, les avis et la fiche Google au même
+              endroit. Les acomptes vont sur votre compte, pas le nôtre. Et
+              chaque chiffre vient avec la donnée brute derrière, que vous
+              pouvez vérifier vous-même.
+            </p>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 20,
+                marginTop: 8,
+              }}
+            >
+              <Link
+                href="/test-presence-google"
+                style={{
+                  background: "var(--ink)",
+                  color: "var(--paper)",
+                  fontSize: 15,
+                  fontWeight: 600,
+                  padding: "14px 26px",
+                  borderRadius: 9,
+                }}
+              >
+                Voir ma fiche
+              </Link>
+              <a
+                href="#benefices"
+                style={{
+                  fontSize: 15,
+                  fontWeight: 600,
+                  color: "var(--ink)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                }}
+              >
+                Voir comment ça marche
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M5 12h14M13 5l7 7-7 7" />
+                </svg>
+              </a>
+            </div>
+          </div>
+
+          <div
+            style={{
+              flex: "1 1 420px",
+              minWidth: 0,
+              width: "100%",
+              position: "relative",
+            }}
+          >
+            <Tilt>
+              <FloatingChip depth={80} style={{ top: -18, left: -14 }}>
+                <span style={{ color: "var(--accent-dark)" }}>✓</span>
+                Cité par ChatGPT
+              </FloatingChip>
+              <FloatingChip depth={55} style={{ bottom: -20, right: -10 }}>
+                <span style={{ color: "var(--accent)" }}>★</span>
+                4,6 — 128 avis
+              </FloatingChip>
               <div
                 style={{
+                  background: "var(--paper)",
                   border: "1px solid var(--line)",
-                  borderRadius: 12,
-                  padding: 16,
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 10,
+                  borderRadius: 16,
+                  boxShadow: "0 40px 80px -30px oklch(20% 0.02 60 / 38%)",
+                  overflow: "hidden",
                 }}
               >
                 <div
                   style={{
                     display: "flex",
                     alignItems: "center",
-                    justifyContent: "space-between",
+                    gap: 8,
+                    padding: "14px 18px",
+                    borderBottom: "1px solid var(--line)",
                   }}
                 >
-                  <span style={{ fontSize: 15, fontWeight: 600 }}>
-                    Le Petit Bouchon
-                  </span>
                   <div
                     style={{
+                      width: 9,
+                      height: 9,
+                      borderRadius: "50%",
+                      background: "var(--line)",
+                    }}
+                  />
+                  <div
+                    style={{
+                      width: 9,
+                      height: 9,
+                      borderRadius: "50%",
+                      background: "var(--line)",
+                    }}
+                  />
+                  <div
+                    style={{
+                      width: 9,
+                      height: 9,
+                      borderRadius: "50%",
+                      background: "var(--line)",
+                    }}
+                  />
+                  <span
+                    style={{
+                      fontSize: 12,
+                      color: "var(--ink-soft)",
+                      marginLeft: 8,
+                    }}
+                  >
+                    Mes restaurants
+                  </span>
+                </div>
+                <div
+                  style={{
+                    padding: 20,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 12,
+                  }}
+                >
+                  <div
+                    style={{
+                      border: "1px solid var(--line)",
+                      borderRadius: 12,
+                      padding: 16,
                       display: "flex",
-                      alignItems: "center",
-                      gap: 6,
-                      background: "var(--accent-soft)",
-                      borderRadius: 100,
-                      padding: "4px 10px",
+                      flexDirection: "column",
+                      gap: 10,
                     }}
                   >
                     <div
                       style={{
-                        width: 6,
-                        height: 6,
-                        borderRadius: "50%",
-                        background: "oklch(62% 0.15 145)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
                       }}
-                    />
+                    >
+                      <span style={{ fontSize: 15, fontWeight: 600 }}>
+                        Le Petit Bouchon
+                      </span>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 6,
+                          background: "var(--accent-soft)",
+                          borderRadius: 100,
+                          padding: "4px 10px",
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: 6,
+                            height: 6,
+                            borderRadius: "50%",
+                            background: "oklch(62% 0.15 145)",
+                          }}
+                        />
+                        <span
+                          style={{
+                            fontSize: 11.5,
+                            fontWeight: 600,
+                            color: "var(--ink-soft)",
+                          }}
+                        >
+                          Google connecté
+                        </span>
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                      <span
+                        style={{
+                          fontSize: 11.5,
+                          fontWeight: 500,
+                          color: "var(--ink-soft)",
+                          background: "var(--bg-alt)",
+                          borderRadius: 100,
+                          padding: "4px 10px",
+                        }}
+                      >
+                        bistrot lyonnais
+                      </span>
+                      <span
+                        style={{
+                          fontSize: 11.5,
+                          fontWeight: 500,
+                          color: "var(--ink-soft)",
+                          background: "var(--bg-alt)",
+                          borderRadius: 100,
+                          padding: "4px 10px",
+                        }}
+                      >
+                        restaurant Lyon 6
+                      </span>
+                      <span
+                        style={{
+                          fontSize: 11.5,
+                          fontWeight: 500,
+                          color: "var(--ink-soft)",
+                          background: "var(--bg-alt)",
+                          borderRadius: 100,
+                          padding: "4px 10px",
+                        }}
+                      >
+                        +3
+                      </span>
+                    </div>
+                  </div>
+                  <div
+                    style={{
+                      border: "1px solid var(--line)",
+                      borderRadius: 12,
+                      padding: 16,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      opacity: 0.55,
+                    }}
+                  >
+                    <span style={{ fontSize: 15, fontWeight: 600 }}>
+                      Chez Marcel
+                    </span>
                     <span
                       style={{
                         fontSize: 11.5,
-                        fontWeight: 600,
+                        fontWeight: 500,
                         color: "var(--ink-soft)",
                       }}
                     >
-                      Google connecté
+                      2 mots-clés
                     </span>
                   </div>
                 </div>
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                  <span
-                    style={{
-                      fontSize: 11.5,
-                      fontWeight: 500,
-                      color: "var(--ink-soft)",
-                      background: "var(--bg-alt)",
-                      borderRadius: 100,
-                      padding: "4px 10px",
-                    }}
-                  >
-                    bistrot lyonnais
-                  </span>
-                  <span
-                    style={{
-                      fontSize: 11.5,
-                      fontWeight: 500,
-                      color: "var(--ink-soft)",
-                      background: "var(--bg-alt)",
-                      borderRadius: 100,
-                      padding: "4px 10px",
-                    }}
-                  >
-                    restaurant Lyon 6
-                  </span>
-                  <span
-                    style={{
-                      fontSize: 11.5,
-                      fontWeight: 500,
-                      color: "var(--ink-soft)",
-                      background: "var(--bg-alt)",
-                      borderRadius: 100,
-                      padding: "4px 10px",
-                    }}
-                  >
-                    +3
-                  </span>
-                </div>
               </div>
-              <div
-                style={{
-                  border: "1px solid var(--line)",
-                  borderRadius: 12,
-                  padding: 16,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  opacity: 0.55,
-                }}
-              >
-                <span style={{ fontSize: 15, fontWeight: 600 }}>
-                  Chez Marcel
-                </span>
-                <span
-                  style={{ fontSize: 11.5, fontWeight: 500, color: "var(--ink-soft)" }}
-                >
-                  2 mots-clés
-                </span>
-              </div>
-            </div>
-            </div>
-          </Tilt>
-        </div>
+            </Tilt>
+          </div>
         </div>
       </div>
 
@@ -505,7 +506,10 @@ export default async function Home() {
       </Reveal>
 
       {/* BENEFITS */}
-      <div id="benefices" style={{ background: "var(--bg-alt)", padding: "100px 32px" }}>
+      <div
+        id="benefices"
+        style={{ background: "var(--bg-alt)", padding: "100px 32px" }}
+      >
         <div style={{ maxWidth: 1180, margin: "0 auto" }}>
           <div
             style={{
@@ -543,7 +547,14 @@ export default async function Home() {
             className="flex-col sm:flex-row"
             style={{ display: "flex", gap: 40 }}
           >
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16 }}>
+            <div
+              style={{
+                flex: 1,
+                display: "flex",
+                flexDirection: "column",
+                gap: 16,
+              }}
+            >
               <div
                 style={{
                   width: 44,
@@ -580,14 +591,28 @@ export default async function Home() {
               >
                 1. La donnée brute
               </h3>
-              <p style={{ margin: 0, fontSize: 15, lineHeight: 1.65, color: "var(--ink-soft)" }}>
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: 15,
+                  lineHeight: 1.65,
+                  color: "var(--ink-soft)",
+                }}
+              >
                 Votre fiche Google telle qu&apos;elle est, vos avis tels
                 qu&apos;ils sont écrits, et la réponse exacte que donne une IA
                 quand un client demande où manger. Vous pouvez reposer la même
                 question de votre côté et retomber sur la même chose.
               </p>
             </div>
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16 }}>
+            <div
+              style={{
+                flex: 1,
+                display: "flex",
+                flexDirection: "column",
+                gap: 16,
+              }}
+            >
               <div
                 style={{
                   width: 44,
@@ -624,13 +649,27 @@ export default async function Home() {
               >
                 2. L&apos;historique, pas le pipeau
               </h3>
-              <p style={{ margin: 0, fontSize: 15, lineHeight: 1.65, color: "var(--ink-soft)" }}>
-                Chaque analyse est horodatée et conservée. Même quand
-                c&apos;est mauvais. Surtout quand c&apos;est mauvais — vous
-                voyez si vous montez ou si vous descendez.
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: 15,
+                  lineHeight: 1.65,
+                  color: "var(--ink-soft)",
+                }}
+              >
+                Chaque analyse est horodatée et conservée. Même quand c&apos;est
+                mauvais. Surtout quand c&apos;est mauvais — vous voyez si vous
+                montez ou si vous descendez.
               </p>
             </div>
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 16 }}>
+            <div
+              style={{
+                flex: 1,
+                display: "flex",
+                flexDirection: "column",
+                gap: 16,
+              }}
+            >
               <div
                 style={{
                   width: 44,
@@ -669,10 +708,17 @@ export default async function Home() {
               >
                 3. Ce qui cloche, pas la tape dans le dos
               </h3>
-              <p style={{ margin: 0, fontSize: 15, lineHeight: 1.65, color: "var(--ink-soft)" }}>
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: 15,
+                  lineHeight: 1.65,
+                  color: "var(--ink-soft)",
+                }}
+              >
                 On ne vous félicite pas. On vous montre les questions où vous
-                n&apos;apparaissez pas, et ce qui manque sur votre fiche.
-                Utile plutôt qu&apos;agréable.
+                n&apos;apparaissez pas, et ce qui manque sur votre fiche. Utile
+                plutôt qu&apos;agréable.
               </p>
             </div>
           </div>
@@ -699,8 +745,132 @@ export default async function Home() {
         <Partner />
       </Reveal>
 
+      {/* RÉSERVATIONS */}
+      <Reveal>
+        <div
+          id="reservations"
+          style={{ maxWidth: 1180, margin: "0 auto" }}
+          className="px-5 py-20 sm:px-8"
+        >
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 16,
+              maxWidth: 620,
+            }}
+          >
+            <span
+              style={{
+                fontSize: 13,
+                fontWeight: 700,
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+                color: "var(--ink-soft)",
+              }}
+            >
+              L&apos;autre moitié
+            </span>
+            <h2
+              style={{
+                fontFamily: "var(--font-instrument-serif), Georgia, serif",
+                fontWeight: 400,
+                margin: 0,
+                fontSize: 34,
+                lineHeight: 1.2,
+                textWrap: "balance",
+              }}
+            >
+              Klarr prend aussi vos réservations. Et ne touche rien dessus.
+            </h2>
+            <p
+              style={{
+                margin: 0,
+                fontSize: 16,
+                lineHeight: 1.65,
+                color: "var(--ink-soft)",
+              }}
+            >
+              Les acomptes et les cautions sont encaissés sur votre compte
+              Stripe, pas sur le nôtre. Pas de commission par couvert, pas de
+              pourcentage : vous payez l&apos;abonnement, et c&apos;est tout.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 gap-x-10 gap-y-7 pt-10 sm:grid-cols-2 lg:grid-cols-4">
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 650 }}>
+                Le carnet
+              </h3>
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: 14.5,
+                  lineHeight: 1.6,
+                  color: "var(--ink-soft)",
+                }}
+              >
+                Demandes, confirmations, plan de salle et écran de service pour
+                le coup de feu.
+              </p>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 650 }}>
+                Moins de no-show
+              </h3>
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: 14.5,
+                  lineHeight: 1.6,
+                  color: "var(--ink-soft)",
+                }}
+              >
+                Rappel la veille, annulation en un clic, acompte quand la table
+                le mérite.
+              </p>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 650 }}>
+                Les privatisations
+              </h3>
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: 14.5,
+                  lineHeight: 1.6,
+                  color: "var(--ink-soft)",
+                }}
+              >
+                Minimum de couverts, minimum de consommation, conditions
+                annoncées avant de réserver.
+              </p>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 650 }}>
+                Rien à relancer
+              </h3>
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: 14.5,
+                  lineHeight: 1.6,
+                  color: "var(--ink-soft)",
+                }}
+              >
+                Le lien de paiement part seul, se relance avant l&apos;échéance,
+                et ce qui rate se rejoue.
+              </p>
+            </div>
+          </div>
+        </div>
+      </Reveal>
+
       {/* FREE GOOGLE PRESENCE TEST */}
-      <div id="test-presence" style={{ maxWidth: 1180, margin: "0 auto", padding: "90px 32px" }}>
+      <div
+        id="test-presence"
+        style={{ maxWidth: 1180, margin: "0 auto", padding: "90px 32px" }}
+      >
         <div
           className="flex-col sm:flex-row"
           style={{
@@ -714,7 +884,14 @@ export default async function Home() {
             padding: "44px 48px",
           }}
         >
-          <div style={{ display: "flex", flexDirection: "column", gap: 14, maxWidth: 560 }}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 14,
+              maxWidth: 560,
+            }}
+          >
             <div
               style={{
                 width: 44,
@@ -727,7 +904,16 @@ export default async function Home() {
                 justifyContent: "center",
               }}
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-dark)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="var(--accent-dark)"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <path d="M18 10c0 5-6 11-6 11s-6-6-6-11a6 6 0 0 1 12 0z" />
                 <circle cx="12" cy="10" r="4.2" />
                 <path d="M20.5 20.5l-3-3" />
@@ -755,9 +941,16 @@ export default async function Home() {
             >
               Pas encore client ? Testez votre présence sur Google.
             </h2>
-            <p style={{ margin: 0, fontSize: 15, lineHeight: 1.65, color: "var(--ink-soft)" }}>
-              En 2 minutes, on analyse la fiche Google de votre restaurant et
-              on vous envoie un score de visibilité détaillé, gratuitement.
+            <p
+              style={{
+                margin: 0,
+                fontSize: 15,
+                lineHeight: 1.65,
+                color: "var(--ink-soft)",
+              }}
+            >
+              En 2 minutes, on analyse la fiche Google de votre restaurant et on
+              vous envoie un score de visibilité détaillé, gratuitement.
             </p>
           </div>
           <Link
@@ -780,12 +973,27 @@ export default async function Home() {
       </div>
 
       {/* COMING SOON */}
-      <div id="bientot" style={{ maxWidth: 1180, margin: "0 auto", padding: "0px 32px 90px" }}>
+      <div
+        id="bientot"
+        style={{ maxWidth: 1180, margin: "0 auto", padding: "0px 32px 90px" }}
+      >
         <div
           className="flex-col sm:flex-row"
-          style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 40 }}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 40,
+          }}
         >
-          <div style={{ display: "flex", flexDirection: "column", gap: 14, maxWidth: 480 }}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 14,
+              maxWidth: 480,
+            }}
+          >
             <span
               style={{
                 fontSize: 13,
@@ -808,13 +1016,27 @@ export default async function Home() {
             >
               Et la suite est déjà en préparation.
             </h2>
-            <p style={{ margin: 0, fontSize: 15, lineHeight: 1.65, color: "var(--ink-soft)" }}>
-              Réponses automatiques aux avis Google, création et programmation
-              de posts avec photos, statistiques de fréquentation de votre
-              fiche.
+            <p
+              style={{
+                margin: 0,
+                fontSize: 15,
+                lineHeight: 1.65,
+                color: "var(--ink-soft)",
+              }}
+            >
+              Les réponses aux avis, les posts programmés et le suivi de
+              position sont arrivés. Voilà ce qui manque encore — et on le dit
+              aussi franchement.
             </p>
           </div>
-          <div style={{ display: "flex", gap: 12, flexWrap: "wrap", maxWidth: 420 }}>
+          <div
+            style={{
+              display: "flex",
+              gap: 12,
+              flexWrap: "wrap",
+              maxWidth: 420,
+            }}
+          >
             <span
               style={{
                 fontSize: 13,
@@ -826,7 +1048,7 @@ export default async function Home() {
                 padding: "8px 16px",
               }}
             >
-              Réponses aux avis
+              Statistiques du carnet
             </span>
             <span
               style={{
@@ -839,7 +1061,7 @@ export default async function Home() {
                 padding: "8px 16px",
               }}
             >
-              Posts programmés
+              Fichier client
             </span>
             <span
               style={{
@@ -852,7 +1074,7 @@ export default async function Home() {
                 padding: "8px 16px",
               }}
             >
-              Statistiques de vues
+              Statistiques de la fiche Google
             </span>
             <span
               style={{
@@ -865,7 +1087,7 @@ export default async function Home() {
                 padding: "8px 16px",
               }}
             >
-              Suivi de position sur Google
+              Liste d&apos;attente
             </span>
           </div>
         </div>
@@ -873,48 +1095,58 @@ export default async function Home() {
 
       {/* CTA BAND */}
       <Reveal>
-      <div id="cta" style={{ background: "var(--ink)", padding: "90px 32px" }}>
         <div
-          style={{
-            maxWidth: 640,
-            margin: "0 auto",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            textAlign: "center",
-            gap: 24,
-          }}
+          id="cta"
+          style={{ background: "var(--ink)", padding: "90px 32px" }}
         >
-          <h2
+          <div
             style={{
-              fontFamily: "var(--font-instrument-serif), Georgia, serif",
-              fontWeight: 400,
-              margin: 0,
-              fontSize: 38,
-              lineHeight: 1.2,
-              color: "var(--paper)",
+              maxWidth: 640,
+              margin: "0 auto",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              textAlign: "center",
+              gap: 24,
             }}
           >
-            Votre fiche Google, sans filtre marketing.
-          </h2>
-          <p style={{ margin: 0, fontSize: 16, lineHeight: 1.6, color: "oklch(80% 0.01 60)" }}>
-            Pas de carte bancaire. Pas d&apos;engagement. Pas de discours.
-          </p>
-          <Link
-            href="/login"
-            style={{
-              background: "var(--accent)",
-              color: "var(--paper)",
-              fontSize: 15,
-              fontWeight: 600,
-              padding: "15px 30px",
-              borderRadius: 9,
-            }}
-          >
-            Vérifier ma visibilité — gratuit, 2 minutes
-          </Link>
+            <h2
+              style={{
+                fontFamily: "var(--font-instrument-serif), Georgia, serif",
+                fontWeight: 400,
+                margin: 0,
+                fontSize: 38,
+                lineHeight: 1.2,
+                color: "var(--paper)",
+              }}
+            >
+              Votre fiche Google, sans filtre marketing.
+            </h2>
+            <p
+              style={{
+                margin: 0,
+                fontSize: 16,
+                lineHeight: 1.6,
+                color: "oklch(80% 0.01 60)",
+              }}
+            >
+              Pas de carte bancaire. Pas d&apos;engagement. Pas de discours.
+            </p>
+            <Link
+              href="/login"
+              style={{
+                background: "var(--accent)",
+                color: "var(--paper)",
+                fontSize: 15,
+                fontWeight: 600,
+                padding: "15px 30px",
+                borderRadius: 9,
+              }}
+            >
+              Vérifier ma visibilité — gratuit, 2 minutes
+            </Link>
+          </div>
         </div>
-      </div>
       </Reveal>
 
       <Reveal>
@@ -936,7 +1168,12 @@ export default async function Home() {
       >
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <KlarrMark size={20} />
-          <span style={{ fontFamily: "var(--font-instrument-serif), serif", fontSize: 16 }}>
+          <span
+            style={{
+              fontFamily: "var(--font-instrument-serif), serif",
+              fontSize: 16,
+            }}
+          >
             Klarr
           </span>
         </div>
@@ -977,7 +1214,7 @@ export default async function Home() {
           <span>© 2026 Klarr — édité par EDIREF.</span>
         </div>
       </div>
-          <Commis />
+      <Commis />
     </div>
   );
 }
