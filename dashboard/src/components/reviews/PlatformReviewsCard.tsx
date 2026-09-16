@@ -10,9 +10,12 @@ const PLATFORM_LABELS: Record<PlatformReviews["platform"], string> = {
 export function PlatformReviewsCard({
   data,
   restaurantId,
+  pied,
 }: {
   data: PlatformReviews;
   restaurantId: string;
+  /** Ce qui se règle plateforme par plateforme, sous les avis. */
+  pied?: React.ReactNode;
 }) {
   const label = PLATFORM_LABELS[data.platform];
 
@@ -54,9 +57,7 @@ export function PlatformReviewsCard({
                 <span className="text-sm font-medium text-zinc-800">
                   {review.author}
                 </span>
-                <span className="text-sm text-zinc-500">
-                  {review.rating}/5
-                </span>
+                <span className="text-sm text-zinc-500">{review.rating}/5</span>
               </div>
               <p className="text-sm text-zinc-600">{review.text}</p>
               <ReviewReplyDraft
@@ -81,6 +82,8 @@ export function PlatformReviewsCard({
           Voir la fiche {label} →
         </a>
       )}
+
+      {pied}
     </div>
   );
 }

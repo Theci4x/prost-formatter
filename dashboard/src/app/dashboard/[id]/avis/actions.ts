@@ -1,7 +1,13 @@
 "use server";
 
 import Anthropic from "@anthropic-ai/sdk";
+import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { exiger } from "@/lib/equipe/roles";
+import {
+  searchTripadvisorLocations,
+  type TripadvisorLocation,
+} from "@/lib/reviews/tripadvisor";
 
 export type DraftState = {
   draft: string | null;
@@ -84,4 +90,69 @@ export async function draftReply(
       version,
     };
   }
+}
+
+/**
+ * La confirmation de l'établissement Tripadvisor.
+ *
+ * Klarr devine — nom plus adresse — et le restaurateur tranche. La
+ * devinette suffit la plupart du temps et ne demande rien à personne ;
+ * ces deux actions n'existent que pour le jour où elle se trompe. Ce
+ * jour-là, sans elles, il n'y avait rien à faire : l'écran annonçait les
+ * avis d'un homonyme, ou aucun, et c'était sans appel.
+ */
+
+export type RechercheState = {
+  candidats: TripadvisorLocation[] | null;
+  error: string | null;
+};
+
+export async function chercherSurTripadvisor(
+  _prevState: RechercheState,
+  formData: FormData,
+): Promise<RechercheState> {
+  const restaurantId = String(formData.get("restaurant_id") ?? "");
+  const requete = String(formData.get("requete") ?? "").trim();
+
+  if (!restaurantId) return { candidats: null, error: "Établissement inconnu." };
+  if (requete.length < 3) {
+    return { candidats: null, error: "Donne au moins trois caractères." };
+  }
+
+  await exiger(restaurantId, "gerant");
+
+  try {
+    const candidats = await searchTripadvisorLocations(requete);
+    if (candidats.length === 0) {
+      return {
+        candidats: [],
+        error: "Aucun établissement trouvé. Essaie en ajoutant la ville.",
+      };
+    }
+    return { candidats, error: null };
+  } catch (erreur) {
+    console.error("[avis/chercherSurTripadvisor]", erreur);
+    return {
+      candidats: null,
+      error: "Tripadvisor n'a pas répondu. Réessaie dans un instant.",
+    };
+  }
+}
+
+export async function epinglerTripadvisor(formData: FormData): Promise<void> {
+  const restaurantId = String(formData.get("restaurant_id") ?? "");
+  const locationId = String(formData.get("location_id") ?? "").trim();
+  if (!restaurantId) return;
+
+  await exiger(restaurantId, "gerant");
+
+  const supabase = await createClient();
+  await supabase
+    .from("restaurants")
+    // Une chaîne vide détache : le restaurateur revient à la recherche
+    // automatique s'il s'est trompé en confirmant.
+    .update({ tripadvisor_location_id: locationId || null })
+    .eq("id", restaurantId);
+
+  revalidatePath(`/dashboard/${restaurantId}/avis`);
 }

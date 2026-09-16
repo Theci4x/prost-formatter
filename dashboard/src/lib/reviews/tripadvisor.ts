@@ -6,9 +6,12 @@ const TA_BASE_URL = "https://api.content.tripadvisor.com/api/v1";
 export type TripadvisorLocation = {
   locationId: string;
   name: string;
+  /** Ce qui permet de distinguer deux homonymes d'un coup d'œil. */
+  adresse: string | null;
 };
 
 export type TripadvisorDetails = {
+  nom: string | null;
   webUrl: string | null;
   rating: number | null;
   reviewCount: number | null;
@@ -28,9 +31,17 @@ function apiKey() {
   return key;
 }
 
-export async function searchTripadvisorLocation(
+/**
+ * Les établissements que Tripadvisor propose pour cette recherche.
+ *
+ * Renvoie la liste et non le premier résultat : c'est elle qu'on montre
+ * au restaurateur quand la devinette automatique s'est trompée, et
+ * choisir entre des homonymes suppose de les voir tous, avec leur
+ * adresse.
+ */
+export async function searchTripadvisorLocations(
   query: string,
-): Promise<TripadvisorLocation | null> {
+): Promise<TripadvisorLocation[]> {
   const url = new URL(`${TA_BASE_URL}/location/search`);
   url.searchParams.set("key", apiKey());
   url.searchParams.set("searchQuery", query);
@@ -46,13 +57,26 @@ export async function searchTripadvisorLocation(
   }
 
   const data = (await res.json()) as {
-    data?: { location_id: string; name: string }[];
+    data?: {
+      location_id: string;
+      name: string;
+      address_obj?: { address_string?: string };
+    }[];
   };
 
-  const first = data.data?.[0];
-  if (!first) return null;
+  return (data.data ?? []).map((lieu) => ({
+    locationId: lieu.location_id,
+    name: lieu.name,
+    adresse: lieu.address_obj?.address_string ?? null,
+  }));
+}
 
-  return { locationId: first.location_id, name: first.name };
+/** La devinette automatique : le premier résultat, faute de mieux. */
+export async function searchTripadvisorLocation(
+  query: string,
+): Promise<TripadvisorLocation | null> {
+  const lieux = await searchTripadvisorLocations(query);
+  return lieux[0] ?? null;
 }
 
 export async function getTripadvisorDetails(
@@ -71,12 +95,14 @@ export async function getTripadvisorDetails(
   }
 
   const data = (await res.json()) as {
+    name?: string;
     web_url?: string;
     rating?: string;
     num_reviews?: string;
   };
 
   return {
+    nom: data.name ?? null,
     webUrl: data.web_url ?? null,
     rating: data.rating ? Number(data.rating) : null,
     reviewCount: data.num_reviews ? Number(data.num_reviews) : null,

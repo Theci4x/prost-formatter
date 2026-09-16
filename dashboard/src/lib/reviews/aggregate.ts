@@ -14,6 +14,13 @@ export type PlatformReviews = {
   platform: "yelp" | "tripadvisor" | "google";
   configured: boolean;
   found: boolean;
+  /**
+   * Vrai quand l'établissement a été confirmé par le restaurateur, faux
+   * quand Klarr l'a deviné. Ce qui est deviné se conteste : l'écran doit
+   * pouvoir le dire, sans quoi une note empruntée à un homonyme passe
+   * pour la sienne.
+   */
+  epingle?: boolean;
   businessName?: string;
   businessUrl?: string | null;
   rating?: number | null;
@@ -62,6 +69,8 @@ export async function fetchYelpPlatformReviews(
 export async function fetchTripadvisorPlatformReviews(
   name: string,
   location: string,
+  /** L'identifiant confirmé, s'il y en a un : on ne redevine alors plus. */
+  locationIdEpingle?: string | null,
 ): Promise<PlatformReviews> {
   if (!process.env.TRIPADVISOR_API_KEY) {
     return {
@@ -73,26 +82,32 @@ export async function fetchTripadvisorPlatformReviews(
   }
 
   try {
-    const place = await searchTripadvisorLocation(`${name} ${location}`);
-    if (!place) {
+    const locationId =
+      locationIdEpingle ??
+      (await searchTripadvisorLocation(`${name} ${location}`))?.locationId ??
+      null;
+
+    if (!locationId) {
       return {
         platform: "tripadvisor",
         configured: true,
         found: false,
+        epingle: false,
         reviews: [],
       };
     }
 
     const [details, reviews] = await Promise.all([
-      getTripadvisorDetails(place.locationId),
-      getTripadvisorReviews(place.locationId),
+      getTripadvisorDetails(locationId),
+      getTripadvisorReviews(locationId),
     ]);
 
     return {
       platform: "tripadvisor",
       configured: true,
       found: true,
-      businessName: place.name,
+      epingle: Boolean(locationIdEpingle),
+      businessName: details.nom ?? name,
       businessUrl: details.webUrl,
       rating: details.rating,
       reviewCount: details.reviewCount,
@@ -104,6 +119,7 @@ export async function fetchTripadvisorPlatformReviews(
       platform: "tripadvisor",
       configured: true,
       found: false,
+      epingle: Boolean(locationIdEpingle),
       reviews: [],
     };
   }
@@ -124,7 +140,12 @@ export async function fetchGooglePlatformReviews(
   try {
     const place = await searchPlace(`${name} ${location}`.trim());
     if (!place) {
-      return { platform: "google", configured: true, found: false, reviews: [] };
+      return {
+        platform: "google",
+        configured: true,
+        found: false,
+        reviews: [],
+      };
     }
 
     const [details, reviews] = await Promise.all([

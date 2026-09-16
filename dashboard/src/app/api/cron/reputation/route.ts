@@ -28,7 +28,15 @@ const JOURS_DU_CYCLE = 7;
  */
 const BUDGET_MS = 45_000;
 
-type RestaurantRow = { id: string; nom: string; adresse: string | null };
+type RestaurantRow = {
+  id: string;
+  nom: string;
+  adresse: string | null;
+  // L'établissement Tripadvisor confirmé par le restaurateur. Le relevé de
+  // nuit doit l'honorer comme l'écran : sinon il enregistrerait chaque nuit
+  // la note d'un homonyme par-dessus celle qu'on lui a désignée.
+  tripadvisor_location_id: string | null;
+};
 
 export async function GET(request: Request) {
   const secret = process.env.CRON_SECRET;
@@ -60,7 +68,7 @@ export async function GET(request: Request) {
 
   const { data, error } = await supabase
     .from("restaurants")
-    .select("id, nom, adresse")
+    .select("id, nom, adresse, tripadvisor_location_id")
     // Les plus anciennement relevés d'abord, et les jamais relevés avant
     // tous les autres : une fois le parc à jour, un établissement inscrit ce
     // soir a donc sa note dès demain matin.
@@ -98,7 +106,11 @@ export async function GET(request: Request) {
     const platforms = await Promise.all([
       fetchGooglePlatformReviews(restaurant.nom, location),
       fetchYelpPlatformReviews(restaurant.nom, location),
-      fetchTripadvisorPlatformReviews(restaurant.nom, location),
+      fetchTripadvisorPlatformReviews(
+        restaurant.nom,
+        location,
+        restaurant.tripadvisor_location_id,
+      ),
     ]);
 
     // Tracé dans les logs : sans ça, une tâche qui n'enregistre rien est
