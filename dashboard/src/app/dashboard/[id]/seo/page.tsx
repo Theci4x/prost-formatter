@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { addKeyword, removeKeyword, analyzeKeywords } from "./actions";
 import { KeywordAnalysis } from "@/components/seo/KeywordAnalysis";
+import { RequetesReelles } from "@/components/seo/RequetesReelles";
+import { etatSearchConsole } from "@/lib/google/requetes-restaurant";
 import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
 import type { Restaurant } from "@/types/restaurant";
 import type { RestaurantKeyword } from "@/types/keyword";
@@ -38,14 +40,26 @@ export default async function SeoPage({
 
   const keywords = (keywordsData ?? []) as RestaurantKeyword[];
 
+  const mesure = await etatSearchConsole(
+    supabase,
+    id,
+    (restaurant as Restaurant & { search_console_site?: string | null })
+      .search_console_site ?? null,
+  );
+
   return (
     <div className="flex flex-1 flex-col gap-8 px-6 py-8">
       <PageHeader icon={dashboardIcons.seo} title={`SEO — ${restaurant.nom}`} />
 
-      <div className="flex max-w-lg flex-col gap-3">
+      <div className="flex max-w-3xl flex-col gap-3">
         <h2 className="text-sm font-medium text-zinc-700">
-          Mots-clés ciblés
+          Ce que les gens tapent vraiment
         </h2>
+        <RequetesReelles etat={mesure} restaurantId={id} />
+      </div>
+
+      <div className="flex max-w-lg flex-col gap-3">
+        <h2 className="text-sm font-medium text-zinc-700">Mots-clés ciblés</h2>
         <form action={addKeyword} className="flex gap-2">
           <input type="hidden" name="restaurant_id" value={id} />
           <input
@@ -64,9 +78,7 @@ export default async function SeoPage({
         </form>
 
         {keywords.length === 0 ? (
-          <p className="text-sm text-zinc-500">
-            Aucun mot-clé pour le moment.
-          </p>
+          <p className="text-sm text-zinc-500">Aucun mot-clé pour le moment.</p>
         ) : (
           <ul className="flex flex-wrap gap-2">
             {keywords.map((k) => (

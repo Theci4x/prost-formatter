@@ -6,8 +6,14 @@ const GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v2/userinfo";
 // business.manage donne acces a la gestion de la fiche Google Business
 // Profile (avis, posts, infos...) ; openid/email pour afficher le compte
 // connecte a l'utilisateur.
+//
+// webmasters.readonly ouvre Search Console — en lecture seule, parce que
+// Klarr n'a aucune raison de soumettre un sitemap ou de retirer une URL
+// au nom du restaurateur. Demander l'écriture ferait hésiter à l'écran
+// d'autorisation pour une capacité qu'on n'utiliserait jamais.
 const SCOPES = [
   "https://www.googleapis.com/auth/business.manage",
+  "https://www.googleapis.com/auth/webmasters.readonly",
   "openid",
   "email",
 ].join(" ");
