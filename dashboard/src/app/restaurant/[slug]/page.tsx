@@ -10,6 +10,8 @@ import { SignatureKlarr } from "@/components/brand/SignatureKlarr";
 import { DonneesStructurees } from "@/components/seo/DonneesStructurees";
 import { restaurantSchema } from "@/lib/seo/donnees-structurees";
 import { reseauxPublics } from "@/lib/seo/reseaux";
+import { fluxInstagram } from "@/lib/vitrine/instagram";
+import { FluxInstagram } from "@/components/reservations/FluxInstagram";
 import { cartePubliee } from "@/lib/menu/publication";
 import { carteOrganisee, formatPrix } from "@/lib/menu/carte";
 import {
@@ -184,35 +186,43 @@ export default async function VitrinePage({
   if (!restaurant) notFound();
 
   const supabase = createServiceClient();
-  const [photosResult, espacesResult, servicesResult, reputationResult, carte, reseaux] =
-    await Promise.all([
-      supabase
-        .from("restaurant_photos")
-        .select("*")
-        .eq("restaurant_id", restaurant.id)
-        .order("ordre")
-        .order("created_at"),
-      supabase
-        .from("restaurant_espaces")
-        .select("*")
-        .eq("restaurant_id", restaurant.id)
-        .order("ordre"),
-      supabase
-        .from("restaurant_services")
-        .select("*")
-        .eq("restaurant_id", restaurant.id)
-        .order("heure_debut"),
-      supabase
-        .from("restaurant_reputation_snapshots")
-        .select("note, nombre_avis")
-        .eq("restaurant_id", restaurant.id)
-        .eq("plateforme", "google")
-        .order("releve_le", { ascending: false })
-        .limit(1)
-        .maybeSingle(),
-      cartePubliee(supabase, restaurant.id),
-      reseauxPublics(supabase, restaurant.id, restaurant.site_web),
-    ]);
+  const [
+    photosResult,
+    espacesResult,
+    servicesResult,
+    reputationResult,
+    carte,
+    reseaux,
+    instagram,
+  ] = await Promise.all([
+    supabase
+      .from("restaurant_photos")
+      .select("*")
+      .eq("restaurant_id", restaurant.id)
+      .order("ordre")
+      .order("created_at"),
+    supabase
+      .from("restaurant_espaces")
+      .select("*")
+      .eq("restaurant_id", restaurant.id)
+      .order("ordre"),
+    supabase
+      .from("restaurant_services")
+      .select("*")
+      .eq("restaurant_id", restaurant.id)
+      .order("heure_debut"),
+    supabase
+      .from("restaurant_reputation_snapshots")
+      .select("note, nombre_avis")
+      .eq("restaurant_id", restaurant.id)
+      .eq("plateforme", "google")
+      .order("releve_le", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    cartePubliee(supabase, restaurant.id),
+    reseauxPublics(supabase, restaurant.id, restaurant.site_web),
+    fluxInstagram(supabase, restaurant.id),
+  ]);
 
   const photos = (photosResult.data ?? []) as RestaurantPhoto[];
   const espaces = (espacesResult.data ?? []) as Espace[];
@@ -242,12 +252,12 @@ export default async function VitrinePage({
     // grille juste en dessous donnerait l'impression d'un bug.
     .filter((photo) => photo.id !== couverture?.id)
     .map((photo) => ({
-    ...photo,
-    legende:
-      photo.legende ??
-      (photo.espace_id ? nomEspace.get(photo.espace_id) : null) ??
-      null,
-  }));
+      ...photo,
+      legende:
+        photo.legende ??
+        (photo.espace_id ? nomEspace.get(photo.espace_id) : null) ??
+        null,
+    }));
 
   const photosParEspace = new Map<string, RestaurantPhoto[]>();
   for (const photo of photos) {
@@ -422,6 +432,10 @@ export default async function VitrinePage({
           </Section>
         )}
 
+        {instagram && (
+          <FluxInstagram pseudo={instagram.pseudo} medias={instagram.medias} />
+        )}
+
         <Section titre="Infos pratiques">
           <div className="grid gap-5 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm sm:grid-cols-2">
             <div className="flex flex-col gap-2">
@@ -497,8 +511,8 @@ export default async function VitrinePage({
         {privatisables.length > 0 && (
           <Section titre="Privatiser un espace">
             <p className="text-sm text-zinc-600">
-              Anniversaire, repas d&apos;équipe, séminaire : l&apos;espace est
-              à vous seuls pendant tout le service.
+              Anniversaire, repas d&apos;équipe, séminaire : l&apos;espace est à
+              vous seuls pendant tout le service.
             </p>
 
             {/* Une salle qu'on privatise se choisit sur photo. La lister en

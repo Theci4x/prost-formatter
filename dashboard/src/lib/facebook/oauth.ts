@@ -37,7 +37,9 @@ export async function exchangeForLongLivedToken(
 
   const res = await fetch(url);
   if (!res.ok) {
-    throw new Error(`Facebook long-lived token a échoué : ${res.status} ${await res.text()}`);
+    throw new Error(
+      `Facebook long-lived token a échoué : ${res.status} ${await res.text()}`,
+    );
   }
 
   const data = (await res.json()) as { access_token: string };
@@ -118,7 +120,9 @@ async function fetchAccountsPages(
 
   const res = await fetch(url);
   if (!res.ok) {
-    throw new Error(`Facebook /me/accounts a échoué : ${res.status} ${await res.text()}`);
+    throw new Error(
+      `Facebook /me/accounts a échoué : ${res.status} ${await res.text()}`,
+    );
   }
 
   const data = (await res.json()) as {
@@ -183,7 +187,10 @@ async function fetchBusinessPages(
 
       for (const page of data.data ?? []) {
         if (pages.has(page.id)) continue;
-        const accessToken = await fetchPageAccessToken(page.id, userAccessToken);
+        const accessToken = await fetchPageAccessToken(
+          page.id,
+          userAccessToken,
+        );
         if (accessToken) {
           pages.set(page.id, { id: page.id, name: page.name, accessToken });
         } else {
@@ -217,7 +224,11 @@ async function fetchPageAccessToken(
 
 export type PageDetails = {
   followersCount: number | null;
-  posts: { message: string | null; createdTime: string; permalinkUrl: string }[];
+  posts: {
+    message: string | null;
+    createdTime: string;
+    permalinkUrl: string;
+  }[];
   instagramBusinessAccountId: string | null;
   instagramUsername: string | null;
 };
@@ -235,13 +246,19 @@ export async function getPageDetails(
 
   const res = await fetch(url);
   if (!res.ok) {
-    throw new Error(`Facebook page details a échoué : ${res.status} ${await res.text()}`);
+    throw new Error(
+      `Facebook page details a échoué : ${res.status} ${await res.text()}`,
+    );
   }
 
   const data = (await res.json()) as {
     followers_count?: number;
     posts?: {
-      data?: { message?: string; created_time: string; permalink_url: string }[];
+      data?: {
+        message?: string;
+        created_time: string;
+        permalink_url: string;
+      }[];
     };
     instagram_business_account?: { id: string; username: string };
   };
@@ -256,4 +273,92 @@ export async function getPageDetails(
     instagramBusinessAccountId: data.instagram_business_account?.id ?? null,
     instagramUsername: data.instagram_business_account?.username ?? null,
   };
+}
+
+export type MediaInstagram = {
+  id: string;
+  /** L'image à montrer. Jamais vide : un média sans visuel est écarté. */
+  image: string;
+  permalien: string;
+  legende: string | null;
+  publieLe: string;
+};
+
+type MediaBrut = {
+  id: string;
+  media_type?: string;
+  media_url?: string;
+  thumbnail_url?: string;
+  permalink?: string;
+  caption?: string;
+  timestamp?: string;
+  children?: { data?: { media_url?: string; thumbnail_url?: string }[] };
+};
+
+/**
+ * De quoi illustrer : le visuel d'un média, quel que soit son type.
+ *
+ * Une vidéo ne donne pas d'image dans `media_url` — c'est le fichier vidéo
+ * — mais une vignette. Un carrousel, lui, n'en donne aucune : ses visuels
+ * vivent dans ses enfants. Ignorer ces deux cas reviendrait à ne montrer
+ * que les photos simples, c'est-à-dire à vider la moitié des comptes.
+ */
+function visuelDe(media: MediaBrut): string | null {
+  if (media.media_type === "VIDEO") return media.thumbnail_url ?? null;
+  if (media.media_url) return media.media_url;
+  const premier = media.children?.data?.[0];
+  return premier?.thumbnail_url ?? premier?.media_url ?? null;
+}
+
+/**
+ * Les dernières publications d'un compte Instagram professionnel.
+ *
+ * Servent la vitrine publique, pas le tableau de bord : c'est une page que
+ * n'importe qui charge, et qui ne doit pas dépendre de la disponibilité de
+ * Meta. D'où le cache d'une heure — Next 16 ne cache plus rien sans qu'on
+ * le demande — et le jeton porté par l'en-tête plutôt que par l'URL, qui
+ * finit dans les journaux et les messages d'erreur.
+ */
+export async function getInstagramMedia(
+  instagramAccountId: string,
+  pageAccessToken: string,
+  combien = 9,
+): Promise<MediaInstagram[]> {
+  const url = new URL(`${GRAPH_BASE_URL}/${instagramAccountId}/media`);
+  url.searchParams.set(
+    "fields",
+    "id,caption,media_type,media_url,thumbnail_url,permalink,timestamp,children{media_url,thumbnail_url}",
+  );
+  // On en demande davantage qu'on n'en montre : les médias sans visuel
+  // exploitable sont écartés ensuite, et une grille trouée se voit.
+  url.searchParams.set("limit", String(combien * 2));
+
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${pageAccessToken}` },
+    cache: "force-cache",
+    next: { revalidate: 3600 },
+  });
+
+  if (!res.ok) {
+    throw new Error(
+      `Instagram /media a échoué : ${res.status} ${await res.text()}`,
+    );
+  }
+
+  const data = (await res.json()) as { data?: MediaBrut[] };
+
+  return (data.data ?? [])
+    .map((media) => {
+      const image = visuelDe(media);
+      if (!image || !media.permalink) return null;
+      return {
+        id: media.id,
+        image,
+        permalien: media.permalink,
+        legende: media.caption ?? null,
+        publieLe: media.timestamp ?? "",
+      };
+    })
+    .filter((media): media is MediaInstagram => media !== null)
+    .slice(0, combien);
 }
