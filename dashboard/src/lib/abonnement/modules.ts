@@ -168,6 +168,7 @@ export const MODULE_DE_LA_SECTION: Record<string, Module> = {
   menu: "visibilite",
   photos: "visibilite",
   avis: "visibilite",
+  retours: "visibilite",
   seo: "visibilite",
   faq: "visibilite",
   "visibilite-ia": "visibilite",

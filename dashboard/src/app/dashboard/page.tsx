@@ -73,6 +73,13 @@ const FEATURE_LINKS: {
     minimum: "gerant",
   },
   {
+    href: "retours",
+    label: "Retours clients",
+    resume: "Ce qu'on préfère te dire en privé. Totem ou QR code.",
+    icon: dashboardIcons.avis,
+    minimum: "gerant",
+  },
+  {
     href: "seo",
     label: "Référencement",
     resume: "Ce que Google sait de toi, et ce qui lui manque.",
