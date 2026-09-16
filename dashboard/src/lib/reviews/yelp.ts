@@ -1,3 +1,4 @@
+import { optionsFraicheur, FRAICHEUR_ECRAN } from "@/lib/reviews/fraicheur";
 // Yelp Fusion API — clé API self-service (yelp.com/developers), pas de
 // programme partenaire à valider. Les avis renvoyés sont limités à 3 par
 // Yelp (restriction de leurs conditions d'utilisation).
@@ -28,6 +29,7 @@ function apiKey() {
 export async function searchYelpBusiness(
   term: string,
   location: string,
+  fraicheur: number = FRAICHEUR_ECRAN,
 ): Promise<YelpBusiness | null> {
   const url = new URL(`${YELP_BASE_URL}/businesses/search`);
   url.searchParams.set("term", term);
@@ -36,6 +38,7 @@ export async function searchYelpBusiness(
 
   const res = await fetch(url, {
     headers: { Authorization: `Bearer ${apiKey()}` },
+    ...optionsFraicheur(fraicheur),
   });
 
   if (!res.ok) {
@@ -64,13 +67,19 @@ export async function searchYelpBusiness(
   };
 }
 
-export async function getYelpReviews(businessId: string): Promise<YelpReview[]> {
+export async function getYelpReviews(
+  businessId: string,
+  fraicheur: number = FRAICHEUR_ECRAN,
+): Promise<YelpReview[]> {
   const res = await fetch(`${YELP_BASE_URL}/businesses/${businessId}/reviews`, {
     headers: { Authorization: `Bearer ${apiKey()}` },
+    ...optionsFraicheur(fraicheur),
   });
 
   if (!res.ok) {
-    throw new Error(`Yelp reviews a échoué : ${res.status} ${await res.text()}`);
+    throw new Error(
+      `Yelp reviews a échoué : ${res.status} ${await res.text()}`,
+    );
   }
 
   const data = (await res.json()) as {

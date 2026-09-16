@@ -4,6 +4,7 @@ import {
   getTripadvisorDetails,
   getTripadvisorReviews,
 } from "@/lib/reviews/tripadvisor";
+import { FRAICHEUR_ECRAN } from "@/lib/reviews/fraicheur";
 import {
   searchPlace,
   getPlaceDetails,
@@ -37,18 +38,19 @@ export type PlatformReviews = {
 export async function fetchYelpPlatformReviews(
   name: string,
   location: string,
+  fraicheur: number = FRAICHEUR_ECRAN,
 ): Promise<PlatformReviews> {
   if (!process.env.YELP_API_KEY) {
     return { platform: "yelp", configured: false, found: false, reviews: [] };
   }
 
   try {
-    const business = await searchYelpBusiness(name, location);
+    const business = await searchYelpBusiness(name, location, fraicheur);
     if (!business) {
       return { platform: "yelp", configured: true, found: false, reviews: [] };
     }
 
-    const reviews = await getYelpReviews(business.id);
+    const reviews = await getYelpReviews(business.id, fraicheur);
 
     return {
       platform: "yelp",
@@ -71,6 +73,7 @@ export async function fetchTripadvisorPlatformReviews(
   location: string,
   /** L'identifiant confirmé, s'il y en a un : on ne redevine alors plus. */
   locationIdEpingle?: string | null,
+  fraicheur: number = FRAICHEUR_ECRAN,
 ): Promise<PlatformReviews> {
   if (!process.env.TRIPADVISOR_API_KEY) {
     return {
@@ -84,7 +87,8 @@ export async function fetchTripadvisorPlatformReviews(
   try {
     const locationId =
       locationIdEpingle ??
-      (await searchTripadvisorLocation(`${name} ${location}`))?.locationId ??
+      (await searchTripadvisorLocation(`${name} ${location}`, fraicheur))
+        ?.locationId ??
       null;
 
     if (!locationId) {
@@ -98,8 +102,8 @@ export async function fetchTripadvisorPlatformReviews(
     }
 
     const [details, reviews] = await Promise.all([
-      getTripadvisorDetails(locationId),
-      getTripadvisorReviews(locationId),
+      getTripadvisorDetails(locationId, fraicheur),
+      getTripadvisorReviews(locationId, fraicheur),
     ]);
 
     return {
@@ -132,13 +136,14 @@ export async function fetchTripadvisorPlatformReviews(
 export async function fetchGooglePlatformReviews(
   name: string,
   location: string,
+  fraicheur: number = FRAICHEUR_ECRAN,
 ): Promise<PlatformReviews> {
   if (!process.env.GOOGLE_PLACES_API_KEY) {
     return { platform: "google", configured: false, found: false, reviews: [] };
   }
 
   try {
-    const place = await searchPlace(`${name} ${location}`.trim());
+    const place = await searchPlace(`${name} ${location}`.trim(), fraicheur);
     if (!place) {
       return {
         platform: "google",
@@ -149,8 +154,8 @@ export async function fetchGooglePlatformReviews(
     }
 
     const [details, reviews] = await Promise.all([
-      getPlaceDetails(place.id),
-      getPlaceReviews(place.id),
+      getPlaceDetails(place.id, fraicheur),
+      getPlaceReviews(place.id, fraicheur),
     ]);
 
     return {

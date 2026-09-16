@@ -1,3 +1,4 @@
+import { optionsFraicheur, FRAICHEUR_ECRAN } from "@/lib/reviews/fraicheur";
 // Google Places API (New) — nécessite une clé API avec "Places API (New)"
 // activée et la facturation Google Cloud configurée (pas d'OAuth, pas de
 // vérification à attendre, contrairement à l'API Business Profile).
@@ -34,19 +35,24 @@ function apiKey() {
 
 export async function searchPlace(
   query: string,
+  fraicheur: number = FRAICHEUR_ECRAN,
 ): Promise<PlaceSearchResult | null> {
   const res = await fetch(`${PLACES_BASE_URL}/places:searchText`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       "X-Goog-Api-Key": apiKey(),
-      "X-Goog-FieldMask": "places.id,places.displayName,places.formattedAddress",
+      "X-Goog-FieldMask":
+        "places.id,places.displayName,places.formattedAddress",
     },
     body: JSON.stringify({ textQuery: query, languageCode: "fr" }),
+    ...optionsFraicheur(fraicheur),
   });
 
   if (!res.ok) {
-    throw new Error(`Places searchText a échoué : ${res.status} ${await res.text()}`);
+    throw new Error(
+      `Places searchText a échoué : ${res.status} ${await res.text()}`,
+    );
   }
 
   const data = (await res.json()) as {
@@ -78,16 +84,22 @@ export type PlaceReview = {
 // L'API Places (New) plafonne à cinq avis, les plus pertinents selon Google.
 // Répondre aux avis demande en revanche l'API Business Profile, soumise à
 // une demande d'accès — d'où la lecture seule ici.
-export async function getPlaceReviews(placeId: string): Promise<PlaceReview[]> {
+export async function getPlaceReviews(
+  placeId: string,
+  fraicheur: number = FRAICHEUR_ECRAN,
+): Promise<PlaceReview[]> {
   const res = await fetch(`${PLACES_BASE_URL}/places/${placeId}`, {
     headers: {
       "X-Goog-Api-Key": apiKey(),
       "X-Goog-FieldMask": "reviews",
     },
+    ...optionsFraicheur(fraicheur),
   });
 
   if (!res.ok) {
-    throw new Error(`Places reviews a échoué : ${res.status} ${await res.text()}`);
+    throw new Error(
+      `Places reviews a échoué : ${res.status} ${await res.text()}`,
+    );
   }
 
   const data = (await res.json()) as {
@@ -112,7 +124,10 @@ export async function getPlaceReviews(placeId: string): Promise<PlaceReview[]> {
   }));
 }
 
-export async function getPlaceDetails(placeId: string): Promise<PlaceDetails> {
+export async function getPlaceDetails(
+  placeId: string,
+  fraicheur: number = FRAICHEUR_ECRAN,
+): Promise<PlaceDetails> {
   const fields = [
     "displayName",
     "formattedAddress",
@@ -130,10 +145,13 @@ export async function getPlaceDetails(placeId: string): Promise<PlaceDetails> {
       "X-Goog-Api-Key": apiKey(),
       "X-Goog-FieldMask": fields,
     },
+    ...optionsFraicheur(fraicheur),
   });
 
   if (!res.ok) {
-    throw new Error(`Places details a échoué : ${res.status} ${await res.text()}`);
+    throw new Error(
+      `Places details a échoué : ${res.status} ${await res.text()}`,
+    );
   }
 
   const data = (await res.json()) as {

@@ -1,3 +1,4 @@
+import { optionsFraicheur, FRAICHEUR_ECRAN } from "@/lib/reviews/fraicheur";
 // Tripadvisor Content API — clé API à demander sur
 // tripadvisor.com/developers (auto-inscription, pas de programme
 // partenaire commercial à négocier).
@@ -41,6 +42,7 @@ function apiKey() {
  */
 export async function searchTripadvisorLocations(
   query: string,
+  fraicheur: number = FRAICHEUR_ECRAN,
 ): Promise<TripadvisorLocation[]> {
   const url = new URL(`${TA_BASE_URL}/location/search`);
   url.searchParams.set("key", apiKey());
@@ -48,7 +50,10 @@ export async function searchTripadvisorLocations(
   url.searchParams.set("category", "restaurants");
   url.searchParams.set("language", "fr");
 
-  const res = await fetch(url, { headers: { accept: "application/json" } });
+  const res = await fetch(url, {
+    headers: { accept: "application/json" },
+    ...optionsFraicheur(fraicheur),
+  });
 
   if (!res.ok) {
     throw new Error(
@@ -74,19 +79,24 @@ export async function searchTripadvisorLocations(
 /** La devinette automatique : le premier résultat, faute de mieux. */
 export async function searchTripadvisorLocation(
   query: string,
+  fraicheur: number = FRAICHEUR_ECRAN,
 ): Promise<TripadvisorLocation | null> {
-  const lieux = await searchTripadvisorLocations(query);
+  const lieux = await searchTripadvisorLocations(query, fraicheur);
   return lieux[0] ?? null;
 }
 
 export async function getTripadvisorDetails(
   locationId: string,
+  fraicheur: number = FRAICHEUR_ECRAN,
 ): Promise<TripadvisorDetails> {
   const url = new URL(`${TA_BASE_URL}/location/${locationId}/details`);
   url.searchParams.set("key", apiKey());
   url.searchParams.set("language", "fr");
 
-  const res = await fetch(url, { headers: { accept: "application/json" } });
+  const res = await fetch(url, {
+    headers: { accept: "application/json" },
+    ...optionsFraicheur(fraicheur),
+  });
 
   if (!res.ok) {
     throw new Error(
@@ -111,12 +121,16 @@ export async function getTripadvisorDetails(
 
 export async function getTripadvisorReviews(
   locationId: string,
+  fraicheur: number = FRAICHEUR_ECRAN,
 ): Promise<TripadvisorReview[]> {
   const url = new URL(`${TA_BASE_URL}/location/${locationId}/reviews`);
   url.searchParams.set("key", apiKey());
   url.searchParams.set("language", "fr");
 
-  const res = await fetch(url, { headers: { accept: "application/json" } });
+  const res = await fetch(url, {
+    headers: { accept: "application/json" },
+    ...optionsFraicheur(fraicheur),
+  });
 
   if (!res.ok) {
     throw new Error(

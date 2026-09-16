@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { jetonValide } from "@/lib/limites/publiques";
+import { TOUJOURS_FRAIS } from "@/lib/reviews/fraicheur";
 import {
   fetchGooglePlatformReviews,
   fetchYelpPlatformReviews,
@@ -104,12 +105,13 @@ export async function GET(request: Request) {
     const location = restaurant.adresse ?? "";
 
     const platforms = await Promise.all([
-      fetchGooglePlatformReviews(restaurant.nom, location),
-      fetchYelpPlatformReviews(restaurant.nom, location),
+      fetchGooglePlatformReviews(restaurant.nom, location, TOUJOURS_FRAIS),
+      fetchYelpPlatformReviews(restaurant.nom, location, TOUJOURS_FRAIS),
       fetchTripadvisorPlatformReviews(
         restaurant.nom,
         location,
         restaurant.tripadvisor_location_id,
+        TOUJOURS_FRAIS,
       ),
     ]);
 
