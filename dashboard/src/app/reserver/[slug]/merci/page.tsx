@@ -21,7 +21,7 @@ export default async function MerciPage({
   const confirmee = (await searchParams).confirmee === "1";
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-[#FAF7F0] px-6 py-16 text-center">
+    <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-brand-cream px-6 py-16 text-center">
       <div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
         <svg
           width="26"

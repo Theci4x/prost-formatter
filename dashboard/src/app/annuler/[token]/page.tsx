@@ -62,7 +62,7 @@ export default async function AnnulerPage({
     : "";
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-[#FAF7F0] px-6 py-16">
+    <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-brand-cream px-6 py-16">
       <div className="flex w-full max-w-md flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm">
         <h1 className="text-xl font-semibold text-zinc-900">
           Annuler ma réservation

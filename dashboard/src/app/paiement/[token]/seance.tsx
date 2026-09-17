@@ -91,7 +91,7 @@ function formatJour(date: string): string {
 
 function Cadre({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-[#FAF7F0] px-6 py-16">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-brand-cream px-6 py-16">
       <div className="flex w-full max-w-lg flex-col gap-5 rounded-2xl border border-zinc-200/70 bg-white p-8 shadow-sm">
         {children}
       </div>

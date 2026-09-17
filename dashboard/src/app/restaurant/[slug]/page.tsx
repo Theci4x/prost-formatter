@@ -290,7 +290,7 @@ export default async function VitrinePage({
   const apercuCarte = carteOrganisee(carte.items).slice(0, 1);
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#FAF7F0]">
+    <div className="flex min-h-screen flex-col bg-brand-cream">
       <header className="border-b border-zinc-200/70 bg-white/90 px-6 py-4">
         <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-4">
           <span className="flex items-center gap-3">

@@ -1,17 +1,44 @@
 @import "tailwindcss";
 
+/* ── La palette de Klarr, pour tout le site ─────────────────────────────
+   Longtemps, seule la page d'accueil avait ces couleurs et ces fontes ; le
+   reste (connexion, aide, pages légales, vitrine) tournait en gris Tailwind
+   et en police système. Quelqu'un qui cliquait « Connexion » changeait de
+   maison. Tout part d'ici désormais, et les pages n'ont qu'à s'y référer. */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: oklch(98% 0.006 80);
+  --bg-alt: oklch(95.5% 0.012 75);
+  --paper: oklch(100% 0 0);
+  --ink: oklch(19% 0.012 60);
+  --ink-soft: oklch(46% 0.02 60);
+  --line: oklch(89% 0.012 70);
+  --accent: #e8871e;
+  --accent-dark: oklch(46% 0.13 50);
+  --accent-soft: color-mix(in oklch, #e8871e 12%, white);
+  --background: var(--bg);
+  --foreground: var(--ink);
 }
 
-/* Couleurs de marque Klarr — utilisées dans le dashboard interne
-   (bg-brand-navy, hover:bg-brand-navy-hover, text-brand-orange, etc.). */
 @theme {
+  /* Manrope pour le texte, Instrument Serif pour ce qui se lit de loin.
+     Chargées une fois dans le layout racine : `font-sans` et `font-serif`
+     les prennent partout, le dashboard compris. */
+  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-instrument-serif), Georgia, serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  /* Couleurs de marque (bg-brand-navy, text-brand-orange, bg-brand-cream…). */
   --color-brand-navy: #0f1e3d;
   --color-brand-navy-hover: #16295a;
   --color-brand-orange: #e8871e;
+  --color-brand-orange-dark: oklch(46% 0.13 50);
   --color-brand-orange-soft: #fdf1e2;
+  --color-brand-cream: oklch(98% 0.006 80);
+  --color-brand-sand: oklch(95.5% 0.012 75);
+  --color-ink: oklch(19% 0.012 60);
+  --color-ink-soft: oklch(46% 0.02 60);
+  --color-line: oklch(89% 0.012 70);
+  --color-paper: #ffffff;
 }
 
 html,
@@ -22,6 +49,13 @@ body {
 body {
   background: var(--background);
   color: var(--foreground);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Les titres en serif ne sont jamais gras : Instrument Serif n'a qu'une
+   graisse, et un faux gras synthétique la salit. */
+.font-serif {
+  font-weight: 400;
 }
 
 /* Bandeau de logos clients (landing) : deux copies de la liste se

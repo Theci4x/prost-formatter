@@ -244,7 +244,7 @@ export default async function AdminPage() {
   ).length;
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#FAF7F0]">
+    <div className="flex min-h-screen flex-col bg-brand-cream">
       <header className="sticky top-0 z-10 flex items-center justify-between border-b border-zinc-200/70 bg-white/90 px-6 py-4 shadow-sm backdrop-blur">
         <Link href="/dashboard" className="flex items-center gap-2">
           <KlarrMark size={22} />

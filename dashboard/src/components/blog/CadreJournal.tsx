@@ -1,19 +1,5 @@
 import Link from "next/link";
-import { Instrument_Serif, Manrope } from "next/font/google";
 import { KlarrMark, KlarrWordmark } from "@/components/brand/KlarrMark";
-
-const instrumentSerif = Instrument_Serif({
-  weight: "400",
-  style: ["normal", "italic"],
-  subsets: ["latin"],
-  variable: "--font-instrument-serif",
-});
-
-const manrope = Manrope({
-  weight: ["400", "500", "600", "700", "800"],
-  subsets: ["latin"],
-  variable: "--font-manrope",
-});
 
 const ACCENT = "#E8871E";
 
@@ -38,7 +24,7 @@ export function CadreJournal({
 }) {
   return (
     <div
-      className={`klarr-grain ${instrumentSerif.variable} ${manrope.variable}`}
+      className="klarr-grain"
       style={{
         // @ts-expect-error -- les propriétés CSS libres ne sont pas dans les
         // typages de React.

@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Instrument_Serif, Manrope } from "next/font/google";
 import { createClient } from "@/lib/supabase/server";
 import { KlarrMark } from "@/components/brand/KlarrMark";
 import { ClientLogos } from "@/components/landing/ClientLogos";
@@ -24,19 +23,6 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
-const instrumentSerif = Instrument_Serif({
-  weight: "400",
-  style: ["normal", "italic"],
-  subsets: ["latin"],
-  variable: "--font-instrument-serif",
-});
-
-const manrope = Manrope({
-  weight: ["400", "500", "600", "700", "800"],
-  subsets: ["latin"],
-  variable: "--font-manrope",
-});
-
 const ACCENT = "#E8871E";
 
 export default async function Home() {
@@ -51,7 +37,7 @@ export default async function Home() {
 
   return (
     <div
-      className={`klarr-grain ${instrumentSerif.variable} ${manrope.variable}`}
+      className="klarr-grain"
       style={{
         // @ts-expect-error -- CSS custom properties aren't in React's style typings.
         "--bg": "oklch(98% 0.006 80)",

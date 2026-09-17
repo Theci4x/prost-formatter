@@ -1,12 +1,25 @@
 import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist_Mono, Instrument_Serif, Manrope } from "next/font/google";
 import "./globals.css";
 import { siteUrl } from "@/lib/site-url";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+// Les deux fontes de la maison, chargées une seule fois pour tout le site.
+// Avant, la page d'accueil et le journal les chargeaient chacun de leur
+// côté, et toutes les autres pages tombaient sur la police du système.
+const manrope = Manrope({
+  weight: ["400", "500", "600", "700", "800"],
   subsets: ["latin"],
+  variable: "--font-manrope",
+  display: "swap",
+});
+
+const instrumentSerif = Instrument_Serif({
+  weight: "400",
+  style: ["normal", "italic"],
+  subsets: ["latin"],
+  variable: "--font-instrument-serif",
+  display: "swap",
 });
 
 const geistMono = Geist_Mono({
@@ -42,7 +55,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="fr"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${manrope.variable} ${instrumentSerif.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         {children}
