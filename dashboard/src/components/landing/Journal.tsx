@@ -22,7 +22,7 @@ export function Journal() {
   if (billets.length === 0) return null;
 
   return (
-    <div style={{ background: "var(--bg-alt)", padding: "90px 32px" }}>
+    <div className="px-5 py-16 sm:px-8 sm:py-20" style={{ background: "var(--bg-alt)" }}>
       <div
         style={{
           maxWidth: 1180,

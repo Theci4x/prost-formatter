@@ -10,7 +10,7 @@ const FAITS = [
 
 export function Partner() {
   return (
-    <div style={{ background: "var(--bg)", padding: "90px 32px" }}>
+    <div className="px-5 py-16 sm:px-8 sm:py-20" style={{ background: "var(--bg)" }}>
       <div
         className="flex-col sm:flex-row"
         style={{ maxWidth: 1180, margin: "0 auto", display: "flex", gap: 56 }}

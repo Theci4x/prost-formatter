@@ -10,7 +10,7 @@ import { Journal } from "@/components/landing/Journal";
 import { Reservation } from "@/components/landing/Reservation";
 import { Tarifs } from "@/components/landing/Tarifs";
 import { HeroBackdrop } from "@/components/landing/HeroBackdrop";
-import { FloatingChip, Tilt } from "@/components/landing/Tilt";
+import { HeroProduit } from "@/components/landing/HeroProduit";
 import { Reveal } from "@/components/landing/Reveal";
 
 import type { Metadata } from "next";
@@ -113,10 +113,10 @@ export default async function Home() {
             Tester ma présence Google
           </a>
           <a
-            href="#bientot"
+            href="#tarifs"
             style={{ fontSize: 14, fontWeight: 500, color: "var(--ink-soft)" }}
           >
-            À venir
+            Tarifs
           </a>
           <Link
             href="/login"
@@ -156,15 +156,14 @@ export default async function Home() {
       <div style={{ position: "relative" }}>
         <HeroBackdrop />
         <div
-          className="flex-col sm:flex-row"
+          className="flex-col px-5 pt-8 pb-16 sm:flex-row sm:px-8 sm:pt-12 sm:pb-24"
           style={{
             position: "relative",
             display: "flex",
             alignItems: "center",
-            gap: 64,
+            gap: 56,
             maxWidth: 1180,
             margin: "0 auto",
-            padding: "56px 32px 100px",
           }}
         >
           <div
@@ -212,9 +211,9 @@ export default async function Home() {
                 fontFamily: "var(--font-instrument-serif), Georgia, serif",
                 fontWeight: 400,
                 margin: 0,
-                fontSize: 56,
-                lineHeight: 1.08,
-                letterSpacing: "-0.01em",
+                fontSize: "clamp(40px, 5vw, 66px)",
+                lineHeight: 1.04,
+                letterSpacing: "-0.015em",
                 textWrap: "pretty",
               }}
             >
@@ -242,25 +241,28 @@ export default async function Home() {
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 20,
+                flexWrap: "wrap",
+                gap: "14px 22px",
                 marginTop: 8,
               }}
             >
               <Link
                 href="/test-presence-google"
+                className="btn-primary"
                 style={{
                   background: "var(--ink)",
                   color: "var(--paper)",
                   fontSize: 15,
                   fontWeight: 600,
-                  padding: "14px 26px",
-                  borderRadius: 9,
+                  padding: "15px 26px",
+                  borderRadius: 10,
+                  boxShadow: "0 14px 30px -14px oklch(20% 0.02 60 / 50%)",
                 }}
               >
-                Voir ma fiche
+                Tester ma présence Google — gratuit
               </Link>
-              <a
-                href="#benefices"
+              <Link
+                href="/login"
                 style={{
                   fontSize: 15,
                   fontWeight: 600,
@@ -270,7 +272,7 @@ export default async function Home() {
                   gap: 6,
                 }}
               >
-                Voir comment ça marche
+                Essayer Klarr 14 jours
                 <svg
                   width="14"
                   height="14"
@@ -283,8 +285,24 @@ export default async function Home() {
                 >
                   <path d="M5 12h14M13 5l7 7-7 7" />
                 </svg>
-              </a>
+              </Link>
             </div>
+            <p
+              style={{
+                margin: 0,
+                fontSize: 13,
+                color: "var(--ink-soft)",
+                display: "flex",
+                flexWrap: "wrap",
+                gap: "4px 10px",
+              }}
+            >
+              <span>Sans carte bancaire</span>
+              <span aria-hidden="true">·</span>
+              <span>Sans engagement</span>
+              <span aria-hidden="true">·</span>
+              <span>Résiliable en un clic</span>
+            </p>
           </div>
 
           <div
@@ -295,190 +313,7 @@ export default async function Home() {
               position: "relative",
             }}
           >
-            <Tilt>
-              <FloatingChip depth={80} style={{ top: -18, left: -14 }}>
-                <span style={{ color: "var(--accent-dark)" }}>✓</span>
-                Cité par ChatGPT
-              </FloatingChip>
-              <FloatingChip depth={55} style={{ bottom: -20, right: -10 }}>
-                <span style={{ color: "var(--accent)" }}>★</span>
-                4,6 — 128 avis
-              </FloatingChip>
-              <div
-                style={{
-                  background: "var(--paper)",
-                  border: "1px solid var(--line)",
-                  borderRadius: 16,
-                  boxShadow: "0 40px 80px -30px oklch(20% 0.02 60 / 38%)",
-                  overflow: "hidden",
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8,
-                    padding: "14px 18px",
-                    borderBottom: "1px solid var(--line)",
-                  }}
-                >
-                  <div
-                    style={{
-                      width: 9,
-                      height: 9,
-                      borderRadius: "50%",
-                      background: "var(--line)",
-                    }}
-                  />
-                  <div
-                    style={{
-                      width: 9,
-                      height: 9,
-                      borderRadius: "50%",
-                      background: "var(--line)",
-                    }}
-                  />
-                  <div
-                    style={{
-                      width: 9,
-                      height: 9,
-                      borderRadius: "50%",
-                      background: "var(--line)",
-                    }}
-                  />
-                  <span
-                    style={{
-                      fontSize: 12,
-                      color: "var(--ink-soft)",
-                      marginLeft: 8,
-                    }}
-                  >
-                    Mes restaurants
-                  </span>
-                </div>
-                <div
-                  style={{
-                    padding: 20,
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 12,
-                  }}
-                >
-                  <div
-                    style={{
-                      border: "1px solid var(--line)",
-                      borderRadius: 12,
-                      padding: 16,
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: 10,
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                      }}
-                    >
-                      <span style={{ fontSize: 15, fontWeight: 600 }}>
-                        Le Petit Bouchon
-                      </span>
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 6,
-                          background: "var(--accent-soft)",
-                          borderRadius: 100,
-                          padding: "4px 10px",
-                        }}
-                      >
-                        <div
-                          style={{
-                            width: 6,
-                            height: 6,
-                            borderRadius: "50%",
-                            background: "oklch(62% 0.15 145)",
-                          }}
-                        />
-                        <span
-                          style={{
-                            fontSize: 11.5,
-                            fontWeight: 600,
-                            color: "var(--ink-soft)",
-                          }}
-                        >
-                          Google connecté
-                        </span>
-                      </div>
-                    </div>
-                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                      <span
-                        style={{
-                          fontSize: 11.5,
-                          fontWeight: 500,
-                          color: "var(--ink-soft)",
-                          background: "var(--bg-alt)",
-                          borderRadius: 100,
-                          padding: "4px 10px",
-                        }}
-                      >
-                        bistrot lyonnais
-                      </span>
-                      <span
-                        style={{
-                          fontSize: 11.5,
-                          fontWeight: 500,
-                          color: "var(--ink-soft)",
-                          background: "var(--bg-alt)",
-                          borderRadius: 100,
-                          padding: "4px 10px",
-                        }}
-                      >
-                        restaurant Lyon 6
-                      </span>
-                      <span
-                        style={{
-                          fontSize: 11.5,
-                          fontWeight: 500,
-                          color: "var(--ink-soft)",
-                          background: "var(--bg-alt)",
-                          borderRadius: 100,
-                          padding: "4px 10px",
-                        }}
-                      >
-                        +3
-                      </span>
-                    </div>
-                  </div>
-                  <div
-                    style={{
-                      border: "1px solid var(--line)",
-                      borderRadius: 12,
-                      padding: 16,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      opacity: 0.55,
-                    }}
-                  >
-                    <span style={{ fontSize: 15, fontWeight: 600 }}>
-                      Chez Marcel
-                    </span>
-                    <span
-                      style={{
-                        fontSize: 11.5,
-                        fontWeight: 500,
-                        color: "var(--ink-soft)",
-                      }}
-                    >
-                      2 mots-clés
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </Tilt>
+            <HeroProduit />
           </div>
         </div>
       </div>
@@ -494,13 +329,14 @@ export default async function Home() {
       {/* BENEFITS */}
       <div
         id="benefices"
-        style={{ background: "var(--bg-alt)", padding: "100px 32px" }}
+        className="px-5 py-20 sm:px-8 sm:py-24"
+        style={{ background: "var(--bg-alt)" }}
       >
         <div style={{ maxWidth: 1180, margin: "0 auto" }}>
           <div
             style={{
               maxWidth: 560,
-              marginBottom: 56,
+              marginBottom: 44,
               display: "flex",
               flexDirection: "column",
               gap: 16,
@@ -531,16 +367,36 @@ export default async function Home() {
           </div>
           <div
             className="flex-col sm:flex-row"
-            style={{ display: "flex", gap: 40 }}
+            style={{ display: "flex", gap: 20 }}
           >
             <div
               style={{
                 flex: 1,
+                position: "relative",
                 display: "flex",
                 flexDirection: "column",
                 gap: 16,
+                background: "var(--paper)",
+                border: "1px solid var(--line)",
+                borderRadius: 20,
+                padding: "30px 28px 32px",
               }}
             >
+              <span
+                aria-hidden="true"
+                style={{
+                  position: "absolute",
+                  top: 22,
+                  right: 26,
+                  fontFamily: "var(--font-instrument-serif), Georgia, serif",
+                  fontSize: 40,
+                  lineHeight: 1,
+                  color: "var(--accent-dark)",
+                  opacity: 0.55,
+                }}
+              >
+                01
+              </span>
               <div
                 style={{
                   width: 44,
@@ -569,13 +425,14 @@ export default async function Home() {
               </div>
               <h3
                 style={{
-                  fontSize: 21,
+                  fontSize: 20,
                   fontFamily: "var(--font-manrope), sans-serif",
                   fontWeight: 700,
                   margin: 0,
+                  paddingRight: 56,
                 }}
               >
-                1. La donnée brute
+                La donnée brute
               </h3>
               <p
                 style={{
@@ -594,11 +451,31 @@ export default async function Home() {
             <div
               style={{
                 flex: 1,
+                position: "relative",
                 display: "flex",
                 flexDirection: "column",
                 gap: 16,
+                background: "var(--paper)",
+                border: "1px solid var(--line)",
+                borderRadius: 20,
+                padding: "30px 28px 32px",
               }}
             >
+              <span
+                aria-hidden="true"
+                style={{
+                  position: "absolute",
+                  top: 22,
+                  right: 26,
+                  fontFamily: "var(--font-instrument-serif), Georgia, serif",
+                  fontSize: 40,
+                  lineHeight: 1,
+                  color: "var(--accent-dark)",
+                  opacity: 0.55,
+                }}
+              >
+                02
+              </span>
               <div
                 style={{
                   width: 44,
@@ -627,13 +504,14 @@ export default async function Home() {
               </div>
               <h3
                 style={{
-                  fontSize: 21,
+                  fontSize: 20,
                   fontFamily: "var(--font-manrope), sans-serif",
                   fontWeight: 700,
                   margin: 0,
+                  paddingRight: 56,
                 }}
               >
-                2. L&apos;historique, pas le pipeau
+                L&apos;historique, pas le pipeau
               </h3>
               <p
                 style={{
@@ -651,11 +529,31 @@ export default async function Home() {
             <div
               style={{
                 flex: 1,
+                position: "relative",
                 display: "flex",
                 flexDirection: "column",
                 gap: 16,
+                background: "var(--paper)",
+                border: "1px solid var(--line)",
+                borderRadius: 20,
+                padding: "30px 28px 32px",
               }}
             >
+              <span
+                aria-hidden="true"
+                style={{
+                  position: "absolute",
+                  top: 22,
+                  right: 26,
+                  fontFamily: "var(--font-instrument-serif), Georgia, serif",
+                  fontSize: 40,
+                  lineHeight: 1,
+                  color: "var(--accent-dark)",
+                  opacity: 0.55,
+                }}
+              >
+                03
+              </span>
               <div
                 style={{
                   width: 44,
@@ -686,13 +584,14 @@ export default async function Home() {
               </div>
               <h3
                 style={{
-                  fontSize: 21,
+                  fontSize: 20,
                   fontFamily: "var(--font-manrope), sans-serif",
                   fontWeight: 700,
                   margin: 0,
+                  paddingRight: 56,
                 }}
               >
-                3. Ce qui cloche, pas la tape dans le dos
+                Ce qui cloche, pas la tape dans le dos
               </h3>
               <p
                 style={{
@@ -729,127 +628,6 @@ export default async function Home() {
 
       <Reveal>
         <Partner />
-      </Reveal>
-
-      {/* RÉSERVATIONS */}
-      <Reveal>
-        <div
-          id="reservations"
-          style={{ maxWidth: 1180, margin: "0 auto" }}
-          className="px-5 py-20 sm:px-8"
-        >
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: 16,
-              maxWidth: 620,
-            }}
-          >
-            <span
-              style={{
-                fontSize: 13,
-                fontWeight: 700,
-                letterSpacing: "0.08em",
-                textTransform: "uppercase",
-                color: "var(--ink-soft)",
-              }}
-            >
-              L&apos;autre moitié
-            </span>
-            <h2
-              style={{
-                fontFamily: "var(--font-instrument-serif), Georgia, serif",
-                fontWeight: 400,
-                margin: 0,
-                fontSize: 34,
-                lineHeight: 1.2,
-                textWrap: "balance",
-              }}
-            >
-              Klarr prend aussi vos réservations. Et ne touche rien dessus.
-            </h2>
-            <p
-              style={{
-                margin: 0,
-                fontSize: 16,
-                lineHeight: 1.65,
-                color: "var(--ink-soft)",
-              }}
-            >
-              Les acomptes et les cautions sont encaissés sur votre compte
-              Stripe, pas sur le nôtre. Pas de commission par couvert, pas de
-              pourcentage : vous payez l&apos;abonnement, et c&apos;est tout.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 gap-x-10 gap-y-7 pt-10 sm:grid-cols-2 lg:grid-cols-4">
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 650 }}>
-                Le carnet
-              </h3>
-              <p
-                style={{
-                  margin: 0,
-                  fontSize: 14.5,
-                  lineHeight: 1.6,
-                  color: "var(--ink-soft)",
-                }}
-              >
-                Demandes, confirmations, plan de salle et écran de service pour
-                le coup de feu.
-              </p>
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 650 }}>
-                Moins de no-show
-              </h3>
-              <p
-                style={{
-                  margin: 0,
-                  fontSize: 14.5,
-                  lineHeight: 1.6,
-                  color: "var(--ink-soft)",
-                }}
-              >
-                Rappel la veille, annulation en un clic, acompte quand la table
-                le mérite.
-              </p>
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 650 }}>
-                Les privatisations
-              </h3>
-              <p
-                style={{
-                  margin: 0,
-                  fontSize: 14.5,
-                  lineHeight: 1.6,
-                  color: "var(--ink-soft)",
-                }}
-              >
-                Minimum de couverts, minimum de consommation, conditions
-                annoncées avant de réserver.
-              </p>
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 650 }}>
-                Rien à relancer
-              </h3>
-              <p
-                style={{
-                  margin: 0,
-                  fontSize: 14.5,
-                  lineHeight: 1.6,
-                  color: "var(--ink-soft)",
-                }}
-              >
-                Le lien de paiement part seul, se relance avant l&apos;échéance,
-                et ce qui rate se rejoue.
-              </p>
-            </div>
-          </div>
-        </div>
       </Reveal>
 
       {/* FREE GOOGLE PRESENCE TEST */}

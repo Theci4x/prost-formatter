@@ -1,6 +1,6 @@
 export function Problem() {
   return (
-    <div style={{ background: "var(--bg)", padding: "90px 32px" }}>
+    <div className="px-5 py-16 sm:px-8 sm:py-20" style={{ background: "var(--bg)" }}>
       <div style={{ maxWidth: 760, margin: "0 auto", display: "flex", flexDirection: "column", gap: 22 }}>
         <span
           style={{
@@ -53,7 +53,7 @@ export function Problem() {
 
 export function Founder() {
   return (
-    <div style={{ background: "var(--bg-alt)", padding: "90px 32px" }}>
+    <div className="px-5 py-16 sm:px-8 sm:py-20" style={{ background: "var(--bg-alt)" }}>
       <div
         className="flex-col sm:flex-row"
         style={{ maxWidth: 1180, margin: "0 auto", display: "flex", gap: 56 }}

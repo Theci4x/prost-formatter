@@ -50,7 +50,7 @@ function Coche() {
 
 export function Tarifs() {
   return (
-    <div id="tarifs" style={{ background: "var(--bg)", padding: "100px 32px" }}>
+    <div id="tarifs" className="px-5 py-20 sm:px-8 sm:py-24" style={{ background: "var(--bg)" }}>
       <div
         style={{
           maxWidth: 1180,
