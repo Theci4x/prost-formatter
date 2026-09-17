@@ -3,7 +3,14 @@ import Link from "next/link";
 import { requireAdmin } from "@/lib/admin";
 import { createServiceClient } from "@/lib/supabase/service";
 import { KlarrMark, KlarrWordmark } from "@/components/brand/KlarrMark";
-import { offrirAcces } from "./actions";
+import { enregistrerSuivi, offrirAcces } from "./actions";
+import {
+  LIBELLE_STATUT,
+  parCible,
+  STATUTS,
+  TEINTE_STATUT,
+  type Suivi,
+} from "@/lib/suivi";
 import { calculerAcces } from "@/lib/abonnement/modules";
 
 export const metadata: Metadata = {
@@ -80,6 +87,98 @@ function Section({
   );
 }
 
+/**
+ * Le suivi d'un contact : ce qu'on en a fait, et la ligne suivante.
+ *
+ * Un journal plutôt qu'un état : « il rappelle après le service » vaut
+ * plus que « à relancer », et l'état se lit dans la dernière ligne. Le
+ * formulaire est en bas, jamais en haut — on lit avant d'écrire.
+ */
+function Suivre({
+  cibleType,
+  cibleId,
+  lignes,
+}: {
+  cibleType: "prospect" | "restaurant";
+  cibleId: string;
+  lignes: Suivi[];
+}) {
+  const derniere = lignes[0];
+
+  return (
+    <div className="flex min-w-[260px] flex-col gap-2">
+      {derniere ? (
+        <div className="flex flex-col gap-0.5">
+          <span className="flex items-center gap-2">
+            <span
+              className={`rounded-full px-2.5 py-1 text-xs font-medium ${TEINTE_STATUT[derniere.statut]}`}
+            >
+              {LIBELLE_STATUT[derniere.statut]}
+            </span>
+            <span className="text-xs text-zinc-400">
+              {formatDate(derniere.created_at)}
+            </span>
+          </span>
+          {derniere.note && (
+            <span className="text-xs text-zinc-600">{derniere.note}</span>
+          )}
+        </div>
+      ) : (
+        <span className="text-xs text-zinc-400">Jamais contacté.</span>
+      )}
+
+      {lignes.length > 1 && (
+        <details className="text-xs text-zinc-500">
+          <summary className="cursor-pointer text-zinc-400">
+            {lignes.length - 1} ligne(s) avant
+          </summary>
+          <ul className="mt-1 flex flex-col gap-1">
+            {lignes.slice(1).map((ligne) => (
+              <li key={ligne.created_at}>
+                <span className="text-zinc-400">
+                  {formatDate(ligne.created_at)} —{" "}
+                </span>
+                {LIBELLE_STATUT[ligne.statut]}
+                {ligne.note ? ` : ${ligne.note}` : ""}
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
+
+      <form action={enregistrerSuivi} className="flex flex-col gap-1">
+        <input type="hidden" name="cible_type" value={cibleType} />
+        <input type="hidden" name="cible_id" value={cibleId} />
+        <div className="flex items-center gap-1">
+          <select
+            name="statut"
+            defaultValue={derniere?.statut ?? "a_rappeler"}
+            className="rounded-md border border-zinc-300 px-2 py-1 text-xs outline-none focus:border-brand-navy"
+          >
+            {STATUTS.map((statut) => (
+              <option key={statut} value={statut}>
+                {LIBELLE_STATUT[statut]}
+              </option>
+            ))}
+          </select>
+          <input
+            type="text"
+            name="note"
+            placeholder="Ce qu'il a dit"
+            className="min-w-0 flex-1 rounded-md border border-zinc-300 px-2 py-1 text-xs outline-none focus:border-brand-navy"
+          />
+          <button
+            type="submit"
+            className="shrink-0 rounded-md border border-zinc-300 px-2 py-1 text-xs font-medium text-zinc-700 hover:border-brand-navy hover:text-brand-navy"
+          >
+            Noter
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
 export default async function AdminPage() {
   const email = await requireAdmin();
 
@@ -87,7 +186,7 @@ export default async function AdminPage() {
   // contourne toutes les règles de sécurité de la base.
   const supabase = createServiceClient();
 
-  const [prospects, audits, restaurants, subscriptions, users] =
+  const [prospects, audits, restaurants, subscriptions, users, suivis] =
     await Promise.all([
       supabase
         .from("prospects")
@@ -108,12 +207,19 @@ export default async function AdminPage() {
         .from("restaurant_subscriptions")
         .select("restaurant_id, module, status, current_period_end"),
       supabase.auth.admin.listUsers({ page: 1, perPage: 200 }),
+      // Du plus récent au plus ancien : la première ligne d'une cible est
+      // son état courant, sans requête de plus.
+      supabase
+        .from("suivis")
+        .select("cible_type, cible_id, statut, note, auteur, created_at")
+        .order("created_at", { ascending: false }),
     ]);
 
   const prospectRows = (prospects.data ?? []) as Prospect[];
   const auditRows = (audits.data ?? []) as Audit[];
   const restaurantRows = (restaurants.data ?? []) as RestaurantRow[];
   const subscriptionRows = (subscriptions.data ?? []) as SubscriptionRow[];
+  const journal = parCible((suivis.data ?? []) as Suivi[]);
 
   // listUsers ne renvoie "total" que sur la variante paginée de sa réponse.
   const totalUsers =
@@ -165,13 +271,14 @@ export default async function AdminPage() {
               Aucun prospect pour le moment.
             </p>
           ) : (
-            <table className="w-full min-w-[720px] border-collapse text-sm">
+            <table className="w-full min-w-[980px] border-collapse text-sm">
               <thead>
                 <tr className="border-b border-zinc-200 text-left text-xs uppercase tracking-wide text-zinc-500">
                   <th className="px-5 py-3 font-semibold">Nom</th>
                   <th className="px-5 py-3 font-semibold">Établissement</th>
                   <th className="px-5 py-3 font-semibold">Contact</th>
                   <th className="px-5 py-3 font-semibold">Date</th>
+                  <th className="px-5 py-3 font-semibold">Suivi</th>
                 </tr>
               </thead>
               <tbody className="[&_td]:px-5 [&_td]:py-3 [&_tr]:border-b [&_tr]:border-zinc-100 [&_tr:last-child]:border-0">
@@ -196,6 +303,13 @@ export default async function AdminPage() {
                     </td>
                     <td className="whitespace-nowrap text-zinc-500">
                       {formatDate(prospect.created_at)}
+                    </td>
+                    <td>
+                      <Suivre
+                        cibleType="prospect"
+                        cibleId={prospect.id}
+                        lignes={journal.get(`prospect:${prospect.id}`) ?? []}
+                      />
                     </td>
                   </tr>
                 ))}
@@ -241,7 +355,7 @@ export default async function AdminPage() {
           {restaurantRows.length === 0 ? (
             <p className="p-5 text-sm text-zinc-500">Aucun restaurant.</p>
           ) : (
-            <table className="w-full min-w-[880px] border-collapse text-sm">
+            <table className="w-full min-w-[1140px] border-collapse text-sm">
               <thead>
                 <tr className="border-b border-zinc-200 text-left text-xs uppercase tracking-wide text-zinc-500">
                   <th className="px-5 py-3 font-semibold">Nom</th>
@@ -251,6 +365,7 @@ export default async function AdminPage() {
                   <th className="px-5 py-3 font-semibold">Accès</th>
                   <th className="px-5 py-3 font-semibold">Offert jusqu&apos;au</th>
                   <th className="px-5 py-3 font-semibold">Créé le</th>
+                  <th className="px-5 py-3 font-semibold">Suivi</th>
                 </tr>
               </thead>
               <tbody className="[&_td]:px-5 [&_td]:py-3 [&_tr]:border-b [&_tr]:border-zinc-100 [&_tr:last-child]:border-0">
@@ -387,6 +502,15 @@ export default async function AdminPage() {
                       </td>
                       <td className="whitespace-nowrap text-zinc-500">
                         {formatDate(restaurant.created_at)}
+                      </td>
+                      <td>
+                        <Suivre
+                          cibleType="restaurant"
+                          cibleId={restaurant.id}
+                          lignes={
+                            journal.get(`restaurant:${restaurant.id}`) ?? []
+                          }
+                        />
                       </td>
                     </tr>
                   );

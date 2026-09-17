@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/admin";
 import { createServiceClient } from "@/lib/supabase/service";
+import { STATUTS } from "@/lib/suivi";
 
 /**
  * Ouvre — ou referme — l'accès d'un établissement à la main.
@@ -38,4 +39,37 @@ export async function offrirAcces(formData: FormData): Promise<void> {
 
   revalidatePath("/admin");
   revalidatePath(`/dashboard/${restaurantId}/abonnement`);
+}
+
+/**
+ * Ajoute une ligne au journal d'un contact.
+ *
+ * Rien ne se met à jour : on empile. Une note fausse se corrige par une
+ * note suivante, et l'historique reste lisible — c'est lui qui dit si un
+ * restaurateur a été relancé trois fois ou jamais.
+ */
+export async function enregistrerSuivi(formData: FormData): Promise<void> {
+  const auteur = await requireAdmin();
+
+  const cibleType = ((formData.get("cible_type") as string) ?? "").trim();
+  const cibleId = ((formData.get("cible_id") as string) ?? "").trim();
+  const statut = ((formData.get("statut") as string) ?? "").trim();
+  const note = ((formData.get("note") as string) ?? "").trim();
+
+  if (cibleType !== "prospect" && cibleType !== "restaurant") return;
+  if (!cibleId) return;
+  if (!(STATUTS as readonly string[]).includes(statut)) return;
+
+  const supabase = createServiceClient();
+  const { error } = await supabase.from("suivis").insert({
+    cible_type: cibleType,
+    cible_id: cibleId,
+    statut,
+    note: note || null,
+    auteur,
+  });
+
+  if (error) console.error("[enregistrerSuivi]", error);
+
+  revalidatePath("/admin");
 }
