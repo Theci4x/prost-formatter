@@ -33,6 +33,7 @@ type Audit = {
 type RestaurantRow = {
   id: string;
   nom: string;
+  proprietaire_id: string;
   adresse: string | null;
   created_at: string;
   acces_offert_jusqu_au: string | null;
@@ -100,13 +101,13 @@ export default async function AdminPage() {
         .limit(20),
       supabase
         .from("restaurants")
-        .select("id, nom, adresse, created_at, acces_offert_jusqu_au")
+        .select("id, nom, adresse, proprietaire_id, created_at, acces_offert_jusqu_au")
         .order("created_at", { ascending: false })
         .limit(20),
       supabase
         .from("restaurant_subscriptions")
         .select("restaurant_id, module, status, current_period_end"),
-      supabase.auth.admin.listUsers({ page: 1, perPage: 1 }),
+      supabase.auth.admin.listUsers({ page: 1, perPage: 200 }),
     ]);
 
   const prospectRows = (prospects.data ?? []) as Prospect[];
@@ -117,6 +118,20 @@ export default async function AdminPage() {
   // listUsers ne renvoie "total" que sur la variante paginée de sa réponse.
   const totalUsers =
     users.data && "total" in users.data ? users.data.total : "—";
+
+  // Le propriétaire d'un restaurant vit dans auth.users, jamais dans la
+  // table : sans cette jointure faite à la main, la liste ci-dessous est
+  // une liste de noms qu'on ne peut pas rappeler.
+  const comptes = new Map(
+    (users.data?.users ?? []).map((compte) => [
+      compte.id,
+      {
+        email: compte.email ?? null,
+        telephone: compte.phone || null,
+        derniereVisite: compte.last_sign_in_at ?? null,
+      },
+    ]),
+  );
 
   const activeSubscriptions = subscriptionRows.filter(
     (s) => s.status === "active" || s.status === "trialing",
@@ -226,11 +241,12 @@ export default async function AdminPage() {
           {restaurantRows.length === 0 ? (
             <p className="p-5 text-sm text-zinc-500">Aucun restaurant.</p>
           ) : (
-            <table className="w-full min-w-[520px] border-collapse text-sm">
+            <table className="w-full min-w-[880px] border-collapse text-sm">
               <thead>
                 <tr className="border-b border-zinc-200 text-left text-xs uppercase tracking-wide text-zinc-500">
                   <th className="px-5 py-3 font-semibold">Nom</th>
                   <th className="px-5 py-3 font-semibold">Adresse</th>
+                  <th className="px-5 py-3 font-semibold">Contact</th>
                   <th className="px-5 py-3 font-semibold">Abonnement</th>
                   <th className="px-5 py-3 font-semibold">Accès</th>
                   <th className="px-5 py-3 font-semibold">Offert jusqu&apos;au</th>
@@ -242,6 +258,7 @@ export default async function AdminPage() {
                   const subscription = subscriptionRows.find(
                     (s) => s.restaurant_id === restaurant.id,
                   );
+                  const compte = comptes.get(restaurant.proprietaire_id);
                   const acces = calculerAcces({
                     abonnements: subscriptionRows
                       .filter((s) => s.restaurant_id === restaurant.id)
@@ -263,6 +280,34 @@ export default async function AdminPage() {
                       </td>
                       <td className="text-zinc-600">
                         {restaurant.adresse ?? "—"}
+                      </td>
+                      <td className="text-zinc-600">
+                        {compte?.email ? (
+                          <a
+                            href={`mailto:${compte.email}`}
+                            className="text-brand-orange hover:underline"
+                          >
+                            {compte.email}
+                          </a>
+                        ) : (
+                          <span className="text-xs text-zinc-400">
+                            compte supprimé
+                          </span>
+                        )}
+                        {compte?.telephone && (
+                          <>
+                            <br />
+                            {compte.telephone}
+                          </>
+                        )}
+                        {compte?.derniereVisite && (
+                          <>
+                            <br />
+                            <span className="text-xs text-zinc-400">
+                              vu le {formatDate(compte.derniereVisite)}
+                            </span>
+                          </>
+                        )}
                       </td>
                       <td>
                         {subscription ? (
