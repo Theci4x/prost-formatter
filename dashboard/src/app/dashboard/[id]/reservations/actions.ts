@@ -1604,3 +1604,59 @@ export async function relancerPaiement(
   revalidatePath(`/dashboard/${restaurantId}/reservations`);
   return { error: null };
 }
+
+/**
+ * Corrige les coordonnées du client.
+ *
+ * Une adresse mal saisie — par le client sur son téléphone, ou par le
+ * restaurateur qui prend une réservation au comptoir pendant le service —
+ * rend la réservation muette : la confirmation part dans le vide, le devis
+ * aussi, et personne ne s'en aperçoit avant le jour dit. Jusqu'ici, rien
+ * ne permettait de la rattraper.
+ *
+ * Ce qui a déjà été envoyé ne se renvoie pas tout seul pour autant : un
+ * genre de courriel ne part qu'une fois par réservation. Un devis, lui, se
+ * renvoie autant de fois qu'il le faut.
+ */
+export async function corrigerCoordonnees(
+  _prevState: DecisionState,
+  formData: FormData,
+): Promise<DecisionState> {
+  const reservationId = (formData.get("reservation_id") as string)?.trim();
+  const restaurantId = (formData.get("restaurant_id") as string)?.trim();
+  const nom = texte(formData.get("client_nom"));
+  const email = texte(formData.get("client_email")).toLowerCase();
+  const telephone = texte(formData.get("client_telephone"));
+
+  if (!reservationId || !restaurantId) {
+    return { error: "Réservation introuvable." };
+  }
+  if (!nom) return { error: "Le nom ne peut pas être vide." };
+  // La colonne n'accepte pas de vide, et une réservation sans adresse ne
+  // pourrait plus rien recevoir : on refuse plutôt que d'effacer.
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return { error: "Cette adresse e-mail ne semble pas valide." };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("restaurant_reservations")
+    .update({
+      client_nom: nom,
+      client_email: email,
+      client_telephone: telephone || null,
+    })
+    .eq("id", reservationId)
+    // Le carnet d'un autre établissement ne se corrige pas d'ici, même
+    // avec un identifiant emprunté.
+    .eq("restaurant_id", restaurantId);
+
+  if (error) {
+    console.error("[corrigerCoordonnees]", error);
+    return { error: "La correction n'a pas pu être enregistrée." };
+  }
+
+  revalidatePath(`/dashboard/${restaurantId}/reservations`);
+  revalidatePath(`/dashboard/${restaurantId}/service`);
+  return { error: null };
+}

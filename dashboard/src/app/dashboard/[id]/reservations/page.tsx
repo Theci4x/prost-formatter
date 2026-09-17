@@ -36,6 +36,7 @@ import {
 import { BoutonAction } from "@/components/reservations/BoutonAction";
 import { BoutonEnvoi } from "@/components/BoutonEnvoi";
 import { NoteInterne } from "@/components/reservations/NoteInterne";
+import { CoordonneesClient } from "@/components/reservations/CoordonneesClient";
 import { formatHeure, type Espace, type Service } from "@/types/reservation";
 import type { Restaurant } from "@/types/restaurant";
 import { exigerModule } from "@/lib/abonnement/acces";
@@ -227,26 +228,26 @@ function Ligne({
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm text-zinc-600">
-        <a
-          href={`mailto:${demande.client_email}`}
-          className="text-brand-orange hover:underline"
-        >
-          {demande.client_email}
-        </a>
-        {demande.client_telephone && (
-          <a
-            href={`tel:${demande.client_telephone}`}
-            className="hover:underline"
-          >
-            {demande.client_telephone}
-          </a>
-        )}
-        {demande.occasion && <span>{demande.occasion}</span>}
-        {demande.accepte_communications && (
-          <span className="text-emerald-700">
-            Accepte d&apos;être recontacté
-          </span>
+      {/* Une adresse fausse rend la réservation muette : la confirmation
+          part dans le vide, le devis aussi. Elle se corrige donc là où on
+          la lit, sans redemander au client de tout ressaisir. */}
+      <div className="flex flex-col gap-2">
+        <CoordonneesClient
+          reservationId={demande.id}
+          restaurantId={restaurantId}
+          nom={demande.client_nom}
+          email={demande.client_email}
+          telephone={demande.client_telephone}
+        />
+        {(demande.occasion || demande.accepte_communications) && (
+          <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm text-zinc-600">
+            {demande.occasion && <span>{demande.occasion}</span>}
+            {demande.accepte_communications && (
+              <span className="text-emerald-700">
+                Accepte d&apos;être recontacté
+              </span>
+            )}
+          </div>
         )}
       </div>
 
