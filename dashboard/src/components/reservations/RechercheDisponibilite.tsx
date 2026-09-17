@@ -83,24 +83,27 @@ export function RechercheDisponibilite({
     <div className="flex flex-col gap-4">
       <form
         method="get"
-        className="flex flex-wrap items-end gap-4 rounded-2xl border border-line bg-paper p-5 shadow-sm"
+        className="flex w-full max-w-full flex-wrap items-end gap-4 rounded-2xl border border-line bg-paper p-5 shadow-sm"
       >
         {choix.espaceId && (
           <input type="hidden" name="espace" value={choix.espaceId} />
         )}
 
-        <label className="flex flex-col gap-1 text-sm font-medium text-ink">
+        <label className="flex min-w-0 flex-1 basis-36 flex-col gap-1 text-sm font-medium text-ink sm:flex-none sm:basis-auto">
           Date
           <input
             type="date"
             name="date"
             value={choix.date}
             min={dateMin}
+            // Un champ de date natif porte sa largeur intrinsèque, qui
+            // varie d'un navigateur à l'autre : sans ces bornes, il élargit
+            // la carte au-delà de l'écran d'un iPhone.
             onChange={(evenement) => {
               const choisie = evenement.target.value;
               if (choisie) naviguer({ date: choisie });
             }}
-            className={champ}
+            className={`${champ} w-full min-w-0`}
           />
         </label>
 
@@ -108,7 +111,7 @@ export function RechercheDisponibilite({
             règle un nombre de convives au pouce, sans faire surgir un
             clavier. Ce sont de vrais boutons d'envoi, qui portent leur
             valeur — sans JavaScript, ils marchent encore. */}
-        <div className="flex flex-col gap-1 text-sm font-medium text-ink">
+        <div className="flex shrink-0 flex-col gap-1 text-sm font-medium text-ink">
           Convives
           <div className="flex items-center gap-1 rounded-lg border border-line bg-paper p-1">
             <button
@@ -148,7 +151,7 @@ export function RechercheDisponibilite({
             convives : un couple qui réserve pour deux ne la verrait jamais,
             et repartirait sans savoir que la salle se loue. */}
         {espaces && espaces.length > 0 && (
-          <label className="flex flex-col gap-1 text-sm font-medium text-ink">
+          <label className="flex w-full min-w-0 basis-full flex-col gap-1 text-sm font-medium text-ink sm:w-auto sm:basis-auto">
             Je souhaite
             <select
               name="espace"
@@ -156,7 +159,7 @@ export function RechercheDisponibilite({
               onChange={(evenement) =>
                 naviguer({ espace: evenement.target.value || null })
               }
-              className={champ}
+              className={`${champ} w-full min-w-0 max-w-full`}
             >
               <option value="">Réserver une table</option>
               {espaces.map((espace) => (
