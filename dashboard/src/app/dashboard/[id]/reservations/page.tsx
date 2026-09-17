@@ -28,6 +28,7 @@ import {
   relancerPaiement,
 } from "./actions";
 import { BoutonAction } from "@/components/reservations/BoutonAction";
+import { BoutonEnvoi } from "@/components/BoutonEnvoi";
 import { NoteInterne } from "@/components/reservations/NoteInterne";
 import { formatHeure, type Espace, type Service } from "@/types/reservation";
 import type { Restaurant } from "@/types/restaurant";
@@ -359,12 +360,11 @@ function Ligne({
         <form action={ouvrirDevis} className="w-fit">
           <input type="hidden" name="restaurant_id" value={restaurantId} />
           <input type="hidden" name="reservation_id" value={demande.id} />
-          <button
-            type="submit"
+          <BoutonEnvoi
+            libelle="Établir un devis"
+            enCours="Ouverture…"
             className="rounded-lg border border-line bg-paper px-3 py-2 text-sm font-semibold text-ink transition-colors hover:border-ink"
-          >
-            Établir un devis
-          </button>
+          />
         </form>
       )}
 
