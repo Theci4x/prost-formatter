@@ -2,6 +2,10 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { createServiceClient } from "@/lib/supabase/service";
 import { GalerieRestaurant } from "@/components/reservations/GalerieRestaurant";
+import {
+  LienCreneau,
+  RechercheDisponibilite,
+} from "@/components/reservations/RechercheDisponibilite";
 import { SectionExperiences } from "@/components/experiences/SectionExperiences";
 import { prochainesSeances } from "@/lib/experiences/seances";
 import type { Experience, PlaceReservee } from "@/types/experience";
@@ -382,29 +386,6 @@ export default async function ReserverPage({
             reseaux,
           })}
         />
-        {/* Les photos des salles ne s'affichent plus que sous les
-            privatisations, là où le client choisit vraiment une pièce. Un
-            établissement qui n'a photographié que ses salles n'en montrerait
-            donc aucune : on les reprend alors en bandeau, faute de mieux que
-            rien. */}
-        <GalerieRestaurant
-          photos={
-            photosEtablissement.length > 0
-              ? photosEtablissement
-              : // Faute de légende, une photo de salle prend le nom de sa
-                // salle : « laquelle est la cave ? » est la première
-                // question du client qui ouvre la visionneuse.
-                toutesPhotos.map((photo) => ({
-                  ...photo,
-                  legende:
-                    photo.legende ??
-                    (photo.espace_id ? nomEspace.get(photo.espace_id) : null) ??
-                    null,
-                }))
-          }
-          nom={restaurant.nom}
-        />
-
         <div className="flex flex-col gap-2">
           <h1 className="font-serif text-4xl text-ink">
             {restaurant.nom}
@@ -425,63 +406,15 @@ export default async function ReserverPage({
           nombreAvis={reputation?.nombre_avis ?? null}
         />
 
-        {/* Formulaire de recherche : une simple navigation, pour que la page
-            fonctionne même sans JavaScript. */}
-        <form
-          method="get"
-          className="flex flex-wrap items-end gap-4 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm"
+        {/* Le choix de la date et des convives, et les créneaux qu'il
+            commande, dans un seul bloc : ils se lisent ensemble. */}
+        <RechercheDisponibilite
+          date={date}
+          couverts={couverts}
+          espaceId={espaceDemande?.id ?? null}
+          espaces={offre ? offre.espaces : null}
+          dateMin={dateDuJour()}
         >
-          <label className="flex flex-col gap-1 text-sm font-medium text-zinc-700">
-            Date
-            <input
-              type="date"
-              name="date"
-              defaultValue={date}
-              min={dateDuJour()}
-              className="rounded-lg border border-line bg-paper px-3 py-2.5 text-sm outline-none transition-colors focus:border-brand-orange"
-            />
-          </label>
-          <label className="flex flex-col gap-1 text-sm font-medium text-zinc-700">
-            Convives
-            <input
-              type="number"
-              name="couverts"
-              min="1"
-              defaultValue={couverts}
-              className="w-28 rounded-lg border border-line bg-paper px-3 py-2.5 text-sm outline-none transition-colors focus:border-brand-orange"
-            />
-          </label>
-          {/* La privatisation ne se propose qu'au-delà d'un certain nombre de
-              convives : un couple qui réserve pour deux ne la verrait jamais,
-              et repartirait sans savoir que la salle se loue. Ici elle est
-              écrite avant même la recherche, sans rien demander — la
-              réservation ordinaire reste le choix par défaut. */}
-          {offre && (
-            <label className="flex flex-col gap-1 text-sm font-medium text-zinc-700">
-              Je souhaite
-              <select
-                name="espace"
-                defaultValue={espaceDemande?.id ?? ""}
-                className="rounded-lg border border-line bg-paper px-3 py-2.5 text-sm outline-none transition-colors focus:border-brand-orange"
-              >
-                <option value="">Réserver une table</option>
-                {offre.espaces.map((espace) => (
-                  <option key={espace.id} value={espace.id}>
-                    Privatiser {espace.nom} — jusqu&apos;à {espace.capacite}{" "}
-                    couverts
-                  </option>
-                ))}
-              </select>
-            </label>
-          )}
-          <button
-            type="submit"
-            className="rounded-lg bg-ink px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy"
-          >
-            Voir les disponibilités
-          </button>
-        </form>
-
         <section className="flex flex-col gap-4">
           <h2 className="text-base font-semibold text-zinc-900 first-letter:capitalize">
             {formatDateLongue(date)} — {couverts} convive
@@ -539,20 +472,15 @@ export default async function ReserverPage({
                         {groupe.heures.map((h) => {
                           const actif = h.heure === retenu.heure;
                           return h.ouvert ? (
-                            <a
+                            <LienCreneau
                               key={h.heure}
                               href={`?date=${date}&couverts=${couverts}&heure=${h.heure}${
                                 query.espace ? `&espace=${query.espace}` : ""
                               }`}
-                              aria-current={actif ? "true" : undefined}
-                              className={`rounded-lg border px-3 py-1.5 text-sm transition-colors ${
-                                actif
-                                  ? "border-brand-navy bg-brand-navy text-white"
-                                  : "border-zinc-200 text-zinc-700 hover:border-brand-navy"
-                              }`}
+                              actif={actif}
                             >
                               {heureLisible(h.heure)}
-                            </a>
+                            </LienCreneau>
                           ) : (
                             <span
                               key={h.heure}
@@ -744,6 +672,31 @@ export default async function ReserverPage({
             </a>
           )}
         </section>
+        </RechercheDisponibilite>
+
+        {/* Les photos des salles ne s'affichent plus que sous les
+            privatisations, là où le client choisit vraiment une pièce. Un
+            établissement qui n'a photographié que ses salles n'en montrerait
+            donc aucune : on les reprend alors en bandeau, faute de mieux que
+            rien. */}
+        <GalerieRestaurant
+          photos={
+            photosEtablissement.length > 0
+              ? photosEtablissement
+              : // Faute de légende, une photo de salle prend le nom de sa
+                // salle : « laquelle est la cave ? » est la première
+                // question du client qui ouvre la visionneuse.
+                toutesPhotos.map((photo) => ({
+                  ...photo,
+                  legende:
+                    photo.legende ??
+                    (photo.espace_id ? nomEspace.get(photo.espace_id) : null) ??
+                    null,
+                }))
+          }
+          nom={restaurant.nom}
+        />
+
 
         <SectionExperiences
           slug={slug}
