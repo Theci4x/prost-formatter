@@ -80,6 +80,36 @@ async function enregistrerAcompte(session: Stripe.Checkout.Session) {
   if (erreurSeance) console.error("[stripe webhook] séance", erreurSeance);
 }
 
+/**
+ * Vérifie la signature, quel que soit le point d'entrée qui a envoyé.
+ *
+ * Stripe sépare les événements du compte (les abonnements Klarr) de ceux
+ * des comptes connectés (les acomptes encaissés par les restaurateurs), et
+ * chaque point d'entrée porte son propre secret. Les deux arrivent pourtant
+ * sur cette même adresse : `STRIPE_WEBHOOK_SECRET` accepte donc plusieurs
+ * secrets séparés par des virgules, et on essaie chacun.
+ *
+ * Essayer plusieurs secrets n'affaiblit rien : un événement qu'aucun ne
+ * valide est refusé, exactement comme avant.
+ */
+function verifier(body: string, signature: string): Stripe.Event {
+  const secrets = (process.env.STRIPE_WEBHOOK_SECRET ?? "")
+    .split(",")
+    .map((secret) => secret.trim())
+    .filter(Boolean);
+  if (secrets.length === 0) throw new Error("STRIPE_WEBHOOK_SECRET manquante");
+
+  let derniere: unknown;
+  for (const secret of secrets) {
+    try {
+      return getStripe().webhooks.constructEvent(body, signature, secret);
+    } catch (erreur) {
+      derniere = erreur;
+    }
+  }
+  throw derniere;
+}
+
 export async function POST(request: NextRequest) {
   const body = await request.text();
   const signature = request.headers.get("stripe-signature");
@@ -92,11 +122,7 @@ export async function POST(request: NextRequest) {
 
   let event: Stripe.Event;
   try {
-    event = getStripe().webhooks.constructEvent(
-      body,
-      signature,
-      process.env.STRIPE_WEBHOOK_SECRET!,
-    );
+    event = verifier(body, signature);
   } catch (err) {
     console.error("[stripe webhook] signature invalide", err);
     return NextResponse.json({ error: "signature invalide" }, {
