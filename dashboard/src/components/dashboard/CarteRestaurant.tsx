@@ -510,6 +510,30 @@ export function CarteRestaurant({
         </div>
       </div>
 
+      {/* Ce qui casse en silence passe avant les chiffres : une alerte
+          qui ne part pas ne se remarque jamais toute seule. */}
+      {pouls.sansEmailContact && (
+        <Link
+          href={`${base}/reservations/configuration`}
+          className="flex items-start gap-3 border-b border-line bg-brand-orange-soft px-6 py-3 transition-colors hover:bg-brand-orange-soft/70 sm:px-8"
+        >
+          <span
+            aria-hidden="true"
+            className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-brand-orange"
+          />
+          <span className="flex flex-col gap-0.5">
+            <span className="text-sm font-semibold text-ink">
+              Aucune adresse e-mail de contact
+            </span>
+            <span className="text-[13px] leading-relaxed text-ink-soft">
+              Vous ne recevez pas les alertes de réservation par e-mail, et un
+              client qui répond à sa confirmation écrit dans le vide.
+              Renseignez-la en deux minutes.
+            </span>
+          </span>
+        </Link>
+      )}
+
       {/* Aujourd'hui : les quatre chiffres qui changent chaque jour. */}
       <div className="border-b border-line px-4 py-3 sm:px-6">
         <p className="px-4 pb-1 pt-1 text-[11px] font-bold uppercase tracking-[0.08em] text-brand-orange-dark">

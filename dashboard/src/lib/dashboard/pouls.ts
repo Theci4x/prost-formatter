@@ -34,6 +34,12 @@ export type Pouls = {
   /** La prochaine publication Google programmée, ISO. */
   prochainPost: string | null;
   cartePubliee: boolean;
+  /**
+   * Vrai quand l'établissement n'a aucune adresse de contact. Sans elle,
+   * l'alerte de réservation ne part nulle part et le client qui répond à
+   * sa confirmation écrit dans le vide — en silence, des deux côtés.
+   */
+  sansEmailContact: boolean;
   nombrePlats: number;
   nombrePhotos: number;
   couvertureUrl: string | null;
@@ -96,6 +102,7 @@ export async function chargerPouls(
     photo_couverture_id?: string | null;
     site_publie?: boolean | null;
     carte_publique?: boolean | null;
+    email_contact?: string | null;
   },
   maintenant: Date = new Date(),
 ): Promise<Pouls> {
@@ -226,6 +233,7 @@ export async function chargerPouls(
     avisCetteSemaine,
     prochainPost,
     cartePubliee: restaurant.carte_publique === true,
+    sansEmailContact: !restaurant.email_contact?.trim(),
     nombrePlats,
     nombrePhotos,
     couvertureUrl: couverture,

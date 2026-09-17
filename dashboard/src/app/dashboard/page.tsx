@@ -16,6 +16,7 @@ import { chargerPouls } from "@/lib/dashboard/pouls";
 type RestaurantEtendu = Restaurant & {
   photo_couverture_id?: string | null;
   site_publie?: boolean | null;
+  email_contact?: string | null;
 };
 
 export default async function DashboardPage() {
