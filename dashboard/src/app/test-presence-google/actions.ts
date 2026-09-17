@@ -24,6 +24,8 @@ import {
   actionsPrioritaires,
   type ActionPrioritaire,
 } from "@/lib/audit/actions";
+import { notifierInterne } from "@/lib/notifications/interne";
+import { siteUrl } from "@/lib/site-url";
 
 export type AuditResult = {
   score: number;
@@ -169,6 +171,21 @@ export async function submitProspect(
   }
 
   const audit = await runAudit(entreprise, ville, data.id as string);
+
+  // Un prospect rappelé dans les dix minutes est impressionné ; rappelé le
+  // soir, il est perdu. L'alerte part après l'audit pour porter le score :
+  // c'est lui qui donne la première phrase de l'appel.
+  await notifierInterne({
+    titre: `Nouveau prospect — ${entreprise}`,
+    lignes: [
+      `${prenom} ${nom} — ${entreprise}, ${ville}`,
+      `${email} — ${telephone}`,
+      audit
+        ? `Score de visibilité : ${audit.score}/100 (${audit.label}).`
+        : "Audit indisponible (établissement introuvable sur Google).",
+    ],
+    lien: { libelle: "Voir les prospects", url: `${siteUrl()}/admin` },
+  });
 
   return { status: "success", audit };
 }

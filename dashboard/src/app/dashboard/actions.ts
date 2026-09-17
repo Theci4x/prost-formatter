@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { JOURS_SEMAINE, type Horaires } from "@/types/restaurant";
+import { notifierInterne } from "@/lib/notifications/interne";
+import { siteUrl } from "@/lib/site-url";
 
 export type RestaurantFormState = {
   error: string | null;
@@ -119,6 +121,20 @@ export async function createRestaurant(
   if (error) {
     return { error: error.message };
   }
+
+  // Cinq établissements se sont inscrits sans que personne ne le sache. Un
+  // essai de quatorze jours commence à cette seconde : c'est maintenant
+  // qu'un mot de bienvenue vaut quelque chose, pas le jour où il expire.
+  await notifierInterne({
+    titre: `Nouvel établissement — ${nom}`,
+    lignes: [
+      adresse ? `${nom} — ${adresse}` : nom,
+      `Propriétaire : ${user.email ?? "adresse inconnue"}`,
+      telephone ? `Téléphone : ${telephone}` : "Aucun téléphone renseigné.",
+      "Essai de 14 jours ouvert.",
+    ],
+    lien: { libelle: "Ouvrir l'administration", url: `${siteUrl()}/admin` },
+  });
 
   revalidatePath("/dashboard");
   redirect("/dashboard");

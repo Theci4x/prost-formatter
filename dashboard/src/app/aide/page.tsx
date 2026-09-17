@@ -83,6 +83,24 @@ export default function AidePage() {
             </ul>
           </section>
         ))}
+        {/* Ce que le mode d'emploi ne couvre pas doit avoir une porte,
+            sinon il ne reste qu'un formulaire de contact perdu en pied de
+            page — ou rien du tout. */}
+        <section className="flex flex-col gap-2 rounded-2xl border border-zinc-200/70 bg-white px-5 py-6 shadow-sm">
+          <h2 className="text-base font-semibold text-zinc-900">
+            Vous ne trouvez pas ?
+          </h2>
+          <p className="text-sm text-zinc-500">
+            Écrivez-nous : une vraie réponse, écrite à la main, dans la
+            journée.
+          </p>
+          <Link
+            href="/aide/contact"
+            className="self-start text-sm font-medium text-brand-orange hover:underline"
+          >
+            Écrire à Klarr
+          </Link>
+        </section>
       </main>
 
       <footer className="border-t border-zinc-200/70 px-6 py-6">

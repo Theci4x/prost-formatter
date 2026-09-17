@@ -5,6 +5,7 @@ import { rattraperCourriels } from "@/lib/courriel/rattrapage";
 import { rappelerLesReservations } from "@/lib/courriel/rappel";
 import { relancerLesPaiements } from "@/lib/courriel/relances";
 import { publierLesPosts } from "@/lib/posts/publication";
+import { prevenirDesEssaisQuiFinissent } from "@/lib/notifications/essais";
 
 // Les options échues ne bloquent déjà plus la jauge — le moteur de
 // disponibilité les ignore. Cette tâche ne fait que le dire : sans elle, une
@@ -90,5 +91,24 @@ export async function GET(request: Request) {
       `${posts.reportes} reporté(s) sur ${posts.echus} échu(s)`,
   );
 
-  return NextResponse.json({ expirees, courriels, rappels, relances, posts });
+  // Les essais qui se terminent en tout dernier : cette alerte ne
+  // s'adresse pas aux restaurateurs mais à nous, et rien de ce qui leur
+  // est dû ne doit attendre derrière elle.
+  const essais = await prevenirDesEssaisQuiFinissent({
+    supabase,
+    maintenant: new Date(),
+  });
+  console.log(
+    `[cron/options-expirees] essais : ${essais.prevenus} alerte(s) ` +
+      `sur ${essais.examines} établissement(s)`,
+  );
+
+  return NextResponse.json({
+    expirees,
+    courriels,
+    rappels,
+    relances,
+    posts,
+    essais,
+  });
 }

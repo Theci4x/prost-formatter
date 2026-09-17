@@ -211,6 +211,10 @@ export function Commis({ connecte = false }: { connecte?: boolean }) {
           : "Le Commis ne lit aucune donnée d'établissement. En cas de doute, "}
         <Link href="/aide" className="underline underline-offset-2">
           {connecte ? "consulte l'aide" : "consultez l'aide"}
+        </Link>{" "}
+        ou{" "}
+        <Link href="/aide/contact" className="underline underline-offset-2">
+          {connecte ? "écris-nous" : "écrivez-nous"}
         </Link>
         .
       </p>

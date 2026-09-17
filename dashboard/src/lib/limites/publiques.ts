@@ -41,6 +41,14 @@ export const AUDITS_PAR_JOUR = 3;
 export const AUDITS_PAR_JOUR_GLOBAL = 200;
 
 /**
+ * Demandes d'aide par visiteur et par jour. Le formulaire envoie un
+ * e-mail à l'équipe : sans plafond, il devient une adresse de spam
+ * ouverte. Cinq laisse la place à quelqu'un qui bloque vraiment et
+ * réécrit deux fois.
+ */
+export const AIDES_PAR_JOUR = 5;
+
+/**
  * L'empreinte d'un visiteur : son adresse et son navigateur, hachés avec un
  * secret. On ne veut pas d'un journal d'adresses IP en base — ce compteur
  * sert à limiter, pas à ficher.
