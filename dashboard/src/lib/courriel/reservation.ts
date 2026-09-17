@@ -118,6 +118,72 @@ export async function prevenirClient({
   }
 }
 
+/**
+ * Renvoie au client le message qu'il aurait dû recevoir.
+ *
+ * `prevenirClient` ne part qu'une fois par réservation, et c'est ce qu'il
+ * faut : un double clic ou deux requêtes simultanées n'envoient pas deux
+ * confirmations. Mais cette garde joue contre nous quand l'adresse était
+ * fausse dès le départ — le client n'a jamais rien reçu, la trace dit que
+ * si, et corriger l'adresse ne rattrape rien.
+ *
+ * Le renvoi est donc un geste délibéré du restaurateur, qui ne se heurte
+ * pas au garde-fou du premier envoi. La trace, elle, est remise à jour :
+ * c'est la dernière adresse servie qui compte, pas la première.
+ */
+export async function renvoyerAuClient({
+  supabase,
+  reservationId,
+  contexte,
+  destinataire,
+  repondreA,
+  confirmee,
+}: {
+  supabase: SupabaseClient;
+  reservationId: string;
+  contexte: Contexte;
+  destinataire: string;
+  repondreA?: string;
+  confirmee: boolean;
+}): Promise<{ envoye: boolean; erreur: string | null }> {
+  const genre: Genre = confirmee ? "confirmee" : "recue";
+  const message = confirmee
+    ? reservationConfirmee(contexte)
+    : demandeRecue(contexte);
+
+  const resultat = await envoyerCourriel({
+    destinataire,
+    repondreA,
+    ...message,
+  });
+
+  // La trace suit l'envoi plutôt que de le précéder : ici, personne ne
+  // court contre personne — c'est un restaurateur qui a cliqué.
+  const trace = {
+    destinataire,
+    envoye_le: new Date().toISOString(),
+    erreur: resultat.envoye ? null : (resultat.erreur ?? "inconnue"),
+  };
+  const { data, error } = await supabase
+    .from("reservation_courriels")
+    .update(trace)
+    .eq("reservation_id", reservationId)
+    .eq("genre", genre)
+    .select("id")
+    .maybeSingle();
+
+  // Aucune ligne à mettre à jour : le premier envoi n'a jamais eu lieu —
+  // une réservation prise au téléphone, par exemple. On la pose.
+  if (!error && !data) {
+    const { error: pose } = await supabase
+      .from("reservation_courriels")
+      .insert({ reservation_id: reservationId, genre, ...trace });
+    if (pose) console.error("[courriel/renvoi-trace]", genre, pose.message);
+  }
+  if (error) console.error("[courriel/renvoi]", genre, error.message);
+  return resultat;
+}
+
 /** Prévient le restaurateur qu'une réservation est entrée. */
 export async function prevenirRestaurateur({
   supabase,

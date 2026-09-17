@@ -23,6 +23,7 @@ import {
   envoyerLienDePaiement,
   prevenirClient,
   prevenirRefus,
+  renvoyerAuClient,
 } from "@/lib/courriel/reservation";
 import type { Contexte } from "@/lib/courriel/messages";
 import { debiterCaution } from "@/lib/stripe/caution";
@@ -1658,5 +1659,67 @@ export async function corrigerCoordonnees(
 
   revalidatePath(`/dashboard/${restaurantId}/reservations`);
   revalidatePath(`/dashboard/${restaurantId}/service`);
+  return { error: null };
+}
+
+/**
+ * Renvoie au client l'e-mail de sa réservation.
+ *
+ * Il existe pour un cas précis : l'adresse était fausse à la saisie. Le
+ * premier envoi est parti dans le vide, sa trace dit pourtant qu'il est
+ * parti, et la contrainte d'unicité empêche tout nouvel essai — corriger
+ * l'adresse ne rattrape donc rien. Ce bouton lève cette garde, parce que
+ * c'est un geste délibéré et non une requête qui se rejoue.
+ *
+ * Le message envoyé est celui de l'état actuel : une demande encore en
+ * attente reçoit « Demande reçue », une table confirmée « C'est confirmé ».
+ * Renvoyer une confirmation pour une réservation qu'on vient de refuser
+ * serait pire que de ne rien renvoyer.
+ */
+export async function renvoyerConfirmation(
+  _prevState: DecisionState,
+  formData: FormData,
+): Promise<DecisionState> {
+  const reservationId = (formData.get("reservation_id") as string)?.trim();
+  const restaurantId = (formData.get("restaurant_id") as string)?.trim();
+  if (!reservationId || !restaurantId) {
+    return { error: "Réservation introuvable." };
+  }
+
+  const { reservation } = await chargerPourDecision(reservationId);
+  // La lecture passe par la session : une réservation d'un autre
+  // établissement ne remonte pas, et ce test attrape le reste.
+  if (!reservation || reservation.restaurant_id !== restaurantId) {
+    return { error: "Réservation introuvable." };
+  }
+  if (reservation.statut !== "demande" && reservation.statut !== "confirmee") {
+    return {
+      error:
+        "Cette réservation n'est plus active : il n'y a pas de confirmation à renvoyer.",
+    };
+  }
+
+  const envoi = await contexteCourriel(reservation);
+  if (!envoi) return { error: "Ce client n'a pas laissé d'adresse e-mail." };
+
+  const resultat = await renvoyerAuClient({
+    supabase: envoi.service,
+    reservationId: reservation.id,
+    contexte: envoi.contexte,
+    destinataire: envoi.destinataire,
+    repondreA: envoi.repondreA,
+    confirmee: reservation.statut === "confirmee",
+  });
+
+  if (!resultat.envoye) {
+    return {
+      error:
+        resultat.erreur === "Envoi non configuré."
+          ? "L'envoi d'e-mails n'est pas encore configuré."
+          : "L'e-mail n'est pas parti. Réessaie dans un instant.",
+    };
+  }
+
+  revalidatePath(`/dashboard/${restaurantId}/reservations`);
   return { error: null };
 }

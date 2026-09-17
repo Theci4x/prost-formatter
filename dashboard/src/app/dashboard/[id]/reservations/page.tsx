@@ -238,6 +238,9 @@ function Ligne({
           nom={demande.client_nom}
           email={demande.client_email}
           telephone={demande.client_telephone}
+          renvoyable={
+            demande.statut === "demande" || demande.statut === "confirmee"
+          }
         />
         {(demande.occasion || demande.accepte_communications) && (
           <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm text-zinc-600">

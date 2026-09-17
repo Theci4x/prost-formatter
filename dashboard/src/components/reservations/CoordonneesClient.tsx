@@ -1,8 +1,12 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { corrigerCoordonnees } from "@/app/dashboard/[id]/reservations/actions";
+import {
+  corrigerCoordonnees,
+  renvoyerConfirmation,
+} from "@/app/dashboard/[id]/reservations/actions";
 import type { DecisionState } from "@/app/dashboard/[id]/reservations/actions";
+import { BoutonAction } from "@/components/reservations/BoutonAction";
 
 /**
  * Les coordonnées du client, et de quoi les corriger.
@@ -26,12 +30,18 @@ export function CoordonneesClient({
   nom,
   email,
   telephone,
+  renvoyable,
 }: {
   reservationId: string;
   restaurantId: string;
   nom: string;
   email: string;
   telephone: string | null;
+  /**
+   * Faux sur une réservation annulée, refusée ou expirée : il n'y a plus
+   * rien à confirmer, et proposer de le renvoyer serait un piège.
+   */
+  renvoyable: boolean;
 }) {
   const [ouvert, setOuvert] = useState(false);
   // Une soumission a-t-elle eu lieu ? Sans ce drapeau, « Enregistré » ne
@@ -64,6 +74,21 @@ export function CoordonneesClient({
         >
           Corriger
         </button>
+        {/* Le compagnon de la correction : une adresse rectifiée ne fait
+            pas repartir ce qui est déjà parti dans le vide. C'est ici
+            qu'on le rattrape, au moment où on regarde l'adresse. */}
+        {renvoyable && (
+          <BoutonAction
+            action={renvoyerConfirmation}
+            champs={{
+              reservation_id: reservationId,
+              restaurant_id: restaurantId,
+            }}
+            libelle="Renvoyer l'e-mail"
+            enCours="Envoi…"
+            className="text-xs font-medium text-zinc-400 transition-colors hover:text-zinc-900"
+          />
+        )}
       </div>
     );
   }
