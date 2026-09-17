@@ -28,10 +28,13 @@ const STATUS_LABELS: Record<string, string> = {
 
 export default async function AbonnementPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ stripe_error?: string; checkout?: string }>;
 }) {
   const { id } = await params;
+  const query = await searchParams;
   await exiger(id, "proprietaire");
 
   const supabase = await createClient();
@@ -68,6 +71,30 @@ export default async function AbonnementPage({
         icon={dashboardIcons.abonnement}
         title={`Abonnement — ${restaurant.nom}`}
       />
+
+      {/* Ce que Stripe a répondu quand la souscription n'a pas pu
+          s'ouvrir. Le message est le sien, en anglais et technique — mais
+          un message technique se cherche, alors qu'une page qui ne fait
+          rien ne se cherche pas. */}
+      {query.stripe_error && (
+        <div
+          className="max-w-2xl rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-900"
+          role="alert"
+        >
+          <p className="font-medium">La souscription n&apos;a pas pu s&apos;ouvrir.</p>
+          <p className="mt-1 font-mono text-xs leading-relaxed">
+            {query.stripe_error === "configuration"
+              ? "Aucun tarif n'est configuré pour ce module (STRIPE_PRICE_ID_…)."
+              : query.stripe_error}
+          </p>
+        </div>
+      )}
+
+      {query.checkout === "cancel" && (
+        <p className="max-w-2xl text-sm text-ink-soft">
+          Souscription abandonnée. Rien n&apos;a été prélevé.
+        </p>
+      )}
 
       {/* Les deux essais ne finissent pas le même jour : le bandeau
           annonce le plus long — la date à laquelle tout se referme — et
