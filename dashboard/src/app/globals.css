@@ -282,14 +282,31 @@ body {
    « Enregistrer en PDF » depuis le navigateur doit donner un document
    qu'un client range dans ses papiers : pas de fond crème qui mange
    l'encre, pas de boutons, et jamais un tableau coupé entre deux pages. */
+/*
+ * Le devis sur papier — ou en PDF, ce qui revient au même : « Enregistrer
+ * au format PDF » du navigateur passe par cette feuille-là.
+ *
+ * Un devis de vingt prestations tient rarement sur une page. On ne cherche
+ * donc pas à garder le document d'un seul tenant — ce serait ingérable —
+ * mais à empêcher les coupures qui font douter : une prestation scindée en
+ * deux, un total séparé de ses lignes, un pied de page orphelin.
+ */
 @media print {
-  .devis-feuille {
-    break-inside: avoid;
-  }
-  .devis-feuille section {
-    break-inside: avoid;
-  }
   @page {
-    margin: 16mm;
+    margin: 14mm;
+  }
+  body {
+    background: #fff;
+  }
+  .devis-feuille {
+    break-inside: auto;
+  }
+  .devis-feuille > header,
+  .devis-totaux,
+  .devis-mentions {
+    break-inside: avoid;
+  }
+  .devis-lignes > div {
+    break-inside: avoid;
   }
 }

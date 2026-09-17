@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { createServiceClient } from "@/lib/supabase/service";
 import { FeuilleDevis } from "@/components/devis/FeuilleDevis";
 import { ReponseDevis } from "@/components/devis/ReponseDevis";
+import { BoutonImprimer } from "@/components/devis/BoutonImprimer";
 import { SignatureKlarr } from "@/components/brand/SignatureKlarr";
 import { decidable, formatEuros, type StatutDevis } from "@/lib/devis/calcul";
 
@@ -16,6 +17,7 @@ type LigneBrute = {
   libelle: string;
   quantite: number;
   prix_unitaire_centimes: number;
+  tva_taux: number;
 };
 
 type Devis = {
@@ -29,6 +31,8 @@ type Devis = {
   acompte_centimes: number | null;
   valide_jusquau: string;
   envoye_le: string | null;
+  /** Les mentions figées à l'envoi. Nulles sur un devis d'avant la 0057. */
+  mentions: string | null;
 };
 
 type Reservation = {
@@ -64,7 +68,7 @@ export default async function DevisPublicPage({
   const [lignesResult, resaResult, maisonResult] = await Promise.all([
     supabase
       .from("devis_lignes")
-      .select("libelle, quantite, prix_unitaire_centimes")
+      .select("libelle, quantite, prix_unitaire_centimes, tva_taux")
       .eq("devis_id", devis.id)
       .order("ordre"),
     supabase
@@ -74,7 +78,7 @@ export default async function DevisPublicPage({
       .maybeSingle(),
     supabase
       .from("restaurants")
-      .select("nom, adresse, telephone, logo_url, mentions_legales")
+      .select("nom, adresse, telephone, logo_url, mentions_legales, devis_mentions")
       .eq("id", devis.restaurant_id)
       .maybeSingle(),
   ]);
@@ -87,6 +91,7 @@ export default async function DevisPublicPage({
     telephone: string | null;
     logo_url: string | null;
     mentions_legales: string | null;
+    devis_mentions: string | null;
   } | null;
   if (!maison) notFound();
 
@@ -108,20 +113,27 @@ export default async function DevisPublicPage({
         <FeuilleDevis
           numero={devis.numero}
           valideJusquau={devis.valide_jusquau}
-          tauxTva={Number(devis.tva_taux)}
           acompteCentimes={devis.acompte_centimes}
           message={devis.message}
           lignes={lignes.map((ligne) => ({
             libelle: ligne.libelle,
             quantite: Number(ligne.quantite),
             prixUnitaireCentimes: ligne.prix_unitaire_centimes,
+            tauxTva: Number(ligne.tva_taux),
           }))}
           maison={{
             nom: maison.nom,
             adresse: maison.adresse,
             telephone: maison.telephone,
             logoUrl: maison.logo_url,
-            mentionsLegales: maison.mentions_legales,
+            // Ce qui a été envoyé prime sur ce que la maison affiche
+            // aujourd'hui : le client relit ce qu'il a accepté. Les
+            // mentions de la page de réservation ne servent qu'aux devis
+            // établis avant qu'on ne les distingue.
+            mentionsLegales:
+              devis.mentions ??
+              maison.devis_mentions ??
+              maison.mentions_legales,
           }}
           evenement={
             reservation
@@ -135,6 +147,13 @@ export default async function DevisPublicPage({
               : null
           }
         />
+
+        {/* Un client fait souvent signer le devis par quelqu'un d'autre :
+            son conjoint, son comité d'entreprise, son patron. Il lui faut
+            donc un document à emporter, pas seulement une page. */}
+        <div className="flex flex-wrap gap-3 print:hidden">
+          <BoutonImprimer />
+        </div>
 
         {verdict.possible ? (
           <ReponseDevis

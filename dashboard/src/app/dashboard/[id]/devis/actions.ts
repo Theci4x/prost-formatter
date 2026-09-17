@@ -13,6 +13,8 @@ import {
   enQuantite,
   numeroSuivant,
   validiteParDefaut,
+  TAUX_PAR_DEFAUT,
+  TAUX_TVA,
   type Ligne,
 } from "@/lib/devis/calcul";
 import { siteUrl } from "@/lib/site-url";
@@ -24,6 +26,9 @@ import { siteUrl } from "@/lib/site-url";
  * connaître suffit à lire le devis, il ne doit donc pas se deviner.
  */
 const OCTETS_JETON = 32;
+
+/** Un pied de devis est une page au plus ; au-delà, c'est un contrat. */
+const MENTIONS_MAX = 4000;
 
 export type DevisState = { erreur: string | null; enregistre: boolean };
 
@@ -75,11 +80,36 @@ type Saisie = {
   devisId: string;
   restaurantId: string;
   lignes: Ligne[];
-  tauxTva: number;
   acompteCentimes: number | null;
   valideJusquau: string;
   message: string | null;
+  /** Le pied de devis de la maison, commun à tous ses devis. */
+  mentions: string | null;
 };
+
+/**
+ * Le taux qu'on reproposera à l'ouverture suivante : celui qui pèse le
+ * plus lourd dans ce devis. Une maison qui ne sert pas d'alcool retrouve
+ * ses 10 % sans y penser ; un traiteur qui facture surtout à 20 % aussi.
+ */
+function tauxDominant(lignes: Ligne[]): number {
+  const poids = new Map<number, number>();
+  for (const ligne of lignes) {
+    poids.set(
+      ligne.tauxTva,
+      (poids.get(ligne.tauxTva) ?? 0) + ligne.quantite * ligne.prixUnitaireCentimes,
+    );
+  }
+  let retenu = TAUX_PAR_DEFAUT;
+  let max = -1;
+  for (const [taux, somme] of poids) {
+    if (somme > max) {
+      max = somme;
+      retenu = taux;
+    }
+  }
+  return retenu;
+}
 
 /** Lit et vérifie ce que l'écran a envoyé. */
 function lire(formData: FormData): Saisie | string {
@@ -103,6 +133,7 @@ function lire(formData: FormData): Saisie | string {
       libelle?: string;
       quantite?: string;
       prix?: string;
+      tva?: number;
     };
     const libelle = (ligne.libelle ?? "").trim();
     // Une ligne entièrement vide est un reste de saisie, pas une erreur :
@@ -116,12 +147,16 @@ function lire(formData: FormData): Saisie | string {
     }
     const prix = enCentimes(ligne.prix ?? "");
     if (prix === undefined) return `Prix illisible pour « ${libelle} ».`;
-    lignes.push({ libelle, quantite, prixUnitaireCentimes: prix });
-  }
 
-  const tauxTva = Number(formData.get("tva") ?? 10);
-  if (!Number.isFinite(tauxTva) || tauxTva < 0 || tauxTva > 100) {
-    return "Taux de TVA invalide.";
+    // Le taux vient de la ligne, et il est vérifié contre la liste : un
+    // taux bricolé dans la console produirait un document faux, que le
+    // client accepterait et que le comptable refuserait.
+    const tauxTva = Number(ligne.tva);
+    if (!TAUX_TVA.includes(tauxTva as (typeof TAUX_TVA)[number])) {
+      return `Taux de TVA inconnu pour « ${libelle} ».`;
+    }
+
+    lignes.push({ libelle, quantite, prixUnitaireCentimes: prix, tauxTva });
   }
 
   const acompteBrut = ((formData.get("acompte") as string) ?? "").trim();
@@ -134,15 +169,16 @@ function lire(formData: FormData): Saisie | string {
   }
 
   const message = ((formData.get("message") as string) ?? "").trim();
+  const mentions = ((formData.get("mentions") as string) ?? "").trim();
 
   return {
     devisId,
     restaurantId,
     lignes,
-    tauxTva,
     acompteCentimes: acompteCentimes ?? null,
     valideJusquau,
     message: message || null,
+    mentions: mentions.slice(0, MENTIONS_MAX) || null,
   };
 }
 
@@ -153,7 +189,7 @@ async function ecrire(saisie: Saisie): Promise<string | null> {
   const { error } = await supabase
     .from("devis")
     .update({
-      tva_taux: saisie.tauxTva,
+      tva_taux: tauxDominant(saisie.lignes),
       acompte_centimes: saisie.acompteCentimes,
       valide_jusquau: saisie.valideJusquau,
       message: saisie.message,
@@ -164,6 +200,15 @@ async function ecrire(saisie: Saisie): Promise<string | null> {
     console.error("[devis/entete]", error);
     return "L'enregistrement a échoué.";
   }
+
+  // Les mentions appartiennent à la maison, pas à ce devis : les régler
+  // une fois vaut pour tous les suivants. Elles se figent sur le devis à
+  // l'envoi seulement — voir `envoyerDevis`.
+  const { error: pied } = await supabase
+    .from("restaurants")
+    .update({ devis_mentions: saisie.mentions })
+    .eq("id", saisie.restaurantId);
+  if (pied) console.error("[devis/mentions]", pied);
 
   // Remplacer plutôt que rapprocher : une ligne supprimée au milieu, une
   // autre insérée, et toute tentative de faire correspondre les anciennes
@@ -184,6 +229,7 @@ async function ecrire(saisie: Saisie): Promise<string | null> {
         libelle: ligne.libelle,
         quantite: ligne.quantite,
         prix_unitaire_centimes: ligne.prixUnitaireCentimes,
+        tva_taux: ligne.tauxTva,
         ordre: rang,
       })),
     );
@@ -191,6 +237,19 @@ async function ecrire(saisie: Saisie): Promise<string | null> {
       console.error("[devis/lignes]", insertion);
       return "L'enregistrement des lignes a échoué.";
     }
+
+    // Ce qui vient de servir remonte en tête du catalogue. L'ordre des
+    // prestations se règle ainsi tout seul, sans que personne ne le
+    // classe : un échec ici ne coûte qu'un rangement, pas un devis.
+    const { error: fraicheur } = await supabase
+      .from("devis_prestations")
+      .update({ derniere_utilisation: new Date().toISOString() })
+      .eq("restaurant_id", saisie.restaurantId)
+      .in(
+        "libelle",
+        saisie.lignes.map((ligne) => ligne.libelle),
+      );
+    if (fraicheur) console.error("[devis/fraicheur]", fraicheur);
   }
   return null;
 }
@@ -270,7 +329,7 @@ export async function envoyerDevis(
     email_contact: string | null;
   } | null;
 
-  const totaux = calculer(saisie.lignes, saisie.tauxTva);
+  const totaux = calculer(saisie.lignes);
   const envoi = await envoyerDevisAuClient({
     destinataire: client.client_email,
     repondreA: restaurant?.email_contact ?? undefined,
@@ -295,11 +354,117 @@ export async function envoyerDevis(
   // afficherait « envoyé » à un restaurateur dont le client n'a rien reçu.
   // La clé de service écrit ce dernier point, la RLS n'ayant pas à juger
   // d'un état que le serveur constate.
+  // Les mentions se figent ici, et nulle part ailleurs : ce que le client
+  // a sous les yeux au moment où il accepte est ce qui l'engage. Une
+  // maison qui révise ses conditions en mars ne réécrit pas un devis
+  // signé en janvier.
   await createServiceClient()
     .from("devis")
-    .update({ statut: "envoye", envoye_le: new Date().toISOString() })
+    .update({
+      statut: "envoye",
+      envoye_le: new Date().toISOString(),
+      mentions: saisie.mentions,
+    })
     .eq("id", saisie.devisId);
 
   revalidatePath(`/dashboard/${saisie.restaurantId}/devis`);
+  return { erreur: null, enregistre: true };
+}
+
+/**
+ * Le catalogue des prestations.
+ *
+ * Un restaurateur propose trois ou quatre formules, toute l'année. Les
+ * ressaisir à chaque devis — libellé, prix, taux — est la corvée qui fait
+ * rouvrir le tableur. On enregistre donc la ligne telle qu'elle est
+ * composée, et on la repropose au devis suivant.
+ *
+ * L'enregistrement se déclenche depuis le formulaire du devis, par un
+ * bouton qui vise une autre action : un formulaire ne s'imbrique pas dans
+ * un autre, et la saisie en cours ne doit pas être perdue pour autant.
+ */
+export async function enregistrerPrestation(
+  _prevState: DevisState,
+  formData: FormData,
+): Promise<DevisState> {
+  const restaurantId = (formData.get("restaurant_id") as string)?.trim();
+  const rang = Number(formData.get("rang"));
+  if (!restaurantId || !Number.isInteger(rang)) {
+    return { erreur: "Prestation introuvable.", enregistre: false };
+  }
+
+  const saisie = lire(formData);
+  if (typeof saisie === "string") return { erreur: saisie, enregistre: false };
+  const ligne = saisie.lignes[rang];
+  if (!ligne) {
+    return {
+      erreur: "Complétez la ligne avant de l'enregistrer.",
+      enregistre: false,
+    };
+  }
+
+  await exiger(restaurantId, "gerant");
+  const supabase = await createClient();
+
+  // Enregistrer deux fois « Menu Saint-Sylvestre » n'aide personne : le
+  // second enregistrement corrige le prix du premier. La comparaison
+  // ignore la casse et les espaces de bord, comme l'index unique.
+  const { data: connue } = await supabase
+    .from("devis_prestations")
+    .select("id")
+    .eq("restaurant_id", restaurantId)
+    .ilike("libelle", ligne.libelle.trim())
+    .maybeSingle();
+
+  const valeurs = {
+    libelle: ligne.libelle.trim(),
+    prix_unitaire_centimes: ligne.prixUnitaireCentimes,
+    tva_taux: ligne.tauxTva,
+    derniere_utilisation: new Date().toISOString(),
+  };
+
+  const { error } = connue
+    ? await supabase
+        .from("devis_prestations")
+        .update(valeurs)
+        .eq("id", (connue as { id: string }).id)
+    : await supabase
+        .from("devis_prestations")
+        .insert({ restaurant_id: restaurantId, ...valeurs });
+
+  if (error) {
+    console.error("[devis/prestation]", error);
+    return { erreur: "L'enregistrement a échoué.", enregistre: false };
+  }
+
+  revalidatePath(`/dashboard/${restaurantId}/devis`);
+  return { erreur: null, enregistre: true };
+}
+
+/** Retire une prestation du catalogue. Les devis déjà écrits n'en savent rien. */
+export async function oublierPrestation(
+  _prevState: DevisState,
+  formData: FormData,
+): Promise<DevisState> {
+  const restaurantId = (formData.get("restaurant_id") as string)?.trim();
+  const prestationId = (formData.get("prestation_id") as string)?.trim();
+  if (!restaurantId || !prestationId) {
+    return { erreur: "Prestation introuvable.", enregistre: false };
+  }
+
+  await exiger(restaurantId, "gerant");
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("devis_prestations")
+    .delete()
+    .eq("id", prestationId)
+    .eq("restaurant_id", restaurantId);
+
+  if (error) {
+    console.error("[devis/prestation-oubli]", error);
+    return { erreur: "La suppression a échoué.", enregistre: false };
+  }
+
+  revalidatePath(`/dashboard/${restaurantId}/devis`);
   return { erreur: null, enregistre: true };
 }

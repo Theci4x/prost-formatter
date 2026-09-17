@@ -3,6 +3,7 @@ import {
   calculer,
   formatEuros,
   formatQuantite,
+  formatTaux,
   totalLigne,
 } from "@/lib/devis/calcul";
 
@@ -19,6 +20,7 @@ export type LigneFeuille = {
   libelle: string;
   quantite: number;
   prixUnitaireCentimes: number;
+  tauxTva: number;
 };
 
 export type Maison = {
@@ -49,7 +51,6 @@ function jour(iso: string): string {
 export function FeuilleDevis({
   numero,
   valideJusquau,
-  tauxTva,
   acompteCentimes,
   message,
   lignes,
@@ -58,21 +59,18 @@ export function FeuilleDevis({
 }: {
   numero: string;
   valideJusquau: string;
-  tauxTva: number;
   acompteCentimes: number | null;
   message: string | null;
   lignes: LigneFeuille[];
   maison: Maison;
   evenement: Evenement | null;
 }) {
-  const totaux = calculer(
-    lignes.map((ligne) => ({
-      libelle: ligne.libelle,
-      quantite: ligne.quantite,
-      prixUnitaireCentimes: ligne.prixUnitaireCentimes,
-    })),
-    tauxTva,
-  );
+  const totaux = calculer(lignes);
+
+  // Un menu à 10 % et un forfait boissons à 20 % : la colonne du taux
+  // n'apparaît que là. Sur un devis à taux unique, elle répéterait vingt
+  // fois le même nombre pour ne rien apprendre.
+  const plusieursTaux = totaux.ventilation.length > 1;
 
   return (
     <article className="devis-feuille flex flex-col gap-7 rounded-2xl border border-line bg-paper p-7 shadow-sm print:rounded-none print:border-0 print:p-0 print:shadow-none">
@@ -126,11 +124,12 @@ export function FeuilleDevis({
         </section>
       )}
 
-      <section className="flex flex-col">
+      <section className="devis-lignes flex flex-col">
         <div className="hidden border-b border-line pb-2 text-xs font-bold uppercase tracking-[0.08em] text-ink-soft sm:flex">
           <span className="flex-1">Prestation</span>
           <span className="w-20 text-right">Qté</span>
           <span className="w-28 text-right">P.U. HT</span>
+          {plusieursTaux && <span className="w-16 text-right">TVA</span>}
           <span className="w-28 text-right">Total HT</span>
         </div>
         {/* Quatre colonnes sur un écran large, comme un devis de papier.
@@ -151,6 +150,7 @@ export function FeuilleDevis({
                 <span className="sm:hidden">
                   {formatQuantite(ligne.quantite)} ×{" "}
                   {formatEuros(ligne.prixUnitaireCentimes)}
+                  {plusieursTaux ? ` · TVA ${formatTaux(ligne.tauxTva)}` : ""}
                 </span>
                 <span className="hidden sm:inline">
                   {formatQuantite(ligne.quantite)}
@@ -159,6 +159,11 @@ export function FeuilleDevis({
               <span className="hidden tabular-nums text-ink-soft sm:block sm:w-28 sm:text-right">
                 {formatEuros(ligne.prixUnitaireCentimes)}
               </span>
+              {plusieursTaux && (
+                <span className="hidden tabular-nums text-ink-soft sm:block sm:w-16 sm:text-right">
+                  {formatTaux(ligne.tauxTva)}
+                </span>
+              )}
               <span className="font-semibold tabular-nums text-ink sm:w-28 sm:text-right">
                 {formatEuros(totalLigne(ligne))}
               </span>
@@ -167,15 +172,32 @@ export function FeuilleDevis({
         ))}
       </section>
 
-      <section className="flex flex-col gap-2 self-end text-[15px] sm:w-72">
+      <section className="devis-totaux flex flex-col gap-2 self-end text-[15px] sm:w-72">
         <div className="flex justify-between text-ink-soft">
           <span>Total HT</span>
           <span className="tabular-nums">{formatEuros(totaux.htCentimes)}</span>
         </div>
-        <div className="flex justify-between text-ink-soft">
-          <span>TVA {tauxTva} %</span>
-          <span className="tabular-nums">{formatEuros(totaux.tvaCentimes)}</span>
-        </div>
+        {/* La ventilation par taux, obligatoire dès qu'il y en a deux, et
+            de toute façon ce que le comptable reprendra. */}
+        {totaux.ventilation.map((assiette) => (
+          <div
+            key={assiette.taux}
+            className="flex justify-between text-ink-soft"
+          >
+            <span>
+              TVA {formatTaux(assiette.taux)}
+              {plusieursTaux && (
+                <span className="text-xs">
+                  {" "}
+                  sur {formatEuros(assiette.htCentimes)}
+                </span>
+              )}
+            </span>
+            <span className="tabular-nums">
+              {formatEuros(assiette.tvaCentimes)}
+            </span>
+          </div>
+        ))}
         <div className="flex items-baseline justify-between border-t border-line pt-2">
           <span className="font-semibold text-ink">Total TTC</span>
           <span className="font-serif text-3xl text-ink">
@@ -203,7 +225,7 @@ export function FeuilleDevis({
       {/* Les mentions du restaurant, pas celles de Klarr : c'est lui qui
           contracte avec le client. */}
       {maison.mentionsLegales && (
-        <section className="whitespace-pre-line border-t border-line pt-5 text-xs leading-relaxed text-ink-soft">
+        <section className="devis-mentions whitespace-pre-line border-t border-line pt-5 text-xs leading-relaxed text-ink-soft">
           {maison.mentionsLegales}
         </section>
       )}

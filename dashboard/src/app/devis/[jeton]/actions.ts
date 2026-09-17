@@ -21,7 +21,12 @@ import { siteUrl } from "@/lib/site-url";
 
 export type ReponseState = { erreur: string | null; fait: boolean };
 
-type Ligne = { quantite: number; prix_unitaire_centimes: number; libelle: string };
+type Ligne = {
+  quantite: number;
+  prix_unitaire_centimes: number;
+  libelle: string;
+  tva_taux: number;
+};
 
 type DevisComplet = {
   id: string;
@@ -61,7 +66,7 @@ export async function accepterDevis(
 
   const { data: lignesData } = await supabase
     .from("devis_lignes")
-    .select("libelle, quantite, prix_unitaire_centimes")
+    .select("libelle, quantite, prix_unitaire_centimes, tva_taux")
     .eq("devis_id", devis.id);
   const lignes = (lignesData ?? []) as Ligne[];
   const totaux = calculer(
@@ -69,8 +74,8 @@ export async function accepterDevis(
       libelle: ligne.libelle,
       quantite: Number(ligne.quantite),
       prixUnitaireCentimes: ligne.prix_unitaire_centimes,
+      tauxTva: Number(ligne.tva_taux),
     })),
-    Number(devis.tva_taux),
   );
 
   // La condition sur le statut rejoue la vérification en base : deux clics

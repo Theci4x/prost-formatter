@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { EditeurDevis } from "@/components/devis/EditeurDevis";
+import { FeuilleDevis } from "@/components/devis/FeuilleDevis";
+import { BoutonImprimer } from "@/components/devis/BoutonImprimer";
 import { LienAcompte } from "@/components/reservations/LienAcompte";
 import { exiger } from "@/lib/equipe/roles";
 import {
@@ -22,6 +24,15 @@ type DevisLigne = {
   libelle: string;
   quantite: number;
   prix_unitaire_centimes: number;
+  tva_taux: number;
+};
+
+/** Une prestation du catalogue, telle qu'on la repropose. */
+type Prestation = {
+  id: string;
+  libelle: string;
+  prix_unitaire_centimes: number;
+  tva_taux: number;
 };
 
 type Devis = {
@@ -37,6 +48,7 @@ type Devis = {
   accepte_le: string | null;
   refuse_le: string | null;
   refus_motif: string | null;
+  mentions: string | null;
 };
 
 type Reservation = {
@@ -100,10 +112,47 @@ export default async function DevisPage({
 
   const { data: lignesData } = await supabase
     .from("devis_lignes")
-    .select("libelle, quantite, prix_unitaire_centimes")
+    .select("libelle, quantite, prix_unitaire_centimes, tva_taux")
     .eq("devis_id", devis.id)
     .order("ordre");
   const lignes = (lignesData ?? []) as DevisLigne[];
+
+  // Le catalogue et le pied de devis appartiennent à la maison : ils
+  // servent ce devis-ci comme tous les suivants.
+  const [prestationsResult, maisonResult] = await Promise.all([
+    supabase
+      .from("devis_prestations")
+      .select("id, libelle, prix_unitaire_centimes, tva_taux")
+      .eq("restaurant_id", id)
+      .order("derniere_utilisation", { ascending: false, nullsFirst: false })
+      .limit(24),
+    supabase
+      .from("restaurants")
+      .select(
+        "nom, adresse, telephone, logo_url, mentions_legales, devis_mentions",
+      )
+      .eq("id", id)
+      .maybeSingle(),
+  ]);
+  // Une colonne absente refuse toute la requête et ressemble à un
+  // catalogue vide : on veut savoir lequel des deux c'est.
+  if (prestationsResult.error) {
+    console.error("[devis/catalogue]", prestationsResult.error.message);
+  }
+  const prestations = (prestationsResult.data ?? []) as Prestation[];
+  const maison = maisonResult.data as {
+    nom: string;
+    adresse: string | null;
+    telephone: string | null;
+    logo_url: string | null;
+    mentions_legales: string | null;
+    devis_mentions: string | null;
+  } | null;
+
+  // Tant que la maison n'a rien écrit de propre au devis, on reprend les
+  // mentions de la page de réservation : mieux vaut un pied imparfait
+  // qu'un document contractuel sans aucune mention.
+  const mentions = maison?.devis_mentions ?? maison?.mentions_legales ?? "";
 
   const lien = `${siteUrl()}/devis/${devis.jeton}`;
   const fige = devis.statut === "accepte";
@@ -196,8 +245,18 @@ export default async function DevisPage({
           libelle: ligne.libelle,
           quantite: String(ligne.quantite).replace(/\.00$/, ""),
           prix: (ligne.prix_unitaire_centimes / 100).toFixed(2).replace(".", ","),
+          tva: Number(ligne.tva_taux),
         }))}
-        tvaInitiale={Number(devis.tva_taux)}
+        tauxParDefaut={Number(devis.tva_taux)}
+        prestations={prestations.map((prestation) => ({
+          id: prestation.id,
+          libelle: prestation.libelle,
+          prix: (prestation.prix_unitaire_centimes / 100)
+            .toFixed(2)
+            .replace(".", ","),
+          tva: Number(prestation.tva_taux),
+        }))}
+        mentionsInitiales={mentions}
         acompteInitial={
           devis.acompte_centimes
             ? (devis.acompte_centimes / 100).toFixed(2).replace(".", ",")
@@ -209,9 +268,53 @@ export default async function DevisPage({
         modifiable={!fige}
       />
 
+      {/* Le document, tel qu'il partira. Il rend ce qui est en base et non
+          la saisie en cours : le restaurateur voit donc ce que son client
+          verrait s'il ouvrait le lien maintenant — ce qui est justement la
+          question qu'on se pose avant d'envoyer. */}
+      {lignes.length > 0 && maison && (
+        <section className="flex flex-col gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-3 print:hidden">
+            <div className="flex flex-col">
+              <h2 className="font-serif text-2xl text-ink">Le document</h2>
+              <p className="text-sm text-ink-soft">
+                Tel que le client le verra, au dernier enregistrement.
+              </p>
+            </div>
+            <BoutonImprimer />
+          </div>
+          <FeuilleDevis
+            numero={devis.numero}
+            valideJusquau={devis.valide_jusquau}
+            acompteCentimes={devis.acompte_centimes}
+            message={devis.message}
+            lignes={lignes.map((ligne) => ({
+              libelle: ligne.libelle,
+              quantite: Number(ligne.quantite),
+              prixUnitaireCentimes: ligne.prix_unitaire_centimes,
+              tauxTva: Number(ligne.tva_taux),
+            }))}
+            maison={{
+              nom: maison.nom,
+              adresse: maison.adresse,
+              telephone: maison.telephone,
+              logoUrl: maison.logo_url,
+              mentionsLegales: devis.mentions ?? mentions ?? null,
+            }}
+            evenement={{
+              clientNom: reservation.client_nom,
+              couverts: reservation.couverts,
+              date: reservation.date_reservation,
+              heure: null,
+              espaceNom: null,
+            }}
+          />
+        </section>
+      )}
+
       <Link
         href={`/dashboard/${id}/reservations`}
-        className="w-fit text-sm text-ink-soft hover:text-ink"
+        className="w-fit text-sm text-ink-soft hover:text-ink print:hidden"
       >
         ← Retour au carnet
       </Link>

@@ -23,6 +23,9 @@ export const LIBELLE_STATUT: Record<StatutDevis, string> = {
  */
 export const TAUX_TVA = [10, 20, 5.5, 0] as const;
 
+/** Le taux qu'on propose quand rien ne dit le contraire : la restauration. */
+export const TAUX_PAR_DEFAUT = 10;
+
 /** Validité par défaut : un mois, le temps qu'un client décide sans presser. */
 export const VALIDITE_JOURS = 30;
 
@@ -31,12 +34,31 @@ export type Ligne = {
   /** Décimale : « 2,5 heures » existe autant que « 30 couverts ». */
   quantite: number;
   prixUnitaireCentimes: number;
+  /**
+   * Le taux de cette ligne-là. Un menu est à 10 %, le forfait boissons
+   * qui l'accompagne à 20 % : sur une privatisation, les deux cohabitent
+   * dans le même devis.
+   */
+  tauxTva: number;
+};
+
+/** Une assiette de TVA : tout ce qui, dans ce devis, porte ce taux. */
+export type Ventilation = {
+  taux: number;
+  htCentimes: number;
+  tvaCentimes: number;
 };
 
 export type Totaux = {
   htCentimes: number;
   tvaCentimes: number;
   ttcCentimes: number;
+  /**
+   * Le détail par taux, du plus employé au moins. C'est ce que le
+   * document doit montrer dès qu'il y a deux taux, et ce que le
+   * comptable ventile.
+   */
+  ventilation: Ventilation[];
 };
 
 /**
@@ -50,10 +72,47 @@ export function totalLigne(ligne: Ligne): number {
   return Math.round(ligne.quantite * ligne.prixUnitaireCentimes);
 }
 
-export function calculer(lignes: Ligne[], tauxTva: number): Totaux {
-  const htCentimes = lignes.reduce((somme, ligne) => somme + totalLigne(ligne), 0);
-  const tvaCentimes = Math.round((htCentimes * tauxTva) / 100);
-  return { htCentimes, tvaCentimes, ttcCentimes: htCentimes + tvaCentimes };
+/**
+ * Les totaux du devis, et le détail par taux.
+ *
+ * La TVA se calcule par assiette et non ligne à ligne : on somme d'abord
+ * tout ce qui porte le même taux, puis on applique le taux une fois. Deux
+ * arrondis successifs sur vingt lignes à 10 % feraient dériver le total
+ * de quelques centimes par rapport au décompte du comptable, et c'est
+ * l'écart qu'on découvre à la facture.
+ */
+export function calculer(lignes: Ligne[]): Totaux {
+  const assiettes = new Map<number, number>();
+  for (const ligne of lignes) {
+    assiettes.set(
+      ligne.tauxTva,
+      (assiettes.get(ligne.tauxTva) ?? 0) + totalLigne(ligne),
+    );
+  }
+
+  const ventilation: Ventilation[] = [...assiettes.entries()]
+    .map(([taux, htCentimes]) => ({
+      taux,
+      htCentimes,
+      tvaCentimes: Math.round((htCentimes * taux) / 100),
+    }))
+    // Du plus gros au plus petit : le taux principal du devis se lit en
+    // premier, les 20 % d'un forfait boissons viennent après.
+    .sort((a, b) => b.htCentimes - a.htCentimes || a.taux - b.taux);
+
+  const htCentimes = ventilation.reduce((somme, a) => somme + a.htCentimes, 0);
+  const tvaCentimes = ventilation.reduce((somme, a) => somme + a.tvaCentimes, 0);
+  return {
+    htCentimes,
+    tvaCentimes,
+    ttcCentimes: htCentimes + tvaCentimes,
+    ventilation,
+  };
+}
+
+/** « 5,5 % » et non « 5.5 % » : le document est français. */
+export function formatTaux(taux: number): string {
+  return `${taux.toLocaleString("fr-FR", { maximumFractionDigits: 2 })} %`;
 }
 
 /** « 1 350,00 € ». L'espace insécable évite qu'un montant se coupe en fin de ligne. */
