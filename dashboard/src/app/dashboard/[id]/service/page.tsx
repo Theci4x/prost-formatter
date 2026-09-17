@@ -15,6 +15,7 @@ import {
 import { chargerFermetures } from "@/lib/reservations/fermetures";
 import { PlanService } from "@/components/reservations/PlanService";
 import { PlacerReservation } from "@/components/reservations/PlacerReservation";
+import { LigneService } from "@/components/reservations/LigneService";
 import {
   reservationsNonPlacees,
   salleADessiner,
@@ -35,10 +36,13 @@ import { exigerModule } from "@/lib/abonnement/acces";
 type Ligne = Reservation & {
   client_nom: string;
   client_telephone: string | null;
+  client_email: string | null;
+  message: string | null;
   occasion: string | null;
   note_interne: string | null;
   origine: "client" | "restaurateur";
   table_id: string | null;
+  absence_constatee_le: string | null;
 };
 
 function decalerJour(date: string, jours: number): string {
@@ -321,64 +325,47 @@ export default async function ServicePage({
                     ) : (
                       <ul className="flex flex-col divide-y divide-zinc-100">
                         {duService.map((ligne) => (
-                          <li
+                          <LigneService
                             key={ligne.id}
-                            className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 py-2.5 first:pt-0 last:pb-0"
+                            restaurantId={id}
+                            jour={jour}
+                            detail={{
+                              id: ligne.id,
+                              clientNom: ligne.client_nom,
+                              telephone: ligne.client_telephone,
+                              email: ligne.client_email,
+                              couverts: ligne.couverts,
+                              heure: ligne.heure_arrivee,
+                              occasion: ligne.occasion,
+                              message: ligne.message,
+                              noteInterne: ligne.note_interne,
+                              type: ligne.type,
+                              statut: ligne.statut,
+                              absenceConstatee: Boolean(
+                                ligne.absence_constatee_le,
+                              ),
+                              date: ligne.date_reservation,
+                            }}
                           >
-                            <span className="flex flex-col">
-                              <span className="font-medium text-zinc-900">
-                                {ligne.client_nom}
-                                {ligne.type === "privatisation" && (
-                                  <span className="ml-2 rounded-full bg-brand-orange-soft px-2 py-0.5 text-xs font-medium text-brand-navy">
-                                    privatisé
-                                  </span>
-                                )}
-                              </span>
-                              {(ligne.occasion || ligne.note_interne) && (
-                                <span className="text-sm text-zinc-500">
-                                  {[ligne.occasion, ligne.note_interne]
-                                    .filter(Boolean)
-                                    .join(" · ")}
-                                </span>
+                            {tablesSalle.length > 0 &&
+                              ligne.type !== "privatisation" && (
+                                <PlacerReservation
+                                  restaurantId={id}
+                                  reservationId={ligne.id}
+                                  couverts={ligne.couverts}
+                                  tableActuelle={
+                                    tablesSalle.find(
+                                      (table) => table.id === ligne.table_id,
+                                    ) ?? null
+                                  }
+                                  tables={tablesProposees({
+                                    tables: tablesSalle,
+                                    reservation: ligne as ReservationPlacable,
+                                    occupees: actifs,
+                                  })}
+                                />
                               )}
-                            </span>
-                            <span className="flex flex-wrap items-baseline justify-end gap-x-4 gap-y-1 text-sm">
-                              {tablesSalle.length > 0 &&
-                                ligne.type !== "privatisation" && (
-                                  <PlacerReservation
-                                    restaurantId={id}
-                                    reservationId={ligne.id}
-                                    couverts={ligne.couverts}
-                                    tableActuelle={
-                                      tablesSalle.find(
-                                        (table) => table.id === ligne.table_id,
-                                      ) ?? null
-                                    }
-                                    tables={tablesProposees({
-                                      tables: tablesSalle,
-                                      reservation: ligne as ReservationPlacable,
-                                      occupees: actifs,
-                                    })}
-                                  />
-                                )}
-                              {ligne.client_telephone && (
-                                <a
-                                  href={`tel:${ligne.client_telephone}`}
-                                  className="text-zinc-500 hover:text-zinc-900"
-                                >
-                                  {ligne.client_telephone}
-                                </a>
-                              )}
-                              {/* L'unité est répétée : à côté d'un numéro de
-                                  téléphone, un nombre nu se lit mal. */}
-                              <span className="font-medium tabular-nums text-zinc-900">
-                                {ligne.couverts}{" "}
-                                <span className="font-normal text-zinc-500">
-                                  couv.
-                                </span>
-                              </span>
-                            </span>
-                          </li>
+                          </LigneService>
                         ))}
                       </ul>
                     )}
