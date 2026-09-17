@@ -2,35 +2,47 @@ import { NextResponse, type NextRequest } from "next/server";
 import Stripe from "stripe";
 import { getStripe } from "@/lib/stripe/client";
 import { createServiceClient } from "@/lib/supabase/service";
+import { MODULES, PACK, type Module } from "@/lib/abonnement/modules";
 
 async function upsertSubscription(subscription: Stripe.Subscription) {
   const restaurantId = subscription.metadata.restaurant_id;
   if (!restaurantId) return;
 
-  // Les abonnements souscrits avant l'existence des modules n'en portent
-  // pas : ce sont ceux de la visibilité, le seul produit d'alors.
-  const paye =
-    subscription.metadata.module === "reservations"
-      ? "reservations"
-      : "visibilite";
+  // Ce qui a été acheté. Les abonnements souscrits avant l'existence des
+  // modules ne portent pas d'étiquette : ce sont ceux de la visibilité, le
+  // seul produit d'alors.
+  //
+  // Le pack, lui, n'est pas un module : c'est un abonnement qui en ouvre
+  // deux. Il donne donc deux lignes portant le même `sub_…` — l'unicité
+  // est posée sur (restaurant, module), pas sur l'abonnement, et le calcul
+  // d'accès n'a rien à savoir de la façon dont on a payé. Une résiliation
+  // les refermera toutes les deux d'un coup, par le même chemin.
+  const etiquette = subscription.metadata.module;
+  const payes: Module[] =
+    etiquette === PACK
+      ? [...MODULES]
+      : [etiquette === "reservations" ? "reservations" : "visibilite"];
 
   const supabase = createServiceClient();
   const currentPeriodEnd = subscription.items.data[0]?.current_period_end;
+  const commun = {
+    restaurant_id: restaurantId,
+    stripe_customer_id: subscription.customer as string,
+    stripe_subscription_id: subscription.id,
+    status: subscription.status,
+    current_period_end: currentPeriodEnd
+      ? new Date(currentPeriodEnd * 1000).toISOString()
+      : null,
+    updated_at: new Date().toISOString(),
+  };
 
-  await supabase.from("restaurant_subscriptions").upsert(
-    {
-      restaurant_id: restaurantId,
-      module: paye,
-      stripe_customer_id: subscription.customer as string,
-      stripe_subscription_id: subscription.id,
-      status: subscription.status,
-      current_period_end: currentPeriodEnd
-        ? new Date(currentPeriodEnd * 1000).toISOString()
-        : null,
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: "restaurant_id,module" },
-  );
+  const { error } = await supabase
+    .from("restaurant_subscriptions")
+    .upsert(
+      payes.map((module) => ({ ...commun, module })),
+      { onConflict: "restaurant_id,module" },
+    );
+  if (error) console.error("[stripe webhook] abonnement", error);
 }
 
 /**

@@ -10,6 +10,10 @@ import {
   MODULES,
   PRIX_MODULE,
   PRIX_MODULE_TTC,
+  LIBELLE_PACK,
+  PRIX_PACK,
+  PRIX_PACK_TTC,
+  RESUME_PACK,
   essaiLePlusLong,
   RESUME_MODULE,
   abonnementOuvrant,
@@ -64,6 +68,13 @@ export default async function AbonnementPage({
     ]),
   );
   const acces = await chargerAcces(id, supabase);
+
+  // Rien de payé nulle part : c'est la seule situation où proposer le pack
+  // ne crée pas de doublon.
+  const aucunAbonnement = MODULES.every((cle) => {
+    const abonnement = abonnements.get(cle);
+    return !abonnement || !abonnementOuvrant(abonnement.status);
+  });
 
   return (
     <div className="flex flex-1 flex-col gap-6 px-6 py-8">
@@ -199,6 +210,36 @@ export default async function AbonnementPage({
           );
         })}
       </div>
+
+      {/* Le pack ne se propose qu'à qui ne paie encore rien. Le proposer
+          à un restaurateur déjà abonné à un module l'enverrait vers un
+          second abonnement au lieu d'une bascule : deux prélèvements pour
+          une chose payée en double. Ce cas-là se règle au portail Stripe,
+          ou par un message. */}
+      {aucunAbonnement && (
+        <div className="flex max-w-4xl flex-wrap items-center gap-x-6 gap-y-3 rounded-2xl border border-brand-navy/20 bg-brand-orange-soft p-6 shadow-sm">
+          <div className="flex min-w-0 flex-1 basis-64 flex-col gap-1">
+            <span className="text-base font-semibold text-zinc-900">
+              {LIBELLE_PACK}
+            </span>
+            <span className="text-sm font-medium text-brand-navy">
+              {PRIX_PACK}{" "}
+              <span className="font-normal text-zinc-500">
+                ({PRIX_PACK_TTC})
+              </span>
+            </span>
+            <span className="text-sm leading-relaxed text-zinc-600">
+              {RESUME_PACK}
+            </span>
+          </div>
+          <a
+            href={`/api/stripe/checkout?restaurant_id=${id}&module=pack`}
+            className="w-fit rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-brand-navy-hover"
+          >
+            Prendre les deux
+          </a>
+        </div>
+      )}
 
       <p className="max-w-2xl text-sm text-zinc-500">
         Les deux modules s&apos;achètent séparément : tu peux prendre la

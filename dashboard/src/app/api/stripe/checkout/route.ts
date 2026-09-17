@@ -3,14 +3,15 @@ import type Stripe from "stripe";
 import { createClient } from "@/lib/supabase/server";
 import { getStripe } from "@/lib/stripe/client";
 import { siteUrl } from "@/lib/site-url";
-import { MODULES, type Module } from "@/lib/abonnement/modules";
+import { MODULES, PACK, type Achat } from "@/lib/abonnement/modules";
 
 /**
- * Le tarif Stripe de chaque module. Deux produits distincts, donc deux
- * identifiants : `STRIPE_PRICE_ID` couvre la visibilité et reste lu tel
- * quel, pour ne pas casser une configuration déjà en place.
+ * Le tarif Stripe de chaque achat possible. Trois produits distincts, donc
+ * trois identifiants : `STRIPE_PRICE_ID` couvre la visibilité et reste lu
+ * tel quel, pour ne pas casser une configuration déjà en place.
  */
-function tarif(requis: Module): string | undefined {
+function tarif(requis: Achat): string | undefined {
+  if (requis === PACK) return process.env.STRIPE_PRICE_ID_PACK;
   return requis === "reservations"
     ? process.env.STRIPE_PRICE_ID_RESERVATIONS
     : (process.env.STRIPE_PRICE_ID_VISIBILITE ?? process.env.STRIPE_PRICE_ID);
@@ -26,10 +27,10 @@ export async function GET(request: NextRequest) {
   }
 
   const demande = request.nextUrl.searchParams.get("module") ?? "visibilite";
-  if (!MODULES.includes(demande as Module)) {
+  if (demande !== PACK && !MODULES.includes(demande as (typeof MODULES)[number])) {
     return NextResponse.json({ error: "module inconnu" }, { status: 400 });
   }
-  const requis = demande as Module;
+  const requis = demande as Achat;
 
   const price = tarif(requis);
   if (!price) {

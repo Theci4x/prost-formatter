@@ -223,6 +223,23 @@ export function Tarifs() {
             </div>
           ))}
         </div>
+
+        {/* Le pack sous les deux cartes plutôt qu'en troisième colonne :
+            il n'ajoute rien à la liste, il dit seulement que les deux
+            ensemble coûtent moins cher. Une carte de plus donnerait à
+            croire à une offre de plus. */}
+        <p
+          style={{
+            marginTop: 20,
+            fontSize: 15,
+            lineHeight: 1.6,
+            color: "var(--ink-soft)",
+          }}
+        >
+          Les deux ensemble :{" "}
+          <strong style={{ color: "var(--ink)" }}>59 € HT par mois</strong>{" "}
+          — 70,80 € TTC, soit onze pour cent de moins que séparément.
+        </p>
       </div>
     </div>
   );

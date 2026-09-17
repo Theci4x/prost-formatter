@@ -34,6 +34,24 @@ export const PRIX_MODULE: Record<Module, string> = {
   reservations: "29 € HT / mois",
 };
 
+/**
+ * Le pack, qui ouvre les deux modules d'un seul abonnement.
+ *
+ * Ce n'est pas un troisième module : rien ne s'ouvre qui ne soit déjà
+ * l'un des deux. C'est une façon de les acheter — une seule ligne sur le
+ * relevé, une seule facture, et onze pour cent de moins que les deux pris
+ * séparément. Le calcul d'accès n'en sait donc rien : le webhook écrit
+ * simplement les deux lignes.
+ */
+export const PACK = "pack" as const;
+export type Achat = Module | typeof PACK;
+
+export const LIBELLE_PACK = "Klarr — les deux modules";
+export const PRIX_PACK = "59 € HT / mois";
+export const PRIX_PACK_TTC = "70,80 € TTC";
+export const RESUME_PACK =
+  "Tout ce qui précède, d'un seul abonnement : la visibilité et les réservations, à onze pour cent de moins que les deux pris séparément.";
+
 /** Ce qui est prélevé, TVA comprise — ce que Stripe débite réellement. */
 export const PRIX_MODULE_TTC: Record<Module, string> = {
   visibilite: "45 € TTC",
