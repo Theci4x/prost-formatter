@@ -137,7 +137,9 @@ export default function ConfidentialitePage() {
             fichiers, hébergés au sein de l&apos;Union européenne.
           </li>
           <li>
-            <strong>Vercel</strong> — hébergement de l&apos;application.
+            <strong>Vercel</strong> — hébergement de l&apos;application et
+            mesure d&apos;audience (Vercel Web Analytics), sans cookie ni
+            identifiant persistant.
           </li>
           <li>
             <strong>Anthropic (Claude)</strong> — génération des analyses de
@@ -198,6 +200,14 @@ export default function ConfidentialitePage() {
           votre session de connexion, et cookies techniques temporaires liés
           au processus de connexion OAuth (protection anti-CSRF). Aucun
           cookie publicitaire ou de suivi tiers n&apos;est utilisé.
+        </p>
+        <p>
+          La fréquentation du site est mesurée par Vercel Web Analytics, qui
+          ne dépose aucun cookie et ne crée aucun identifiant permettant de
+          vous suivre d&apos;une visite à l&apos;autre. Seules des données
+          agrégées (pages vues, pays, type d&apos;appareil) sont conservées.
+          Aucun consentement n&apos;est donc requis, et aucun profil
+          individuel n&apos;est constitué.
         </p>
       </LegalSection>
 
