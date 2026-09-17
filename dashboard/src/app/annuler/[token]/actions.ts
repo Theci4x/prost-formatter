@@ -5,6 +5,7 @@ import { peutAnnuler } from "@/lib/reservations/annulation";
 import { prevenirAnnulationClient } from "@/lib/courriel/reservation";
 import type { Contexte } from "@/lib/courriel/messages";
 import type { Service } from "@/types/reservation";
+import { notifierEtablissement } from "@/lib/push/envoyer";
 
 export type AnnulationState = { error: string | null; fait: boolean };
 
@@ -108,12 +109,30 @@ export async function annulerParLeClient(
       serviceNom: service?.nom ?? null,
       type: reservation.type,
     };
-    await prevenirAnnulationClient({
-      supabase,
-      reservationId: reservation.id,
-      contexte,
-      destinataire: restaurant.email_contact,
-    });
+    await Promise.all([
+      prevenirAnnulationClient({
+        supabase,
+        reservationId: reservation.id,
+        contexte,
+        destinataire: restaurant.email_contact,
+      }),
+      // Une table rendue à 18 h se revend encore ; découverte le
+      // lendemain dans les e-mails, elle est perdue pour rien.
+      notifierEtablissement(supabase, reservation.restaurant_id, {
+        titre: `Annulation — ${reservation.client_nom ?? "un client"}`,
+        corps: `${reservation.couverts} couvert${
+          reservation.couverts > 1 ? "s" : ""
+        } le ${new Date(
+          `${reservation.date_reservation}T12:00:00`,
+        ).toLocaleDateString("fr-FR", {
+          weekday: "long",
+          day: "numeric",
+          month: "long",
+        })}. La table se libère.`,
+        chemin: `/dashboard/${reservation.restaurant_id}/reservations`,
+        etiquette: `annulation-${reservation.id}`,
+      }),
+    ]);
   }
 
   return { error: null, fait: true };

@@ -72,6 +72,24 @@ const nextConfig: NextConfig = {
           { key: "Content-Security-Policy", value: "frame-ancestors 'self'" },
         ],
       },
+      {
+        // Le service worker doit rester frais : mis en cache, un appareil
+        // garderait pour toujours une version qui n'affiche plus rien. Pas
+        // de politique de contenu propre ici — à clé égale, c'est celle du
+        // bloc général qui est servie, et une ligne sans effet vaut moins
+        // que pas de ligne du tout.
+        source: "/sw.js",
+        headers: [
+          {
+            key: "Content-Type",
+            value: "application/javascript; charset=utf-8",
+          },
+          {
+            key: "Cache-Control",
+            value: "no-cache, no-store, must-revalidate",
+          },
+        ],
+      },
     ];
   },
 

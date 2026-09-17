@@ -162,6 +162,12 @@ const ICONES = {
       <path d="M8 9h8M8 13h5" />
     </Icone>
   ),
+  notifications: (
+    <Icone>
+      <path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
+      <path d="M13.7 21a2 2 0 0 1-3.4 0" />
+    </Icone>
+  ),
 };
 
 function dateCourte(iso: string): string {
@@ -323,6 +329,13 @@ const GROUPES: Groupe[] = [
     titre: "Réglages",
     compact: true,
     entrees: [
+      {
+        href: "notifications",
+        label: "Notifications",
+        resume: "Être prévenu sur ton téléphone.",
+        icone: ICONES.notifications,
+        minimum: "gerant",
+      },
       {
         href: "connexions",
         label: "Connexions",

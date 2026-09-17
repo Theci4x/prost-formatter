@@ -22,6 +22,7 @@ import {
 } from "@/lib/courriel/reservation";
 import type { Contexte } from "@/lib/courriel/messages";
 import { siteUrl } from "@/lib/site-url";
+import { notifierEtablissement } from "@/lib/push/envoyer";
 import { chargerAcces } from "@/lib/abonnement/acces";
 import {
   disponibiliteEspace,
@@ -323,6 +324,7 @@ export async function demanderReservation(
           ? `${(espace.minimum_consommation_centimes / 100).toLocaleString("fr-FR")} € ${espace.minimum_consommation_ht ? "HT" : "TTC"}`
           : null,
     };
+    const couvertsLisibles = `${couverts} couvert${couverts > 1 ? "s" : ""}`;
     await Promise.all([
       prevenirClient({
         supabase,
@@ -338,6 +340,24 @@ export async function demanderReservation(
         contexte,
         destinataire: restaurant.email_contact ?? null,
         confirmee,
+      }),
+      // Le téléphone en même temps que l'e-mail, et pas à sa place : en
+      // plein service, l'e-mail attendra la fermeture. Une demande non
+      // tranchée expire, alors elle mène droit au carnet ; une table
+      // déjà confirmée n'est qu'une bonne nouvelle.
+      notifierEtablissement(supabase, restaurant.id, {
+        titre: confirmee
+          ? `Table confirmée — ${nom}`
+          : `Nouvelle demande — ${nom}`,
+        corps: `${couvertsLisibles} le ${new Date(
+          `${date}T12:00:00`,
+        ).toLocaleDateString("fr-FR", {
+          weekday: "long",
+          day: "numeric",
+          month: "long",
+        })} à ${heure}${type === "privatisation" ? " (privatisation)" : ""}.`,
+        chemin: `/dashboard/${restaurant.id}/reservations`,
+        etiquette: `reservation-${reservationId}`,
       }),
     ]);
   }
