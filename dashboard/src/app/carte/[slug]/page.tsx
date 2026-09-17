@@ -160,7 +160,7 @@ export default async function CartePage({
           ])}
         />
         <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-semibold text-zinc-900">
+          <h1 className="font-serif text-4xl text-ink">
             {anglais ? "Menu" : "La carte"}
           </h1>
           {restaurant.adresse && (

@@ -305,7 +305,7 @@ export default async function VitrinePage({
                 />
               </span>
             )}
-            <span className="text-lg font-semibold text-zinc-900">
+            <span className="font-serif text-2xl text-ink">
               {restaurant.nom}
             </span>
           </span>
@@ -320,7 +320,7 @@ export default async function VitrinePage({
             )}
             <Link
               href={`/reserver/${slug}`}
-              className="rounded-md bg-brand-navy px-4 py-2 font-medium text-white transition-colors hover:bg-brand-navy-hover"
+              className="rounded-lg bg-ink px-4 py-2 font-semibold text-white transition-colors hover:bg-brand-navy"
             >
               Réserver
             </Link>
@@ -381,7 +381,7 @@ export default async function VitrinePage({
               photo ne doit pas se retrouver sans nom. */}
           {!couverture && (
             <>
-              <h1 className="text-3xl font-semibold text-zinc-900">
+              <h1 className="font-serif text-4xl text-ink sm:text-5xl">
                 {restaurant.nom}
               </h1>
               {restaurant.adresse && (
@@ -405,14 +405,14 @@ export default async function VitrinePage({
           <div className="mt-2 flex flex-wrap gap-3">
             <Link
               href={`/reserver/${slug}`}
-              className="rounded-md bg-brand-navy px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover"
+              className="rounded-lg bg-ink px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy"
             >
               Réserver une table
             </Link>
             {carte.publiee && (
               <Link
                 href={`/carte/${slug}`}
-                className="rounded-md border border-zinc-300 px-5 py-2.5 text-sm font-medium text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
+                className="rounded-lg border border-line bg-paper px-5 py-2.5 text-sm font-semibold text-ink transition-colors hover:border-ink"
               >
                 Voir la carte
               </Link>

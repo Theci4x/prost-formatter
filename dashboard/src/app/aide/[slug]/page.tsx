@@ -87,14 +87,14 @@ export default async function ArticleAidePage({
         />
 
         <div className="flex flex-col gap-2">
-          <h1 className="text-2xl font-semibold text-zinc-900">
+          <h1 className="font-serif text-4xl leading-[1.1] text-ink">
             {article.titre}
           </h1>
-          <p className="text-sm text-zinc-500">{article.resume}</p>
+          <p className="text-[15px] text-ink-soft">{article.resume}</p>
         </div>
 
         <article
-          className="flex flex-col gap-4 text-sm leading-relaxed text-zinc-700 [&_a]:text-brand-navy [&_a]:underline-offset-2 hover:[&_a]:underline [&_h2]:mt-4 [&_h2]:text-base [&_h2]:font-semibold [&_h2]:text-zinc-900 [&_li]:ml-5 [&_li]:list-disc [&_ol_li]:list-decimal [&_strong]:font-semibold [&_strong]:text-zinc-900 [&_ul]:flex [&_ul]:flex-col [&_ul]:gap-2 [&_ol]:flex [&_ol]:flex-col [&_ol]:gap-2"
+          className="flex flex-col gap-4 text-[15px] leading-relaxed text-zinc-700 [&_a]:text-brand-navy [&_a]:underline-offset-2 hover:[&_a]:underline [&_h2]:mt-4 [&_h2]:font-serif [&_h2]:text-2xl [&_h2]:text-ink [&_li]:ml-5 [&_li]:list-disc [&_ol_li]:list-decimal [&_strong]:font-semibold [&_strong]:text-zinc-900 [&_ul]:flex [&_ul]:flex-col [&_ul]:gap-2 [&_ol]:flex [&_ol]:flex-col [&_ol]:gap-2"
           dangerouslySetInnerHTML={{ __html: html }}
         />
 

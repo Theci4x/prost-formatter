@@ -91,8 +91,8 @@ export default async function AvisPage({
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center gap-8 px-6 py-12">
       <div className="flex flex-col gap-2 text-center">
-        <h1 className="text-2xl font-semibold text-zinc-900">{maison.nom}</h1>
-        <p className="text-base text-zinc-600">
+        <h1 className="font-serif text-4xl text-ink">{maison.nom}</h1>
+        <p className="text-base text-ink-soft">
           Merci d&apos;être venu. Deux minutes pour nous dire comment
           c&apos;était ?
         </p>

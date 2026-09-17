@@ -39,7 +39,7 @@ export default async function MerciPage({
       </div>
 
       <div className="flex max-w-md flex-col gap-3">
-        <h1 className="text-2xl font-semibold text-zinc-900">
+        <h1 className="font-serif text-4xl text-ink">
           {confirmee ? "C'est réservé." : "Ta demande est partie."}
         </h1>
         {confirmee ? (

@@ -1,8 +1,5 @@
 import Link from "next/link";
-import { Instrument_Serif } from "next/font/google";
 import { KlarrMark, KlarrWordmark } from "@/components/brand/KlarrMark";
-
-const instrumentSerif = Instrument_Serif({ weight: "400", subsets: ["latin"] });
 
 // Les trois documents se citent mutuellement : un lecteur (ou un
 // examinateur Meta) arrivé sur l'un doit pouvoir atteindre les autres.
@@ -53,7 +50,7 @@ export function LegalLayout({
             Document légal
           </p>
           <h1
-            className={`${instrumentSerif.className} mt-1 text-4xl font-normal text-brand-navy`}
+            className="mt-1 font-serif text-4xl text-ink sm:text-5xl"
           >
             {title}
           </h1>

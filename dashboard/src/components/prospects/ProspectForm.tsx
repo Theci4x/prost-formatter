@@ -26,9 +26,9 @@ export function ProspectForm({
       return <AuditResultCard audit={state.audit} t={auditT} />;
     }
     return (
-      <div className="rounded-xl border border-amber-200 bg-amber-50 px-6 py-8 text-center">
-        <p className="text-lg font-medium text-stone-900">{t.successTitle}</p>
-        <p className="mt-2 text-sm text-stone-600">{t.successBody}</p>
+      <div className="rounded-2xl border border-brand-orange/30 bg-brand-orange-soft px-6 py-8 text-center">
+        <p className="font-serif text-2xl text-ink">{t.successTitle}</p>
+        <p className="mt-2 text-sm text-ink-soft">{t.successBody}</p>
       </div>
     );
   }
@@ -36,11 +36,11 @@ export function ProspectForm({
   return (
     <form
       action={formAction}
-      className="flex flex-col gap-4 rounded-xl border border-stone-200 bg-white p-6 shadow-sm"
+      className="flex flex-col gap-4 rounded-2xl border border-line bg-paper p-6 shadow-[0_24px_60px_-40px_oklch(20%_0.02_60/35%)] sm:p-7"
     >
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="prenom" className="text-sm font-medium text-stone-700">
+          <label htmlFor="prenom" className="text-sm font-medium text-ink">
             {t.prenom}
           </label>
           <input
@@ -48,11 +48,11 @@ export function ProspectForm({
             name="prenom"
             type="text"
             required
-            className="rounded-md border border-stone-300 px-3 py-2 text-sm outline-none focus:border-amber-600"
+            className="rounded-lg border border-line bg-paper px-3 py-2.5 text-sm outline-none transition-colors focus:border-brand-orange"
           />
         </div>
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="nom" className="text-sm font-medium text-stone-700">
+          <label htmlFor="nom" className="text-sm font-medium text-ink">
             {t.nom}
           </label>
           <input
@@ -60,14 +60,14 @@ export function ProspectForm({
             name="nom"
             type="text"
             required
-            className="rounded-md border border-stone-300 px-3 py-2 text-sm outline-none focus:border-amber-600"
+            className="rounded-lg border border-line bg-paper px-3 py-2.5 text-sm outline-none transition-colors focus:border-brand-orange"
           />
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="entreprise" className="text-sm font-medium text-stone-700">
+          <label htmlFor="entreprise" className="text-sm font-medium text-ink">
             {t.entreprise}
           </label>
           <input
@@ -75,11 +75,11 @@ export function ProspectForm({
             name="entreprise"
             type="text"
             required
-            className="rounded-md border border-stone-300 px-3 py-2 text-sm outline-none focus:border-amber-600"
+            className="rounded-lg border border-line bg-paper px-3 py-2.5 text-sm outline-none transition-colors focus:border-brand-orange"
           />
         </div>
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="ville" className="text-sm font-medium text-stone-700">
+          <label htmlFor="ville" className="text-sm font-medium text-ink">
             {t.ville}
           </label>
           <input
@@ -87,14 +87,14 @@ export function ProspectForm({
             name="ville"
             type="text"
             required
-            className="rounded-md border border-stone-300 px-3 py-2 text-sm outline-none focus:border-amber-600"
+            className="rounded-lg border border-line bg-paper px-3 py-2.5 text-sm outline-none transition-colors focus:border-brand-orange"
           />
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="email" className="text-sm font-medium text-stone-700">
+          <label htmlFor="email" className="text-sm font-medium text-ink">
             {t.email}
           </label>
           <input
@@ -102,11 +102,11 @@ export function ProspectForm({
             name="email"
             type="email"
             required
-            className="rounded-md border border-stone-300 px-3 py-2 text-sm outline-none focus:border-amber-600"
+            className="rounded-lg border border-line bg-paper px-3 py-2.5 text-sm outline-none transition-colors focus:border-brand-orange"
           />
         </div>
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="telephone" className="text-sm font-medium text-stone-700">
+          <label htmlFor="telephone" className="text-sm font-medium text-ink">
             {t.telephone}
           </label>
           <input
@@ -114,7 +114,7 @@ export function ProspectForm({
             name="telephone"
             type="tel"
             required
-            className="rounded-md border border-stone-300 px-3 py-2 text-sm outline-none focus:border-amber-600"
+            className="rounded-lg border border-line bg-paper px-3 py-2.5 text-sm outline-none transition-colors focus:border-brand-orange"
           />
         </div>
       </div>
@@ -127,13 +127,13 @@ export function ProspectForm({
 
       {/* Information au moment de la collecte : le RGPD l'exige là où la
           donnée est saisie, pas seulement dans une page à part. */}
-      <p className="max-w-prose text-xs leading-relaxed text-stone-500">
+      <p className="max-w-prose text-xs leading-relaxed text-ink-soft">
         {t.privacyNotice}{" "}
         <a
           href="/confidentialite"
           target="_blank"
           rel="noopener"
-          className="underline hover:text-stone-800"
+          className="underline hover:text-ink"
         >
           {t.privacyLink}
         </a>
@@ -143,7 +143,7 @@ export function ProspectForm({
       <button
         type="submit"
         disabled={pending}
-        className="mt-2 rounded-md bg-stone-900 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-stone-700 disabled:opacity-50"
+        className="mt-2 rounded-xl bg-ink px-6 py-3.5 text-[15px] font-semibold text-white shadow-[0_14px_30px_-14px_oklch(20%_0.02_60/50%)] transition-[transform,opacity] hover:-translate-y-px disabled:opacity-50"
       >
         {pending ? t.submitting : t.submit}
       </button>

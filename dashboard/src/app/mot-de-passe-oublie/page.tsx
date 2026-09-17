@@ -18,13 +18,13 @@ export default function ForgotPasswordPage() {
         <LoginIllustration />
       </div>
 
-      <div className="flex flex-1 flex-col items-center justify-center gap-8 bg-zinc-50 px-4 py-16">
+      <div className="flex flex-1 flex-col items-center justify-center gap-8 bg-brand-cream px-5 py-16">
         <div className="flex flex-col items-center gap-3 text-center">
           <div className="flex flex-col items-center gap-3 md:hidden">
             <KlarrMark size={40} />
             <KlarrWordmark className="text-2xl text-zinc-900" />
           </div>
-          <h1 className="text-2xl font-semibold text-zinc-900">
+          <h1 className="font-serif text-4xl text-ink">
             Mot de passe oublié
           </h1>
           <p className="max-w-sm text-sm text-zinc-500">

@@ -43,7 +43,7 @@ export default async function ContactAidePage() {
 
       <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-6 py-10">
         <div className="flex flex-col gap-2">
-          <h1 className="text-2xl font-semibold text-zinc-900">
+          <h1 className="font-serif text-4xl text-ink">
             Écrire à Klarr
           </h1>
           <p className="text-sm text-zinc-500">

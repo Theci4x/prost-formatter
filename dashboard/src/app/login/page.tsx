@@ -27,12 +27,12 @@ export default async function LoginPage({
         <LoginIllustration />
       </div>
 
-      <div className="flex flex-1 flex-col items-center justify-center gap-8 bg-zinc-50 px-4 py-16">
+      <div className="flex flex-1 flex-col items-center justify-center gap-8 bg-brand-cream px-5 py-16">
         <div className="flex flex-col items-center gap-3 text-center">
           {/* Un seul h1, dont le contenu s'adapte : deux titres dans la
               page, même si l'un est masqué en CSS, en font deux pour un
               moteur de recherche. */}
-          <h1 className="flex flex-col items-center gap-3 text-2xl font-semibold text-zinc-900">
+          <h1 className="flex flex-col items-center gap-3 text-2xl font-semibold text-ink">
             <span className="flex flex-col items-center gap-3 md:hidden">
               <KlarrMark size={40} />
               <span className="flex items-baseline gap-2">
@@ -40,10 +40,10 @@ export default async function LoginPage({
                 <span className="text-zinc-400">— connexion</span>
               </span>
             </span>
-            <span className="hidden md:inline">Connexion</span>
+            <span className="hidden font-serif text-4xl md:inline">Connexion</span>
           </h1>
           <p className="max-w-sm text-sm text-zinc-500">
-            Connecte-toi ou crée un compte pour accéder au dashboard.
+            Connectez-vous, ou créez un compte : 14 jours d&apos;essai, sans carte bancaire.
           </p>
         </div>
 

@@ -12,19 +12,19 @@ const LABEL_COLORS: Record<AuditResult["label"], string> = {
 const COULEURS_IMPACT: Record<Impact, string> = {
   fort: "bg-red-50 text-red-700 border-red-200",
   moyen: "bg-amber-50 text-amber-700 border-amber-200",
-  faible: "bg-stone-50 text-stone-600 border-stone-200",
+  faible: "bg-brand-sand text-ink-soft border-line",
 };
 
 function ScoreBar({ label, score }: { label: string; score: number }) {
   return (
     <div className="flex flex-col gap-1.5">
       <div className="flex items-center justify-between text-sm">
-        <span className="font-medium text-stone-700">{label}</span>
-        <span className="text-stone-500">{score}/100</span>
+        <span className="font-medium text-ink">{label}</span>
+        <span className="text-ink-soft">{score}/100</span>
       </div>
-      <div className="h-2 w-full overflow-hidden rounded-full bg-stone-100">
+      <div className="h-2 w-full overflow-hidden rounded-full bg-brand-sand">
         <div
-          className="h-full rounded-full bg-amber-600"
+          className="h-full rounded-full bg-brand-orange"
           style={{ width: `${score}%` }}
         />
       </div>
@@ -40,9 +40,9 @@ export function AuditResultCard({
   t: (typeof translations)[keyof typeof translations]["audit"];
 }) {
   return (
-    <div className="flex flex-col gap-6 rounded-xl border border-stone-200 bg-white p-6 shadow-sm">
+    <div className="flex flex-col gap-6 rounded-xl border border-line bg-white p-6 shadow-sm">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-stone-900">{t.title}</h3>
+        <h3 className="text-lg font-semibold text-ink">{t.title}</h3>
         <span
           className={`rounded-full border px-3 py-1 text-xs font-semibold ${LABEL_COLORS[audit.label]}`}
         >
@@ -51,10 +51,10 @@ export function AuditResultCard({
       </div>
 
       <div className="flex items-center gap-4">
-        <span className="text-5xl font-bold text-stone-900">
+        <span className="text-5xl font-bold text-ink">
           {audit.score}
         </span>
-        <span className="text-sm text-stone-500">{t.globalLabel} /100</span>
+        <span className="text-sm text-ink-soft">{t.globalLabel} /100</span>
       </div>
 
       <div className="flex flex-col gap-4">
@@ -67,12 +67,12 @@ export function AuditResultCard({
           ligne porte le chiffre qui la déclenche : « 8 photos » se discute,
           « votre visibilité est perfectible » ne se discute pas. */}
       <div className="flex flex-col gap-3 border-t border-stone-100 pt-5">
-        <h4 className="text-sm font-semibold text-stone-900">
+        <h4 className="text-sm font-semibold text-ink">
           {t.actionsTitre}
         </h4>
 
         {audit.actions.length === 0 ? (
-          <p className="text-sm text-stone-600">{t.actionsVide}</p>
+          <p className="text-sm text-ink-soft">{t.actionsVide}</p>
         ) : (
           <ul className="flex flex-col gap-3">
             {audit.actions.map((action) => {
@@ -80,10 +80,10 @@ export function AuditResultCard({
               return (
                 <li
                   key={action.cle}
-                  className="flex flex-col gap-1.5 rounded-lg border border-stone-200 p-4"
+                  className="flex flex-col gap-1.5 rounded-lg border border-line p-4"
                 >
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-sm font-medium text-stone-900">
+                    <span className="text-sm font-medium text-ink">
                       {texte.titre}
                     </span>
                     <span
@@ -92,7 +92,7 @@ export function AuditResultCard({
                       {t.impacts[action.impact]}
                     </span>
                   </div>
-                  <p className="text-sm leading-relaxed text-stone-600">
+                  <p className="text-sm leading-relaxed text-ink-soft">
                     {formater(texte.constat, action.valeurs)}
                   </p>
                   {texte.klarr && (

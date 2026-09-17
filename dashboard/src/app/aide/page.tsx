@@ -48,7 +48,7 @@ export default function AidePage() {
         />
 
         <div className="flex flex-col gap-2">
-          <h1 className="text-2xl font-semibold text-zinc-900">Aide</h1>
+          <h1 className="font-serif text-4xl text-ink">Aide</h1>
           <p className="max-w-xl text-sm text-zinc-500">
             Comment se servir de Klarr, en clair. Chaque article répond à une
             question qu&apos;on se pose vraiment, et dit aussi ce que Klarr ne
@@ -59,7 +59,7 @@ export default function AidePage() {
         {sections.map((rubrique) => (
           <section key={rubrique.cle} className="flex flex-col gap-4">
             <div className="flex flex-col gap-1">
-              <h2 className="text-base font-semibold text-zinc-900">
+              <h2 className="font-serif text-2xl text-ink">
                 {rubrique.titre}
               </h2>
               <p className="text-sm text-zinc-500">{rubrique.resume}</p>
@@ -87,7 +87,7 @@ export default function AidePage() {
             sinon il ne reste qu'un formulaire de contact perdu en pied de
             page — ou rien du tout. */}
         <section className="flex flex-col gap-2 rounded-2xl border border-zinc-200/70 bg-white px-5 py-6 shadow-sm">
-          <h2 className="text-base font-semibold text-zinc-900">
+          <h2 className="font-serif text-2xl text-ink">
             Vous ne trouvez pas ?
           </h2>
           <p className="text-sm text-zinc-500">

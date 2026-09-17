@@ -346,7 +346,7 @@ export default async function ReserverPage({
                 />
               </span>
             )}
-            <span className="text-lg font-semibold text-zinc-900">
+            <span className="font-serif text-2xl text-ink">
               {restaurant.nom}
             </span>
           </span>
@@ -406,7 +406,7 @@ export default async function ReserverPage({
         />
 
         <div className="flex flex-col gap-2">
-          <h1 className="text-2xl font-semibold text-zinc-900">
+          <h1 className="font-serif text-4xl text-ink">
             {restaurant.nom}
           </h1>
           {restaurant.adresse && (
@@ -438,7 +438,7 @@ export default async function ReserverPage({
               name="date"
               defaultValue={date}
               min={dateDuJour()}
-              className="rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-brand-navy"
+              className="rounded-lg border border-line bg-paper px-3 py-2.5 text-sm outline-none transition-colors focus:border-brand-orange"
             />
           </label>
           <label className="flex flex-col gap-1 text-sm font-medium text-zinc-700">
@@ -448,7 +448,7 @@ export default async function ReserverPage({
               name="couverts"
               min="1"
               defaultValue={couverts}
-              className="w-28 rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-brand-navy"
+              className="w-28 rounded-lg border border-line bg-paper px-3 py-2.5 text-sm outline-none transition-colors focus:border-brand-orange"
             />
           </label>
           {/* La privatisation ne se propose qu'au-delà d'un certain nombre de
@@ -462,7 +462,7 @@ export default async function ReserverPage({
               <select
                 name="espace"
                 defaultValue={espaceDemande?.id ?? ""}
-                className="rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-brand-navy"
+                className="rounded-lg border border-line bg-paper px-3 py-2.5 text-sm outline-none transition-colors focus:border-brand-orange"
               >
                 <option value="">Réserver une table</option>
                 {offre.espaces.map((espace) => (
@@ -476,7 +476,7 @@ export default async function ReserverPage({
           )}
           <button
             type="submit"
-            className="rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover"
+            className="rounded-lg bg-ink px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy"
           >
             Voir les disponibilités
           </button>

@@ -30,7 +30,7 @@ export function LoginForm() {
           type="email"
           required
           autoComplete="email"
-          className="rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-zinc-500"
+          className="rounded-lg border border-line bg-paper px-3 py-2.5 text-sm outline-none transition-colors focus:border-brand-orange"
         />
       </div>
 
@@ -48,7 +48,7 @@ export function LoginForm() {
           required
           minLength={6}
           autoComplete="current-password"
-          className="rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-zinc-500"
+          className="rounded-lg border border-line bg-paper px-3 py-2.5 text-sm outline-none transition-colors focus:border-brand-orange"
         />
       </div>
 
@@ -65,14 +65,14 @@ export function LoginForm() {
         <button
           formAction={loginAction}
           disabled={loginPending || signupPending}
-          className="flex-1 rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover disabled:opacity-50"
+          className="flex-1 rounded-lg bg-ink px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy disabled:opacity-50"
         >
           {loginPending ? "Connexion..." : "Se connecter"}
         </button>
         <button
           formAction={signupAction}
           disabled={loginPending || signupPending}
-          className="flex-1 rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-50 disabled:opacity-50"
+          className="flex-1 rounded-lg border border-line bg-paper px-4 py-2.5 text-sm font-semibold text-ink transition-colors hover:border-ink disabled:opacity-50"
         >
           {signupPending ? "Inscription..." : "Créer un compte"}
         </button>
