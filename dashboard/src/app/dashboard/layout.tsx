@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { LogoutButton } from "@/components/auth/LogoutButton";
 import { Commis } from "@/components/commis/Commis";
 import { KlarrMark, KlarrWordmark } from "@/components/brand/KlarrMark";
+import { BandeauInstallation } from "@/components/dashboard/BandeauInstallation";
 
 export default async function DashboardLayout({
   children,
@@ -43,6 +44,9 @@ export default async function DashboardLayout({
           <LogoutButton />
         </div>
       </header>
+      {/* Sous l'en-tête, au-dessus du travail : visible sans couvrir quoi
+          que ce soit, et absent dès que Klarr est installé. */}
+      <BandeauInstallation />
       <main className="flex flex-1 flex-col">{children}</main>
           <Commis connecte />
     </div>
