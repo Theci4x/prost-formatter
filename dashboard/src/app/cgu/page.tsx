@@ -93,6 +93,17 @@ export default function CguPage() {
           sans que vous ayez vu ce montant.
         </p>
         <p>
+          Chaque module ouvre sur une période d&apos;essai gratuite,
+          décomptée à partir de la création de l&apos;établissement :
+          <strong> trente jours</strong> pour le module Réservations,
+          <strong> quatorze jours</strong> pour le module Klarr — visibilité.
+          Aucune carte bancaire n&apos;est demandée pour en bénéficier et
+          aucun prélèvement n&apos;intervient à son terme : l&apos;accès au
+          module se referme, et il vous appartient de souscrire si vous
+          souhaitez le conserver. Les durées affichées sur la page
+          « Abonnement » de votre tableau de bord font foi.
+        </p>
+        <p>
           Le paiement est traité par <strong>Stripe</strong>. EDIREF
           n&apos;a jamais connaissance de votre numéro de carte. La facture
           correspondante est mise à votre disposition par Stripe à chaque

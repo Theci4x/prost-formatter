@@ -26,8 +26,8 @@ const OFFRES = [
   },
   {
     nom: "Réservations",
-    ht: "29,17 €",
-    ttc: "35 € TTC",
+    ht: "29 €",
+    ttc: "34,80 € TTC",
     essai: "30 jours d'essai",
     resume: "Votre page de réservation, sans intermédiaire.",
     lignes: [

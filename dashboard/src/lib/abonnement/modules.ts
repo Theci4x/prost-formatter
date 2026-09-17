@@ -31,13 +31,13 @@ export const LIBELLE_MODULE: Record<Module, string> = {
  */
 export const PRIX_MODULE: Record<Module, string> = {
   visibilite: "37,50 € HT / mois",
-  reservations: "29,17 € HT / mois",
+  reservations: "29 € HT / mois",
 };
 
 /** Ce qui est prélevé, TVA comprise — ce que Stripe débite réellement. */
 export const PRIX_MODULE_TTC: Record<Module, string> = {
   visibilite: "45 € TTC",
-  reservations: "35 € TTC",
+  reservations: "34,80 € TTC",
 };
 
 export const RESUME_MODULE: Record<Module, string> = {
