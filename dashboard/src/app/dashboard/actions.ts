@@ -116,6 +116,12 @@ export async function createRestaurant(
     type_cuisine: typeCuisine?.trim() || null,
     horaires,
     proprietaire_id: user.id,
+    // L'adresse qui reçoit les réservations, par défaut celle du compte.
+    // Vide, elle veut dire « ne rien recevoir » : un restaurateur aurait
+    // dû deviner qu'un champ l'attendait au fond de la configuration pour
+    // être prévenu de ses propres tables. Elle se change, et se vide, mais
+    // c'est un choix désormais, pas un oubli.
+    email_contact: user.email ?? null,
   });
 
   if (error) {
