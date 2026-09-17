@@ -4,6 +4,12 @@ import { createClient } from "@/lib/supabase/server";
 import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
 import { DecisionDemande } from "@/components/reservations/DecisionDemande";
 import { ouvrirDevis } from "@/app/dashboard/[id]/devis/actions";
+import {
+  calculer,
+  formatEuros,
+  LIBELLE_STATUT,
+  type StatutDevis,
+} from "@/lib/devis/calcul";
 import { aTrancher, attendLaGarantie } from "@/lib/reservations/garantie";
 import { SaisieReservation } from "@/components/reservations/SaisieReservation";
 import {
@@ -75,6 +81,27 @@ type Demande = {
   created_at: string;
 };
 
+/**
+ * Ce que le carnet doit savoir d'un devis, sans ouvrir sa page.
+ *
+ * En plein service, la question n'est pas « où en est la rédaction » mais
+ * « est-ce que cette salle est vendue, et pour combien ». D'où le total et
+ * le statut sur la carte, et rien d'autre.
+ */
+type DevisResume = {
+  numero: string;
+  statut: StatutDevis;
+  totalTtcCentimes: number;
+  acompteCentimes: number | null;
+};
+
+const DEVIS_STYLES: Record<StatutDevis, string> = {
+  brouillon: "bg-brand-sand text-ink-soft",
+  envoye: "bg-blue-50 text-blue-700",
+  accepte: "bg-emerald-50 text-emerald-700",
+  refuse: "bg-zinc-100 text-zinc-500",
+};
+
 const STATUT_STYLES: Record<Demande["statut"], string> = {
   demande: "bg-brand-orange-soft text-brand-navy",
   confirmee: "bg-emerald-50 text-emerald-700",
@@ -125,6 +152,7 @@ function Ligne({
   espace,
   service,
   site,
+  devis,
   absencesPassees = 0,
   constatable = false,
 }: {
@@ -133,6 +161,8 @@ function Ligne({
   espace: Espace | undefined;
   service: Service | undefined;
   site: string;
+  /** Le devis de cette demande, s'il en existe un. */
+  devis?: DevisResume;
   /** Absences déjà constatées pour ce client, celle-ci exceptée. */
   absencesPassees?: number;
   /** Le service a eu lieu : on peut dire si la table est restée vide. */
@@ -355,18 +385,58 @@ function Ligne({
 
       {/* Une privatisation se chiffre avant de se trancher : trente
           couverts, un menu, une salle, ça ne se règle pas d'un « Accepter ».
-          Le devis n'existe donc que là, et il mène à l'acceptation. */}
-      {demande.type === "privatisation" && demande.statut !== "annulee" && (
-        <form action={ouvrirDevis} className="w-fit">
-          <input type="hidden" name="restaurant_id" value={restaurantId} />
-          <input type="hidden" name="reservation_id" value={demande.id} />
-          <BoutonEnvoi
-            libelle="Établir un devis"
-            enCours="Ouverture…"
-            className="rounded-lg border border-line bg-paper px-3 py-2 text-sm font-semibold text-ink transition-colors hover:border-ink"
-          />
-        </form>
-      )}
+
+          Et une fois le devis établi, il doit se voir d'ici. Un serveur qui
+          ouvre le carnet pendant le service a besoin de savoir que la salle
+          est vendue, à quel prix et si le client a répondu — pas d'un bouton
+          qui propose d'établir un devis qui existe déjà. */}
+      {(demande.type === "privatisation" || devis) &&
+        demande.statut !== "annulee" &&
+        (devis ? (
+          // Le devis existe : ce qu'il vaut et où il en est passent avant
+          // le bouton, parce que c'est ce qu'on vient chercher.
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl border border-line bg-brand-cream px-4 py-3">
+            <span
+              className={`rounded-full px-2.5 py-1 text-xs font-medium ${DEVIS_STYLES[devis.statut]}`}
+            >
+              Devis {LIBELLE_STATUT[devis.statut].toLowerCase()}
+            </span>
+            <span className="text-sm text-ink-soft">
+              {devis.numero} ·{" "}
+              <span className="font-semibold tabular-nums text-ink">
+                {formatEuros(devis.totalTtcCentimes)} TTC
+              </span>
+              {devis.acompteCentimes
+                ? ` · acompte ${formatEuros(devis.acompteCentimes)}`
+                : ""}
+            </span>
+            <form action={ouvrirDevis} className="ml-auto w-fit">
+              <input type="hidden" name="restaurant_id" value={restaurantId} />
+              <input type="hidden" name="reservation_id" value={demande.id} />
+              <BoutonEnvoi
+                libelle={
+                  devis.statut === "brouillon"
+                    ? "Reprendre le brouillon"
+                    : "Ouvrir le devis"
+                }
+                enCours="Ouverture…"
+                className="rounded-lg border border-line bg-paper px-3 py-2 text-sm font-semibold text-ink transition-colors hover:border-ink"
+              />
+            </form>
+          </div>
+        ) : (
+          // Rien à montrer encore : un cadre vide autour d'un seul bouton
+          // ferait croire qu'il manque quelque chose.
+          <form action={ouvrirDevis} className="w-fit">
+            <input type="hidden" name="restaurant_id" value={restaurantId} />
+            <input type="hidden" name="reservation_id" value={demande.id} />
+            <BoutonEnvoi
+              libelle="Établir un devis"
+              enCours="Ouverture…"
+              className="rounded-lg border border-line bg-paper px-3 py-2 text-sm font-semibold text-ink transition-colors hover:border-ink"
+            />
+          </form>
+        ))}
 
       {enCours ? (
         <DecisionDemande
@@ -409,17 +479,31 @@ export default async function ReservationsPage({
   const query = await searchParams;
   const supabase = await createClient();
 
-  const [restaurantResult, espacesResult, servicesResult, reservationsResult] =
-    await Promise.all([
-      supabase.from("restaurants").select("*").eq("id", id).maybeSingle(),
-      supabase.from("restaurant_espaces").select("*").eq("restaurant_id", id),
-      supabase.from("restaurant_services").select("*").eq("restaurant_id", id),
-      supabase
-        .from("restaurant_reservations")
-        .select("*")
-        .eq("restaurant_id", id)
-        .order("date_reservation"),
-    ]);
+  const [
+    restaurantResult,
+    espacesResult,
+    servicesResult,
+    reservationsResult,
+    devisResult,
+  ] = await Promise.all([
+    supabase.from("restaurants").select("*").eq("id", id).maybeSingle(),
+    supabase.from("restaurant_espaces").select("*").eq("restaurant_id", id),
+    supabase.from("restaurant_services").select("*").eq("restaurant_id", id),
+    supabase
+      .from("restaurant_reservations")
+      .select("*")
+      .eq("restaurant_id", id)
+      .order("date_reservation"),
+    // Les lignes viennent avec, par la clé étrangère : le total se calcule
+    // ici plutôt que de se stocker, pour qu'il ne puisse jamais mentir sur
+    // ce que le document affiche.
+    supabase
+      .from("devis")
+      .select(
+        "reservation_id, numero, statut, acompte_centimes, devis_lignes(quantite, prix_unitaire_centimes, tva_taux)",
+      )
+      .eq("restaurant_id", id),
+  ]);
 
   const restaurant = restaurantResult.data as Restaurant | null;
   if (!restaurant) notFound();
@@ -427,6 +511,39 @@ export default async function ReservationsPage({
   const espaces = (espacesResult.data ?? []) as Espace[];
   const services = (servicesResult.data ?? []) as Service[];
   const reservations = (reservationsResult.data ?? []) as Demande[];
+
+  // Un devis par demande. Une requête refusée — migration en retard,
+  // colonne absente — ne doit pas vider le carnet : on la signale et on
+  // continue sans les devis.
+  if (devisResult.error) console.error("[carnet/devis]", devisResult.error.message);
+  const parDevis = new Map<string, DevisResume>(
+    ((devisResult.data ?? []) as {
+      reservation_id: string;
+      numero: string;
+      statut: StatutDevis;
+      acompte_centimes: number | null;
+      devis_lignes: {
+        quantite: number;
+        prix_unitaire_centimes: number;
+        tva_taux: number;
+      }[];
+    }[]).map((devis) => [
+      devis.reservation_id,
+      {
+        numero: devis.numero,
+        statut: devis.statut,
+        acompteCentimes: devis.acompte_centimes,
+        totalTtcCentimes: calculer(
+          (devis.devis_lignes ?? []).map((ligne) => ({
+            libelle: "",
+            quantite: Number(ligne.quantite),
+            prixUnitaireCentimes: ligne.prix_unitaire_centimes,
+            tauxTva: Number(ligne.tva_taux),
+          })),
+        ).ttcCentimes,
+      },
+    ]),
+  );
 
   const parEspace = new Map(espaces.map((espace) => [espace.id, espace]));
   const parService = new Map(services.map((service) => [service.id, service]));
@@ -588,6 +705,7 @@ export default async function ReservationsPage({
                 demande={demande}
                 restaurantId={id}
                 site={site}
+                devis={parDevis.get(demande.id)}
                 espace={parEspace.get(demande.espace_id)}
                 service={
                   demande.service_id
@@ -629,6 +747,7 @@ export default async function ReservationsPage({
                 demande={demande}
                 restaurantId={id}
                 site={site}
+                devis={parDevis.get(demande.id)}
                 espace={parEspace.get(demande.espace_id)}
                 service={
                   demande.service_id
@@ -679,6 +798,7 @@ export default async function ReservationsPage({
                   demande={demande}
                   restaurantId={id}
                   site={site}
+                  devis={parDevis.get(demande.id)}
                   espace={parEspace.get(demande.espace_id)}
                   service={
                     demande.service_id
