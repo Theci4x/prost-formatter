@@ -47,7 +47,7 @@ export type Message = { sujet: string; texte: string; html: string };
  * l'encadré qui porte le quand et le combien, seule chose qu'un client
  * relit vraiment.
  */
-type Bloc =
+export type Bloc =
   | string
   | { bouton: { libelle: string; url: string } }
   | { encadre: string[] };
@@ -86,7 +86,7 @@ function sujet(texte: string): string {
   return texte.replace(/[\r\n]+/g, " ").slice(0, 180);
 }
 
-function echapper(texte: string): string {
+export function echapper(texte: string): string {
   return texte
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
@@ -169,7 +169,7 @@ function encadreHtml(lignes: string[]): string {
  * tête plutôt qu'en pied. Tout est en tableaux et en styles en ligne —
  * c'est laid à écrire, c'est la seule chose qui s'affiche partout.
  */
-function enveloppe(blocs: Bloc[], signature: string): string {
+export function enveloppe(blocs: Bloc[], signature: string): string {
   const corps = blocs
     .filter((bloc) => bloc !== "")
     .map((bloc) => {
@@ -372,6 +372,11 @@ export function alerteAnnulationClient(c: Contexte): Message {
  * cliquer, et une adresse cachée y devient une adresse perdue.
  */
 function texteDe(blocs: Bloc[], c: Contexte): string {
+  return texteNu(blocs, c.restaurantNom);
+}
+
+/** La version texte d'un message, signée du nom qu'on lui donne. */
+export function texteNu(blocs: Bloc[], signature: string): string {
   const nu = blocs
     .filter((bloc) => bloc !== "")
     .map((bloc) => {
@@ -379,7 +384,7 @@ function texteDe(blocs: Bloc[], c: Contexte): string {
       if ("bouton" in bloc) return `${bloc.bouton.libelle} : ${bloc.bouton.url}`;
       return bloc.encadre.join("\n");
     });
-  return `${nu.join("\n\n")}\n\n— ${c.restaurantNom}`;
+  return `${nu.join("\n\n")}\n\n— ${signature}`;
 }
 
 function deshtml(html: string): string {

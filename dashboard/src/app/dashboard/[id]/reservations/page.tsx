@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
 import { DecisionDemande } from "@/components/reservations/DecisionDemande";
+import { ouvrirDevis } from "@/app/dashboard/[id]/devis/actions";
 import { aTrancher, attendLaGarantie } from "@/lib/reservations/garantie";
 import { SaisieReservation } from "@/components/reservations/SaisieReservation";
 import {
@@ -350,6 +351,22 @@ function Ligne({
           </div>
         );
       })()}
+
+      {/* Une privatisation se chiffre avant de se trancher : trente
+          couverts, un menu, une salle, ça ne se règle pas d'un « Accepter ».
+          Le devis n'existe donc que là, et il mène à l'acceptation. */}
+      {demande.type === "privatisation" && demande.statut !== "annulee" && (
+        <form action={ouvrirDevis} className="w-fit">
+          <input type="hidden" name="restaurant_id" value={restaurantId} />
+          <input type="hidden" name="reservation_id" value={demande.id} />
+          <button
+            type="submit"
+            className="rounded-lg border border-line bg-paper px-3 py-2 text-sm font-semibold text-ink transition-colors hover:border-ink"
+          >
+            Établir un devis
+          </button>
+        </form>
+      )}
 
       {enCours ? (
         <DecisionDemande

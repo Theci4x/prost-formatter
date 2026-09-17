@@ -277,3 +277,19 @@ body {
   flex-direction: column;
   gap: 0.6rem;
 }
+
+/* ── Le devis à l'impression ───────────────────────────────────────────
+   « Enregistrer en PDF » depuis le navigateur doit donner un document
+   qu'un client range dans ses papiers : pas de fond crème qui mange
+   l'encre, pas de boutons, et jamais un tableau coupé entre deux pages. */
+@media print {
+  .devis-feuille {
+    break-inside: avoid;
+  }
+  .devis-feuille section {
+    break-inside: avoid;
+  }
+  @page {
+    margin: 16mm;
+  }
+}
