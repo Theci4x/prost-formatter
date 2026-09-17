@@ -272,7 +272,7 @@ export default async function Home() {
                   gap: 6,
                 }}
               >
-                Essayer Klarr 14 jours
+                Essayer Klarr gratuitement
                 <svg
                   width="14"
                   height="14"

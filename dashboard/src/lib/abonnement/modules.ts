@@ -18,9 +18,26 @@ export const LIBELLE_MODULE: Record<Module, string> = {
   reservations: "Réservations",
 };
 
+/**
+ * Le prix affiché, hors taxes.
+ *
+ * Un restaurateur est assujetti : il raisonne en HT, il récupère la TVA,
+ * et tous les logiciels du secteur affichent du HT. Annoncer « 45 € TTC »
+ * à côté d'un concurrent à « 49 € HT » nous faisait passer pour plus cher
+ * alors qu'on est 25 % en dessous.
+ *
+ * Le TTC reste affiché à côté : c'est le montant réellement prélevé, et
+ * une surprise au débit coûte plus qu'une ligne de plus sur une page.
+ */
 export const PRIX_MODULE: Record<Module, string> = {
-  visibilite: "45 € TTC / mois",
-  reservations: "35 € TTC / mois",
+  visibilite: "37,50 € HT / mois",
+  reservations: "29,17 € HT / mois",
+};
+
+/** Ce qui est prélevé, TVA comprise — ce que Stripe débite réellement. */
+export const PRIX_MODULE_TTC: Record<Module, string> = {
+  visibilite: "45 € TTC",
+  reservations: "35 € TTC",
 };
 
 export const RESUME_MODULE: Record<Module, string> = {
@@ -31,21 +48,26 @@ export const RESUME_MODULE: Record<Module, string> = {
 };
 
 /**
- * La période d'essai, à compter de la création de l'établissement.
+ * La période d'essai, à compter de la création de l'établissement — et
+ * elle n'est pas la même selon ce qu'on essaie.
  *
- * Quatorze jours : deux week-ends, le minimum pour juger un carnet de
- * réservations.
+ * Trente jours sur les réservations : c'est la durée qu'annonce le
+ * marché, et elle ne nous coûte rien. Un carnet ne s'emporte pas — on
+ * cesse de payer, la page de réservation s'éteint, et le restaurateur
+ * repart avec ce qu'il avait en arrivant.
  *
- * Pas trente, et la raison tient au module visibilité. Les réservations
- * ne s'emportent pas — on cesse de payer, la page s'éteint. La
- * visibilité, si : en un mois on fait remonter sa fiche Google, on
- * publie sa carte, on structure ses données, et on part en gardant le
- * bénéfice. L'essai gratuit y coûte bien plus que le mois non facturé.
+ * Quatorze sur la visibilité, parce qu'elle, elle s'emporte. En un mois
+ * on fait remonter sa fiche Google, on publie sa carte, on structure ses
+ * données — et on s'en va en gardant le bénéfice. L'essai gratuit y
+ * coûte bien plus que le mois non facturé.
  *
  * La générosité passe donc par `acces_offert_jusqu_au`, accordé au cas
  * par cas : un geste choisi, pas un cadeau automatique à des inconnus.
  */
-export const ESSAI_JOURS = 14;
+export const ESSAI_JOURS: Record<Module, number> = {
+  reservations: 30,
+  visibilite: 14,
+};
 
 export type EtatAbonnement = {
   module: Module;
@@ -61,15 +83,35 @@ export function abonnementOuvrant(status: string): boolean {
   return status === "active" || status === "trialing" || status === "past_due";
 }
 
+/** Un essai en cours sur un module. */
+export type Essai = {
+  /** Dernier jour, « 2026-10-15 ». */
+  jusquau: string;
+  joursRestants: number;
+};
+
 export type Acces = {
   /** Module par module, ce à quoi l'établissement a droit. */
   ouvert: Record<Module, boolean>;
+  /**
+   * L'essai en cours, module par module — les deux ne finissent pas le
+   * même jour. Null quand il est terminé, ou quand le module est payé.
+   */
+  essai: Record<Module, Essai | null>;
   /** Vrai quand l'accès vient de l'essai ou d'une faveur, pas d'un paiement. */
   enEssai: boolean;
-  /** Dernier jour de l'essai ou de la faveur, « 2026-10-15 ». Null sinon. */
-  essaiJusquau: string | null;
-  joursRestants: number | null;
 };
+
+/** L'essai qui dure encore le plus longtemps, pour un bandeau unique. */
+export function essaiLePlusLong(acces: Acces): Essai | null {
+  return MODULES.reduce<Essai | null>((retenu, cle) => {
+    const essai = acces.essai[cle];
+    if (!essai) return retenu;
+    return !retenu || essai.joursRestants > retenu.joursRestants
+      ? essai
+      : retenu;
+  }, null);
+}
 
 function jourLocal(instant: Date): string {
   return new Date(instant.getTime() - instant.getTimezoneOffset() * 60000)
@@ -102,15 +144,7 @@ export function calculerAcces({
   maintenant: Date;
 }): Acces {
   const aujourdhui = jourLocal(maintenant);
-
-  const finEssai = ajouterJours(creeLe.slice(0, 10), ESSAI_JOURS);
-  // La faveur accordée à la main l'emporte quand elle va plus loin que
-  // l'essai : c'est tout son intérêt.
-  const finFaveur =
-    accesOffertJusquAu && accesOffertJusquAu > finEssai
-      ? accesOffertJusquAu
-      : finEssai;
-  const gratuitOuvert = aujourdhui <= finFaveur;
+  const ouverture = creeLe.slice(0, 10);
 
   const paye = new Set(
     abonnements
@@ -118,41 +152,53 @@ export function calculerAcces({
       .map((abonnement) => abonnement.module),
   );
 
-  const ouvert = {
-    visibilite: paye.has("visibilite") || gratuitOuvert,
-    reservations: paye.has("reservations") || gratuitOuvert,
-  };
+  const ouvert = {} as Record<Module, boolean>;
+  const essai = {} as Record<Module, Essai | null>;
+
+  for (const cle of MODULES) {
+    const finEssai = ajouterJours(ouverture, ESSAI_JOURS[cle]);
+    // La faveur accordée à la main l'emporte quand elle va plus loin que
+    // l'essai : c'est tout son intérêt. Elle vaut pour tous les modules —
+    // on ne fait pas un geste à moitié.
+    const fin =
+      accesOffertJusquAu && accesOffertJusquAu > finEssai
+        ? accesOffertJusquAu
+        : finEssai;
+    const gratuitOuvert = aujourdhui <= fin;
+
+    ouvert[cle] = paye.has(cle) || gratuitOuvert;
+    // Un module payé n'est plus en essai, même si la période court
+    // encore : ce qui est facturé ne s'annonce pas comme gratuit.
+    essai[cle] =
+      gratuitOuvert && !paye.has(cle)
+        ? {
+            jusquau: fin,
+            joursRestants: Math.max(
+              0,
+              Math.round(
+                (new Date(`${fin}T12:00:00`).getTime() -
+                  new Date(`${aujourdhui}T12:00:00`).getTime()) /
+                  86400000,
+              ),
+            ),
+          }
+        : null;
+  }
 
   // « En essai » ne se dit que si l'on n'a rien payé : un établissement
   // qui paie la visibilité et découvre les réservations pendant son essai
   // ne doit pas voir son module payé étiqueté comme un essai.
-  const enEssai = gratuitOuvert && paye.size === 0;
+  const enEssai =
+    paye.size === 0 && MODULES.some((cle) => essai[cle] !== null);
 
-  const joursRestants = gratuitOuvert
-    ? Math.max(
-        0,
-        Math.round(
-          (new Date(`${finFaveur}T12:00:00`).getTime() -
-            new Date(`${aujourdhui}T12:00:00`).getTime()) /
-            86400000,
-        ),
-      )
-    : null;
-
-  return {
-    ouvert,
-    enEssai,
-    essaiJusquau: gratuitOuvert ? finFaveur : null,
-    joursRestants,
-  };
+  return { ouvert, essai, enEssai };
 }
 
 /** Un accès complet, pour les écrans qui n'ont pas à vérifier. */
 export const ACCES_COMPLET: Acces = {
   ouvert: { visibilite: true, reservations: true },
+  essai: { visibilite: null, reservations: null },
   enEssai: false,
-  essaiJusquau: null,
-  joursRestants: null,
 };
 
 /**

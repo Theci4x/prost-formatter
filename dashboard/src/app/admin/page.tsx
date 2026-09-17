@@ -11,7 +11,10 @@ import {
   TEINTE_STATUT,
   type Suivi,
 } from "@/lib/suivi";
-import { calculerAcces } from "@/lib/abonnement/modules";
+import {
+  calculerAcces,
+  essaiLePlusLong,
+} from "@/lib/abonnement/modules";
 
 export const metadata: Metadata = {
   title: "Administration — Klarr",
@@ -464,11 +467,16 @@ export default async function AdminPage() {
                           >
                             {acces.ouvert.reservations ? "✓" : "✕"} réservations
                           </span>
-                          {acces.enEssai && acces.joursRestants !== null && (
-                            <span className="text-brand-navy">
-                              essai, {acces.joursRestants} j
-                            </span>
-                          )}
+                          {/* Le plus long des deux : c'est la date à
+                              laquelle cet établissement perd tout. */}
+                          {(() => {
+                            const essai = essaiLePlusLong(acces);
+                            return acces.enEssai && essai ? (
+                              <span className="text-brand-navy">
+                                essai, {essai.joursRestants} j
+                              </span>
+                            ) : null;
+                          })()}
                         </span>
                       </td>
                       <td>

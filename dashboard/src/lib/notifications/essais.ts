@@ -1,6 +1,10 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { calculerAcces } from "@/lib/abonnement/modules";
+import {
+  calculerAcces,
+  LIBELLE_MODULE,
+  MODULES,
+} from "@/lib/abonnement/modules";
 import { notifierInterne } from "@/lib/notifications/interne";
 import { siteUrl } from "@/lib/site-url";
 
@@ -93,33 +97,39 @@ export async function prevenirDesEssaisQuiFinissent({
       maintenant,
     });
 
-    // Celui qui paie déjà quelque chose n'est pas en essai, et celui dont
-    // l'essai est fini n'a plus rien à décider aujourd'hui.
-    if (!acces.enEssai || acces.joursRestants === null) continue;
-    if (acces.joursRestants > PREVENIR_JOURS || acces.joursRestants <= 0) {
-      continue;
+    // Celui qui paie déjà quelque chose n'est pas en essai.
+    if (!acces.enEssai) continue;
+
+    // Les deux essais ne finissent pas le même jour : chacun est une
+    // occasion d'appeler, et chacun mérite donc son alerte.
+    for (const cle of MODULES) {
+      const essai = acces.essai[cle];
+      if (!essai) continue;
+      if (essai.joursRestants > PREVENIR_JOURS || essai.joursRestants <= 0) {
+        continue;
+      }
+
+      const empreinte = `essai:${ligne.id}:${cle}:${essai.jusquau}`;
+      if (!(await premiereFois(supabase, empreinte))) continue;
+
+      // L'adresse du propriétaire vit dans auth.users : sans elle, l'alerte
+      // annonce un nom qu'on ne peut pas rappeler.
+      const compte = await supabase.auth.admin
+        .getUserById(ligne.proprietaire_id)
+        .catch(() => null);
+      const courriel = compte?.data?.user?.email ?? "adresse inconnue";
+
+      await notifierInterne({
+        titre: `Essai bientôt fini — ${ligne.nom} (${LIBELLE_MODULE[cle]})`,
+        lignes: [
+          `Il reste ${essai.joursRestants} jour(s), jusqu'au ${essai.jusquau}.`,
+          `Propriétaire : ${courriel}`,
+          "Aucun abonnement en cours.",
+        ],
+        lien: { libelle: "Ouvrir l'administration", url: `${siteUrl()}/admin` },
+      });
+      prevenus += 1;
     }
-
-    const cle = `essai:${ligne.id}:${acces.essaiJusquau}`;
-    if (!(await premiereFois(supabase, cle))) continue;
-
-    // L'adresse du propriétaire vit dans auth.users : sans elle, l'alerte
-    // annonce un nom qu'on ne peut pas rappeler.
-    const compte = await supabase.auth.admin
-      .getUserById(ligne.proprietaire_id)
-      .catch(() => null);
-    const courriel = compte?.data?.user?.email ?? "adresse inconnue";
-
-    await notifierInterne({
-      titre: `Essai bientôt fini — ${ligne.nom}`,
-      lignes: [
-        `Il reste ${acces.joursRestants} jour(s), jusqu'au ${acces.essaiJusquau}.`,
-        `Propriétaire : ${courriel}`,
-        "Aucun abonnement en cours.",
-      ],
-      lien: { libelle: "Ouvrir l'administration", url: `${siteUrl()}/admin` },
-    });
-    prevenus += 1;
   }
 
   return { examines: lignes.length, prevenus };

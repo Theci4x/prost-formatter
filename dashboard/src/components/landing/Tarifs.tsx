@@ -1,10 +1,20 @@
-// Prix affichés TTC, comme le veut l'annonceur, avec le HT en dessous :
-// un restaurateur assujetti raisonne en HT et le cherchera.
+// Le HT en grand, le TTC en dessous — et pas l'inverse.
+//
+// Le code de la consommation impose le TTC quand on s'adresse à des
+// particuliers. Ici les clients sont des professionnels assujettis : ils
+// récupèrent la TVA, raisonnent en HT, et tous les logiciels du secteur
+// affichent du HT. Annoncer « 45 € » en gros à côté d'un concurrent qui
+// annonce « 49 € HT » nous faisait passer pour plus cher, alors qu'on est
+// un quart en dessous.
+//
+// Le TTC reste juste en dessous : c'est le montant réellement prélevé, et
+// une surprise au débit coûte plus cher qu'une ligne de plus.
 const OFFRES = [
   {
     nom: "Klarr",
-    ttc: "45 €",
-    ht: "37,50 € HT",
+    ht: "37,50 €",
+    ttc: "45 € TTC",
+    essai: "14 jours d'essai",
     resume: "Votre visibilité, en clair.",
     lignes: [
       "Votre fiche Google, vos avis, vos réseaux au même endroit",
@@ -16,8 +26,9 @@ const OFFRES = [
   },
   {
     nom: "Réservations",
-    ttc: "35 €",
-    ht: "29,17 € HT",
+    ht: "29,17 €",
+    ttc: "35 € TTC",
+    essai: "30 jours d'essai",
     resume: "Votre page de réservation, sans intermédiaire.",
     lignes: [
       "Une adresse à votre nom, à partager où vous voulez",
@@ -152,10 +163,10 @@ export function Tarifs() {
                     lineHeight: 1,
                   }}
                 >
-                  {offre.ttc}
+                  {offre.ht}
                 </span>
                 <span style={{ fontSize: 15, color: "var(--ink-soft)" }}>
-                  TTC / mois
+                  HT / mois
                 </span>
               </div>
               <span
@@ -165,7 +176,7 @@ export function Tarifs() {
                   marginTop: -12,
                 }}
               >
-                soit {offre.ht}
+                soit {offre.ttc} · {offre.essai}
               </span>
 
               <ul

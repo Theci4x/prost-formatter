@@ -43,7 +43,7 @@ export default async function LoginPage({
             <span className="hidden font-serif text-4xl md:inline">Connexion</span>
           </h1>
           <p className="max-w-sm text-sm text-zinc-500">
-            Connectez-vous, ou créez un compte : 14 jours d&apos;essai, sans carte bancaire.
+            Connectez-vous, ou créez un compte : essai gratuit, sans carte bancaire.
           </p>
         </div>
 

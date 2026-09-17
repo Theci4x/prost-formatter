@@ -9,6 +9,8 @@ import {
   LIBELLE_MODULE,
   MODULES,
   PRIX_MODULE,
+  PRIX_MODULE_TTC,
+  essaiLePlusLong,
   RESUME_MODULE,
   abonnementOuvrant,
   type Module,
@@ -67,16 +69,20 @@ export default async function AbonnementPage({
         title={`Abonnement — ${restaurant.nom}`}
       />
 
-      {acces.enEssai && acces.joursRestants !== null && (
+      {/* Les deux essais ne finissent pas le même jour : le bandeau
+          annonce le plus long — la date à laquelle tout se referme — et
+          chaque carte porte le sien. */}
+      {acces.enEssai && essaiLePlusLong(acces) && (
         <p className="max-w-2xl rounded-2xl border border-brand-orange/30 bg-brand-orange-soft px-5 py-4 text-sm text-brand-navy">
           <span className="font-medium">
-            Essai gratuit — {acces.joursRestants} jour
-            {acces.joursRestants > 1 ? "s" : ""} restant
-            {acces.joursRestants > 1 ? "s" : ""}.
+            Essai gratuit — {essaiLePlusLong(acces)!.joursRestants} jour
+            {essaiLePlusLong(acces)!.joursRestants > 1 ? "s" : ""} restant
+            {essaiLePlusLong(acces)!.joursRestants > 1 ? "s" : ""}.
           </span>{" "}
-          Tout est ouvert jusque-là. Ensuite, chaque module se paie
-          séparément, et ta page de réservation comme ton site vitrine
-          restent en ligne tant que le module correspondant l&apos;est.
+          Chaque module a sa propre période, indiquée ci-dessous. Ensuite ils
+          se paient séparément, et ta page de réservation comme ton site
+          vitrine restent en ligne tant que le module correspondant
+          l&apos;est.
         </p>
       )}
 
@@ -102,8 +108,20 @@ export default async function AbonnementPage({
                   {LIBELLE_MODULE[cle]}
                 </span>
                 <span className="text-sm font-medium text-brand-navy">
-                  {PRIX_MODULE[cle]}
+                  {PRIX_MODULE[cle]}{" "}
+                  {/* Le HT pour comparer, le TTC pour ne pas être surpris
+                      au débit : c'est le second qui est prélevé. */}
+                  <span className="font-normal text-zinc-500">
+                    ({PRIX_MODULE_TTC[cle]})
+                  </span>
                 </span>
+                {acces.essai[cle] && (
+                  <span className="text-sm text-brand-navy">
+                    Essai en cours — {acces.essai[cle]!.joursRestants} jour
+                    {acces.essai[cle]!.joursRestants > 1 ? "s" : ""} restant
+                    {acces.essai[cle]!.joursRestants > 1 ? "s" : ""}.
+                  </span>
+                )}
                 <span className="text-sm leading-relaxed text-zinc-500">
                   {RESUME_MODULE[cle]}
                 </span>

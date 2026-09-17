@@ -252,7 +252,8 @@ export function Reservation() {
                 }}
               >
                 Ni sur les couverts, ni sur les privatisations. Le module
-                Réservations coûte 35 € TTC par mois, et rien d&apos;autre.
+                Réservations coûte 29,17 € HT par mois — 35 € TTC — et rien
+                d&apos;autre.
               </p>
               <span
                 style={{
