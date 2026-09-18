@@ -15,6 +15,23 @@ import {
  * trois identifiants : `STRIPE_PRICE_ID` couvre la visibilité et reste lu
  * tel quel, pour ne pas casser une configuration déjà en place.
  */
+/**
+ * Le taux de TVA appliqué à l'abonnement.
+ *
+ * Sans lui, Stripe encaisse exactement le montant du prix : un tarif à
+ * 29 € rapporterait 29 € dont 4,83 € dus au fisc, soit un cinquième de la
+ * marge perdu sans s'en apercevoir. Avec lui, la facture affiche
+ * « 29,00 € + 5,80 € de TVA = 34,80 € » — ce que des clients
+ * professionnels attendent pour la récupérer.
+ *
+ * Optionnel : sans la variable, on retombe sur l'ancien comportement, et
+ * les prix doivent alors être saisis toutes taxes comprises.
+ */
+function tauxTva(): string[] | undefined {
+  const taux = process.env.STRIPE_TAX_RATE_ID?.trim();
+  return taux ? [taux] : undefined;
+}
+
 function tarif(requis: Achat): string | undefined {
   if (requis === PACK) return process.env.STRIPE_PRICE_ID_PACK;
   return requis === "reservations"
@@ -119,7 +136,7 @@ export async function GET(request: NextRequest) {
       // par défaut sur les comptes Stripe récents) choisit automatiquement
       // les moyens de paiement disponibles (carte, SEPA...) selon le pays et
       // la devise du client.
-      line_items: [{ price, quantity: 1 }],
+      line_items: [{ price, quantity: 1, tax_rates: tauxTva() }],
       // Les codes promotionnels se créent et se révoquent chez Stripe, pas
       // ici : un système maison demanderait sa table, son écran, ses règles
       // de cumul et ses dates de validité — tout ce que Stripe fait déjà, et
