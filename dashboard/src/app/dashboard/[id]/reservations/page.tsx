@@ -31,6 +31,7 @@ import { siteUrl } from "@/lib/site-url";
 import {
   annulerReservation,
   constaterAbsence,
+  constaterAcompteHorsLigne,
   relancerPaiement,
 } from "./actions";
 import { BoutonAction } from "@/components/reservations/BoutonAction";
@@ -67,6 +68,8 @@ type Demande = {
   option_expire_le: string | null;
   acompte_centimes: number | null;
   acompte_statut: "non_requis" | "attendu" | "paye" | "rembourse";
+  /** Constaté par le restaurateur : aucun paiement Stripe ne lui répond. */
+  acompte_hors_ligne?: boolean;
   caution_centimes: number | null;
   caution_statut:
     | "non_requise"
@@ -306,7 +309,11 @@ function Ligne({
 
       {(() => {
         const libelle =
-          libelleAcompte(demande.acompte_statut, demande.acompte_centimes) ??
+          libelleAcompte(
+            demande.acompte_statut,
+            demande.acompte_centimes,
+            demande.acompte_hors_ligne,
+          ) ??
           libelleCaution(
             demande.caution_statut,
             demande.caution_centimes,
@@ -371,8 +378,39 @@ function Ligne({
                       Relancé le {formatRelance(demande.derniere_relance_le)}
                     </span>
                   )}
+                  {/* Tout ne passe pas par Stripe : un virement d'entreprise,
+                      des espèces au comptoir. Sans ce bouton, la salle est
+                      payée et l'option s'éteint quand même. */}
+                  {demande.acompte_statut === "attendu" && (
+                    <BoutonAction
+                      action={constaterAcompteHorsLigne}
+                      champs={{
+                        reservation_id: demande.id,
+                        restaurant_id: restaurantId,
+                      }}
+                      libelle="Déjà encaissé (virement, espèces)"
+                      enCours="Enregistrement…"
+                      className="text-xs font-medium text-brand-navy underline-offset-2 hover:underline"
+                    />
+                  )}
                 </div>
               </>
+            )}
+
+            {/* Ce qu'on a constaté soi-même peut se défaire ; un paiement
+                par carte, non — il se rembourse depuis Stripe. */}
+            {demande.acompte_hors_ligne && (
+              <BoutonAction
+                action={constaterAcompteHorsLigne}
+                champs={{
+                  reservation_id: demande.id,
+                  restaurant_id: restaurantId,
+                  retirer: "1",
+                }}
+                libelle="Retirer ce constat"
+                enCours="Retrait…"
+                className="w-fit text-xs text-zinc-500 hover:text-zinc-900"
+              />
             )}
 
             {demande.caution_statut === "enregistree" &&

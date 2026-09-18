@@ -41,10 +41,18 @@ export function formatEuros(centimes: number): string {
 export function libelleAcompte(
   statut: StatutAcompte,
   centimes: number | null,
+  /** Vrai quand le restaurateur l'a constaté lui-même : virement, espèces. */
+  horsLigne = false,
 ): string | null {
   if (statut === "non_requis" || !centimes) return null;
   const somme = formatEuros(centimes);
-  if (statut === "paye") return `Acompte de ${somme} encaissé`;
+  if (statut === "paye") {
+    // Dire le chemin qu'a pris l'argent : la comptabilité ne doit pas
+    // chercher chez Stripe un paiement qui n'y est pas.
+    return horsLigne
+      ? `Acompte de ${somme} encaissé — virement ou espèces`
+      : `Acompte de ${somme} encaissé`;
+  }
   if (statut === "rembourse") return `Acompte de ${somme} remboursé`;
   return `Acompte de ${somme} en attente`;
 }

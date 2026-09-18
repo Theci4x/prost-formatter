@@ -1723,3 +1723,88 @@ export async function renvoyerConfirmation(
   revalidatePath(`/dashboard/${restaurantId}/reservations`);
   return { error: null };
 }
+
+/**
+ * Constate un acompte encaissé hors de Stripe.
+ *
+ * Un virement, des espèces au comptoir, un bon de commande d'entreprise :
+ * l'argent est arrivé, mais Klarr ne l'a pas vu passer. Sans ce geste, la
+ * réservation restait « acompte en attente » et son option s'éteignait
+ * toute seule au bout de quarante-huit heures — une salle payée, rendue
+ * disponible par le logiciel.
+ *
+ * Le drapeau `acompte_hors_ligne` dit par quel chemin c'est arrivé : la
+ * comptabilité ne doit pas chercher chez Stripe un paiement qui n'y est
+ * pas. Et `retirer` permet de défaire un constat posé par erreur, tant
+ * qu'aucun paiement Stripe n'est venu le remplacer.
+ */
+export async function constaterAcompteHorsLigne(
+  _prevState: DecisionState,
+  formData: FormData,
+): Promise<DecisionState> {
+  const reservationId = (formData.get("reservation_id") as string)?.trim();
+  const restaurantId = (formData.get("restaurant_id") as string)?.trim();
+  const retirer = formData.get("retirer") === "1";
+  if (!reservationId || !restaurantId) {
+    return { error: "Réservation introuvable." };
+  }
+
+  const supabase = await createClient();
+
+  if (retirer) {
+    // On ne défait que ce qu'on a posé soi-même : un acompte réglé par
+    // carte sur le compte du restaurateur ne se dé-encaisse pas d'un clic.
+    const { data, error } = await supabase
+      .from("restaurant_reservations")
+      .update({
+        acompte_statut: "attendu",
+        acompte_paye_le: null,
+        acompte_hors_ligne: false,
+      })
+      .eq("id", reservationId)
+      .eq("restaurant_id", restaurantId)
+      .eq("acompte_hors_ligne", true)
+      .select("id")
+      .maybeSingle();
+
+    if (error) {
+      console.error("[constaterAcompteHorsLigne/retrait]", error);
+      return { error: "Le retrait n'a pas pu être enregistré." };
+    }
+    if (!data) {
+      return {
+        error:
+          "Cet acompte a été réglé par carte : il se rembourse depuis Stripe, pas d'ici.",
+      };
+    }
+  } else {
+    const { data, error } = await supabase
+      .from("restaurant_reservations")
+      .update({
+        acompte_statut: "paye",
+        acompte_paye_le: new Date().toISOString(),
+        acompte_hors_ligne: true,
+        // C'est l'encaissement qui rend la salle ferme, quel que soit le
+        // chemin qu'a pris l'argent.
+        statut: "confirmee",
+        option_expire_le: null,
+      })
+      .eq("id", reservationId)
+      .eq("restaurant_id", restaurantId)
+      .eq("acompte_statut", "attendu")
+      .select("id")
+      .maybeSingle();
+
+    if (error) {
+      console.error("[constaterAcompteHorsLigne]", error);
+      return { error: "Le constat n'a pas pu être enregistré." };
+    }
+    if (!data) {
+      return { error: "Aucun acompte n'est en attente sur cette réservation." };
+    }
+  }
+
+  revalidatePath(`/dashboard/${restaurantId}/reservations`);
+  revalidatePath(`/dashboard/${restaurantId}/devis`);
+  return { error: null };
+}

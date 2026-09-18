@@ -7,6 +7,19 @@ import { EditeurDevis } from "@/components/devis/EditeurDevis";
 import { FeuilleDevis } from "@/components/devis/FeuilleDevis";
 import { BoutonImprimer } from "@/components/devis/BoutonImprimer";
 import { LienAcompte } from "@/components/reservations/LienAcompte";
+import { BoutonAction } from "@/components/reservations/BoutonAction";
+import {
+  constaterAcompteHorsLigne,
+  relancerPaiement,
+} from "@/app/dashboard/[id]/reservations/actions";
+import {
+  libelleAcompte,
+  type StatutAcompte,
+} from "@/lib/reservations/acompte";
+import {
+  libelleCaution,
+  type StatutCaution,
+} from "@/lib/reservations/caution";
 import { exiger } from "@/lib/equipe/roles";
 import {
   LIBELLE_STATUT,
@@ -56,6 +69,15 @@ type Reservation = {
   restaurant_id: string;
   client_nom: string | null;
   client_email: string | null;
+  /** L'état du règlement, pour proposer le lien là où on compose le devis. */
+  acompte_statut: StatutAcompte;
+  acompte_hors_ligne?: boolean;
+  acompte_centimes: number | null;
+  caution_statut: StatutCaution;
+  caution_centimes: number | null;
+  caution_debitee_centimes: number | null;
+  paiement_token: string | null;
+  derniere_relance_le: string | null;
   couverts: number;
   date_reservation: string;
   type: string;
@@ -93,7 +115,7 @@ export default async function DevisPage({
     supabase
       .from("restaurant_reservations")
       .select(
-        "id, restaurant_id, client_nom, client_email, couverts, date_reservation, type",
+        "id, restaurant_id, client_nom, client_email, couverts, date_reservation, type, acompte_statut, acompte_hors_ligne, acompte_centimes, caution_statut, caution_centimes, caution_debitee_centimes, paiement_token, derniere_relance_le",
       )
       .eq("id", reservationId)
       .maybeSingle(),
@@ -155,6 +177,24 @@ export default async function DevisPage({
   const mentions = maison?.devis_mentions ?? maison?.mentions_legales ?? "";
 
   const lien = `${siteUrl()}/devis/${devis.jeton}`;
+
+  // Un règlement attendu du client : acompte non payé, ou empreinte non
+  // encore déposée. Le reste — réglé, libéré, non requis — n'appelle
+  // aucun lien.
+  const attendLeClient =
+    reservation.acompte_statut === "attendu" ||
+    reservation.caution_statut === "attendue";
+  const libelleReglement =
+    libelleAcompte(
+      reservation.acompte_statut,
+      reservation.acompte_centimes,
+      reservation.acompte_hors_ligne,
+    ) ??
+    libelleCaution(
+      reservation.caution_statut,
+      reservation.caution_centimes,
+      reservation.caution_debitee_centimes,
+    );
   const fige = devis.statut === "accepte";
 
   return (
@@ -229,6 +269,79 @@ export default async function DevisPage({
           </div>
         )}
       </div>
+
+      {/* Le règlement, là où le devis se compose.
+          Le lien existait déjà, mais seulement sur la carte du carnet —
+          or c'est ici qu'on est quand un client rappelle pour dire qu'il
+          n'a rien reçu, ou qu'on veut le lui passer par WhatsApp. */}
+      {attendLeClient && reservation.paiement_token && (
+        <div className="flex max-w-3xl flex-col gap-2 rounded-2xl bg-brand-orange-soft p-5">
+          <span className="text-sm font-medium text-brand-navy">
+            {libelleReglement}
+          </span>
+          <span className="text-xs text-zinc-600">
+            {reservation.caution_statut === "attendue"
+              ? "Ton client a reçu ce lien par e-mail : il enregistrera sa carte, rien ne sera prélevé."
+              : "Ton client a reçu ce lien par e-mail : il paiera sur ton compte Stripe, sans commission."}
+          </span>
+          <LienAcompte lien={`${siteUrl()}/paiement/${reservation.paiement_token}`} />
+          <div className="flex flex-wrap items-center gap-3">
+            <BoutonAction
+              action={relancerPaiement}
+              champs={{
+                reservation_id: reservation.id,
+                restaurant_id: id,
+              }}
+              libelle="Relancer par e-mail"
+              enCours="Envoi…"
+              className="rounded-md border border-brand-navy/30 bg-white px-3 py-1.5 text-xs font-medium text-brand-navy hover:border-brand-navy"
+            />
+            {reservation.derniere_relance_le && (
+              <span className="text-xs text-zinc-500">
+                Relancé le{" "}
+                {new Date(reservation.derniere_relance_le).toLocaleDateString(
+                  "fr-FR",
+                  { day: "numeric", month: "long" },
+                )}
+              </span>
+            )}
+            {/* Un virement d'entreprise, des espèces au comptoir : l'argent
+                arrive souvent hors de Stripe, et la salle doit être tenue
+                quand même. */}
+            {reservation.acompte_statut === "attendu" && (
+              <BoutonAction
+                action={constaterAcompteHorsLigne}
+                champs={{
+                  reservation_id: reservation.id,
+                  restaurant_id: id,
+                }}
+                libelle="Déjà encaissé (virement, espèces)"
+                enCours="Enregistrement…"
+                className="text-xs font-medium text-brand-navy underline-offset-2 hover:underline"
+              />
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Constaté à la main, donc défaisable à la main. Un acompte réglé
+          par carte, lui, se rembourse depuis Stripe. */}
+      {reservation.acompte_hors_ligne && (
+        <p className="flex max-w-3xl flex-wrap items-center gap-3 rounded-2xl bg-emerald-50 px-5 py-4 text-sm text-emerald-800">
+          <span className="font-medium">{libelleReglement}</span>
+          <BoutonAction
+            action={constaterAcompteHorsLigne}
+            champs={{
+              reservation_id: reservation.id,
+              restaurant_id: id,
+              retirer: "1",
+            }}
+            libelle="Retirer ce constat"
+            enCours="Retrait…"
+            className="text-xs text-emerald-700 underline-offset-2 hover:underline"
+          />
+        </p>
+      )}
 
       {fige && (
         <p className="rounded-2xl border border-line bg-brand-orange-soft p-4 text-sm leading-relaxed text-ink">
