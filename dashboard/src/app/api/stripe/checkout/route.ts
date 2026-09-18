@@ -3,7 +3,12 @@ import type Stripe from "stripe";
 import { createClient } from "@/lib/supabase/server";
 import { getStripe } from "@/lib/stripe/client";
 import { siteUrl } from "@/lib/site-url";
-import { MODULES, PACK, type Achat } from "@/lib/abonnement/modules";
+import {
+  abonnementOuvrant,
+  MODULES,
+  PACK,
+  type Achat,
+} from "@/lib/abonnement/modules";
 
 /**
  * Le tarif Stripe de chaque achat possible. Trois produits distincts, donc
@@ -63,6 +68,41 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "restaurant introuvable" }, {
       status: 404,
     });
+  }
+
+  // Payer deux fois le même module est trop facile : on clique, le webhook
+  // tarde, l'écran n'a pas encore bougé, on reclique. Deux abonnements
+  // partent, deux prélèvements suivent, et il faut que le restaurateur
+  // s'en aperçoive pour en résilier un. On préfère refuser et l'envoyer
+  // là où il peut agir.
+  //
+  // La lecture passe par sa session : la RLS ne lui montre que ses propres
+  // abonnements, et un module ouvert par un autre établissement ne le
+  // regarde pas.
+  const { data: dejaPayes } = await supabase
+    .from("restaurant_subscriptions")
+    .select("module, status")
+    .eq("restaurant_id", restaurantId);
+
+  const ouverts = new Set(
+    ((dejaPayes ?? []) as { module?: string; status: string }[])
+      .filter((abonnement) => abonnementOuvrant(abonnement.status))
+      .map((abonnement) => abonnement.module ?? "visibilite"),
+  );
+
+  // Le pack ouvre les deux : un seul module déjà payé suffit à le refuser.
+  const conflit =
+    requis === PACK
+      ? MODULES.some((module) => ouverts.has(module))
+      : ouverts.has(requis);
+
+  if (conflit) {
+    return NextResponse.redirect(
+      new URL(
+        `/dashboard/${restaurantId}/abonnement?stripe_error=deja_abonne`,
+        request.url,
+      ),
+    );
   }
 
   const site = siteUrl();

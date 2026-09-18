@@ -96,7 +96,9 @@ export default async function AbonnementPage({
           <p className="mt-1 font-mono text-xs leading-relaxed">
             {query.stripe_error === "configuration"
               ? "Aucun tarif n'est configuré pour ce module (STRIPE_PRICE_ID_…)."
-              : query.stripe_error}
+              : query.stripe_error === "deja_abonne"
+                ? "Ce module est déjà payé. Utilisez « Gérer » pour changer de carte ou résilier — souscrire une seconde fois vous ferait payer deux fois."
+                : query.stripe_error}
           </p>
         </div>
       )}
@@ -174,13 +176,26 @@ export default async function AbonnementPage({
                     >
                       {STATUS_LABELS[abonnement.status] ?? abonnement.status}
                     </span>
+                    {/* Résilié à échéance : le statut reste « actif » chez
+                        Stripe, et il l'est — mais ne pas le dire ferait
+                        croire à une reconduction. */}
+                    {abonnement.cancel_at_period_end && (
+                      <span className="text-orange-600">
+                        {" "}
+                        — résiliation demandée
+                      </span>
+                    )}
                   </p>
                   {abonnement.current_period_end && (
                     <p className="text-sm text-zinc-500">
-                      Prochain renouvellement :{" "}
+                      {abonnement.cancel_at_period_end
+                        ? "Prend fin le "
+                        : "Prochain renouvellement : "}
                       {new Date(
                         abonnement.current_period_end,
                       ).toLocaleDateString("fr-FR")}
+                      {abonnement.cancel_at_period_end &&
+                        " — le module se fermera ce jour-là."}
                     </p>
                   )}
                 </div>

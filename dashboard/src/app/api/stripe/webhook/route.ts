@@ -41,6 +41,10 @@ async function upsertSubscription(subscription: Stripe.Subscription) {
     current_period_end: currentPeriodEnd
       ? new Date(currentPeriodEnd * 1000).toISOString()
       : null,
+    // Une résiliation demandée laisse le statut à « active » jusqu'au
+    // terme : sans ce drapeau, l'écran annonce un renouvellement là où le
+    // service s'arrête.
+    cancel_at_period_end: subscription.cancel_at_period_end ?? false,
     updated_at: new Date().toISOString(),
   };
 
