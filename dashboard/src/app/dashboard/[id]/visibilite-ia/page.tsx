@@ -26,6 +26,15 @@ import {
   type Intention,
 } from "@/lib/ai-visibility/intentions";
 import { ECRANS, type ActionPlan } from "@/lib/ai-visibility/plan";
+import {
+  POIDS,
+  classement,
+  positionMoyenne,
+  scoreGlobal,
+  tauxParAssistant,
+  tauxParIntention,
+  type Mesure,
+} from "@/lib/ai-visibility/score";
 
 // Interroger un assistant puis en extraire les noms cités dépasse largement
 // la durée par défaut d'une fonction serveur. Posée sur la page, la valeur
@@ -79,60 +88,68 @@ export default async function VisibiliteIaPage({
     genere_le: string;
   } | null;
 
-  // Les analyses arrivent triées de la plus récente à la plus ancienne : la
-  // première rencontrée pour un couple (question, assistant) est donc la
-  // dernière en date.
-  const latestByQuestion = new Map<string, AiVisibilityCheck[]>();
-  const seen = new Set<string>();
+  const intentionDe = new Map<string, Intention>(
+    questions.map((q) => [
+      q.id,
+      estIntention(q.intention) ? q.intention : "decouverte",
+    ]),
+  );
+
+  // Les analyses arrivent de la plus récente à la plus ancienne. Pour chaque
+  // couple (question, assistant), la première est l'état actuel ; la
+  // deuxième, l'état précédent — c'est elle qui donne la tendance.
+  const dernieres = new Map<string, AiVisibilityCheck>();
+  const precedentes = new Map<string, AiVisibilityCheck>();
   for (const check of checks) {
-    const key = `${check.question_id}:${check.fournisseur}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    const list = latestByQuestion.get(check.question_id) ?? [];
-    list.push(check);
-    latestByQuestion.set(check.question_id, list);
+    const cle = `${check.question_id}:${check.fournisseur}`;
+    if (!dernieres.has(cle)) dernieres.set(cle, check);
+    else if (!precedentes.has(cle)) precedentes.set(cle, check);
+  }
+
+  const versMesure = (check: AiVisibilityCheck): Mesure | null => {
+    const intention = intentionDe.get(check.question_id);
+    if (!intention) return null; // question supprimée depuis
+    return {
+      questionId: check.question_id,
+      intention,
+      fournisseur: check.modele,
+      estCite: check.est_cite,
+      rang: check.rang,
+    };
+  };
+
+  const actuelles = [...dernieres.values()].flatMap((c) => {
+    const m = versMesure(c);
+    return m ? [m] : [];
+  });
+  const anciennes = [...precedentes.values()].flatMap((c) => {
+    const m = versMesure(c);
+    return m ? [m] : [];
+  });
+
+  const score = scoreGlobal(actuelles);
+  const scorePrecedent = anciennes.length > 0 ? scoreGlobal(anciennes) : null;
+  const delta =
+    score !== null && scorePrecedent !== null ? score - scorePrecedent : null;
+  const parIntention = tauxParIntention(actuelles);
+  const parAssistant = tauxParAssistant(actuelles);
+  const position = positionMoyenne(actuelles);
+  const podium = classement(
+    restaurant.nom,
+    [...dernieres.values()]
+      .filter((c) => intentionDe.has(c.question_id))
+      .map((c) => ({ estCite: c.est_cite, concurrents: c.concurrents })),
+  );
+
+  const latestByQuestion = new Map<string, AiVisibilityCheck[]>();
+  for (const check of dernieres.values()) {
+    const liste = latestByQuestion.get(check.question_id) ?? [];
+    liste.push(check);
+    latestByQuestion.set(check.question_id, liste);
   }
 
   const actifs = configuredProviders().map((provider) => provider.label);
-  const analysedChecks = [...latestByQuestion.values()].flat();
-
-  const intentionDe = (question: AiVisibilityQuestion): Intention =>
-    estIntention(question.intention) ? question.intention : "decouverte";
-
-  // Un taux global ne dit rien : être cité partout dans « les meilleurs bars
-  // de Paris » et nulle part dans « où réserver pour un anniversaire » donne
-  // le même chiffre qu'une salle pleine. On compte donc par intention, et
-  // c'est « on me réserve » qu'on regarde en premier.
-  const parIntention = INTENTIONS.map((intention) => {
-    const concernees = questions.filter((q) => intentionDe(q) === intention);
-    const reponses = concernees.flatMap(
-      (question) => latestByQuestion.get(question.id) ?? [],
-    );
-    const citees = reponses.filter((check) => check.est_cite).length;
-    return {
-      intention,
-      questions: concernees,
-      analysees: reponses.length,
-      citees,
-      part: reponses.length > 0 ? citees / reponses.length : 0,
-    };
-  });
-
-  // Qui occupe la place. Un nom qui revient dans dix réponses n'est pas un
-  // concurrent parmi d'autres : c'est celui à qui l'IA envoie tes clients.
-  const occurrences = new Map<string, number>();
-  for (const check of analysedChecks) {
-    for (const nom of check.concurrents) {
-      const propre = nom.trim();
-      if (!propre) continue;
-      occurrences.set(propre, (occurrences.get(propre) ?? 0) + 1);
-    }
-  }
-  const concurrents = [...occurrences.entries()]
-    .map(([nom, fois]) => ({ nom, fois }))
-    .sort((a, b) => b.fois - a.fois || a.nom.localeCompare(b.nom))
-    .slice(0, 8);
-  const plusCite = concurrents[0]?.fois ?? 1;
+  const aDesAnalyses = actuelles.length > 0;
 
   return (
     <div className="flex flex-1 flex-col gap-10 px-6 py-8">
@@ -141,53 +158,175 @@ export default async function VisibiliteIaPage({
         title={`Visibilité IA — ${restaurant.nom}`}
       />
 
-      <p className="max-w-2xl text-sm leading-relaxed text-zinc-600">
-        De plus en plus de clients demandent à une IA où aller manger. Cette
-        page pose de vraies questions de clients à l&apos;IA, vérifie si ton
-        restaurant fait partie des réponses, face à quels concurrents — et en
-        tire ce qu&apos;il y a à corriger.
-      </p>
-
       {actifs.length === 0 && (
-        <div className="max-w-2xl rounded-2xl border border-orange-200 bg-orange-50 p-5">
+        <div className="max-w-3xl rounded-2xl border border-orange-200 bg-orange-50 p-5">
           <p className="text-sm font-medium text-orange-900">
             Aucun assistant n&apos;est configuré.
           </p>
           <p className="mt-1 text-sm text-orange-800">
             Les analyses ne peuvent pas être lancées tant qu&apos;aucune clé
-            d&apos;API n&apos;est renseignée. Vous pouvez déjà enregistrer vos
+            d&apos;API n&apos;est renseignée. Tu peux déjà enregistrer tes
             questions : elles seront analysables dès qu&apos;une clé sera en
             place.
           </p>
         </div>
       )}
 
-      {/* ——— Les trois taux ——————————————————————————————————— */}
-      {analysedChecks.length > 0 && (
-        <section className="flex max-w-3xl flex-col gap-3">
-          <h2 className="text-sm font-semibold text-ink">Où tu en es</h2>
-          <div className="grid gap-3 sm:grid-cols-3">
-            {parIntention.map((bloc) => (
-              <Jauge key={bloc.intention} {...bloc} />
-            ))}
+      {/* ——— Le cockpit ————————————————————————————————————————— */}
+      {aDesAnalyses ? (
+        <section className="relative max-w-5xl overflow-hidden rounded-3xl bg-brand-navy p-6 text-white shadow-xl sm:p-8">
+          {/* Une lueur, pas un décor : elle donne de la profondeur au bloc
+              sans concurrencer les chiffres. */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-brand-orange/25 blur-3xl"
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -bottom-32 -left-16 h-72 w-72 rounded-full bg-sky-400/10 blur-3xl"
+          />
+
+          <div className="relative grid gap-8 lg:grid-cols-[auto_1fr]">
+            {/* Le score */}
+            <div className="flex flex-col items-center gap-3 lg:items-start">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/60">
+                Score de visibilité IA
+              </p>
+              <Anneau valeur={score ?? 0} />
+              <div className="flex flex-col items-center gap-1 lg:items-start">
+                {delta !== null && delta !== 0 && (
+                  <p
+                    className={`font-mono text-sm tabular-nums ${
+                      delta > 0 ? "text-emerald-300" : "text-orange-300"
+                    }`}
+                  >
+                    {delta > 0 ? "▲" : "▼"} {delta > 0 ? "+" : ""}
+                    {delta} depuis la dernière analyse
+                  </p>
+                )}
+                {delta === 0 && (
+                  <p className="font-mono text-sm text-white/50">
+                    = stable depuis la dernière analyse
+                  </p>
+                )}
+                <p className="text-xs text-white/50">
+                  {actuelles.length} réponse{actuelles.length > 1 ? "s" : ""} ·{" "}
+                  {parAssistant.length} assistant
+                  {parAssistant.length > 1 ? "s" : ""}
+                </p>
+              </div>
+            </div>
+
+            {/* Le détail */}
+            <div className="flex flex-col gap-6">
+              {/* Trois intentions */}
+              <div className="flex flex-col gap-3">
+                {INTENTIONS.map((intention) => {
+                  const t = parIntention[intention];
+                  return (
+                    <div key={intention} className="flex flex-col gap-1.5">
+                      <div className="flex items-baseline justify-between gap-3">
+                        <div className="flex items-baseline gap-2">
+                          <span className="text-sm font-medium">
+                            {LIBELLE_INTENTION[intention]}
+                          </span>
+                          <span className="rounded-full border border-white/15 px-1.5 py-px font-mono text-[10px] text-white/60">
+                            ×{POIDS[intention].toFixed(1)}
+                          </span>
+                        </div>
+                        <span className="font-mono text-sm tabular-nums text-white/80">
+                          {t.part === null
+                            ? "—"
+                            : `${Math.round(t.part * 100)} %`}
+                          <span className="ml-2 text-xs text-white/40">
+                            {t.analysees > 0 && `${t.citees}/${t.analysees}`}
+                          </span>
+                        </span>
+                      </div>
+                      <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+                        <div
+                          className="h-full rounded-full bg-brand-orange transition-[width]"
+                          style={{
+                            width: `${Math.round((t.part ?? 0) * 100)}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Les indicateurs secondaires */}
+              <div className="grid gap-3 sm:grid-cols-3">
+                <Indicateur
+                  libelle="Rang parmi les noms cités"
+                  valeur={podium.rang !== null ? `#${podium.rang}` : "—"}
+                  detail={
+                    podium.rang !== null ? `sur ${podium.total}` : undefined
+                  }
+                />
+                <Indicateur
+                  libelle="Position moyenne quand cité"
+                  valeur={position !== null ? `${position}` : "—"}
+                  detail={position !== null ? "dans la réponse" : "jamais cité"}
+                />
+                <Indicateur
+                  libelle="Questions suivies"
+                  valeur={`${questions.length}`}
+                  detail={`${latestByQuestion.size} analysée${
+                    latestByQuestion.size > 1 ? "s" : ""
+                  }`}
+                />
+              </div>
+
+              {/* Par assistant */}
+              {parAssistant.length > 0 && (
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs text-white/50">Par assistant</span>
+                  {parAssistant.map(({ fournisseur, taux }) => (
+                    <span
+                      key={fournisseur}
+                      className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs"
+                    >
+                      <span className="font-medium">{fournisseur}</span>
+                      <span className="font-mono tabular-nums text-white/70">
+                        {taux.part === null
+                          ? "—"
+                          : `${Math.round(taux.part * 100)} %`}
+                      </span>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
-          <p className="text-xs leading-relaxed text-zinc-500">
-            {RESUME_INTENTION.reservation}
-          </p>
+
+          <details className="relative mt-6 text-xs text-white/60">
+            <summary className="cursor-pointer select-none hover:text-white">
+              Comment lire ce score
+            </summary>
+            <p className="mt-2 max-w-2xl leading-relaxed">
+              Pour chaque intention, on compte la part des réponses où tu es
+              cité. Le score les pondère : « on me réserve » compte pour la
+              moitié, « on me compare » pour trois dixièmes, « on me découvre »
+              pour deux. Une intention sans analyse est simplement ignorée, elle
+              ne te pénalise pas. Le rang te compte parmi tous les noms que les
+              assistants ont cités sur tes questions.
+            </p>
+          </details>
         </section>
+      ) : (
+        <Demarrage pretes={questions.length} />
       )}
 
       {/* ——— Le plan d'action ————————————————————————————————— */}
-      {analysedChecks.length > 0 && (
+      {aDesAnalyses && (
         <section className="flex max-w-3xl flex-col gap-3">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <h2 className="text-sm font-semibold text-ink">
-              Ce que tu peux faire
-            </h2>
+            <Titre numero="01">Ce que tu peux faire</Titre>
             {plan && (
-              <span className="text-xs text-zinc-400">
-                Écrit le{" "}
-                {new Date(plan.genere_le).toLocaleDateString("fr-FR")}
+              <span className="font-mono text-xs text-zinc-400">
+                écrit le {new Date(plan.genere_le).toLocaleDateString("fr-FR")}
               </span>
             )}
           </div>
@@ -197,26 +336,33 @@ export default async function VisibiliteIaPage({
               {plan.actions.map((action, rang) => (
                 <li
                   key={`${rang}-${action.titre}`}
-                  className="flex gap-4 rounded-2xl border border-line bg-white p-4 shadow-sm"
+                  className="group flex gap-4 rounded-2xl border border-line bg-paper p-4 shadow-sm transition-colors hover:border-brand-navy/30"
                 >
-                  <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-navy text-xs font-semibold text-white">
+                  <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-navy font-mono text-xs font-semibold text-white">
                     {rang + 1}
                   </span>
-                  <div className="flex min-w-0 flex-col gap-1">
-                    <p className="text-sm font-medium text-ink">
-                      {action.titre}
-                    </p>
+                  <div className="flex min-w-0 flex-1 flex-col gap-1">
+                    <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                      <p className="text-sm font-semibold text-ink">
+                        {action.titre}
+                      </p>
+                      {rang === 0 && (
+                        <span className="rounded-full bg-brand-orange-soft px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-brand-orange-dark">
+                          Priorité
+                        </span>
+                      )}
+                    </div>
                     {action.pourquoi && (
-                      <p className="text-sm leading-relaxed text-zinc-600">
+                      <p className="text-sm leading-relaxed text-ink-soft">
                         {action.pourquoi}
                       </p>
                     )}
                     {action.ecran && (
                       <Link
                         href={`/dashboard/${id}/${ECRANS[action.ecran].chemin}`}
-                        className="w-fit text-xs font-medium text-brand-orange hover:underline"
+                        className="mt-1 w-fit text-xs font-semibold text-brand-orange hover:underline"
                       >
-                        Aller dans « {ECRANS[action.ecran].libelle} » →
+                        Ouvrir « {ECRANS[action.ecran].libelle} » →
                       </Link>
                     )}
                   </div>
@@ -224,9 +370,9 @@ export default async function VisibiliteIaPage({
               ))}
             </ol>
           ) : (
-            <p className="text-sm text-zinc-500">
-              Pas encore de plan. Il se déduit de tes analyses et de ta fiche
-              — carte, photos, questions fréquentes, espaces privatisables.
+            <p className="text-sm text-ink-soft">
+              Pas encore de plan. Il se déduit de tes analyses et de ta fiche —
+              carte, photos, questions fréquentes, espaces privatisables.
             </p>
           )}
 
@@ -244,50 +390,80 @@ export default async function VisibiliteIaPage({
         </section>
       )}
 
-      {/* ——— Qui te passe devant ——————————————————————————————— */}
-      {concurrents.length > 0 && (
-        <section className="flex max-w-xl flex-col gap-3">
-          <h2 className="text-sm font-semibold text-ink">
-            Qui te passe devant
-          </h2>
-          <p className="text-xs leading-relaxed text-zinc-500">
-            Nombre de réponses où ce nom est cité, sur les{" "}
-            {analysedChecks.length} analysées.
+      {/* ——— Le classement ————————————————————————————————————— */}
+      {aDesAnalyses && podium.lignes.length > 1 && (
+        <section className="flex max-w-3xl flex-col gap-3">
+          <Titre numero="02">Qui l&apos;IA cite à ta place</Titre>
+          <p className="text-xs leading-relaxed text-ink-soft">
+            Nombre de réponses où chaque nom apparaît, sur les{" "}
+            {actuelles.length} analysées. Toi compris.
           </p>
-          <ul className="flex flex-col gap-2">
-            {concurrents.map((concurrent) => (
-              <li key={concurrent.nom} className="flex flex-col gap-1">
-                <div className="flex items-baseline justify-between gap-3">
-                  <span className="truncate text-sm text-ink">
-                    {concurrent.nom}
+          <ol className="flex flex-col overflow-hidden rounded-2xl border border-line bg-paper shadow-sm">
+            {podium.lignes.map((ligne, index) => {
+              const max = podium.lignes[0]?.fois || 1;
+              const rangAffiche =
+                podium.lignes.findIndex((l) => l.fois === ligne.fois) + 1;
+              return (
+                <li
+                  key={ligne.nom}
+                  className={`grid grid-cols-[2.5rem_1fr_auto] items-center gap-3 px-4 py-3 ${
+                    index > 0 ? "border-t border-line" : ""
+                  } ${ligne.toi ? "bg-brand-orange-soft/60" : ""}`}
+                >
+                  <span
+                    className={`font-mono text-sm tabular-nums ${
+                      ligne.toi
+                        ? "font-semibold text-brand-orange-dark"
+                        : "text-zinc-400"
+                    }`}
+                  >
+                    #{rangAffiche}
                   </span>
-                  <span className="shrink-0 text-xs tabular-nums text-zinc-500">
-                    {concurrent.fois}
+                  <div className="flex min-w-0 flex-col gap-1.5">
+                    <div className="flex items-baseline gap-2">
+                      <span
+                        className={`truncate text-sm ${
+                          ligne.toi ? "font-semibold text-ink" : "text-ink"
+                        }`}
+                      >
+                        {ligne.nom}
+                      </span>
+                      {ligne.toi && (
+                        <span className="rounded-full bg-brand-orange px-1.5 py-px text-[10px] font-semibold uppercase tracking-wider text-white">
+                          toi
+                        </span>
+                      )}
+                    </div>
+                    <div className="h-1.5 w-full rounded-full bg-zinc-100">
+                      <div
+                        className={`h-1.5 rounded-full ${
+                          ligne.toi ? "bg-brand-orange" : "bg-brand-navy"
+                        }`}
+                        style={{
+                          width: `${Math.max(3, (ligne.fois / max) * 100)}%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <span className="font-mono text-sm tabular-nums text-ink-soft">
+                    {ligne.fois}
                   </span>
-                </div>
-                <div className="h-1.5 w-full rounded-full bg-zinc-100">
-                  <div
-                    className="h-1.5 rounded-full bg-brand-navy"
-                    style={{
-                      width: `${Math.max(4, (concurrent.fois / plusCite) * 100)}%`,
-                    }}
-                  />
-                </div>
-              </li>
-            ))}
-          </ul>
+                </li>
+              );
+            })}
+          </ol>
         </section>
       )}
 
       {/* ——— Les questions suivies ————————————————————————————— */}
-      <section className="flex max-w-2xl flex-col gap-4">
-        <h2 className="text-sm font-semibold text-ink">Tes questions</h2>
+      <section className="flex max-w-3xl flex-col gap-4">
+        <Titre numero={aDesAnalyses ? "03" : "01"}>Tes questions</Titre>
 
-        <div className="flex flex-col gap-3 rounded-2xl border border-line bg-white p-5 shadow-sm">
+        <div className="flex flex-col gap-3 rounded-2xl border border-line bg-paper p-5 shadow-sm">
           <form action={addQuestion} className="flex flex-wrap items-end gap-2">
             <input type="hidden" name="restaurant_id" value={id} />
             <div className="flex flex-1 basis-56 flex-col gap-1">
-              <label className="text-xs font-medium text-zinc-600">
+              <label className="text-xs font-medium text-ink-soft">
                 Une question que poserait un client
               </label>
               <input
@@ -295,17 +471,17 @@ export default async function VisibiliteIaPage({
                 type="text"
                 required
                 placeholder="ex : où réserver pour un anniversaire dans le 11e ?"
-                className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-zinc-500"
+                className="w-full rounded-md border border-line px-3 py-2 text-sm outline-none focus:border-brand-navy"
               />
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-zinc-600">
+              <label className="text-xs font-medium text-ink-soft">
                 Ce que le client cherche
               </label>
               <select
                 name="intention"
                 defaultValue="reservation"
-                className="rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-zinc-500"
+                className="rounded-md border border-line px-3 py-2 text-sm outline-none focus:border-brand-navy"
               >
                 {INTENTIONS.map((intention) => (
                   <option key={intention} value={intention}>
@@ -322,9 +498,6 @@ export default async function VisibiliteIaPage({
             </button>
           </form>
 
-          {/* Devant un champ vide, personne ne sait quoi taper — et une page
-              de suivi sans rien à suivre ne se rouvre pas. Tant qu'aucune
-              question n'existe, la proposition devient le geste principal. */}
           <BoutonLent
             action={suggestQuestions}
             champs={{ restaurant_id: id }}
@@ -341,27 +514,38 @@ export default async function VisibiliteIaPage({
             }
           />
 
-          <p className="text-xs leading-relaxed text-zinc-500">
+          <p className="text-xs leading-relaxed text-ink-soft">
             Les propositions partent de tes mots-clés et, si ton compte Google
             est relié, des requêtes réellement tapées par ceux qui t&apos;ont
             trouvé.
           </p>
         </div>
 
-        {parIntention
-          .filter((bloc) => bloc.questions.length > 0)
-          .map((bloc) => (
-            <div key={bloc.intention} className="flex flex-col gap-2">
-              <div className="flex flex-col gap-0.5">
-                <h3 className="text-sm font-semibold text-ink">
-                  {LIBELLE_INTENTION[bloc.intention]}
-                </h3>
-                <p className="text-xs leading-relaxed text-zinc-500">
-                  {RESUME_INTENTION[bloc.intention]}
-                </p>
+        {INTENTIONS.map((intention) => {
+          const liste = questions.filter(
+            (q) => intentionDe.get(q.id) === intention,
+          );
+          if (liste.length === 0) return null;
+          const t = parIntention[intention];
+          return (
+            <div key={intention} className="flex flex-col gap-2">
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <div className="flex flex-col gap-0.5">
+                  <h3 className="text-sm font-semibold text-ink">
+                    {LIBELLE_INTENTION[intention]}
+                  </h3>
+                  <p className="text-xs leading-relaxed text-ink-soft">
+                    {RESUME_INTENTION[intention]}
+                  </p>
+                </div>
+                {t.part !== null && (
+                  <span className="font-mono text-xs tabular-nums text-ink-soft">
+                    cité {Math.round(t.part * 100)} % · {t.citees}/{t.analysees}
+                  </span>
+                )}
               </div>
               <ul className="flex flex-col gap-2">
-                {bloc.questions.map((question) => (
+                {liste.map((question) => (
                   <CarteQuestion
                     key={question.id}
                     restaurantId={id}
@@ -372,66 +556,176 @@ export default async function VisibiliteIaPage({
                 ))}
               </ul>
             </div>
-          ))}
+          );
+        })}
       </section>
 
-      <p className="max-w-2xl text-xs leading-relaxed text-zinc-400">
+      <p className="max-w-3xl text-xs leading-relaxed text-zinc-400">
         Assistants interrogés aujourd&apos;hui :{" "}
         {actifs.length > 0 ? actifs.join(", ") : "aucun"}. Les autres
         s&apos;activeront automatiquement dès que leur clé d&apos;API sera
-        renseignée. Les analyses portent sur les connaissances propres de
-        chaque assistant ; les réponses affichées dans les applications grand
-        public (qui vont chercher sur le web en direct) demanderaient un accès
+        renseignée. Les analyses portent sur les connaissances propres de chaque
+        assistant ; les réponses affichées dans les applications grand public
+        (qui vont chercher sur le web en direct) demanderaient un accès
         supplémentaire.
       </p>
     </div>
   );
 }
 
-/**
- * Le taux de citation d'une intention.
- *
- * La barre porte l'information, le chiffre la confirme : on compare trois
- * hauteurs d'un coup d'œil là où trois fractions demandent un calcul.
- */
-function Jauge({
-  intention,
-  analysees,
-  citees,
-  part,
+/* ——— Pièces ———————————————————————————————————————————————————— */
+
+/** Un titre de section numéroté, à la manière d'un tableau de bord. */
+function Titre({
+  numero,
+  children,
 }: {
-  intention: Intention;
-  analysees: number;
-  citees: number;
-  part: number;
+  numero: string;
+  children: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-2 rounded-2xl border border-line bg-white p-4 shadow-sm">
-      <p className="text-xs font-medium text-zinc-600">
-        {LIBELLE_INTENTION[intention]}
+    <h2 className="flex items-baseline gap-3 text-sm font-semibold text-ink">
+      <span className="font-mono text-xs text-brand-orange">{numero}</span>
+      {children}
+    </h2>
+  );
+}
+
+/** Un chiffre secondaire dans le cockpit. */
+function Indicateur({
+  libelle,
+  valeur,
+  detail,
+}: {
+  libelle: string;
+  valeur: string;
+  detail?: string;
+}) {
+  return (
+    <div className="flex flex-col gap-1 rounded-2xl border border-white/10 bg-white/5 p-4">
+      <p className="text-[11px] uppercase tracking-wider text-white/50">
+        {libelle}
       </p>
-      {analysees > 0 ? (
-        <>
-          <p className="text-2xl font-semibold tabular-nums text-brand-navy">
-            {citees}
-            <span className="text-base font-normal text-zinc-400">
-              /{analysees}
-            </span>
-          </p>
-          <div className="h-1.5 w-full rounded-full bg-zinc-100">
-            <div
-              className="h-1.5 rounded-full bg-brand-navy"
-              style={{ width: `${Math.round(part * 100)}%` }}
-            />
-          </div>
-        </>
-      ) : (
-        <>
-          <p className="text-2xl font-semibold text-zinc-300">—</p>
-          <p className="text-xs text-zinc-400">aucune question analysée</p>
-        </>
-      )}
+      <p className="font-mono text-2xl font-semibold tabular-nums">
+        {valeur}
+        {detail && (
+          <span className="ml-2 font-sans text-xs font-normal text-white/50">
+            {detail}
+          </span>
+        )}
+      </p>
     </div>
+  );
+}
+
+/**
+ * L'anneau du score.
+ *
+ * Un SVG pur, rendu côté serveur : pas de bibliothèque, pas de script.
+ * La circonférence est calculée pour que le trait d'avancement soit exact.
+ */
+function Anneau({ valeur }: { valeur: number }) {
+  const rayon = 56;
+  const circonference = 2 * Math.PI * rayon;
+  const avance = (Math.max(0, Math.min(100, valeur)) / 100) * circonference;
+  return (
+    <div className="relative h-40 w-40">
+      <svg viewBox="0 0 140 140" className="h-full w-full -rotate-90">
+        <circle
+          cx="70"
+          cy="70"
+          r={rayon}
+          fill="none"
+          stroke="rgba(255,255,255,0.1)"
+          strokeWidth="10"
+        />
+        <circle
+          cx="70"
+          cy="70"
+          r={rayon}
+          fill="none"
+          stroke="var(--color-brand-orange)"
+          strokeWidth="10"
+          strokeLinecap="round"
+          strokeDasharray={`${avance} ${circonference - avance}`}
+        />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="font-mono text-5xl font-semibold tabular-nums leading-none">
+          {valeur}
+        </span>
+        <span className="mt-1 text-xs text-white/50">/ 100</span>
+      </div>
+    </div>
+  );
+}
+
+/** Ce qu'on voit avant la première analyse : trois pas, pas un vide. */
+function Demarrage({ pretes }: { pretes: number }) {
+  const etapes = [
+    {
+      titre: "Pose les questions de tes clients",
+      texte:
+        "Six sont proposées d'un clic, à partir de tes mots-clés et de ce que tes clients tapent sur Google.",
+      faite: pretes > 0,
+    },
+    {
+      titre: "Lance une analyse",
+      texte:
+        "Chaque assistant configuré répond comme il le ferait à un client. On note si tu es cité, à quelle place, et qui l'est à ta place.",
+      faite: false,
+    },
+    {
+      titre: "Applique ton plan",
+      texte:
+        "Claude croise les réponses et ta fiche Klarr pour te dire quoi corriger, et où.",
+      faite: false,
+    },
+  ];
+  return (
+    <section className="relative max-w-5xl overflow-hidden rounded-3xl bg-brand-navy p-6 text-white shadow-xl sm:p-8">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-brand-orange/25 blur-3xl"
+      />
+      <div className="relative flex flex-col gap-6">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/60">
+            Score de visibilité IA
+          </p>
+          <p className="mt-2 max-w-xl text-sm leading-relaxed text-white/80">
+            De plus en plus de clients demandent à une IA où aller manger. Cette
+            page mesure si ton restaurant fait partie des réponses — et te dit
+            quoi faire pour y entrer.
+          </p>
+        </div>
+        <ol className="grid gap-3 sm:grid-cols-3">
+          {etapes.map((etape, i) => (
+            <li
+              key={etape.titre}
+              className={`flex flex-col gap-2 rounded-2xl border p-4 ${
+                etape.faite
+                  ? "border-emerald-400/40 bg-emerald-400/10"
+                  : "border-white/10 bg-white/5"
+              }`}
+            >
+              <span className="font-mono text-xs text-brand-orange">
+                0{i + 1} {etape.faite && "✓"}
+              </span>
+              <p className="text-sm font-semibold">{etape.titre}</p>
+              <p className="text-xs leading-relaxed text-white/60">
+                {etape.texte}
+              </p>
+            </li>
+          ))}
+        </ol>
+        <p className="text-xs text-white/50">
+          {pretes === 0
+            ? "Commence par le bouton orange ci-dessous."
+            : `${pretes} question${pretes > 1 ? "s" : ""} prête${pretes > 1 ? "s" : ""} — lance une analyse ci-dessous.`}
+        </p>
+      </div>
+    </section>
   );
 }
 
@@ -453,7 +747,7 @@ function CarteQuestion({
   analysable: boolean;
 }) {
   return (
-    <li className="flex flex-col gap-3 rounded-2xl border border-line bg-white p-4 shadow-sm">
+    <li className="flex flex-col gap-3 rounded-2xl border border-line bg-paper p-4 shadow-sm">
       <div className="flex items-start justify-between gap-4">
         <p className="text-sm font-medium text-ink">{question.question}</p>
         <form action={removeQuestion}>
@@ -470,54 +764,61 @@ function CarteQuestion({
       </div>
 
       {results.length > 0 ? (
-        <div className="flex flex-col gap-3">
-          {results.map((check) => (
-            <div
-              key={check.id}
-              className="flex flex-col gap-2 border-t border-zinc-100 pt-3 first:border-0 first:pt-0"
-            >
-              <div className="flex flex-wrap items-center gap-3">
-                <span className="text-sm font-medium text-ink">
-                  {check.modele}
+        <>
+          {/* Le verdict par assistant, lisible d'un coup d'œil. */}
+          <div className="flex flex-wrap gap-2">
+            {results.map((check) => (
+              <span
+                key={check.id}
+                className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs ${
+                  check.est_cite
+                    ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+                    : "border-line bg-zinc-50 text-ink-soft"
+                }`}
+              >
+                <span className="font-medium">{check.modele}</span>
+                <span className="font-mono tabular-nums">
+                  {check.est_cite
+                    ? `cité${check.rang ? ` #${check.rang}` : ""}`
+                    : "non cité"}
                 </span>
-                <span
-                  className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                    check.est_cite
-                      ? "bg-emerald-50 text-emerald-700"
-                      : "bg-zinc-100 text-zinc-600"
-                  }`}
+              </span>
+            ))}
+          </div>
+
+          <details className="text-sm text-ink-soft">
+            <summary className="cursor-pointer text-xs text-ink-soft hover:text-ink">
+              Voir les réponses et les concurrents cités
+            </summary>
+            <div className="mt-3 flex flex-col gap-3">
+              {results.map((check) => (
+                <div
+                  key={check.id}
+                  className="flex flex-col gap-2 border-t border-line pt-3"
                 >
-                  {check.est_cite ? "Cité" : "Non cité"}
-                </span>
-                {check.rang && (
-                  <span className="text-xs text-zinc-500">
-                    Position {check.rang}
-                  </span>
-                )}
-                <span className="text-xs text-zinc-400">
-                  {new Date(check.created_at).toLocaleDateString("fr-FR")}
-                </span>
-              </div>
-
-              {check.concurrents.length > 0 && (
-                <p className="text-sm leading-relaxed text-zinc-600">
-                  Cités à ta place : {check.concurrents.join(", ")}
-                </p>
-              )}
-
-              <details className="text-sm text-zinc-600">
-                <summary className="cursor-pointer text-xs text-zinc-500 hover:text-ink">
-                  Voir la réponse
-                </summary>
-                <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed">
-                  {check.reponse}
-                </p>
-              </details>
+                  <div className="flex flex-wrap items-baseline gap-3">
+                    <span className="text-sm font-medium text-ink">
+                      {check.modele}
+                    </span>
+                    <span className="font-mono text-xs text-zinc-400">
+                      {new Date(check.created_at).toLocaleDateString("fr-FR")}
+                    </span>
+                  </div>
+                  {check.concurrents.length > 0 && (
+                    <p className="text-sm leading-relaxed">
+                      Cités à ta place : {check.concurrents.join(", ")}
+                    </p>
+                  )}
+                  <p className="whitespace-pre-wrap text-sm leading-relaxed">
+                    {check.reponse}
+                  </p>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          </details>
+        </>
       ) : (
-        <p className="text-sm text-zinc-500">Pas encore analysée.</p>
+        <p className="text-sm text-ink-soft">Pas encore analysée.</p>
       )}
 
       {analysable ? (
@@ -527,7 +828,7 @@ function CarteQuestion({
           libelle={results.length > 0 ? "Relancer l'analyse" : "Analyser"}
           // Une demi-minute sans rien à l'écran passe pour une panne. Dire
           // qui travaille, et à quoi s'attendre, suffit à faire patienter.
-          enCours="Claude répond… (environ 30 secondes)"
+          enCours="Les assistants répondent… (30 s à 1 min)"
           className="w-fit rounded-md border border-line px-3 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
         />
       ) : (
