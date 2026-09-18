@@ -4,6 +4,13 @@ import { revalidatePath } from "next/cache";
 import Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@/lib/supabase/server";
 import { runVisibilityChecks } from "@/lib/ai-visibility/check";
+import {
+  CONSIGNE_INTENTION,
+  INTENTIONS,
+  estIntention,
+  type Intention,
+} from "@/lib/ai-visibility/intentions";
+import { etatSearchConsole } from "@/lib/google/requetes-restaurant";
 
 async function getOwnedRestaurant(restaurantId: string) {
   const supabase = await createClient();
@@ -11,13 +18,18 @@ async function getOwnedRestaurant(restaurantId: string) {
   // l'utilisateur connecté.
   const { data } = await supabase
     .from("restaurants")
-    .select("id, nom, adresse")
+    .select("id, nom, adresse, search_console_site")
     .eq("id", restaurantId)
     .maybeSingle();
 
   return {
     supabase,
-    restaurant: data as { id: string; nom: string; adresse: string | null } | null,
+    restaurant: data as {
+      id: string;
+      nom: string;
+      adresse: string | null;
+      search_console_site: string | null;
+    } | null,
   };
 }
 
@@ -26,6 +38,11 @@ export async function addQuestion(formData: FormData) {
   const question = ((formData.get("question") as string) ?? "").trim();
   if (!question) return;
 
+  // Le formulaire propose toujours les trois choix ; la découverte reste le
+  // repli, c'est l'intention la plus large et la moins engageante à corriger.
+  const brute = (formData.get("intention") as string) ?? "";
+  const intention: Intention = estIntention(brute) ? brute : "decouverte";
+
   const supabase = await createClient();
   // ignoreDuplicates génère un ON CONFLICT DO NOTHING : sans lui, PostgREST
   // produit un DO UPDATE, qui exige en plus une policy UPDATE que la table
@@ -33,7 +50,7 @@ export async function addQuestion(formData: FormData) {
   const { error } = await supabase
     .from("ai_visibility_questions")
     .upsert(
-      { restaurant_id: restaurantId, question },
+      { restaurant_id: restaurantId, question, intention },
       { onConflict: "restaurant_id,question", ignoreDuplicates: true },
     );
 
@@ -103,9 +120,15 @@ export async function analyzeQuestion(formData: FormData) {
   revalidatePath(`/dashboard/${restaurantId}/visibilite-ia`);
 }
 
-// Transforme les mots-clés déjà suivis (page SEO) en questions telles qu'un
-// client les poserait réellement à une IA. Les questions sont seulement
-// enregistrées : c'est le bouton "Analyser" qui déclenche ensuite l'analyse.
+// Transforme ce qu'on sait déjà du restaurant en questions telles qu'un
+// client les poserait à une IA. Les questions sont seulement enregistrées :
+// c'est le bouton "Analyser" qui déclenche ensuite l'analyse.
+//
+// Deux sources, et la seconde fait toute la différence. Les mots-clés sont
+// ce que le restaurateur croit qu'on tape ; les requêtes Search Console sont
+// ce qu'on a réellement tapé pour le trouver. Suivre des mots-clés, tout le
+// monde le propose — Malou, Nimt, Semrush. Partir des requêtes mesurées de
+// l'établissement, il faut son compte Google relié, et c'est ce que Klarr a.
 export async function suggestQuestions(formData: FormData) {
   const restaurantId = formData.get("restaurant_id") as string;
 
@@ -121,15 +144,28 @@ export async function suggestQuestions(formData: FormData) {
     (k) => k.keyword,
   );
 
+  // Ne lève jamais : sans compte Google relié, on retombe simplement sur les
+  // mots-clés, comme avant.
+  const mesure = await etatSearchConsole(
+    supabase,
+    restaurantId,
+    restaurant.search_console_site,
+  );
+  const requetes = mesure.requetes.slice(0, 15).map((r) => r.requete);
+
+  const parIntention = INTENTIONS.map(
+    (intention) => `- ${intention} : ${CONSIGNE_INTENTION[intention]}`,
+  ).join("\n");
+
   try {
     const client = new Anthropic();
     const response = await client.messages.create({
       model: "claude-opus-5",
-      max_tokens: 700,
+      max_tokens: 1500,
       system:
         "Tu génères des questions telles qu'un client les poserait à une IA " +
-        "pour trouver où manger. Réponds uniquement par un tableau JSON de " +
-        'chaînes, par exemple ["Où manger ... ?"]. Aucun autre texte.',
+        "pour trouver où manger. Réponds uniquement par un tableau JSON " +
+        'd\'objets {"question": "...", "intention": "..."}. Aucun autre texte.',
       messages: [
         {
           role: "user",
@@ -138,9 +174,15 @@ export async function suggestQuestions(formData: FormData) {
             (restaurant.adresse ? ` (${restaurant.adresse})` : "") +
             `.\nMots-clés suivis : ${
               keywords.length > 0 ? keywords.join(", ") : "aucun"
-            }.\n\n` +
-            "Propose 5 questions courtes, en français, sans jamais citer le " +
-            "nom du restaurant, telles qu'un client du quartier les poserait.",
+            }.\n` +
+            (requetes.length > 0
+              ? `Requêtes réellement tapées par ceux qui l'ont trouvé sur ` +
+                `Google ces quatre dernières semaines : ${requetes.join(", ")}.\n`
+              : "") +
+            `\nTrois intentions possibles :\n${parIntention}\n\n` +
+            "Propose deux questions par intention, soit six en tout, " +
+            "courtes, en français, sans jamais citer le nom du restaurant, " +
+            "telles qu'un client du quartier les poserait.",
         },
       ],
     });
@@ -158,9 +200,24 @@ export async function suggestQuestions(formData: FormData) {
     if (!Array.isArray(parsed)) return;
 
     const questions = parsed
-      .filter((item): item is string => typeof item === "string")
-      .slice(0, 5)
-      .map((question) => ({ restaurant_id: restaurantId, question }));
+      .filter(
+        (item): item is { question: string; intention?: string } =>
+          typeof item === "object" &&
+          item !== null &&
+          typeof (item as { question?: unknown }).question === "string",
+      )
+      .slice(0, 9)
+      .map((item) => ({
+        restaurant_id: restaurantId,
+        question: item.question.trim(),
+        // Une intention inventée par le modèle ne doit pas faire échouer
+        // l'insertion entière sur la contrainte : on retombe au plus large.
+        intention:
+          item.intention && estIntention(item.intention)
+            ? item.intention
+            : "decouverte",
+      }))
+      .filter((item) => item.question.length > 0);
 
     if (questions.length > 0) {
       const { error } = await supabase
