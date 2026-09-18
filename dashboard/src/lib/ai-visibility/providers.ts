@@ -5,7 +5,12 @@ import Anthropic from "@anthropic-ai/sdk";
 // ignoré, et il s'active sans changement de code le jour où la clé est
 // renseignée. Le nom du modèle est lui aussi surchargeable, pour absorber
 // les renommages côté fournisseurs sans redéploiement de code.
-export type ProviderId = "claude" | "chatgpt" | "gemini" | "perplexity";
+export type ProviderId =
+  | "claude"
+  | "chatgpt"
+  | "gemini"
+  | "perplexity"
+  | "mistral";
 
 export type Provider = {
   id: ProviderId;
@@ -44,7 +49,7 @@ async function askClaude(question: string): Promise<string> {
     .trim();
 }
 
-// OpenAI et Perplexity partagent le même format de requête.
+// OpenAI, Perplexity et Mistral partagent le même format de requête.
 async function askOpenAiCompatible({
   url,
   apiKey,
@@ -135,6 +140,21 @@ export const PROVIDERS: Provider[] = [
     label: "Gemini",
     isConfigured: () => Boolean(process.env.GEMINI_API_KEY),
     ask: askGemini,
+  },
+  {
+    // Le français de la bande. Sur « où manger à Paris », un modèle entraîné
+    // ici ne cite pas tout à fait les mêmes maisons — et pour un produit
+    // vendu à des restaurateurs français, l'écart mérite d'être mesuré.
+    id: "mistral",
+    label: "Le Chat (Mistral)",
+    isConfigured: () => Boolean(process.env.MISTRAL_API_KEY),
+    ask: (question) =>
+      askOpenAiCompatible({
+        url: "https://api.mistral.ai/v1/chat/completions",
+        apiKey: process.env.MISTRAL_API_KEY!,
+        model: process.env.MISTRAL_MODEL ?? "mistral-large-latest",
+        question,
+      }),
   },
   {
     id: "perplexity",
