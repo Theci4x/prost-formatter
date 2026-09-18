@@ -18,6 +18,7 @@ import {
   type Inventaire,
 } from "@/lib/ai-visibility/plan";
 import type { AiVisibilityCheck } from "@/types/ai-visibility";
+import { consommerGeste } from "@/lib/ai-visibility/quota";
 
 /**
  * Ce que rend une action lente.
@@ -119,6 +120,9 @@ export async function analyzeQuestion(
   const questionRow = questionData as { id: string; question: string } | null;
   if (!questionRow) return { error: "Question introuvable." };
 
+  const refus = await consommerGeste(restaurantId, "analyse");
+  if (refus) return { error: refus };
+
   try {
     const results = await runVisibilityChecks({
       question: questionRow.question,
@@ -175,6 +179,9 @@ export async function suggestQuestions(
 
   const { supabase, restaurant } = await getOwnedRestaurant(restaurantId);
   if (!restaurant) return { error: "Établissement introuvable." };
+
+  const refus = await consommerGeste(restaurantId, "suggestion");
+  if (refus) return { error: refus };
 
   const { data: keywordsData } = await supabase
     .from("restaurant_keywords")
@@ -326,6 +333,9 @@ export async function genererPlan(
   if (checks.length === 0) {
     return { error: "Analyse d'abord une question : le plan en découle." };
   }
+
+  const refus = await consommerGeste(restaurantId, "plan");
+  if (refus) return { error: refus };
 
   // La fiche complète, en un seul aller-retour par table.
   const [plats, photos, faq, espaces, google] = await Promise.all([
