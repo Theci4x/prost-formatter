@@ -152,14 +152,14 @@ export default async function VisibiliteIaPage({
   const aDesAnalyses = actuelles.length > 0;
 
   return (
-    <div className="flex flex-1 flex-col gap-10 px-6 py-8">
+    <div className="flex flex-1 flex-col gap-8 px-6 py-8">
       <PageHeader
         icon={dashboardIcons.visibiliteIa}
         title={`Visibilité IA — ${restaurant.nom}`}
       />
 
       {actifs.length === 0 && (
-        <div className="max-w-3xl rounded-2xl border border-orange-200 bg-orange-50 p-5">
+        <div className="rounded-2xl border border-orange-200 bg-orange-50 p-5">
           <p className="text-sm font-medium text-orange-900">
             Aucun assistant n&apos;est configuré.
           </p>
@@ -174,7 +174,7 @@ export default async function VisibiliteIaPage({
 
       {/* ——— Le cockpit ————————————————————————————————————————— */}
       {aDesAnalyses ? (
-        <section className="relative max-w-5xl overflow-hidden rounded-3xl bg-brand-navy p-6 text-white shadow-xl sm:p-8">
+        <section className="relative overflow-hidden rounded-3xl bg-brand-navy p-6 text-white shadow-xl sm:p-8">
           {/* Une lueur, pas un décor : elle donne de la profondeur au bloc
               sans concurrencer les chiffres. */}
           <div
@@ -186,7 +186,7 @@ export default async function VisibiliteIaPage({
             className="pointer-events-none absolute -bottom-32 -left-16 h-72 w-72 rounded-full bg-sky-400/10 blur-3xl"
           />
 
-          <div className="relative grid gap-8 lg:grid-cols-[auto_1fr]">
+          <div className="relative grid gap-8 lg:grid-cols-[auto_minmax(0,1fr)] xl:grid-cols-[auto_minmax(0,1fr)_minmax(0,24rem)]">
             {/* Le score */}
             <div className="flex flex-col items-center gap-3 lg:items-start">
               <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/60">
@@ -217,10 +217,9 @@ export default async function VisibiliteIaPage({
               </div>
             </div>
 
-            {/* Le détail */}
-            <div className="flex flex-col gap-6">
-              {/* Trois intentions */}
-              <div className="flex flex-col gap-3">
+            {/* Les trois intentions */}
+            <div className="flex flex-col justify-center gap-4">
+              <div className="flex flex-col gap-4">
                 {INTENTIONS.map((intention) => {
                   const t = parIntention[intention];
                   return (
@@ -255,9 +254,11 @@ export default async function VisibiliteIaPage({
                   );
                 })}
               </div>
+            </div>
 
-              {/* Les indicateurs secondaires */}
-              <div className="grid gap-3 sm:grid-cols-3">
+            {/* Les chiffres qui se lisent d'un coup */}
+            <div className="flex flex-col gap-3">
+              <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
                 <Indicateur
                   libelle="Rang parmi les noms cités"
                   valeur={podium.rang !== null ? `#${podium.rang}` : "—"}
@@ -319,144 +320,147 @@ export default async function VisibiliteIaPage({
         <Demarrage pretes={questions.length} />
       )}
 
-      {/* ——— Le plan d'action ————————————————————————————————— */}
       {aDesAnalyses && (
-        <section className="flex max-w-3xl flex-col gap-3">
-          <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <Titre numero="01">Ce que tu peux faire</Titre>
-            {plan && (
-              <span className="font-mono text-xs text-zinc-400">
-                écrit le {new Date(plan.genere_le).toLocaleDateString("fr-FR")}
-              </span>
-            )}
-          </div>
+        <div className="grid gap-8 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+          {/* ——— Le plan d'action ————————————————————————————————— */}
+          <section className="flex flex-col gap-3">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <Titre numero="01">Ce que tu peux faire</Titre>
+              {plan && (
+                <span className="font-mono text-xs text-zinc-400">
+                  écrit le{" "}
+                  {new Date(plan.genere_le).toLocaleDateString("fr-FR")}
+                </span>
+              )}
+            </div>
 
-          {plan && plan.actions.length > 0 ? (
-            <ol className="flex flex-col gap-2">
-              {plan.actions.map((action, rang) => (
-                <li
-                  key={`${rang}-${action.titre}`}
-                  className="group flex gap-4 rounded-2xl border border-line bg-paper p-4 shadow-sm transition-colors hover:border-brand-navy/30"
-                >
-                  <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-navy font-mono text-xs font-semibold text-white">
-                    {rang + 1}
-                  </span>
-                  <div className="flex min-w-0 flex-1 flex-col gap-1">
-                    <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-                      <p className="text-sm font-semibold text-ink">
-                        {action.titre}
-                      </p>
-                      {rang === 0 && (
-                        <span className="rounded-full bg-brand-orange-soft px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-brand-orange-dark">
-                          Priorité
-                        </span>
-                      )}
-                    </div>
-                    {action.pourquoi && (
-                      <p className="text-sm leading-relaxed text-ink-soft">
-                        {action.pourquoi}
-                      </p>
-                    )}
-                    {action.ecran && (
-                      <Link
-                        href={`/dashboard/${id}/${ECRANS[action.ecran].chemin}`}
-                        className="mt-1 w-fit text-xs font-semibold text-brand-orange hover:underline"
-                      >
-                        Ouvrir « {ECRANS[action.ecran].libelle} » →
-                      </Link>
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ol>
-          ) : (
-            <p className="text-sm text-ink-soft">
-              Pas encore de plan. Il se déduit de tes analyses et de ta fiche —
-              carte, photos, questions fréquentes, espaces privatisables.
-            </p>
-          )}
-
-          <BoutonLent
-            action={genererPlan}
-            champs={{ restaurant_id: id }}
-            libelle={plan ? "Réécrire le plan" : "Écrire mon plan d'action"}
-            enCours="Claude lit tes analyses et ta fiche…"
-            className={
-              plan
-                ? "text-sm font-medium text-brand-orange hover:underline"
-                : "rounded-md bg-brand-orange px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:brightness-95"
-            }
-          />
-        </section>
-      )}
-
-      {/* ——— Le classement ————————————————————————————————————— */}
-      {aDesAnalyses && podium.lignes.length > 1 && (
-        <section className="flex max-w-3xl flex-col gap-3">
-          <Titre numero="02">Qui l&apos;IA cite à ta place</Titre>
-          <p className="text-xs leading-relaxed text-ink-soft">
-            Nombre de réponses où chaque nom apparaît, sur les{" "}
-            {actuelles.length} analysées. Toi compris.
-          </p>
-          <ol className="flex flex-col overflow-hidden rounded-2xl border border-line bg-paper shadow-sm">
-            {podium.lignes.map((ligne, index) => {
-              const max = podium.lignes[0]?.fois || 1;
-              const rangAffiche =
-                podium.lignes.findIndex((l) => l.fois === ligne.fois) + 1;
-              return (
-                <li
-                  key={ligne.nom}
-                  className={`grid grid-cols-[2.5rem_1fr_auto] items-center gap-3 px-4 py-3 ${
-                    index > 0 ? "border-t border-line" : ""
-                  } ${ligne.toi ? "bg-brand-orange-soft/60" : ""}`}
-                >
-                  <span
-                    className={`font-mono text-sm tabular-nums ${
-                      ligne.toi
-                        ? "font-semibold text-brand-orange-dark"
-                        : "text-zinc-400"
-                    }`}
+            {plan && plan.actions.length > 0 ? (
+              <ol className="flex flex-col gap-2">
+                {plan.actions.map((action, rang) => (
+                  <li
+                    key={`${rang}-${action.titre}`}
+                    className="group flex gap-4 rounded-2xl border border-line bg-paper p-4 shadow-sm transition-colors hover:border-brand-navy/30"
                   >
-                    #{rangAffiche}
-                  </span>
-                  <div className="flex min-w-0 flex-col gap-1.5">
-                    <div className="flex items-baseline gap-2">
-                      <span
-                        className={`truncate text-sm ${
-                          ligne.toi ? "font-semibold text-ink" : "text-ink"
-                        }`}
-                      >
-                        {ligne.nom}
-                      </span>
-                      {ligne.toi && (
-                        <span className="rounded-full bg-brand-orange px-1.5 py-px text-[10px] font-semibold uppercase tracking-wider text-white">
-                          toi
-                        </span>
+                    <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-navy font-mono text-xs font-semibold text-white">
+                      {rang + 1}
+                    </span>
+                    <div className="flex min-w-0 flex-1 flex-col gap-1">
+                      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                        <p className="text-sm font-semibold text-ink">
+                          {action.titre}
+                        </p>
+                        {rang === 0 && (
+                          <span className="rounded-full bg-brand-orange-soft px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-brand-orange-dark">
+                            Priorité
+                          </span>
+                        )}
+                      </div>
+                      {action.pourquoi && (
+                        <p className="text-sm leading-relaxed text-ink-soft">
+                          {action.pourquoi}
+                        </p>
+                      )}
+                      {action.ecran && (
+                        <Link
+                          href={`/dashboard/${id}/${ECRANS[action.ecran].chemin}`}
+                          className="mt-1 w-fit text-xs font-semibold text-brand-orange hover:underline"
+                        >
+                          Ouvrir « {ECRANS[action.ecran].libelle} » →
+                        </Link>
                       )}
                     </div>
-                    <div className="h-1.5 w-full rounded-full bg-zinc-100">
-                      <div
-                        className={`h-1.5 rounded-full ${
-                          ligne.toi ? "bg-brand-orange" : "bg-brand-navy"
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <p className="text-sm text-ink-soft">
+                Pas encore de plan. Il se déduit de tes analyses et de ta fiche
+                — carte, photos, questions fréquentes, espaces privatisables.
+              </p>
+            )}
+
+            <BoutonLent
+              action={genererPlan}
+              champs={{ restaurant_id: id }}
+              libelle={plan ? "Réécrire le plan" : "Écrire mon plan d'action"}
+              enCours="Claude lit tes analyses et ta fiche…"
+              className={
+                plan
+                  ? "text-sm font-medium text-brand-orange hover:underline"
+                  : "rounded-md bg-brand-orange px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:brightness-95"
+              }
+            />
+          </section>
+
+          {/* ——— Le classement ————————————————————————————————————— */}
+          {podium.lignes.length > 1 && (
+            <section className="flex flex-col gap-3">
+              <Titre numero="02">Qui l&apos;IA cite à ta place</Titre>
+              <p className="text-xs leading-relaxed text-ink-soft">
+                Nombre de réponses où chaque nom apparaît, sur les{" "}
+                {actuelles.length} analysées. Toi compris.
+              </p>
+              <ol className="flex flex-col overflow-hidden rounded-2xl border border-line bg-paper shadow-sm">
+                {podium.lignes.map((ligne, index) => {
+                  const max = podium.lignes[0]?.fois || 1;
+                  const rangAffiche =
+                    podium.lignes.findIndex((l) => l.fois === ligne.fois) + 1;
+                  return (
+                    <li
+                      key={ligne.nom}
+                      className={`grid grid-cols-[2.5rem_1fr_auto] items-center gap-3 px-4 py-3 ${
+                        index > 0 ? "border-t border-line" : ""
+                      } ${ligne.toi ? "bg-brand-orange-soft/60" : ""}`}
+                    >
+                      <span
+                        className={`font-mono text-sm tabular-nums ${
+                          ligne.toi
+                            ? "font-semibold text-brand-orange-dark"
+                            : "text-zinc-400"
                         }`}
-                        style={{
-                          width: `${Math.max(3, (ligne.fois / max) * 100)}%`,
-                        }}
-                      />
-                    </div>
-                  </div>
-                  <span className="font-mono text-sm tabular-nums text-ink-soft">
-                    {ligne.fois}
-                  </span>
-                </li>
-              );
-            })}
-          </ol>
-        </section>
+                      >
+                        #{rangAffiche}
+                      </span>
+                      <div className="flex min-w-0 flex-col gap-1.5">
+                        <div className="flex items-baseline gap-2">
+                          <span
+                            className={`truncate text-sm ${
+                              ligne.toi ? "font-semibold text-ink" : "text-ink"
+                            }`}
+                          >
+                            {ligne.nom}
+                          </span>
+                          {ligne.toi && (
+                            <span className="rounded-full bg-brand-orange px-1.5 py-px text-[10px] font-semibold uppercase tracking-wider text-white">
+                              toi
+                            </span>
+                          )}
+                        </div>
+                        <div className="h-1.5 w-full rounded-full bg-zinc-100">
+                          <div
+                            className={`h-1.5 rounded-full ${
+                              ligne.toi ? "bg-brand-orange" : "bg-brand-navy"
+                            }`}
+                            style={{
+                              width: `${Math.max(3, (ligne.fois / max) * 100)}%`,
+                            }}
+                          />
+                        </div>
+                      </div>
+                      <span className="font-mono text-sm tabular-nums text-ink-soft">
+                        {ligne.fois}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ol>
+            </section>
+          )}
+        </div>
       )}
 
       {/* ——— Les questions suivies ————————————————————————————— */}
-      <section className="flex max-w-3xl flex-col gap-4">
+      <section className="flex flex-col gap-4">
         <Titre numero={aDesAnalyses ? "03" : "01"}>Tes questions</Titre>
 
         <div className="flex flex-col gap-3 rounded-2xl border border-line bg-paper p-5 shadow-sm">
@@ -544,7 +548,7 @@ export default async function VisibiliteIaPage({
                   </span>
                 )}
               </div>
-              <ul className="flex flex-col gap-2">
+              <ul className="grid gap-2 xl:grid-cols-2">
                 {liste.map((question) => (
                   <CarteQuestion
                     key={question.id}
@@ -683,7 +687,7 @@ function Demarrage({ pretes }: { pretes: number }) {
     },
   ];
   return (
-    <section className="relative max-w-5xl overflow-hidden rounded-3xl bg-brand-navy p-6 text-white shadow-xl sm:p-8">
+    <section className="relative overflow-hidden rounded-3xl bg-brand-navy p-6 text-white shadow-xl sm:p-8">
       <div
         aria-hidden
         className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-brand-orange/25 blur-3xl"
