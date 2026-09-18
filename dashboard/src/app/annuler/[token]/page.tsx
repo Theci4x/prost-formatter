@@ -111,6 +111,10 @@ export default async function AnnulerPage({
             {/* Changer plutôt qu'annuler : c'est presque toujours ce que
                 le client veut vraiment quand il ouvre ce lien une semaine
                 avant. Proposé d'abord, l'annulation reste en dessous. */}
+            {/* Le rappel de ce qui est réservé, une seule fois et en
+                tête : les deux gestes qui suivent portent dessus. */}
+            <p className="text-sm leading-relaxed text-zinc-600">{resume}</p>
+
             {modifiable && service && (
               <ModificationClient
                 token={token}
@@ -121,7 +125,11 @@ export default async function AnnulerPage({
                 dateMin={aujourdhui}
               />
             )}
-            <AnnulationClient token={token} resume={resume} />
+            <AnnulationClient
+              token={token}
+              resume={resume}
+              discret={modifiable}
+            />
           </>
         ) : (
           // Le même message pour un lien inventé et pour un lien périmé :

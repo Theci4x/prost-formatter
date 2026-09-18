@@ -49,14 +49,20 @@ export function ModificationClient({
     );
   }
 
+  // Le bouton plein, et l'annulation en lien discret juste en dessous :
+  // c'est l'inverse de ce qu'on avait posé au départ, et l'inverse était
+  // un piège. Un client venu décaler d'une demi-heure voyait un gros
+  // bouton « Annuler » et un lien qu'on ne remarque pas — il annulait,
+  // puis refaisait une réservation. Toute la mécanique de modification
+  // ne sert à rien si le chemin le plus visible mène ailleurs.
   if (!ouvert) {
     return (
       <button
         type="button"
         onClick={() => setOuvert(true)}
-        className="w-fit text-sm font-medium text-brand-navy underline-offset-2 hover:underline"
+        className="w-fit rounded-md bg-brand-navy px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover"
       >
-        Modifier l&apos;heure ou le nombre de convives
+        Modifier ma réservation
       </button>
     );
   }
