@@ -1,3 +1,4 @@
+import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
 
 // Chaque assistant est optionnel : sans sa clé d'API il est simplement
