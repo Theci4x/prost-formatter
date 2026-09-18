@@ -147,12 +147,20 @@ export default async function VisibiliteIaPage({
   const parIntention = tauxParIntention(actuelles);
   const parAssistant = tauxParAssistant(actuelles);
   const position = positionMoyenne(actuelles);
-  const podium = classement(
-    restaurant.nom,
-    [...dernieres.values()]
-      .filter((c) => intentionDe.has(c.question_id))
-      .map((c) => ({ estCite: c.est_cite, concurrents: c.concurrents })),
-  );
+  // Agréger tous les concurrents dans un seul tableau les dilue : Moonshiner
+  // te bat sur « speakeasy », La Fine Mousse sur « bière », et mélangés ils
+  // ne disent plus rien. On sépare donc ce qui remplit la salle du reste.
+  const reponsesOu = (garde: (intention: Intention) => boolean) =>
+    [...dernieres.values()].flatMap((c) => {
+      const intention = intentionDe.get(c.question_id);
+      if (!intention || !garde(intention)) return [];
+      return [{ estCite: c.est_cite, concurrents: c.concurrents }];
+    });
+
+  const toutes = reponsesOu(() => true);
+  const reservation = reponsesOu((intention) => intention === "reservation");
+  const podium = classement(restaurant.nom, toutes);
+  const podiumReservation = classement(restaurant.nom, reservation);
 
   const latestByQuestion = new Map<string, AiVisibilityCheck[]>();
   for (const check of dernieres.values()) {
@@ -412,77 +420,37 @@ export default async function VisibiliteIaPage({
           {podium.lignes.length > 1 && (
             <section className="flex flex-col gap-3">
               <Titre numero="02">Qui l&apos;IA cite à ta place</Titre>
-              <p className="text-xs leading-relaxed text-ink-soft">
-                Nombre de réponses où chaque nom apparaît, sur les{" "}
-                {actuelles.length} analysées. Toi compris.
-              </p>
-              <ol className="flex flex-col overflow-hidden rounded-2xl border border-line bg-paper shadow-sm">
-                {podium.lignes.map((ligne, index) => {
-                  const max = podium.lignes[0]?.fois || 1;
-                  // Quand l'établissement est loin derrière, on saute des
-                  // noms pour le garder visible : le dire évite de croire
-                  // que la liste est continue.
-                  const saut =
-                    podium.omis > 0 && index === podium.lignes.length - 1;
-                  return (
-                    <Fragment key={ligne.nom}>
-                      {saut && (
-                        <li className="border-t border-line px-4 py-2 text-center text-xs text-zinc-400">
-                          … {podium.omis} autre{podium.omis > 1 ? "s" : ""} nom
-                          {podium.omis > 1 ? "s" : ""} cité
-                          {podium.omis > 1 ? "s" : ""}
-                        </li>
-                      )}
-                      <li
-                        className={`grid grid-cols-[2.5rem_1fr_auto] items-center gap-3 px-4 py-3 ${
-                          index > 0 ? "border-t border-line" : ""
-                        } ${ligne.toi ? "bg-brand-orange-soft/60" : ""}`}
-                      >
-                        <span
-                          className={`font-mono text-sm tabular-nums ${
-                            ligne.toi
-                              ? "font-semibold text-brand-orange-dark"
-                              : "text-zinc-400"
-                          }`}
-                        >
-                          #{ligne.rang}
-                        </span>
-                        <div className="flex min-w-0 flex-col gap-1.5">
-                          <div className="flex items-baseline gap-2">
-                            <span
-                              className={`truncate text-sm ${
-                                ligne.toi
-                                  ? "font-semibold text-ink"
-                                  : "text-ink"
-                              }`}
-                            >
-                              {ligne.nom}
-                            </span>
-                            {ligne.toi && (
-                              <span className="rounded-full bg-brand-orange px-1.5 py-px text-[10px] font-semibold uppercase tracking-wider text-white">
-                                toi
-                              </span>
-                            )}
-                          </div>
-                          <div className="h-1.5 w-full rounded-full bg-zinc-100">
-                            <div
-                              className={`h-1.5 rounded-full ${
-                                ligne.toi ? "bg-brand-orange" : "bg-brand-navy"
-                              }`}
-                              style={{
-                                width: `${Math.max(3, (ligne.fois / max) * 100)}%`,
-                              }}
-                            />
-                          </div>
-                        </div>
-                        <span className="font-mono text-sm tabular-nums text-ink-soft">
-                          {ligne.fois}
-                        </span>
-                      </li>
-                    </Fragment>
-                  );
-                })}
-              </ol>
+
+              {/* Ceux qui te battent quand le client veut réserver sont tes
+                  vrais concurrents commerciaux ; les autres partagent
+                  seulement un mot-clé avec toi. */}
+              {podiumReservation.lignes.length > 1 ? (
+                <>
+                  <Palmares
+                    titre="Quand le client veut réserver"
+                    podium={podiumReservation}
+                    analysees={reservation.length}
+                  />
+                  <details className="flex flex-col gap-2">
+                    <summary className="cursor-pointer text-xs text-ink-soft hover:text-ink">
+                      Voir aussi toutes questions confondues
+                    </summary>
+                    <div className="mt-2">
+                      <Palmares podium={podium} analysees={toutes.length} />
+                    </div>
+                  </details>
+                </>
+              ) : (
+                <>
+                  <Palmares podium={podium} analysees={toutes.length} />
+                  <p className="text-xs leading-relaxed text-ink-soft">
+                    Analyse une question « On me réserve » et ce tableau se
+                    dédoublera : tes vrais concurrents ne sont pas ceux qui
+                    partagent un mot-clé avec toi, ce sont ceux qu&apos;on cite
+                    quand un client cherche où réserver.
+                  </p>
+                </>
+              )}
             </section>
           )}
         </div>
@@ -582,6 +550,7 @@ export default async function VisibiliteIaPage({
                   <CarteQuestion
                     key={question.id}
                     restaurantId={id}
+                    restaurantNom={restaurant.nom}
                     question={question}
                     results={latestByQuestion.get(question.id) ?? []}
                     analysable={actifs.length > 0}
@@ -763,6 +732,113 @@ function Demarrage({ pretes }: { pretes: number }) {
 }
 
 /**
+ * Un classement de noms cités, l'établissement surligné dedans.
+ *
+ * Se compter parmi les autres est ce qui transforme une liste de
+ * concurrents en rang : « #4 sur 9 » se retient, « La Fine Mousse : 7 » non.
+ */
+function Palmares({
+  titre,
+  podium,
+  analysees,
+  compact = false,
+}: {
+  titre?: string;
+  podium: ReturnType<typeof classement>;
+  analysees: number;
+  compact?: boolean;
+}) {
+  const max = podium.lignes[0]?.fois || 1;
+  return (
+    <div className="flex flex-col gap-2">
+      {titre && (
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <h3 className="text-sm font-semibold text-ink">{titre}</h3>
+          {podium.rang !== null && (
+            <span className="font-mono text-xs tabular-nums text-ink-soft">
+              tu es #{podium.rang} sur {podium.total}
+            </span>
+          )}
+        </div>
+      )}
+      {!compact && (
+        <p className="text-xs leading-relaxed text-ink-soft">
+          Nombre de réponses où chaque nom apparaît, sur les {analysees}{" "}
+          analysées. Toi compris.
+        </p>
+      )}
+      <ol
+        className={`flex flex-col overflow-hidden rounded-2xl border border-line ${
+          compact ? "bg-brand-cream" : "bg-paper shadow-sm"
+        }`}
+      >
+        {podium.lignes.map((ligne, index) => {
+          // Quand l'établissement est loin derrière, on saute des noms pour
+          // le garder visible : le dire évite de croire la liste continue.
+          const saut = podium.omis > 0 && index === podium.lignes.length - 1;
+          return (
+            <Fragment key={ligne.nom}>
+              {saut && (
+                <li className="border-t border-line px-4 py-1.5 text-center text-xs text-zinc-400">
+                  … {podium.omis} autre{podium.omis > 1 ? "s" : ""} nom
+                  {podium.omis > 1 ? "s" : ""} cité{podium.omis > 1 ? "s" : ""}
+                </li>
+              )}
+              <li
+                className={`grid grid-cols-[2.5rem_1fr_auto] items-center gap-3 px-4 ${
+                  compact ? "py-2" : "py-3"
+                } ${index > 0 ? "border-t border-line" : ""} ${
+                  ligne.toi ? "bg-brand-orange-soft/60" : ""
+                }`}
+              >
+                <span
+                  className={`font-mono text-sm tabular-nums ${
+                    ligne.toi
+                      ? "font-semibold text-brand-orange-dark"
+                      : "text-zinc-400"
+                  }`}
+                >
+                  #{ligne.rang}
+                </span>
+                <div className="flex min-w-0 flex-col gap-1.5">
+                  <div className="flex items-baseline gap-2">
+                    <span
+                      className={`truncate text-sm text-ink ${
+                        ligne.toi ? "font-semibold" : ""
+                      }`}
+                    >
+                      {ligne.nom}
+                    </span>
+                    {ligne.toi && (
+                      <span className="rounded-full bg-brand-orange px-1.5 py-px text-[10px] font-semibold uppercase tracking-wider text-white">
+                        toi
+                      </span>
+                    )}
+                  </div>
+                  <div className="h-1.5 w-full rounded-full bg-zinc-100">
+                    <div
+                      className={`h-1.5 rounded-full ${
+                        ligne.toi ? "bg-brand-orange" : "bg-brand-navy"
+                      }`}
+                      style={{
+                        width: `${Math.max(3, (ligne.fois / max) * 100)}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+                <span className="font-mono text-sm tabular-nums text-ink-soft">
+                  {ligne.fois}
+                </span>
+              </li>
+            </Fragment>
+          );
+        })}
+      </ol>
+    </div>
+  );
+}
+
+/**
  * Une question suivie, et ce que chaque assistant en a dit.
  *
  * Sortie de la page parce que la liste se regroupe par intention : la même
@@ -770,15 +846,26 @@ function Demarrage({ pretes }: { pretes: number }) {
  */
 function CarteQuestion({
   restaurantId,
+  restaurantNom,
   question,
   results,
   analysable,
 }: {
   restaurantId: string;
+  restaurantNom: string;
   question: AiVisibilityQuestion;
   results: AiVisibilityCheck[];
   analysable: boolean;
 }) {
+  // Le classement propre à cette question. C'est le plus actionnable :
+  // « sur celle-ci, ces trois-là passent devant » se corrige, alors qu'un
+  // tableau qui mélange toutes les questions ne désigne personne.
+  const podium = classement(
+    restaurantNom,
+    results.map((c) => ({ estCite: c.est_cite, concurrents: c.concurrents })),
+    5,
+  );
+
   return (
     <li className="flex flex-col gap-3 rounded-2xl border border-line bg-paper p-4 shadow-sm">
       <div className="flex items-start justify-between gap-4">
@@ -819,9 +906,13 @@ function CarteQuestion({
             ))}
           </div>
 
+          {podium.lignes.length > 1 && (
+            <Palmares podium={podium} analysees={results.length} compact />
+          )}
+
           <details className="text-sm text-ink-soft">
             <summary className="cursor-pointer text-xs text-ink-soft hover:text-ink">
-              Voir les réponses et les concurrents cités
+              Voir les réponses complètes
             </summary>
             <div className="mt-3 flex flex-col gap-3">
               {results.map((check) => (
