@@ -256,6 +256,46 @@ export function reservationRefusee(
 }
 
 /** Pour le restaurateur : une réservation vient d'entrer. */
+/**
+ * Le client a changé son heure ou son nombre de convives.
+ *
+ * Ces deux messages ne passent pas par la table des envois : celle-ci
+ * n'autorise qu'un courriel par genre et par réservation, ce qui est juste
+ * pour une confirmation — on ne confirme qu'une fois — et faux pour une
+ * modification, qu'un client peut faire deux fois dans la semaine.
+ */
+export function reservationModifiee(c: Contexte): Message {
+  const blocs: Bloc[] = [
+    `Bonjour ${echapper(c.clientNom)},`,
+    `Votre réservation chez ${echapper(c.restaurantNom)} a bien été modifiée.`,
+    encadre(c),
+    ligneMinimum(c),
+    ligneAnnulation(c),
+  ].filter(Boolean) as Bloc[];
+
+  return {
+    sujet: sujet(`Réservation modifiée — ${c.restaurantNom}`),
+    texte: texteNu(blocs, c.restaurantNom),
+    html: enveloppe(blocs, c.restaurantNom),
+  };
+}
+
+/** La même nouvelle, côté maison : c'est le plan de salle qui bouge. */
+export function alerteModification(c: Contexte, avant: string): Message {
+  const blocs: Bloc[] = [
+    `<strong>${echapper(c.clientNom)} a modifié sa réservation.</strong>`,
+    `Auparavant : ${echapper(avant)}`,
+    encadre(c),
+    `La disponibilité a été revérifiée avant d'accepter le changement.`,
+  ];
+
+  return {
+    sujet: sujet(`Réservation modifiée — ${c.clientNom}`),
+    texte: texteNu(blocs, "Klarr"),
+    html: enveloppe(blocs, "Klarr"),
+  };
+}
+
 export function alerteRestaurateur(
   c: Contexte,
   confirmee: boolean,

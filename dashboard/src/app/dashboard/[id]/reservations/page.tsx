@@ -32,6 +32,7 @@ import {
   annulerReservation,
   constaterAbsence,
   constaterAcompteHorsLigne,
+  leverCaution,
   relancerPaiement,
 } from "./actions";
 import { BoutonAction } from "@/components/reservations/BoutonAction";
@@ -390,6 +391,21 @@ function Ligne({
                       }}
                       libelle="Déjà encaissé (virement, espèces)"
                       enCours="Enregistrement…"
+                      className="text-xs font-medium text-brand-navy underline-offset-2 hover:underline"
+                    />
+                  )}
+                  {/* On ne demande pas d'empreinte à un ami ou à un
+                      habitué de dix ans. Lever la caution confirme la
+                      table : le restaurateur prend le risque sur lui. */}
+                  {demande.caution_statut === "attendue" && (
+                    <BoutonAction
+                      action={leverCaution}
+                      champs={{
+                        reservation_id: demande.id,
+                        restaurant_id: restaurantId,
+                      }}
+                      libelle="Ne pas demander de caution"
+                      enCours="Levée…"
                       className="text-xs font-medium text-brand-navy underline-offset-2 hover:underline"
                     />
                   )}

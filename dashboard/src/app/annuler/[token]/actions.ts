@@ -3,9 +3,24 @@
 import { createServiceClient } from "@/lib/supabase/service";
 import { peutAnnuler } from "@/lib/reservations/annulation";
 import { prevenirAnnulationClient } from "@/lib/courriel/reservation";
-import type { Contexte } from "@/lib/courriel/messages";
-import type { Service } from "@/types/reservation";
+import {
+  alerteModification,
+  reservationModifiee,
+  type Contexte,
+} from "@/lib/courriel/messages";
+import { envoyerCourriel } from "@/lib/courriel/envoyer";
+import type { Espace, Service } from "@/types/reservation";
 import { notifierEtablissement } from "@/lib/push/envoyer";
+import { peutModifier } from "@/lib/reservations/modification";
+import { chargerFermetures } from "@/lib/reservations/fermetures";
+import {
+  disponibiliteEspace,
+  heuresDArrivee,
+  serviceOuvertCeJour,
+  servicePasseOuTropTard,
+  type Reservation,
+} from "@/lib/reservations/disponibilite";
+import { siteUrl } from "@/lib/site-url";
 
 export type AnnulationState = { error: string | null; fait: boolean };
 
@@ -131,6 +146,246 @@ export async function annulerParLeClient(
         })}. La table se libère.`,
         chemin: `/dashboard/${reservation.restaurant_id}/reservations`,
         etiquette: `annulation-${reservation.id}`,
+      }),
+    ]);
+  }
+
+  return { error: null, fait: true };
+}
+
+export type ModificationState = { error: string | null; fait: boolean };
+
+/**
+ * Modifie une réservation depuis le lien reçu par e-mail.
+ *
+ * Sans ce geste, un client qui veut décaler d'une demi-heure n'a qu'un
+ * recours : annuler et recommencer. Le restaurateur voit alors une table
+ * rendue puis reprise, perd la note interne et l'historique du client, et
+ * pendant le battement quelqu'un d'autre peut prendre le créneau.
+ *
+ * La disponibilité est recalculée exactement comme à la réservation, avec
+ * une précaution : la réservation qu'on déplace est retirée du calcul,
+ * sinon elle se ferait concurrence à elle-même et refuserait un créneau
+ * qu'elle occupe déjà.
+ *
+ * L'espace ne change pas. Si le nouveau nombre de convives n'y tient plus,
+ * on renvoie vers l'établissement plutôt que de replacer le client nous-
+ * mêmes : décider qui va dans quelle salle est un métier, pas un calcul.
+ */
+export async function modifierParLeClient(
+  _prevState: ModificationState,
+  formData: FormData,
+): Promise<ModificationState> {
+  const token = ((formData.get("token") as string | null) ?? "").trim();
+  const date = ((formData.get("date") as string | null) ?? "").trim();
+  const heure = ((formData.get("heure") as string | null) ?? "").trim().slice(0, 5);
+  const couverts = Number(formData.get("couverts"));
+  if (!token) return { error: "Lien invalide.", fait: false };
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return { error: "Choisis une date.", fait: false };
+  }
+  if (!Number.isInteger(couverts) || couverts <= 0) {
+    return { error: "Indique un nombre de convives.", fait: false };
+  }
+
+  const supabase = createServiceClient();
+  const { data } = await supabase
+    .from("restaurant_reservations")
+    .select(
+      "id, restaurant_id, espace_id, service_id, date_reservation, heure_arrivee, couverts, type, statut, client_nom, client_email, acompte_statut, caution_statut",
+    )
+    .eq("annulation_token", token)
+    .maybeSingle();
+
+  const reservation = data as {
+    id: string;
+    restaurant_id: string;
+    espace_id: string;
+    service_id: string | null;
+    date_reservation: string;
+    heure_arrivee: string | null;
+    couverts: number;
+    type: "table" | "privatisation";
+    statut: "demande" | "confirmee" | "refusee" | "annulee" | "expiree";
+    client_nom: string | null;
+    client_email: string | null;
+    acompte_statut: string | null;
+    caution_statut: string | null;
+  } | null;
+  if (!reservation) return { error: "Ce lien n'est plus valide.", fait: false };
+
+  const [espaceResult, serviceResult, devisResult] = await Promise.all([
+    supabase
+      .from("restaurant_espaces")
+      .select("*")
+      .eq("id", reservation.espace_id)
+      .maybeSingle(),
+    reservation.service_id
+      ? supabase
+          .from("restaurant_services")
+          .select("*")
+          .eq("id", reservation.service_id)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+    supabase
+      .from("devis")
+      .select("statut")
+      .eq("reservation_id", reservation.id)
+      .maybeSingle(),
+  ]);
+
+  const espace = espaceResult.data as Espace | null;
+  const service = serviceResult.data as Service | null;
+  const devisAccepte =
+    (devisResult.data as { statut: string } | null)?.statut === "accepte";
+
+  const verdict = peutModifier(reservation, service, devisAccepte, new Date());
+  if (!verdict.possible) return { error: verdict.motif, fait: false };
+
+  if (!espace || !service) {
+    return {
+      error:
+        "Cette réservation ne peut plus être modifiée en ligne. Contacte l'établissement.",
+      fait: false,
+    };
+  }
+
+  const maintenant = new Date();
+  if (!serviceOuvertCeJour(date, service)) {
+    return { error: "Ce service n'est pas assuré ce jour-là.", fait: false };
+  }
+  if (servicePasseOuTropTard(date, service, maintenant)) {
+    return {
+      error:
+        service.delai_heures > 0
+          ? `Les changements ferment ${service.delai_heures} h avant le service.`
+          : "Ce service est passé.",
+      fait: false,
+    };
+  }
+  if (!heuresDArrivee(service).includes(heure)) {
+    return { error: "Choisis une heure dans la liste proposée.", fait: false };
+  }
+
+  const [reservationsResult, fermetures] = await Promise.all([
+    supabase
+      .from("restaurant_reservations")
+      .select(
+        "id, espace_id, service_id, date_reservation, heure_arrivee, couverts, type, statut, option_expire_le",
+      )
+      .eq("restaurant_id", reservation.restaurant_id)
+      .eq("date_reservation", date),
+    chargerFermetures(supabase, reservation.restaurant_id, date),
+  ]);
+
+  // Sans ce filtre, une réservation qu'on déplace de 20h à 20h30 se
+  // heurterait à elle-même et se verrait refuser sa propre place.
+  const voisines = ((reservationsResult.data ?? []) as Reservation[]).filter(
+    (ligne) => ligne.id !== reservation.id,
+  );
+
+  const dispo = disponibiliteEspace({
+    espace,
+    service,
+    date,
+    heure,
+    couverts,
+    reservations: voisines,
+    fermetures,
+    maintenant,
+  });
+  const possible =
+    reservation.type === "table" ? dispo.peutRecevoirTable : dispo.peutEtrePrivatise;
+  if (!possible) {
+    return {
+      error:
+        dispo.raison ??
+        "Ce créneau n'est plus libre. Choisis-en un autre, ou contacte l'établissement.",
+      fait: false,
+    };
+  }
+
+  const avant = `${new Date(
+    `${reservation.date_reservation}T12:00:00`,
+  ).toLocaleDateString("fr-FR", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  })}${
+    reservation.heure_arrivee
+      ? ` à ${reservation.heure_arrivee.slice(0, 5).replace(":", "h")}`
+      : ""
+  }, ${reservation.couverts} couvert${reservation.couverts > 1 ? "s" : ""}`;
+
+  const { data: modifiee, error } = await supabase
+    .from("restaurant_reservations")
+    .update({
+      date_reservation: date,
+      heure_arrivee: heure,
+      couverts,
+    })
+    .eq("id", reservation.id)
+    // Rejoue la vérification en base : deux envois simultanés ne
+    // modifient qu'une fois.
+    .in("statut", ["demande", "confirmee"])
+    .select("id")
+    .maybeSingle();
+
+  if (error || !modifiee) {
+    console.error("[modifierParLeClient]", error);
+    return {
+      error: "La modification a échoué. Réessaie dans un instant.",
+      fait: false,
+    };
+  }
+
+  const { data: restaurantData } = await supabase
+    .from("restaurants")
+    .select("nom, adresse, email_contact")
+    .eq("id", reservation.restaurant_id)
+    .maybeSingle();
+  const restaurant = restaurantData as {
+    nom: string;
+    adresse: string | null;
+    email_contact: string | null;
+  } | null;
+
+  if (restaurant) {
+    const contexte: Contexte = {
+      restaurantNom: restaurant.nom,
+      restaurantAdresse: restaurant.adresse,
+      clientNom: reservation.client_nom ?? "",
+      date,
+      heure,
+      couverts,
+      serviceNom: service.nom,
+      type: reservation.type,
+      lienAnnulation: `${siteUrl()}/annuler/${token}`,
+    };
+
+    await Promise.all([
+      reservation.client_email
+        ? envoyerCourriel({
+            destinataire: reservation.client_email,
+            repondreA: restaurant.email_contact ?? undefined,
+            ...reservationModifiee(contexte),
+          })
+        : Promise.resolve(),
+      restaurant.email_contact
+        ? envoyerCourriel({
+            destinataire: restaurant.email_contact,
+            ...alerteModification(contexte, avant),
+          })
+        : Promise.resolve(),
+      // Le plan de salle change : c'est une information de service, elle
+      // ne peut pas attendre la relève des e-mails.
+      notifierEtablissement(supabase, reservation.restaurant_id, {
+        titre: `Réservation modifiée — ${reservation.client_nom ?? "un client"}`,
+        corps: `Auparavant ${avant}. Désormais ${couverts} couvert${
+          couverts > 1 ? "s" : ""
+        } à ${heure.replace(":", "h")}.`,
+        chemin: `/dashboard/${reservation.restaurant_id}/reservations`,
+        etiquette: `modification-${reservation.id}`,
       }),
     ]);
   }

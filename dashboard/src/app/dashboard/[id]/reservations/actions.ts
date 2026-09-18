@@ -1808,3 +1808,61 @@ export async function constaterAcompteHorsLigne(
   revalidatePath(`/dashboard/${restaurantId}/devis`);
   return { error: null };
 }
+
+/**
+ * Lève la caution demandée à un client.
+ *
+ * Un ami, un habitué de dix ans, un groupe qui a déjà versé un acompte
+ * par virement : le restaurateur sait à qui il a affaire, et réclamer une
+ * empreinte de carte serait déplacé. Jusqu'ici il n'avait pas le choix —
+ * la caution était calculée depuis les réglages de la salle, et la
+ * réservation restait bloquée tant que le client n'avait pas sorti sa
+ * carte.
+ *
+ * Lever la caution rend la table ferme : c'est bien le sens du geste, le
+ * restaurateur prend le risque sur lui en connaissance de cause.
+ */
+export async function leverCaution(
+  _prevState: DecisionState,
+  formData: FormData,
+): Promise<DecisionState> {
+  const reservationId = (formData.get("reservation_id") as string)?.trim();
+  const restaurantId = (formData.get("restaurant_id") as string)?.trim();
+  if (!reservationId || !restaurantId) {
+    return { error: "Réservation introuvable." };
+  }
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("restaurant_reservations")
+    .update({
+      caution_statut: "non_requise",
+      // La salle n'était tenue que par une option en attendant la carte.
+      // Renoncer à la carte, c'est s'engager à sa place.
+      statut: "confirmee",
+      option_expire_le: null,
+    })
+    .eq("id", reservationId)
+    .eq("restaurant_id", restaurantId)
+    // Seule une caution encore attendue se lève : une empreinte déjà
+    // prise se libère depuis Stripe, ce n'est pas le même geste ni les
+    // mêmes conséquences.
+    .eq("caution_statut", "attendue")
+    .select("id")
+    .maybeSingle();
+
+  if (error) {
+    console.error("[leverCaution]", error);
+    return { error: "La caution n'a pas pu être levée." };
+  }
+  if (!data) {
+    return {
+      error:
+        "Aucune caution n'est en attente. Une empreinte déjà enregistrée se libère depuis le bloc de gestion de la caution.",
+    };
+  }
+
+  revalidatePath(`/dashboard/${restaurantId}/reservations`);
+  revalidatePath(`/dashboard/${restaurantId}/devis`);
+  return { error: null };
+}

@@ -10,6 +10,7 @@ import { LienAcompte } from "@/components/reservations/LienAcompte";
 import { BoutonAction } from "@/components/reservations/BoutonAction";
 import {
   constaterAcompteHorsLigne,
+  leverCaution,
   relancerPaiement,
 } from "@/app/dashboard/[id]/reservations/actions";
 import {
@@ -317,6 +318,18 @@ export default async function DevisPage({
                 }}
                 libelle="Déjà encaissé (virement, espèces)"
                 enCours="Enregistrement…"
+                className="text-xs font-medium text-brand-navy underline-offset-2 hover:underline"
+              />
+            )}
+            {reservation.caution_statut === "attendue" && (
+              <BoutonAction
+                action={leverCaution}
+                champs={{
+                  reservation_id: reservation.id,
+                  restaurant_id: id,
+                }}
+                libelle="Ne pas demander de caution"
+                enCours="Levée…"
                 className="text-xs font-medium text-brand-navy underline-offset-2 hover:underline"
               />
             )}
