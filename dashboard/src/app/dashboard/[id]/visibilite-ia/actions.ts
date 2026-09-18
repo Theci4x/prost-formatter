@@ -12,6 +12,18 @@ import {
 } from "@/lib/ai-visibility/intentions";
 import { etatSearchConsole } from "@/lib/google/requetes-restaurant";
 
+/**
+ * Ce que rend une action lente.
+ *
+ * Analyser et proposer prennent des dizaines de secondes et peuvent
+ * échouer — clé refusée, quota, assistant muet. Sans état rendu, l'échec
+ * ne partait que dans le journal du serveur : la page se rechargeait
+ * inchangée et le bouton passait pour cassé.
+ */
+export type AnalyseState = { error: string | null };
+
+const RIEN_A_SIGNALER: AnalyseState = { error: null };
+
 async function getOwnedRestaurant(restaurantId: string) {
   const supabase = await createClient();
   // La RLS garantit qu'on ne récupère le restaurant que s'il appartient à
@@ -76,12 +88,15 @@ export async function removeQuestion(formData: FormData) {
 
 // Une analyse = un appel court, lancé question par question, pour rester dans
 // le temps d'exécution d'une fonction serveur.
-export async function analyzeQuestion(formData: FormData) {
+export async function analyzeQuestion(
+  _prev: AnalyseState,
+  formData: FormData,
+): Promise<AnalyseState> {
   const restaurantId = formData.get("restaurant_id") as string;
   const questionId = formData.get("question_id") as string;
 
   const { supabase, restaurant } = await getOwnedRestaurant(restaurantId);
-  if (!restaurant) return;
+  if (!restaurant) return { error: "Établissement introuvable." };
 
   const { data: questionData } = await supabase
     .from("ai_visibility_questions")
@@ -90,7 +105,7 @@ export async function analyzeQuestion(formData: FormData) {
     .maybeSingle();
 
   const questionRow = questionData as { id: string; question: string } | null;
-  if (!questionRow) return;
+  if (!questionRow) return { error: "Question introuvable." };
 
   try {
     const results = await runVisibilityChecks({
@@ -98,26 +113,37 @@ export async function analyzeQuestion(formData: FormData) {
       restaurantName: restaurant.nom,
     });
 
-    if (results.length > 0) {
-      const { error } = await supabase.from("ai_visibility_checks").insert(
-        results.map((result) => ({
-          question_id: questionRow.id,
-          restaurant_id: restaurantId,
-          fournisseur: result.fournisseur,
-          modele: result.modele,
-          est_cite: result.estCite,
-          rang: result.rang,
-          concurrents: result.concurrents,
-          reponse: result.reponse,
-        })),
-      );
-      if (error) console.error("[analyzeQuestion] insertion", error);
+    // Zéro résultat n'est pas un succès silencieux : tous les assistants
+    // ont échoué, et c'est précisément le cas qui donnait un bouton muet.
+    if (results.length === 0) {
+      return {
+        error: "Aucun assistant n'a répondu. Réessaie dans un instant.",
+      };
+    }
+
+    const { error } = await supabase.from("ai_visibility_checks").insert(
+      results.map((result) => ({
+        question_id: questionRow.id,
+        restaurant_id: restaurantId,
+        fournisseur: result.fournisseur,
+        modele: result.modele,
+        est_cite: result.estCite,
+        rang: result.rang,
+        concurrents: result.concurrents,
+        reponse: result.reponse,
+      })),
+    );
+    if (error) {
+      console.error("[analyzeQuestion] insertion", error);
+      return { error: "L'analyse a abouti mais n'a pas pu être enregistrée." };
     }
   } catch (err) {
     console.error("[analyzeQuestion]", err);
+    return { error: "L'analyse a échoué. Réessaie dans un instant." };
   }
 
   revalidatePath(`/dashboard/${restaurantId}/visibilite-ia`);
+  return RIEN_A_SIGNALER;
 }
 
 // Transforme ce qu'on sait déjà du restaurant en questions telles qu'un
@@ -129,11 +155,14 @@ export async function analyzeQuestion(formData: FormData) {
 // ce qu'on a réellement tapé pour le trouver. Suivre des mots-clés, tout le
 // monde le propose — Malou, Nimt, Semrush. Partir des requêtes mesurées de
 // l'établissement, il faut son compte Google relié, et c'est ce que Klarr a.
-export async function suggestQuestions(formData: FormData) {
+export async function suggestQuestions(
+  _prev: AnalyseState,
+  formData: FormData,
+): Promise<AnalyseState> {
   const restaurantId = formData.get("restaurant_id") as string;
 
   const { supabase, restaurant } = await getOwnedRestaurant(restaurantId);
-  if (!restaurant) return;
+  if (!restaurant) return { error: "Établissement introuvable." };
 
   const { data: keywordsData } = await supabase
     .from("restaurant_keywords")
@@ -194,10 +223,14 @@ export async function suggestQuestions(formData: FormData) {
 
     const start = raw.indexOf("[");
     const end = raw.lastIndexOf("]");
-    if (start === -1 || end === -1) return;
+    if (start === -1 || end === -1) {
+      return { error: "Réponse inattendue du modèle. Réessaie." };
+    }
 
     const parsed: unknown = JSON.parse(raw.slice(start, end + 1));
-    if (!Array.isArray(parsed)) return;
+    if (!Array.isArray(parsed)) {
+      return { error: "Réponse inattendue du modèle. Réessaie." };
+    }
 
     const questions = parsed
       .filter(
@@ -219,18 +252,25 @@ export async function suggestQuestions(formData: FormData) {
       }))
       .filter((item) => item.question.length > 0);
 
-    if (questions.length > 0) {
-      const { error } = await supabase
-        .from("ai_visibility_questions")
-        .upsert(questions, {
-          onConflict: "restaurant_id,question",
-          ignoreDuplicates: true,
-        });
-      if (error) console.error("[suggestQuestions] insertion", error);
+    if (questions.length === 0) {
+      return { error: "Le modèle n'a proposé aucune question. Réessaie." };
+    }
+
+    const { error } = await supabase
+      .from("ai_visibility_questions")
+      .upsert(questions, {
+        onConflict: "restaurant_id,question",
+        ignoreDuplicates: true,
+      });
+    if (error) {
+      console.error("[suggestQuestions] insertion", error);
+      return { error: "Les questions n'ont pas pu être enregistrées." };
     }
   } catch (err) {
     console.error("[suggestQuestions]", err);
+    return { error: "La proposition a échoué. Réessaie dans un instant." };
   }
 
   revalidatePath(`/dashboard/${restaurantId}/visibilite-ia`);
+  return RIEN_A_SIGNALER;
 }

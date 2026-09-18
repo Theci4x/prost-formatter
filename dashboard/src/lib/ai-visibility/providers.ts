@@ -17,13 +17,22 @@ export type Provider = {
 const ANSWER_SYSTEM =
   "Tu réponds comme un assistant grand public à qui quelqu'un demande une " +
   "recommandation de restaurant. Cite des établissements précis quand tu " +
-  "en connais, et n'invente pas d'adresses.";
+  "en connais, et n'invente pas d'adresses. Réponds en texte simple, sans " +
+  "mise en forme Markdown : la réponse est relue telle quelle.";
 
 async function askClaude(question: string): Promise<string> {
   const client = new Anthropic();
   const response = await client.messages.create({
     model: process.env.ANTHROPIC_MODEL ?? "claude-opus-5",
-    max_tokens: 1500,
+    // Le modèle réfléchit avant de répondre, et cette réflexion se prend
+    // sur le même budget que la réponse. Avec 1500 jetons, elle pouvait le
+    // consommer en entier : l'appel réussissait, le texte revenait vide, et
+    // l'analyse se terminait sans rien écrire — un bouton qui ne fait rien.
+    max_tokens: 4000,
+    // On mesure ce qu'un assistant grand public répond spontanément, pas ce
+    // qu'il trouve en y réfléchissant longuement. L'effort le plus bas est
+    // donc le plus fidèle — et le moins cher.
+    output_config: { effort: "low" },
     system: ANSWER_SYSTEM,
     messages: [{ role: "user", content: question }],
   });

@@ -7,6 +7,7 @@ import {
   removeQuestion,
   suggestQuestions,
 } from "./actions";
+import { BoutonLent } from "@/components/visibilite-ia/BoutonLent";
 import { configuredProviders } from "@/lib/ai-visibility/providers";
 import type { Restaurant } from "@/types/restaurant";
 import type {
@@ -21,6 +22,11 @@ import {
   RESUME_INTENTION,
   estIntention,
 } from "@/lib/ai-visibility/intentions";
+
+// Interroger un assistant puis en extraire les noms cités dépasse largement
+// la durée par défaut d'une fonction serveur. Posée sur la page, la valeur
+// s'applique à toutes ses actions serveur.
+export const maxDuration = 60;
 
 export default async function VisibiliteIaPage({
   params,
@@ -193,24 +199,23 @@ export default async function VisibiliteIaPage({
         {/* Devant un champ vide, personne ne sait quoi taper — et une page de
             suivi sans rien à suivre ne se rouvre pas. Tant qu'aucune question
             n'existe, la proposition devient donc le geste principal. */}
-        <form action={suggestQuestions}>
-          <input type="hidden" name="restaurant_id" value={id} />
-          {questions.length === 0 ? (
-            <button
-              type="submit"
-              className="rounded-md bg-brand-orange px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:brightness-95"
-            >
-              Commencer : proposer six questions
-            </button>
-          ) : (
-            <button
-              type="submit"
-              className="text-sm font-medium text-brand-orange hover:underline"
-            >
-              Proposer d&apos;autres questions
-            </button>
-          )}
-        </form>
+        {questions.length === 0 ? (
+          <BoutonLent
+            action={suggestQuestions}
+            champs={{ restaurant_id: id }}
+            libelle="Commencer : proposer six questions"
+            enCours="Le modèle écrit tes questions…"
+            className="rounded-md bg-brand-orange px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:brightness-95"
+          />
+        ) : (
+          <BoutonLent
+            action={suggestQuestions}
+            champs={{ restaurant_id: id }}
+            libelle="Proposer d'autres questions"
+            enCours="Le modèle écrit tes questions…"
+            className="text-sm font-medium text-brand-orange hover:underline"
+          />
+        )}
 
         <p className="text-xs leading-relaxed text-zinc-500">
           Les propositions partent de tes mots-clés et, si ton compte Google est
@@ -350,17 +355,25 @@ function CarteQuestion({
         <p className="text-sm text-zinc-500">Pas encore analysée.</p>
       )}
 
-      <form action={analyzeQuestion}>
-        <input type="hidden" name="restaurant_id" value={restaurantId} />
-        <input type="hidden" name="question_id" value={question.id} />
+      {analysable ? (
+        <BoutonLent
+          action={analyzeQuestion}
+          champs={{ restaurant_id: restaurantId, question_id: question.id }}
+          libelle={results.length > 0 ? "Relancer l'analyse" : "Analyser"}
+          // Une demi-minute sans rien à l'écran passe pour une panne. Dire
+          // qui travaille, et à quoi s'attendre, suffit à faire patienter.
+          enCours="Claude répond… (environ 30 secondes)"
+          className="w-fit rounded-md border border-zinc-200 px-3 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
+        />
+      ) : (
         <button
-          type="submit"
-          disabled={!analysable}
-          className="w-fit rounded-md border border-zinc-200 px-3 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-zinc-200 disabled:hover:text-zinc-700"
+          type="button"
+          disabled
+          className="w-fit cursor-not-allowed rounded-md border border-zinc-200 px-3 py-1.5 text-xs font-medium text-zinc-700 opacity-40"
         >
-          {results.length > 0 ? "Relancer l'analyse" : "Analyser"}
+          Analyser
         </button>
-      </form>
+      )}
     </li>
   );
 }

@@ -49,7 +49,9 @@ async function extractNames(reponse: string): Promise<string[]> {
   const client = new Anthropic();
   const extraction = await client.messages.create({
     model: "claude-opus-5",
-    max_tokens: 500,
+    // Même piège que pour la réponse : la réflexion se paie sur ce budget,
+    // et 500 jetons ne laissaient parfois rien pour la liste elle-même.
+    max_tokens: 2000,
     output_config: { effort: "low" },
     system:
       "Tu extrais des noms d'établissements. Réponds uniquement par un " +
