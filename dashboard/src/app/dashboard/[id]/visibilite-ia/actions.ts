@@ -11,6 +11,13 @@ import {
   type Intention,
 } from "@/lib/ai-visibility/intentions";
 import { etatSearchConsole } from "@/lib/google/requetes-restaurant";
+import {
+  decrireInventaire,
+  estEcran,
+  type ActionPlan,
+  type Inventaire,
+} from "@/lib/ai-visibility/plan";
+import type { AiVisibilityCheck } from "@/types/ai-visibility";
 
 /**
  * Ce que rend une action lente.
@@ -30,7 +37,9 @@ async function getOwnedRestaurant(restaurantId: string) {
   // l'utilisateur connecté.
   const { data } = await supabase
     .from("restaurants")
-    .select("id, nom, adresse, search_console_site")
+    .select(
+      "id, nom, adresse, description, type_cuisine, site_web, search_console_site",
+    )
     .eq("id", restaurantId)
     .maybeSingle();
 
@@ -40,6 +49,9 @@ async function getOwnedRestaurant(restaurantId: string) {
       id: string;
       nom: string;
       adresse: string | null;
+      description: string | null;
+      type_cuisine: string | null;
+      site_web: string | null;
       search_console_site: string | null;
     } | null,
   };
@@ -269,6 +281,201 @@ export async function suggestQuestions(
   } catch (err) {
     console.error("[suggestQuestions]", err);
     return { error: "La proposition a échoué. Réessaie dans un instant." };
+  }
+
+  revalidatePath(`/dashboard/${restaurantId}/visibilite-ia`);
+  return RIEN_A_SIGNALER;
+}
+
+
+/**
+ * Écrit le plan d'action à partir des analyses et de la fiche.
+ *
+ * Deux sources, et la seconde fait toute la valeur : les réponses des
+ * assistants disent où l'on manque, la fiche Klarr dit ce qu'on peut
+ * corriger. Sans elle, le modèle ne saurait produire que des conseils de
+ * référencement qu'on lit partout.
+ */
+export async function genererPlan(
+  _prev: AnalyseState,
+  formData: FormData,
+): Promise<AnalyseState> {
+  const restaurantId = formData.get("restaurant_id") as string;
+
+  const { supabase, restaurant } = await getOwnedRestaurant(restaurantId);
+  if (!restaurant) return { error: "Établissement introuvable." };
+
+  const { data: questionsData } = await supabase
+    .from("ai_visibility_questions")
+    .select("id, question, intention")
+    .eq("restaurant_id", restaurantId);
+
+  const questions = (questionsData ?? []) as {
+    id: string;
+    question: string;
+    intention: string;
+  }[];
+
+  const { data: checksData } = await supabase
+    .from("ai_visibility_checks")
+    .select("*")
+    .eq("restaurant_id", restaurantId)
+    .order("created_at", { ascending: false });
+
+  const checks = (checksData ?? []) as AiVisibilityCheck[];
+  if (checks.length === 0) {
+    return { error: "Analyse d'abord une question : le plan en découle." };
+  }
+
+  // La fiche complète, en un seul aller-retour par table.
+  const [plats, photos, faq, espaces, google] = await Promise.all([
+    supabase
+      .from("restaurant_menu_items")
+      .select("id", { count: "exact", head: true })
+      .eq("restaurant_id", restaurantId),
+    supabase
+      .from("restaurant_photos")
+      .select("id", { count: "exact", head: true })
+      .eq("restaurant_id", restaurantId),
+    supabase
+      .from("restaurant_faq")
+      .select("id", { count: "exact", head: true })
+      .eq("restaurant_id", restaurantId),
+    supabase
+      .from("restaurant_espaces")
+      .select("id", { count: "exact", head: true })
+      .eq("restaurant_id", restaurantId),
+    supabase
+      .from("google_business_connections")
+      .select("restaurant_id")
+      .eq("restaurant_id", restaurantId)
+      .maybeSingle(),
+  ]);
+
+  const mesure = await etatSearchConsole(
+    supabase,
+    restaurantId,
+    restaurant.search_console_site,
+  );
+
+  const inventaire: Inventaire = {
+    description: restaurant.description,
+    typeCuisine: restaurant.type_cuisine,
+    adresse: restaurant.adresse,
+    siteWeb: restaurant.site_web,
+    plats: plats.count ?? 0,
+    photos: photos.count ?? 0,
+    faq: faq.count ?? 0,
+    espaces: espaces.count ?? 0,
+    googleRelie: Boolean(google.data),
+    requetes: mesure.requetes.slice(0, 10).map((r) => r.requete),
+  };
+
+  // Une seule ligne par couple (question, assistant) : la plus récente.
+  const vus = new Set<string>();
+  const dernieres = checks.filter((check) => {
+    const cle = `${check.question_id}:${check.fournisseur}`;
+    if (vus.has(cle)) return false;
+    vus.add(cle);
+    return true;
+  });
+
+  const libelleQuestion = new Map(
+    questions.map((q) => [q.id, `${q.question} [${q.intention}]`]),
+  );
+
+  const resultats = dernieres
+    .map(
+      (check) =>
+        `- ${libelleQuestion.get(check.question_id) ?? "question supprimée"} ` +
+        `— ${check.modele} : ${check.est_cite ? `cité (position ${check.rang ?? "?"})` : "NON cité"}` +
+        (check.concurrents.length > 0
+          ? `, cités à la place : ${check.concurrents.join(", ")}`
+          : ""),
+    )
+    .join("\n");
+
+  try {
+    const client = new Anthropic();
+    const response = await client.messages.create({
+      model: "claude-opus-5",
+      max_tokens: 4000,
+      system:
+        "Tu conseilles un restaurateur français sur sa visibilité dans les " +
+        "réponses des assistants IA. Tu es concret, jamais générique : " +
+        "chaque action se rattache à un manque précis de sa fiche ou à un " +
+        "concurrent nommé. Réponds uniquement par un tableau JSON d'objets " +
+        '{"titre": "...", "pourquoi": "...", "ecran": "..."}. ' +
+        "titre : une action à l'impératif, une ligne, tutoiement. " +
+        "pourquoi : deux phrases maximum, appuyées sur les mesures. " +
+        "ecran : un seul de vitrine, menu, photos, faq, experiences, " +
+        "google, seo, avis — ou null si l'action se joue hors de Klarr. " +
+        "Aucun autre texte.",
+      messages: [
+        {
+          role: "user",
+          content:
+            `Restaurant : "${restaurant.nom}".\n\n` +
+            `Ce que Klarr sait de lui :\n${decrireInventaire(inventaire)}\n\n` +
+            `Résultat des analyses (l'intention est entre crochets ; ` +
+            `reservation est celle qui remplit la salle) :\n${resultats}\n\n` +
+            "Propose au maximum cinq actions, de la plus rentable à la " +
+            "moins, sans jamais répéter un conseil que la fiche satisfait " +
+            "déjà.",
+        },
+      ],
+    });
+
+    const raw = response.content
+      .filter((block): block is Anthropic.TextBlock => block.type === "text")
+      .map((block) => block.text)
+      .join("\n");
+
+    const start = raw.indexOf("[");
+    const end = raw.lastIndexOf("]");
+    if (start === -1 || end === -1) {
+      return { error: "Réponse inattendue du modèle. Réessaie." };
+    }
+
+    const parsed: unknown = JSON.parse(raw.slice(start, end + 1));
+    if (!Array.isArray(parsed)) {
+      return { error: "Réponse inattendue du modèle. Réessaie." };
+    }
+
+    const actions: ActionPlan[] = parsed
+      .filter(
+        (item): item is { titre: string; pourquoi?: string; ecran?: string } =>
+          typeof item === "object" &&
+          item !== null &&
+          typeof (item as { titre?: unknown }).titre === "string",
+      )
+      .slice(0, 5)
+      .map((item) => ({
+        titre: item.titre.trim(),
+        pourquoi: (item.pourquoi ?? "").trim(),
+        // Un écran inventé ne doit pas produire un lien mort : on retombe
+        // sur « pas d'écran », l'action reste lisible.
+        ecran: item.ecran && estEcran(item.ecran) ? item.ecran : null,
+      }))
+      .filter((action) => action.titre.length > 0);
+
+    if (actions.length === 0) {
+      return { error: "Le modèle n'a proposé aucune action. Réessaie." };
+    }
+
+    const { error } = await supabase
+      .from("ai_visibility_plans")
+      .upsert(
+        { restaurant_id: restaurantId, actions, genere_le: new Date().toISOString() },
+        { onConflict: "restaurant_id" },
+      );
+    if (error) {
+      console.error("[genererPlan] enregistrement", error);
+      return { error: "Le plan n'a pas pu être enregistré." };
+    }
+  } catch (err) {
+    console.error("[genererPlan]", err);
+    return { error: "Le plan n'a pas pu être écrit. Réessaie dans un instant." };
   }
 
   revalidatePath(`/dashboard/${restaurantId}/visibilite-ia`);
