@@ -6,7 +6,15 @@ import { MODULES, PACK, type Module } from "@/lib/abonnement/modules";
 
 async function upsertSubscription(subscription: Stripe.Subscription) {
   const restaurantId = subscription.metadata.restaurant_id;
-  if (!restaurantId) return;
+  // Sans cette étiquette, on ne sait pas à qui appartient l'abonnement.
+  // Le silence d'hier coûtait une heure de recherche : on le dit.
+  if (!restaurantId) {
+    console.error(
+      "[stripe webhook] abonnement sans restaurant_id",
+      subscription.id,
+    );
+    return;
+  }
 
   // Ce qui a été acheté. Les abonnements souscrits avant l'existence des
   // modules ne portent pas d'étiquette : ce sont ceux de la visibilité, le
@@ -145,17 +153,31 @@ export async function POST(request: NextRequest) {
   switch (event.type) {
     case "checkout.session.completed": {
       const session = event.data.object as Stripe.Checkout.Session;
-      // `event.account` n'est renseigné que pour un compte connecté : c'est
-      // ce qui distingue l'acompte d'un restaurateur de l'abonnement Klarr.
-      if (event.account) {
+
+      // C'est la séance elle-même qui dit ce qu'elle est, et non
+      // l'enveloppe qui la porte.
+      //
+      // On se fiait à `event.account`, renseigné pour un compte connecté.
+      // Accounts v2 a changé l'acheminement de ces événements, et un
+      // abonnement Klarr pouvait se retrouver traité comme un acompte : la
+      // fonction n'y trouvait pas de jeton et s'arrêtait sans rien écrire
+      // ni rien dire. Un paiement réussi, une base vide, aucune erreur.
+      //
+      // Un acompte porte son jeton dans la métadonnée ; un abonnement
+      // porte un `subscription`. Ces deux marques-là sont posées par notre
+      // propre code : elles ne bougeront pas sous nos pieds.
+      if (session.metadata?.klarr_token) {
         await enregistrerAcompte(session);
-        break;
-      }
-      if (session.subscription) {
+      } else if (session.subscription) {
         const subscription = await getStripe().subscriptions.retrieve(
           session.subscription as string,
         );
         await upsertSubscription(subscription);
+      } else {
+        console.error(
+          "[stripe webhook] séance sans jeton ni abonnement",
+          session.id,
+        );
       }
       break;
     }
