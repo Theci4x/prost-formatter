@@ -4,6 +4,10 @@ import { creerPaiementAcompte, paiementAbouti } from "@/lib/stripe/paiement";
 import { formatEuros, resumePourClient } from "@/lib/reservations/acompte";
 import { engagementClient } from "@/lib/reservations/caution";
 import { cautionEnregistree, demanderCaution } from "@/lib/stripe/caution";
+import {
+  prevenirAcompteRegle,
+  prevenirCautionDeposee,
+} from "@/lib/push/argent";
 import { formatCreneau } from "@/types/reservation";
 import { chargerSeance, PaiementSeance } from "./seance";
 
@@ -214,7 +218,11 @@ export default async function PaiementPage({
         token,
       );
       if (resultat.enregistree) {
-        await supabase
+        // Sous condition de statut, et on regarde ce qui a bougé : le
+        // webhook fait le même travail de son côté quand le client ne
+        // revient pas. Le premier des deux qui passe écrit et prévient ;
+        // le second ne trouve plus rien et se tait.
+        const { data: posee } = await supabase
           .from("restaurant_reservations")
           .update({
             caution_statut: "enregistree",
@@ -226,7 +234,19 @@ export default async function PaiementPage({
             statut: "confirmee",
             option_expire_le: null,
           })
-          .eq("id", ligne.id);
+          .eq("id", ligne.id)
+          .eq("caution_statut", "attendue")
+          .select("id")
+          .maybeSingle();
+
+        if (posee) {
+          await prevenirCautionDeposee(supabase, {
+            id: ligne.id,
+            restaurant_id: ligne.restaurant_id,
+            client_nom: ligne.client_nom,
+            caution_centimes: ligne.caution_centimes,
+          });
+        }
         redirect(`/paiement/${token}`);
       }
     } else if (!enCaution && ligne.stripe_session_id) {
@@ -236,7 +256,7 @@ export default async function PaiementPage({
         token,
       );
       if (resultat.paye) {
-        await supabase
+        const { data: reglee } = await supabase
           .from("restaurant_reservations")
           .update({
             acompte_statut: "paye",
@@ -246,7 +266,19 @@ export default async function PaiementPage({
             statut: "confirmee",
             option_expire_le: null,
           })
-          .eq("id", ligne.id);
+          .eq("id", ligne.id)
+          .eq("acompte_statut", "attendu")
+          .select("id")
+          .maybeSingle();
+
+        if (reglee) {
+          await prevenirAcompteRegle(supabase, {
+            id: ligne.id,
+            restaurant_id: ligne.restaurant_id,
+            client_nom: ligne.client_nom,
+            acompte_centimes: ligne.acompte_centimes,
+          });
+        }
         redirect(`/paiement/${token}`);
       }
     }

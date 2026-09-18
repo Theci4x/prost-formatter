@@ -2,6 +2,11 @@ import { NextResponse, type NextRequest } from "next/server";
 import Stripe from "stripe";
 import { getStripe } from "@/lib/stripe/client";
 import { createServiceClient } from "@/lib/supabase/service";
+import { cautionEnregistree } from "@/lib/stripe/caution";
+import {
+  prevenirAcompteRegle,
+  prevenirCautionDeposee,
+} from "@/lib/push/argent";
 import { MODULES, PACK, type Module } from "@/lib/abonnement/modules";
 
 async function upsertSubscription(subscription: Stripe.Subscription) {
@@ -58,6 +63,71 @@ async function upsertSubscription(subscription: Stripe.Subscription) {
 }
 
 /**
+ * L'empreinte de carte, déposée sur le compte du restaurateur.
+ *
+ * Même filet que pour l'acompte, et il manquait : une caution ne
+ * s'enregistrait que si le client revenait sur notre page. Fermer
+ * l'onglet juste après avoir saisi sa carte laissait la réservation en
+ * « caution attendue » alors que Stripe tenait l'empreinte — et la salle
+ * se libérait toute seule à l'expiration de l'option.
+ */
+async function enregistrerCaution(session: Stripe.Checkout.Session) {
+  const token = session.metadata?.klarr_token;
+  if (!token) return;
+
+  const supabase = createServiceClient();
+  const { data: ligne } = await supabase
+    .from("restaurant_reservations")
+    .select("id, restaurant_id, client_nom, caution_centimes, caution_statut")
+    .eq("paiement_token", token)
+    .maybeSingle();
+
+  const resa = ligne as {
+    id: string;
+    restaurant_id: string;
+    client_nom: string | null;
+    caution_centimes: number | null;
+    caution_statut: string;
+  } | null;
+  if (!resa || resa.caution_statut !== "attendue") return;
+
+  // Le compte connecté se retrouve par la réservation plutôt que par
+  // l'enveloppe de l'événement : c'est une donnée à nous, elle ne changera
+  // pas au gré des versions d'API.
+  const { data: connexion } = await supabase
+    .from("restaurant_stripe_connexions")
+    .select("stripe_account_id")
+    .eq("restaurant_id", resa.restaurant_id)
+    .maybeSingle();
+  const compte = (connexion as { stripe_account_id: string } | null)
+    ?.stripe_account_id;
+  if (!compte) return;
+
+  // L'empreinte est relue chez Stripe, jamais déduite de l'événement.
+  const resultat = await cautionEnregistree(compte, session.id, token);
+  if (!resultat.enregistree) return;
+
+  const { data: posee, error } = await supabase
+    .from("restaurant_reservations")
+    .update({
+      caution_statut: "enregistree",
+      caution_enregistree_le: new Date().toISOString(),
+      stripe_customer_id: resultat.customerId,
+      stripe_payment_method_id: resultat.carteId,
+      statut: "confirmee",
+      option_expire_le: null,
+    })
+    .eq("id", resa.id)
+    .eq("caution_statut", "attendue")
+    .select("id")
+    .maybeSingle();
+  if (error) console.error("[stripe webhook] caution", error);
+  if (!posee) return;
+
+  await prevenirCautionDeposee(supabase, resa);
+}
+
+/**
  * Acompte encaissé sur le compte d'un restaurateur. Le client est censé
  * revenir sur notre page, qui vérifie et enregistre — mais il peut fermer
  * l'onglet juste après avoir payé. Sans ce filet, sa réservation resterait
@@ -76,7 +146,7 @@ async function enregistrerAcompte(session: Stripe.Checkout.Session) {
   // Le jeton désigne soit un acompte sur une réservation, soit une place
   // d'atelier. On tente les deux : le filtre sur le statut garantit qu'un
   // événement rejoué n'écrase rien, et qu'une seule des deux tables répond.
-  const { error } = await supabase
+  const { data: reglee, error } = await supabase
     .from("restaurant_reservations")
     .update({
       acompte_statut: "paye",
@@ -89,8 +159,22 @@ async function enregistrerAcompte(session: Stripe.Checkout.Session) {
       option_expire_le: null,
     })
     .eq("paiement_token", token)
-    .eq("acompte_statut", "attendu");
+    .eq("acompte_statut", "attendu")
+    // Ce qui revient dit si la ligne a bougé : un événement rejoué ne
+    // renverra rien, et ne préviendra donc pas une seconde fois.
+    .select("id, restaurant_id, client_nom, acompte_centimes")
+    .maybeSingle();
   if (error) console.error("[stripe webhook] acompte", error);
+
+  if (reglee) {
+    const resa = reglee as {
+      id: string;
+      restaurant_id: string;
+      client_nom: string | null;
+      acompte_centimes: number | null;
+    };
+    await prevenirAcompteRegle(supabase, resa);
+  }
 
   const { error: erreurSeance } = await supabase
     .from("restaurant_experience_reservations")
@@ -171,7 +255,13 @@ export async function POST(request: NextRequest) {
       // porte un `subscription`. Ces deux marques-là sont posées par notre
       // propre code : elles ne bougeront pas sous nos pieds.
       if (session.metadata?.klarr_token) {
-        await enregistrerAcompte(session);
+        // Deux formes de garantie, deux modes de séance : un acompte se
+        // paie, une caution ne fait qu'empreindre la carte.
+        if (session.mode === "setup") {
+          await enregistrerCaution(session);
+        } else {
+          await enregistrerAcompte(session);
+        }
       } else if (session.subscription) {
         const subscription = await getStripe().subscriptions.retrieve(
           session.subscription as string,
