@@ -26,9 +26,10 @@ export type Contexte = {
   serviceNom: string | null;
   type: "table" | "privatisation";
   /**
-   * L'adresse qui permet au client de rendre sa table en un clic. Sans
-   * elle, un empêchement se règle par téléphone en plein service — donc
-   * le plus souvent ne se règle pas, et la table reste vide.
+   * L'adresse où le client reprend la main : décaler l'heure, changer le
+   * nombre de convives, ou rendre la table. Sans elle, un changement se
+   * règle par téléphone en plein service — donc le plus souvent ne se
+   * règle pas, et la table reste vide ou mal dimensionnée.
    */
   lienAnnulation?: string | null;
   /**
@@ -115,13 +116,20 @@ function ligneMinimum(c: Contexte): string {
 }
 
 /**
- * La phrase qui rend la table. Elle vient en dernier, en lien discret et
- * non en bouton : on ne pousse personne à annuler, on rend juste la
- * chose possible.
+ * La phrase qui laisse la main au client. Elle vient en dernier, en lien
+ * discret et non en bouton : on ne pousse personne à annuler, on rend
+ * juste la chose possible.
+ *
+ * Elle parlait d'annulation seule, et c'est ce que le lien savait faire.
+ * Il permet maintenant de décaler l'heure ou de changer le nombre de
+ * convives — ce que le client veut presque toujours faire en réalité. Le
+ * dire dans cet ordre n'est pas cosmétique : un client qui ne lit que
+ * « annuler » annule, puis refait une réservation, et la table passe par
+ * une minute de vide où quelqu'un d'autre peut la prendre.
  */
 function ligneAnnulation(c: Contexte): string {
   return c.lienAnnulation
-    ? `Un empêchement ? ${lien("Rendez votre table en un clic", c.lienAnnulation)}.`
+    ? `Un changement ? ${lien("Modifiez ou annulez votre réservation", c.lienAnnulation)} — l'heure, le nombre de convives, ou rendre la table.`
     : "";
 }
 
