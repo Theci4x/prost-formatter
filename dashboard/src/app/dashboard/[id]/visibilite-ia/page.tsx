@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -122,15 +123,27 @@ export default async function VisibiliteIaPage({
     const m = versMesure(c);
     return m ? [m] : [];
   });
-  const anciennes = [...precedentes.values()].flatMap((c) => {
-    const m = versMesure(c);
-    return m ? [m] : [];
-  });
-
   const score = scoreGlobal(actuelles);
-  const scorePrecedent = anciennes.length > 0 ? scoreGlobal(anciennes) : null;
-  const delta =
-    score !== null && scorePrecedent !== null ? score - scorePrecedent : null;
+
+  // La tendance ne se compare qu'à périmètre égal : seulement les couples
+  // (question, assistant) analysés deux fois. Rapporter le score du jour,
+  // calculé sur trois questions, à celui d'hier calculé sur une seule,
+  // produisait un « stable » qui ne voulait rien dire.
+  const reanalyses = [...precedentes.keys()].filter((cle) =>
+    dernieres.has(cle),
+  );
+  const mesuresDe = (source: Map<string, AiVisibilityCheck>) =>
+    reanalyses.flatMap((cle) => {
+      const m = versMesure(source.get(cle)!);
+      return m ? [m] : [];
+    });
+  const avant =
+    reanalyses.length > 0 ? scoreGlobal(mesuresDe(precedentes)) : null;
+  const apres =
+    reanalyses.length > 0 ? scoreGlobal(mesuresDe(dernieres)) : null;
+  const delta = avant !== null && apres !== null ? apres - avant : null;
+  // Le delta ne porte que sur une partie des questions : on le dit.
+  const deltaPartiel = reanalyses.length < dernieres.size;
   const parIntention = tauxParIntention(actuelles);
   const parAssistant = tauxParAssistant(actuelles);
   const position = positionMoyenne(actuelles);
@@ -194,19 +207,22 @@ export default async function VisibiliteIaPage({
               </p>
               <Anneau valeur={score ?? 0} />
               <div className="flex flex-col items-center gap-1 lg:items-start">
-                {delta !== null && delta !== 0 && (
+                {delta !== null && (
                   <p
                     className={`font-mono text-sm tabular-nums ${
-                      delta > 0 ? "text-emerald-300" : "text-orange-300"
+                      delta > 0
+                        ? "text-emerald-300"
+                        : delta < 0
+                          ? "text-orange-300"
+                          : "text-white/50"
                     }`}
                   >
-                    {delta > 0 ? "▲" : "▼"} {delta > 0 ? "+" : ""}
-                    {delta} depuis la dernière analyse
-                  </p>
-                )}
-                {delta === 0 && (
-                  <p className="font-mono text-sm text-white/50">
-                    = stable depuis la dernière analyse
+                    {delta === 0
+                      ? "= stable"
+                      : `${delta > 0 ? "▲ +" : "▼ "}${delta}`}{" "}
+                    {deltaPartiel
+                      ? "sur les questions réanalysées"
+                      : "depuis la dernière analyse"}
                   </p>
                 )}
                 <p className="text-xs text-white/50">
@@ -403,54 +419,67 @@ export default async function VisibiliteIaPage({
               <ol className="flex flex-col overflow-hidden rounded-2xl border border-line bg-paper shadow-sm">
                 {podium.lignes.map((ligne, index) => {
                   const max = podium.lignes[0]?.fois || 1;
-                  const rangAffiche =
-                    podium.lignes.findIndex((l) => l.fois === ligne.fois) + 1;
+                  // Quand l'établissement est loin derrière, on saute des
+                  // noms pour le garder visible : le dire évite de croire
+                  // que la liste est continue.
+                  const saut =
+                    podium.omis > 0 && index === podium.lignes.length - 1;
                   return (
-                    <li
-                      key={ligne.nom}
-                      className={`grid grid-cols-[2.5rem_1fr_auto] items-center gap-3 px-4 py-3 ${
-                        index > 0 ? "border-t border-line" : ""
-                      } ${ligne.toi ? "bg-brand-orange-soft/60" : ""}`}
-                    >
-                      <span
-                        className={`font-mono text-sm tabular-nums ${
-                          ligne.toi
-                            ? "font-semibold text-brand-orange-dark"
-                            : "text-zinc-400"
-                        }`}
+                    <Fragment key={ligne.nom}>
+                      {saut && (
+                        <li className="border-t border-line px-4 py-2 text-center text-xs text-zinc-400">
+                          … {podium.omis} autre{podium.omis > 1 ? "s" : ""} nom
+                          {podium.omis > 1 ? "s" : ""} cité
+                          {podium.omis > 1 ? "s" : ""}
+                        </li>
+                      )}
+                      <li
+                        className={`grid grid-cols-[2.5rem_1fr_auto] items-center gap-3 px-4 py-3 ${
+                          index > 0 ? "border-t border-line" : ""
+                        } ${ligne.toi ? "bg-brand-orange-soft/60" : ""}`}
                       >
-                        #{rangAffiche}
-                      </span>
-                      <div className="flex min-w-0 flex-col gap-1.5">
-                        <div className="flex items-baseline gap-2">
-                          <span
-                            className={`truncate text-sm ${
-                              ligne.toi ? "font-semibold text-ink" : "text-ink"
-                            }`}
-                          >
-                            {ligne.nom}
-                          </span>
-                          {ligne.toi && (
-                            <span className="rounded-full bg-brand-orange px-1.5 py-px text-[10px] font-semibold uppercase tracking-wider text-white">
-                              toi
+                        <span
+                          className={`font-mono text-sm tabular-nums ${
+                            ligne.toi
+                              ? "font-semibold text-brand-orange-dark"
+                              : "text-zinc-400"
+                          }`}
+                        >
+                          #{ligne.rang}
+                        </span>
+                        <div className="flex min-w-0 flex-col gap-1.5">
+                          <div className="flex items-baseline gap-2">
+                            <span
+                              className={`truncate text-sm ${
+                                ligne.toi
+                                  ? "font-semibold text-ink"
+                                  : "text-ink"
+                              }`}
+                            >
+                              {ligne.nom}
                             </span>
-                          )}
+                            {ligne.toi && (
+                              <span className="rounded-full bg-brand-orange px-1.5 py-px text-[10px] font-semibold uppercase tracking-wider text-white">
+                                toi
+                              </span>
+                            )}
+                          </div>
+                          <div className="h-1.5 w-full rounded-full bg-zinc-100">
+                            <div
+                              className={`h-1.5 rounded-full ${
+                                ligne.toi ? "bg-brand-orange" : "bg-brand-navy"
+                              }`}
+                              style={{
+                                width: `${Math.max(3, (ligne.fois / max) * 100)}%`,
+                              }}
+                            />
+                          </div>
                         </div>
-                        <div className="h-1.5 w-full rounded-full bg-zinc-100">
-                          <div
-                            className={`h-1.5 rounded-full ${
-                              ligne.toi ? "bg-brand-orange" : "bg-brand-navy"
-                            }`}
-                            style={{
-                              width: `${Math.max(3, (ligne.fois / max) * 100)}%`,
-                            }}
-                          />
-                        </div>
-                      </div>
-                      <span className="font-mono text-sm tabular-nums text-ink-soft">
-                        {ligne.fois}
-                      </span>
-                    </li>
+                        <span className="font-mono text-sm tabular-nums text-ink-soft">
+                          {ligne.fois}
+                        </span>
+                      </li>
+                    </Fragment>
                   );
                 })}
               </ol>

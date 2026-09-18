@@ -83,7 +83,13 @@ export function positionMoyenne(mesures: Mesure[]): number | null {
   );
 }
 
-export type LigneClassement = { nom: string; fois: number; toi: boolean };
+export type LigneClassement = {
+  nom: string;
+  fois: number;
+  toi: boolean;
+  /** Le rang sur la liste entière, pas sur la portion affichée. */
+  rang: number;
+};
 
 /**
  * Le classement des noms cités, l'établissement inclus.
@@ -95,7 +101,13 @@ export function classement(
   restaurantNom: string,
   reponses: { estCite: boolean; concurrents: string[] }[],
   limite = 8,
-): { lignes: LigneClassement[]; rang: number | null; total: number } {
+): {
+  lignes: LigneClassement[];
+  rang: number | null;
+  total: number;
+  /** Combien de noms sautés entre la tête affichée et l'établissement. */
+  omis: number;
+} {
   const occurrences = new Map<string, number>();
   let citations = 0;
   for (const r of reponses) {
@@ -106,7 +118,8 @@ export function classement(
       occurrences.set(nom, (occurrences.get(nom) ?? 0) + 1);
     }
   }
-  const lignes: LigneClassement[] = [
+
+  const triees = [
     ...[...occurrences.entries()].map(([nom, fois]) => ({
       nom,
       fois,
@@ -115,19 +128,27 @@ export function classement(
     { nom: restaurantNom, fois: citations, toi: true },
   ].sort((a, b) => b.fois - a.fois || a.nom.localeCompare(b.nom));
 
+  // Rang de compétition : les ex æquo partagent le meilleur rang du groupe,
+  // et le suivant reprend à la position réelle. Calculé une fois sur la
+  // liste entière — le déduire de la portion affichée donnait « #8 » à qui
+  // était vingt-deuxième.
+  const lignes: LigneClassement[] = triees.map((ligne, index) => ({
+    ...ligne,
+    rang:
+      triees.findIndex((autre) => autre.fois === ligne.fois) + 1 || index + 1,
+  }));
+
   const total = lignes.length;
   const indexToi = lignes.findIndex((l) => l.toi);
-  // Ex æquo : on prend le meilleur rang du groupe, comme sur un podium.
-  const rang =
-    total > 1 && indexToi !== -1
-      ? lignes.findIndex((l) => l.fois === lignes[indexToi].fois) + 1
-      : null;
+  const rang = total > 1 && indexToi !== -1 ? lignes[indexToi].rang : null;
 
   // On garde toujours l'établissement visible, même hors des premiers.
   const tete = lignes.slice(0, limite);
-  const visibles = tete.some((l) => l.toi)
+  const dansLaTete = tete.some((l) => l.toi);
+  const visibles = dansLaTete
     ? tete
-    : [...tete.slice(0, limite - 1), lignes[indexToi]];
+    : [...lignes.slice(0, limite - 1), lignes[indexToi]!];
+  const omis = dansLaTete ? 0 : Math.max(0, indexToi - (limite - 1));
 
-  return { lignes: visibles, rang, total };
+  return { lignes: visibles, rang, total, omis };
 }
