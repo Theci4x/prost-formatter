@@ -17,6 +17,9 @@ const PAGES_FIXES = [
   { chemin: "/aide", priorite: 0.6 },
   { chemin: "/aide/contact", priorite: 0.4 },
   { chemin: "/blog", priorite: 0.8 },
+  // Une page d'intention d'achat : quelqu'un qui compare est à deux
+  // doigts de choisir.
+  { chemin: "/comparatif-logiciels-reservation-restaurant", priorite: 0.9 },
 ];
 
 /**

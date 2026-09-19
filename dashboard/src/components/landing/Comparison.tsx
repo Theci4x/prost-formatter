@@ -1,3 +1,4 @@
+import Link from "next/link";
 const WITH_KLARR = [
   "Fiche Google, avis, réseaux sociaux et menu au même endroit",
   "Des mots-clés choisis à partir d'une analyse, pas au hasard",
@@ -88,7 +89,9 @@ function Column({
         }}
       >
         {title}{" "}
-        <span style={{ color: positive ? "var(--accent-dark)" : "var(--ink-soft)" }}>
+        <span
+          style={{ color: positive ? "var(--accent-dark)" : "var(--ink-soft)" }}
+        >
           {highlight}
         </span>
       </h3>
@@ -113,7 +116,11 @@ function Column({
               color: positive ? "var(--ink)" : "var(--ink-soft)",
             }}
           >
-            <span style={{ color: positive ? "var(--accent-dark)" : "var(--ink-soft)" }}>
+            <span
+              style={{
+                color: positive ? "var(--accent-dark)" : "var(--ink-soft)",
+              }}
+            >
               {positive ? <CheckIcon /> : <CrossIcon />}
             </span>
             {item}
@@ -160,10 +167,34 @@ export function Comparison() {
             Ce que ça change, concrètement.
           </h2>
         </div>
-        <div className="flex-col sm:flex-row" style={{ display: "flex", gap: 24 }}>
+        <div
+          className="flex-col sm:flex-row"
+          style={{ display: "flex", gap: 24 }}
+        >
           <Column title="Avec" highlight="Klarr" items={WITH_KLARR} positive />
-          <Column title="Sans" highlight="Klarr" items={WITHOUT_KLARR} positive={false} />
+          <Column
+            title="Sans"
+            highlight="Klarr"
+            items={WITHOUT_KLARR}
+            positive={false}
+          />
         </div>
+
+        {/* « Avec / sans nous » ne convainc que ceux qui nous connaissent
+            déjà. Celui qui hésite entre quatre logiciels veut les voir
+            côte à côte, avec ce que nous ne savons pas faire. */}
+        <p style={{ marginTop: 28, fontSize: 15.5 }}>
+          <Link
+            href="/comparatif-logiciels-reservation-restaurant"
+            style={{
+              color: "var(--accent-dark)",
+              textDecoration: "underline",
+              textUnderlineOffset: 3,
+            }}
+          >
+            Voir le comparatif avec TheFork, Zenchef et Guestonline
+          </Link>
+        </p>
       </div>
     </div>
   );
