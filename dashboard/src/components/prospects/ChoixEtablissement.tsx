@@ -1,5 +1,6 @@
 "use client";
 
+import { BarreAnalyse } from "@/components/prospects/BarreAnalyse";
 import type { Candidat } from "@/lib/audit/correspondance";
 import type { translations } from "@/lib/i18n/testPresence";
 
@@ -78,7 +79,7 @@ export function ChoixEtablissement({
         {t.choixAucun}
       </button>
 
-      {enCours && <p className="text-sm text-ink-soft">{t.submitting}</p>}
+      {enCours && <BarreAnalyse libelle={t.submittingDetail} />}
     </form>
   );
 }

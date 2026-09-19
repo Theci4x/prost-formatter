@@ -58,6 +58,30 @@ body {
   font-weight: 400;
 }
 
+/* Barre d'attente de l'audit : elle va et vient plutôt que de se remplir,
+   parce qu'on ignore où en est l'analyse. Une barre qui prétend le savoir
+   et se fige à 90 % inquiète plus qu'une barre qui ne promet rien. */
+@keyframes klarr-attente {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(300%);
+  }
+}
+.klarr-attente {
+  animation: klarr-attente 1.6s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  /* Sans mouvement, la barre resterait immobile à gauche et passerait pour
+     un chargement bloqué : on la déploie en entier, en retrait. */
+  .klarr-attente {
+    animation: none;
+    width: 100%;
+    opacity: 0.45;
+  }
+}
+
 /* Bandeau de logos clients (landing) : deux copies de la liste se
    suivent, translater de -50% boucle donc sans saut visible. */
 @keyframes klarr-marquee {

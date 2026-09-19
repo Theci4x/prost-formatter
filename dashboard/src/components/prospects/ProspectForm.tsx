@@ -8,6 +8,7 @@ import {
 } from "@/app/test-presence-google/actions";
 import { AuditResultCard } from "@/components/prospects/AuditResultCard";
 import { ChoixEtablissement } from "@/components/prospects/ChoixEtablissement";
+import { BarreAnalyse } from "@/components/prospects/BarreAnalyse";
 import type { translations } from "@/lib/i18n/testPresence";
 
 const initialState: ProspectFormState = { status: "idle" };
@@ -82,6 +83,7 @@ export function ProspectForm({
           <input
             id="prenom"
             name="prenom"
+            defaultValue={courant.valeurs?.prenom ?? ""}
             type="text"
             required
             className="rounded-lg border border-line bg-paper px-3 py-2.5 text-sm outline-none transition-colors focus:border-brand-orange"
@@ -94,6 +96,7 @@ export function ProspectForm({
           <input
             id="nom"
             name="nom"
+            defaultValue={courant.valeurs?.nom ?? ""}
             type="text"
             required
             className="rounded-lg border border-line bg-paper px-3 py-2.5 text-sm outline-none transition-colors focus:border-brand-orange"
@@ -109,6 +112,7 @@ export function ProspectForm({
           <input
             id="entreprise"
             name="entreprise"
+            defaultValue={courant.valeurs?.entreprise ?? ""}
             type="text"
             required
             className="rounded-lg border border-line bg-paper px-3 py-2.5 text-sm outline-none transition-colors focus:border-brand-orange"
@@ -121,6 +125,7 @@ export function ProspectForm({
           <input
             id="ville"
             name="ville"
+            defaultValue={courant.valeurs?.ville ?? ""}
             type="text"
             required
             className="rounded-lg border border-line bg-paper px-3 py-2.5 text-sm outline-none transition-colors focus:border-brand-orange"
@@ -136,6 +141,7 @@ export function ProspectForm({
           <input
             id="email"
             name="email"
+            defaultValue={courant.valeurs?.email ?? ""}
             type="email"
             required
             className="rounded-lg border border-line bg-paper px-3 py-2.5 text-sm outline-none transition-colors focus:border-brand-orange"
@@ -148,6 +154,7 @@ export function ProspectForm({
           <input
             id="telephone"
             name="telephone"
+            defaultValue={courant.valeurs?.telephone ?? ""}
             type="tel"
             required
             className="rounded-lg border border-line bg-paper px-3 py-2.5 text-sm outline-none transition-colors focus:border-brand-orange"
@@ -161,7 +168,9 @@ export function ProspectForm({
             ? t.missingFields
             : courant.error === "quota"
               ? t.quotaError
-              : t.genericError}
+              : courant.error === "telephone"
+                ? t.telephoneError
+                : t.genericError}
         </p>
       )}
 
@@ -187,6 +196,8 @@ export function ProspectForm({
       >
         {pending ? t.submitting : t.submit}
       </button>
+
+      {pending && <BarreAnalyse libelle={t.submittingDetail} />}
     </form>
   );
 }

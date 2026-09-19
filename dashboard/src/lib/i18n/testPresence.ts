@@ -24,10 +24,14 @@ export const translations = {
       privacyLink: "politique de confidentialité",
       submit: "Demander mon test gratuit",
       submitting: "Analyse en cours...",
+      submittingDetail:
+        "On lit ta fiche Google, on regarde ton site, puis on demande à l'IA. Une trentaine de secondes.",
       missingFields: "Merci de remplir tous les champs.",
       genericError: "Une erreur est survenue, réessaie dans un instant.",
       quotaError:
         "Tu as déjà lancé plusieurs tests aujourd'hui. Reviens demain, ou écris-nous : on le fait pour toi.",
+      telephoneError:
+        "Ce numéro ne semble pas valide. Un numéro français fait dix chiffres (06 12 34 56 78).",
       choixTitle: "Lequel est le vôtre ?",
       choixBody:
         "Plusieurs établissements portent ce nom. Choisissez le bon : nous préférons vous le demander plutôt que d'analyser celui du voisin.",
@@ -193,10 +197,14 @@ export const translations = {
       privacyLink: "privacy policy",
       submit: "Request my free review",
       submitting: "Analyzing...",
+      submittingDetail:
+        "We read your Google listing, check your website, then ask the AI. About thirty seconds.",
       missingFields: "Please fill in all fields.",
       genericError: "Something went wrong, please try again in a moment.",
       quotaError:
         "You have already run several tests today. Come back tomorrow, or write to us and we will run it for you.",
+      telephoneError:
+        "That number does not look valid. Include the country code for numbers outside France (+44…).",
       choixTitle: "Which one is yours?",
       choixBody:
         "Several places share that name. Pick the right one — we would rather ask than analyse your neighbour's.",
@@ -359,10 +367,13 @@ export const translations = {
       privacyLink: "隐私政策",
       submit: "申请免费测评",
       submitting: "分析中...",
+      submittingDetail:
+        "我们正在读取您的 Google 商户信息、检查网站，然后询问 AI。约三十秒。",
       missingFields: "请填写所有字段。",
       genericError: "出现错误，请稍后重试。",
       quotaError:
         "您今天已经进行了多次测试。请明天再来，或与我们联系，我们代您完成。",
+      telephoneError: "该号码似乎无效。法国以外的号码请加国家代码（+86…）。",
       choixTitle: "哪一家是您的？",
       choixBody:
         "有多家同名商户。请选择正确的一家——我们宁可多问一句，也不愿分析邻店。",

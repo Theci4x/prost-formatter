@@ -13,6 +13,7 @@ import {
 } from "@/lib/limites/publiques";
 import { searchPlaces, getPlaceDetails } from "@/lib/google/places";
 import { trancher, type Candidat } from "@/lib/audit/correspondance";
+import { normaliserTelephone } from "@/lib/contact/telephone";
 import { checkWebsite } from "@/lib/audit/website";
 import {
   scoreLocalSeo,
@@ -59,7 +60,13 @@ export type AuditResult = {
 
 export type ProspectFormState = {
   status: "idle" | "success" | "error" | "choix";
-  error?: "missing" | "generic" | "quota";
+  error?: "missing" | "generic" | "quota" | "telephone";
+  /**
+   * Ce qu'il avait saisi, pour le lui rendre. Un formulaire qui se vide
+   * parce qu'un champ était mal rempli fait fuir : il faut tout retaper
+   * pour corriger une virgule.
+   */
+  valeurs?: Record<string, string>;
   audit?: AuditResult;
   /** Pour pré-remplir l'inscription plutôt que de la redemander. */
   email?: string;
@@ -234,8 +241,18 @@ export async function submitProspect(
   const entreprise = (formData.get("entreprise") as string)?.trim();
   const ville = (formData.get("ville") as string)?.trim();
 
+  const valeurs = { prenom, nom, email, telephone, entreprise, ville };
+
   if (!prenom || !nom || !email || !telephone || !entreprise || !ville) {
-    return { status: "error", error: "missing" };
+    return { status: "error", error: "missing", valeurs };
+  }
+
+  // Un numéro trop long passait : on le découvrait en essayant de rappeler,
+  // c'est-à-dire trop tard. On l'enregistre sous sa forme internationale,
+  // celle qu'on recompose pour appeler.
+  const telephoneNormalise = normaliserTelephone(telephone);
+  if (!telephoneNormalise) {
+    return { status: "error", error: "telephone", valeurs };
   }
 
   // Chaque soumission déclenche deux appels facturés à Google Places. Sans
@@ -262,7 +279,7 @@ export async function submitProspect(
     console.warn(
       `[submitProspect] plafond atteint (${sousPlafond ? "global" : "visiteur"})`,
     );
-    return { status: "error", error: "quota" };
+    return { status: "error", error: "quota", valeurs };
   }
 
   // Écrit avec la clé de service, et non avec celle du visiteur. La table
@@ -275,13 +292,20 @@ export async function submitProspect(
   // formulaire échouait à chaque envoi.
   const { data, error } = await service
     .from("prospects")
-    .insert({ prenom, nom, email, telephone, entreprise, ville })
+    .insert({
+      prenom,
+      nom,
+      email,
+      telephone: telephoneNormalise,
+      entreprise,
+      ville,
+    })
     .select("id")
     .single();
 
   if (error || !data) {
     console.error("[submitProspect]", error);
-    return { status: "error", error: "generic" };
+    return { status: "error", error: "generic", valeurs };
   }
 
   const prospectId = data.id as string;
@@ -291,7 +315,14 @@ export async function submitProspect(
   // l'équipe : le prospect, lui, est déjà là. S'il abandonne devant la
   // liste, on a quand même son numéro.
   if ("choix" in issue) {
-    await prevenirEquipe({ prenom, nom, email, telephone, entreprise, ville });
+    await prevenirEquipe({
+      prenom,
+      nom,
+      email,
+      telephone: telephoneNormalise,
+      entreprise,
+      ville,
+    });
     return {
       status: "choix",
       candidats: issue.choix,
@@ -304,7 +335,7 @@ export async function submitProspect(
 
   const audit = "audit" in issue ? issue.audit : undefined;
   await prevenirEquipe(
-    { prenom, nom, email, telephone, entreprise, ville },
+    { prenom, nom, email, telephone: telephoneNormalise, entreprise, ville },
     audit,
   );
   return { status: "success", audit, email };
