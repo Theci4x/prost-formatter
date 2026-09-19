@@ -2,6 +2,9 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { AlertsPanel } from "@/components/dashboard/AlertsPanel";
 import { CarteRestaurant } from "@/components/dashboard/CarteRestaurant";
+import { ACCUEIL } from "@/lib/i18n/accueil";
+import { ChoixLangue } from "@/components/dashboard/ChoixLangue";
+import { langueUtilisateur } from "@/lib/i18n/langue";
 import { dashboardIcons } from "@/components/dashboard/PageHeader";
 import { fetchAlerts } from "@/lib/reputation/alerts";
 import { roleSur } from "@/lib/equipe/roles";
@@ -20,6 +23,8 @@ type RestaurantEtendu = Restaurant & {
 };
 
 export default async function DashboardPage() {
+  const langue = await langueUtilisateur();
+  const t = ACCUEIL[langue];
   const supabase = await createClient();
   const { data } = await supabase
     .from("restaurants")
@@ -65,6 +70,10 @@ export default async function DashboardPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-4 py-8 sm:px-6">
+      <div className="flex justify-end">
+        <ChoixLangue courante={langue} libelle={t.langue.choisir} />
+      </div>
+
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="font-serif text-3xl text-ink sm:text-4xl">
@@ -119,6 +128,7 @@ export default async function DashboardPage() {
         <ul className="flex flex-col gap-6">
           {restaurants.map((restaurant) => (
             <CarteRestaurant
+              t={t}
               key={restaurant.id}
               restaurant={restaurant}
               role={roles.get(restaurant.id) ?? null}

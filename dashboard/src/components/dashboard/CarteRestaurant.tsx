@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import type { Pouls } from "@/lib/dashboard/pouls";
 import { publicationsGoogleOuvertes } from "@/lib/google/business";
+import type { ClesAccueil } from "@/lib/i18n/accueil";
 import { peutGerer, type Role } from "@/lib/equipe/roles";
 import {
   type Acces,
@@ -181,211 +182,212 @@ function dateCourte(iso: string): string {
   });
 }
 
-const GROUPES: Groupe[] = [
-  {
-    titre: "Le service",
-    entrees: [
-      {
-        href: "reservations",
-        label: "Réservations",
-        resume: "Le carnet, tes salles, tes services et ton plan de salle.",
-        icone: ICONES.reservations,
-        detail: (p) =>
-          p.aConfirmer > 0
-            ? `${p.aConfirmer} demande${p.aConfirmer > 1 ? "s" : ""} à confirmer`
-            : "Rien en attente",
-        attention: (p) => p.aConfirmer > 0,
-      },
-      {
-        href: "service",
-        label: "Service",
-        resume: "L'écran de salle, pour le coup de feu.",
-        icone: ICONES.service,
-        detail: (p) => {
-          const total = p.couvertsMidi + p.couvertsSoir;
-          return total > 0
-            ? `${total} couvert${total > 1 ? "s" : ""} aujourd'hui`
-            : "Aucun couvert confirmé aujourd'hui";
+function groupes(t: ClesAccueil): Groupe[] {
+  return [
+    {
+      titre: t.groupes.service,
+      entrees: [
+        {
+          href: "reservations",
+          label: t.entrees.reservations.label,
+          resume: t.entrees.reservations.resume,
+          icone: ICONES.reservations,
+          detail: (p) =>
+            p.aConfirmer > 0
+              ? `${p.aConfirmer} demande${p.aConfirmer > 1 ? "s" : ""} à confirmer`
+              : "Rien en attente",
+          attention: (p) => p.aConfirmer > 0,
         },
-      },
-    ],
-  },
-  {
-    titre: "Votre maison",
-    entrees: [
-      {
-        href: "vitrine",
-        label: "Site vitrine",
-        resume: "Le site de ton restaurant, fait de ce que tu as déjà rempli.",
-        icone: ICONES.vitrine,
-        minimum: "gerant",
-        detail: (p) => (p.sitePublie ? "En ligne" : "Pas encore publié"),
-        attention: (p) => !p.sitePublie,
-      },
-      {
-        href: "menu",
-        label: "Carte",
-        resume: "Tes plats, leurs prix, leurs photos, et le QR code à poser.",
-        icone: ICONES.menu,
-        minimum: "gerant",
-        detail: (p) =>
-          p.cartePubliee
-            ? `Publiée · ${p.nombrePlats} plat${p.nombrePlats > 1 ? "s" : ""}`
-            : p.nombrePlats > 0
-              ? `${p.nombrePlats} plat${p.nombrePlats > 1 ? "s" : ""}, pas encore publiée`
-              : "Pas encore saisie",
-      },
-      {
-        href: "photos",
-        label: "Photos",
-        resume: "Ce que voit un client avant de choisir de venir.",
-        icone: ICONES.photos,
-        minimum: "gerant",
-        detail: (p) =>
-          p.nombrePhotos > 0
-            ? `${p.nombrePhotos} photo${p.nombrePhotos > 1 ? "s" : ""}${p.couvertureUrl ? " · couverture choisie" : ""}`
-            : "Aucune photo",
-        attention: (p) => p.nombrePhotos === 0,
-      },
-      {
-        href: "faq",
-        label: "Questions fréquentes",
-        resume:
-          "Ce qu'on te demande au téléphone, répondu une fois pour toutes.",
-        icone: ICONES.faq,
-        minimum: "gerant",
-        detail: (p) =>
-          p.nombreQuestions > 0
-            ? `${p.nombreQuestions} question${p.nombreQuestions > 1 ? "s" : ""}`
-            : null,
-      },
-      {
-        href: "experiences",
-        label: "Expériences",
-        resume: "Ateliers, dégustations, soirées à places comptées.",
-        icone: ICONES.experiences,
-        minimum: "gerant",
-      },
-    ],
-  },
-  {
-    titre: "Votre visibilité",
-    entrees: [
-      {
-        href: "avis",
-        label: "Avis",
-        resume: "Tes avis Google, et des réponses prêtes à relire.",
-        icone: ICONES.avis,
-        minimum: "gerant",
-        detail: (p) =>
-          p.note != null
-            ? `${p.note.toFixed(1).replace(".", ",")} ★ · ${p.nombreAvis ?? 0} avis${
-                p.avisCetteSemaine
-                  ? ` · ${p.avisCetteSemaine > 0 ? "+" : ""}${p.avisCetteSemaine} cette semaine`
-                  : ""
-              }`
-            : "Premier relevé la nuit prochaine",
-      },
-      {
-        href: "retours",
-        label: "Retours clients",
-        resume: "Ce qu'on préfère te dire en privé. Totem ou QR code.",
-        icone: ICONES.retours,
-        minimum: "gerant",
-        detail: (p) =>
-          p.retoursALire > 0 ? `${p.retoursALire} à lire` : "Rien de nouveau",
-        attention: (p) => p.retoursALire > 0,
-      },
-      {
-        href: "seo",
-        label: "Référencement",
-        resume: "Ce que Google sait de toi, et ce qui lui manque.",
-        icone: ICONES.seo,
-        minimum: "gerant",
-      },
-      // Masquée tant que Google n'a pas ouvert la publication : elle
-      // revient d'elle-même le jour où l'accès est accordé, sans toucher
-      // au code.
-      ...(publicationsGoogleOuvertes()
-        ? [
-            {
-              href: "posts",
-              label: "Publications Google",
-              resume: "Écris tes posts à l'avance, Klarr les publie.",
-              icone: ICONES.posts,
-              minimum: "gerant" as const,
-              detail: (p: Pouls) =>
-                p.prochainPost
-                  ? `Prochaine : ${dateCourte(p.prochainPost)}`
-                  : "Aucune programmée",
-            },
-          ]
-        : []),
-      {
-        href: "visibilite-ia",
-        label: "Visibilité IA",
-        resume: "Es-tu cité quand on demande à une IA où dîner ?",
-        icone: ICONES.ia,
-        minimum: "gerant",
-        detail: (p) =>
-          p.ia
-            ? `Cité sur ${p.ia.citees} question${p.ia.citees > 1 ? "s" : ""} sur ${p.ia.total}`
-            : "Pas encore vérifié",
-      },
-    ],
-  },
-  {
-    titre: "Réglages",
-    compact: true,
-    entrees: [
-      {
-        href: "notifications",
-        label: "Notifications",
-        resume: "Être prévenu sur ton téléphone.",
-        icone: ICONES.notifications,
-        minimum: "gerant",
-      },
-      {
-        href: "connexions",
-        label: "Connexions",
-        resume: "Google, Facebook, Instagram, TikTok.",
-        icone: ICONES.connexions,
-        minimum: "gerant",
-        detail: (p) => {
-          const liees = [
-            p.connexions.google && "Google",
-            p.connexions.facebook && "Facebook",
-            p.connexions.instagram && "Instagram",
-            p.connexions.tiktok && "TikTok",
-          ].filter(Boolean);
-          return liees.length > 0 ? liees.join(" · ") : "Rien de relié";
+        {
+          href: "service",
+          label: t.entrees.service.label,
+          resume: t.entrees.service.resume,
+          icone: ICONES.service,
+          detail: (p) => {
+            const total = p.couvertsMidi + p.couvertsSoir;
+            return total > 0
+              ? `${total} couvert${total > 1 ? "s" : ""} aujourd'hui`
+              : "Aucun couvert confirmé aujourd'hui";
+          },
         },
-        attention: (p) => !p.connexions.google,
-      },
-      {
-        href: "paiements",
-        label: "Paiements",
-        resume: "Acomptes, cautions, compte Stripe.",
-        icone: ICONES.paiements,
-        minimum: "gerant",
-      },
-      {
-        href: "equipe",
-        label: "Équipe",
-        resume: "Qui accède à quoi.",
-        icone: ICONES.equipe,
-        minimum: "proprietaire",
-      },
-      {
-        href: "abonnement",
-        label: "Abonnement",
-        resume: "Ta formule, tes factures.",
-        icone: ICONES.abonnement,
-        minimum: "proprietaire",
-      },
-    ],
-  },
-];
+      ],
+    },
+    {
+      titre: t.groupes.maison,
+      entrees: [
+        {
+          href: "vitrine",
+          label: t.entrees.vitrine.label,
+          resume: t.entrees.vitrine.resume,
+          icone: ICONES.vitrine,
+          minimum: "gerant",
+          detail: (p) => (p.sitePublie ? "En ligne" : "Pas encore publié"),
+          attention: (p) => !p.sitePublie,
+        },
+        {
+          href: "menu",
+          label: t.entrees.carte.label,
+          resume: t.entrees.carte.resume,
+          icone: ICONES.menu,
+          minimum: "gerant",
+          detail: (p) =>
+            p.cartePubliee
+              ? `Publiée · ${p.nombrePlats} plat${p.nombrePlats > 1 ? "s" : ""}`
+              : p.nombrePlats > 0
+                ? `${p.nombrePlats} plat${p.nombrePlats > 1 ? "s" : ""}, pas encore publiée`
+                : "Pas encore saisie",
+        },
+        {
+          href: "photos",
+          label: t.entrees.photos.label,
+          resume: t.entrees.photos.resume,
+          icone: ICONES.photos,
+          minimum: "gerant",
+          detail: (p) =>
+            p.nombrePhotos > 0
+              ? `${p.nombrePhotos} photo${p.nombrePhotos > 1 ? "s" : ""}${p.couvertureUrl ? " · couverture choisie" : ""}`
+              : "Aucune photo",
+          attention: (p) => p.nombrePhotos === 0,
+        },
+        {
+          href: "faq",
+          label: t.entrees.faq.label,
+          resume: t.entrees.faq.resume,
+          icone: ICONES.faq,
+          minimum: "gerant",
+          detail: (p) =>
+            p.nombreQuestions > 0
+              ? `${p.nombreQuestions} question${p.nombreQuestions > 1 ? "s" : ""}`
+              : null,
+        },
+        {
+          href: "experiences",
+          label: t.entrees.experiences.label,
+          resume: t.entrees.experiences.resume,
+          icone: ICONES.experiences,
+          minimum: "gerant",
+        },
+      ],
+    },
+    {
+      titre: t.groupes.visibilite,
+      entrees: [
+        {
+          href: "avis",
+          label: t.entrees.avis.label,
+          resume: t.entrees.avis.resume,
+          icone: ICONES.avis,
+          minimum: "gerant",
+          detail: (p) =>
+            p.note != null
+              ? `${p.note.toFixed(1).replace(".", ",")} ★ · ${p.nombreAvis ?? 0} avis${
+                  p.avisCetteSemaine
+                    ? ` · ${p.avisCetteSemaine > 0 ? "+" : ""}${p.avisCetteSemaine} cette semaine`
+                    : ""
+                }`
+              : "Premier relevé la nuit prochaine",
+        },
+        {
+          href: "retours",
+          label: t.entrees.retours.label,
+          resume: t.entrees.retours.resume,
+          icone: ICONES.retours,
+          minimum: "gerant",
+          detail: (p) =>
+            p.retoursALire > 0 ? `${p.retoursALire} à lire` : "Rien de nouveau",
+          attention: (p) => p.retoursALire > 0,
+        },
+        {
+          href: "seo",
+          label: t.entrees.seo.label,
+          resume: t.entrees.seo.resume,
+          icone: ICONES.seo,
+          minimum: "gerant",
+        },
+        // Masquée tant que Google n'a pas ouvert la publication : elle
+        // revient d'elle-même le jour où l'accès est accordé, sans toucher
+        // au code.
+        ...(publicationsGoogleOuvertes()
+          ? [
+              {
+                href: "posts",
+                label: t.entrees.posts.label,
+                resume: t.entrees.posts.resume,
+                icone: ICONES.posts,
+                minimum: "gerant" as const,
+                detail: (p: Pouls) =>
+                  p.prochainPost
+                    ? `Prochaine : ${dateCourte(p.prochainPost)}`
+                    : "Aucune programmée",
+              },
+            ]
+          : []),
+        {
+          href: "visibilite-ia",
+          label: t.entrees.visibiliteIa.label,
+          resume: t.entrees.visibiliteIa.resume,
+          icone: ICONES.ia,
+          minimum: "gerant",
+          detail: (p) =>
+            p.ia
+              ? `Cité sur ${p.ia.citees} question${p.ia.citees > 1 ? "s" : ""} sur ${p.ia.total}`
+              : "Pas encore vérifié",
+        },
+      ],
+    },
+    {
+      titre: t.groupes.reglages,
+      compact: true,
+      entrees: [
+        {
+          href: "notifications",
+          label: t.entrees.notifications.label,
+          resume: t.entrees.notifications.resume,
+          icone: ICONES.notifications,
+          minimum: "gerant",
+        },
+        {
+          href: "connexions",
+          label: t.entrees.connexions.label,
+          resume: t.entrees.connexions.resume,
+          icone: ICONES.connexions,
+          minimum: "gerant",
+          detail: (p) => {
+            const liees = [
+              p.connexions.google && "Google",
+              p.connexions.facebook && "Facebook",
+              p.connexions.instagram && "Instagram",
+              p.connexions.tiktok && "TikTok",
+            ].filter(Boolean);
+            return liees.length > 0 ? liees.join(" · ") : "Rien de relié";
+          },
+          attention: (p) => !p.connexions.google,
+        },
+        {
+          href: "paiements",
+          label: t.entrees.paiements.label,
+          resume: t.entrees.paiements.resume,
+          icone: ICONES.paiements,
+          minimum: "gerant",
+        },
+        {
+          href: "equipe",
+          label: t.entrees.equipe.label,
+          resume: t.entrees.equipe.resume,
+          icone: ICONES.equipe,
+          minimum: "proprietaire",
+        },
+        {
+          href: "abonnement",
+          label: t.entrees.abonnement.label,
+          resume: t.entrees.abonnement.resume,
+          icone: ICONES.abonnement,
+          minimum: "proprietaire",
+        },
+      ],
+    },
+  ];
+}
 
 function accessible(minimum: Minimum, role: Role | null): boolean {
   if (!minimum) return true;
@@ -432,11 +434,14 @@ export function CarteRestaurant({
   role,
   acces,
   pouls,
+  t,
 }: {
   restaurant: { id: string; nom: string; adresse: string | null };
   role: Role | null;
   acces: Acces;
   pouls: Pouls;
+  /** Les phrases de l'écran, dans la langue du compte. */
+  t: ClesAccueil;
 }) {
   const base = `/dashboard/${restaurant.id}`;
   const couverts = pouls.couvertsMidi + pouls.couvertsSoir;
@@ -597,7 +602,7 @@ export function CarteRestaurant({
       </div>
 
       <div className="flex flex-col gap-7 px-6 py-6 sm:px-8">
-        {GROUPES.map((groupe) => {
+        {groupes(t).map((groupe) => {
           const entrees = groupe.entrees.filter((entree) =>
             accessible(entree.minimum, role),
           );
