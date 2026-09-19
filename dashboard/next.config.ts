@@ -7,10 +7,9 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseImagePattern = supabaseUrl
   ? [
       {
-        protocol: new URL(supabaseUrl).protocol.replace(
-          ":",
-          "",
-        ) as "http" | "https",
+        protocol: new URL(supabaseUrl).protocol.replace(":", "") as
+          | "http"
+          | "https",
         hostname: new URL(supabaseUrl).hostname,
         port: new URL(supabaseUrl).port,
         pathname: "/storage/v1/object/public/**",
@@ -99,6 +98,27 @@ const nextConfig: NextConfig = {
   // pas les redirections.
   skipTrailingSlashRedirect: true,
 
+  /**
+   * Les adresses qu'on tape d'instinct.
+   *
+   * La grille tarifaire vit dans la page d'accueil, à l'ancre « #tarifs ».
+   * Mais personne ne devine une ancre : on tape « /tarifs », et on tombait
+   * sur une 404. Une redirection coûte une ligne et évite d'entretenir une
+   * deuxième page qui dirait la même chose — deux pages du même site sur le
+   * même sujet se font concurrence dans les résultats.
+   */
+  async redirects() {
+    return [
+      { source: "/tarifs", destination: "/#tarifs", permanent: true },
+      { source: "/prix", destination: "/#tarifs", permanent: true },
+      {
+        source: "/comparatif",
+        destination: "/comparatif-logiciels-reservation-restaurant",
+        permanent: true,
+      },
+    ];
+  },
+
   // TikTok demande la vérification de domaine avec un "/" final après le
   // nom de fichier (ex: /cgu/tiktok....txt/), ce que le dossier public/
   // ne sert pas nativement (404). On réécrit vers le fichier réel.
@@ -110,7 +130,8 @@ const nextConfig: NextConfig = {
       },
       {
         source: "/confidentialite/tiktok69Eu9CmXzSvXSjuwxYgKrEaudj3P3iy8.txt/",
-        destination: "/confidentialite/tiktok69Eu9CmXzSvXSjuwxYgKrEaudj3P3iy8.txt",
+        destination:
+          "/confidentialite/tiktok69Eu9CmXzSvXSjuwxYgKrEaudj3P3iy8.txt",
       },
     ];
   },
