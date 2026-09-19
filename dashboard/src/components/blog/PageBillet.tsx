@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Commis } from "@/components/commis/Commis";
 import { CadreJournal, Separateur } from "@/components/blog/CadreJournal";
+import { LangueDocument } from "@/components/blog/LangueDocument";
 import { InvitationTest } from "@/components/blog/InvitationTest";
 import { Couverture } from "@/components/blog/Couverture";
 import { dateLisible, aLireEnsuite } from "@/lib/blog/billets";
@@ -69,6 +70,7 @@ export async function PageBillet({
 
   return (
     <>
+      {langue !== "fr" && <LangueDocument langue={langue} />}
       <CadreJournal
         langue={langue}
         // Le sélecteur emmène vers ce même article dans la langue

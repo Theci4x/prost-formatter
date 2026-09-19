@@ -12,12 +12,20 @@ import { traduction as declarationSanitaireEn } from "@/contenu/blog/traductions
 import { traduction as haccpEn } from "@/contenu/blog/traductions/en/haccp-pms";
 import { traduction as erpEn } from "@/contenu/blog/traductions/en/erp-commission-securite";
 import { traduction as avantTravauxEn } from "@/contenu/blog/traductions/en/avant-travaux-diagnostics";
+import { traduction as terrasseEn } from "@/contenu/blog/traductions/en/terrasse";
+import { traduction as sacemSpreEn } from "@/contenu/blog/traductions/en/sacem-spre";
+import { traduction as impactSonoreEn } from "@/contenu/blog/traductions/en/etude-impact-sonore";
+import { traduction as chantierEn } from "@/contenu/blog/traductions/en/chantier-obligations-employeur";
 import { traduction as ouvrirChecklistZh } from "@/contenu/blog/traductions/zh/ouvrir-un-restaurant-checklist";
 import { traduction as permisLicenceZh } from "@/contenu/blog/traductions/zh/permis-exploitation-licence";
 import { traduction as declarationSanitaireZh } from "@/contenu/blog/traductions/zh/declaration-sanitaire-ddpp";
 import { traduction as haccpZh } from "@/contenu/blog/traductions/zh/haccp-pms";
 import { traduction as erpZh } from "@/contenu/blog/traductions/zh/erp-commission-securite";
 import { traduction as avantTravauxZh } from "@/contenu/blog/traductions/zh/avant-travaux-diagnostics";
+import { traduction as terrasseZh } from "@/contenu/blog/traductions/zh/terrasse";
+import { traduction as sacemSpreZh } from "@/contenu/blog/traductions/zh/sacem-spre";
+import { traduction as impactSonoreZh } from "@/contenu/blog/traductions/zh/etude-impact-sonore";
+import { traduction as chantierZh } from "@/contenu/blog/traductions/zh/chantier-obligations-employeur";
 
 /**
  * Le journal dans les autres langues.
@@ -47,6 +55,10 @@ const TRADUCTIONS: Record<
     "haccp-plan-maitrise-sanitaire-restaurant": haccpEn,
     "erp-restaurant-categorie-commission-securite": erpEn,
     "diagnostics-avant-travaux-restaurant": avantTravauxEn,
+    "terrasse-restaurant-autorisation-domaine-public": terrasseEn,
+    "sacem-spre-restaurant-musique": sacemSpreEn,
+    "etude-impact-nuisances-sonores-restaurant": impactSonoreEn,
+    "ouvriers-sur-votre-chantier-obligations": chantierEn,
   },
   zh: {
     "ouvrir-un-restaurant-demarches": ouvrirChecklistZh,
@@ -55,6 +67,10 @@ const TRADUCTIONS: Record<
     "haccp-plan-maitrise-sanitaire-restaurant": haccpZh,
     "erp-restaurant-categorie-commission-securite": erpZh,
     "diagnostics-avant-travaux-restaurant": avantTravauxZh,
+    "terrasse-restaurant-autorisation-domaine-public": terrasseZh,
+    "sacem-spre-restaurant-musique": sacemSpreZh,
+    "etude-impact-nuisances-sonores-restaurant": impactSonoreZh,
+    "ouvriers-sur-votre-chantier-obligations": chantierZh,
   },
 };
 
