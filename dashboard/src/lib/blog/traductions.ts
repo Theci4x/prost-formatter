@@ -16,6 +16,11 @@ import { traduction as terrasseEn } from "@/contenu/blog/traductions/en/terrasse
 import { traduction as sacemSpreEn } from "@/contenu/blog/traductions/en/sacem-spre";
 import { traduction as impactSonoreEn } from "@/contenu/blog/traductions/en/etude-impact-sonore";
 import { traduction as chantierEn } from "@/contenu/blog/traductions/en/chantier-obligations-employeur";
+import { traduction as visibiliteIaEn } from "@/contenu/blog/traductions/en/visibilite-ia-chatgpt";
+import { traduction as ficheGoogleEn } from "@/contenu/blog/traductions/en/fiche-google-ligne-par-ligne";
+import { traduction as avisGoogleEn } from "@/contenu/blog/traductions/en/avis-google";
+import { traduction as classementLocalEn } from "@/contenu/blog/traductions/en/classement-local-maps";
+import { traduction as menuOuCarteEn } from "@/contenu/blog/traductions/en/menu-ou-carte";
 import { traduction as ouvrirChecklistZh } from "@/contenu/blog/traductions/zh/ouvrir-un-restaurant-checklist";
 import { traduction as permisLicenceZh } from "@/contenu/blog/traductions/zh/permis-exploitation-licence";
 import { traduction as declarationSanitaireZh } from "@/contenu/blog/traductions/zh/declaration-sanitaire-ddpp";
@@ -26,6 +31,11 @@ import { traduction as terrasseZh } from "@/contenu/blog/traductions/zh/terrasse
 import { traduction as sacemSpreZh } from "@/contenu/blog/traductions/zh/sacem-spre";
 import { traduction as impactSonoreZh } from "@/contenu/blog/traductions/zh/etude-impact-sonore";
 import { traduction as chantierZh } from "@/contenu/blog/traductions/zh/chantier-obligations-employeur";
+import { traduction as visibiliteIaZh } from "@/contenu/blog/traductions/zh/visibilite-ia-chatgpt";
+import { traduction as ficheGoogleZh } from "@/contenu/blog/traductions/zh/fiche-google-ligne-par-ligne";
+import { traduction as avisGoogleZh } from "@/contenu/blog/traductions/zh/avis-google";
+import { traduction as classementLocalZh } from "@/contenu/blog/traductions/zh/classement-local-maps";
+import { traduction as menuOuCarteZh } from "@/contenu/blog/traductions/zh/menu-ou-carte";
 
 /**
  * Le journal dans les autres langues.
@@ -59,6 +69,11 @@ const TRADUCTIONS: Record<
     "sacem-spre-restaurant-musique": sacemSpreEn,
     "etude-impact-nuisances-sonores-restaurant": impactSonoreEn,
     "ouvriers-sur-votre-chantier-obligations": chantierEn,
+    "pourquoi-chatgpt-ne-parle-pas-de-votre-restaurant": visibiliteIaEn,
+    "fiche-google-restaurant-ce-qui-compte-vraiment": ficheGoogleEn,
+    "avis-google-restaurant-ce-qui-est-interdit": avisGoogleEn,
+    "pourquoi-je-sors-derriere-mon-voisin-google-maps": classementLocalEn,
+    "menu-ou-carte-restaurant-marges": menuOuCarteEn,
   },
   zh: {
     "ouvrir-un-restaurant-demarches": ouvrirChecklistZh,
@@ -71,6 +86,11 @@ const TRADUCTIONS: Record<
     "sacem-spre-restaurant-musique": sacemSpreZh,
     "etude-impact-nuisances-sonores-restaurant": impactSonoreZh,
     "ouvriers-sur-votre-chantier-obligations": chantierZh,
+    "pourquoi-chatgpt-ne-parle-pas-de-votre-restaurant": visibiliteIaZh,
+    "fiche-google-restaurant-ce-qui-compte-vraiment": ficheGoogleZh,
+    "avis-google-restaurant-ce-qui-est-interdit": avisGoogleZh,
+    "pourquoi-je-sors-derriere-mon-voisin-google-maps": classementLocalZh,
+    "menu-ou-carte-restaurant-marges": menuOuCarteZh,
   },
 };
 
