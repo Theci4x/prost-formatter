@@ -2,10 +2,12 @@
 
 import { useActionState } from "react";
 import {
+  confirmerEtablissement,
   submitProspect,
   type ProspectFormState,
 } from "@/app/test-presence-google/actions";
 import { AuditResultCard } from "@/components/prospects/AuditResultCard";
+import { ChoixEtablissement } from "@/components/prospects/ChoixEtablissement";
 import type { translations } from "@/lib/i18n/testPresence";
 
 const initialState: ProspectFormState = { status: "idle" };
@@ -23,11 +25,23 @@ export function ProspectForm({
     submitProspect,
     initialState,
   );
+  const [confirmation, confirmerAction, confirmationEnCours] = useActionState(
+    confirmerEtablissement,
+    initialState,
+  );
 
-  if (state.status === "success") {
-    if (state.audit) {
+  // Deux actions, un seul écran : dès que la confirmation a parlé, c'est
+  // elle qui fait foi.
+  const courant = confirmation.status === "idle" ? state : confirmation;
+
+  if (courant.status === "success") {
+    if (courant.audit) {
       return (
-        <AuditResultCard audit={state.audit} t={auditT} email={state.email} />
+        <AuditResultCard
+          audit={courant.audit}
+          t={auditT}
+          email={courant.email}
+        />
       );
     }
     return (
@@ -35,6 +49,23 @@ export function ProspectForm({
         <p className="font-serif text-2xl text-ink">{t.successTitle}</p>
         <p className="mt-2 text-sm text-ink-soft">{t.successBody}</p>
       </div>
+    );
+  }
+
+  // Son nom désigne plusieurs endroits : plutôt que d'auditer celui d'un
+  // autre, on lui demande. Ses coordonnées sont déjà enregistrées.
+  if (state.status === "choix" && state.candidats) {
+    return (
+      <ChoixEtablissement
+        t={t}
+        action={confirmerAction}
+        enCours={confirmationEnCours}
+        candidats={state.candidats}
+        prospectId={state.prospectId ?? ""}
+        entreprise={state.entreprise ?? ""}
+        ville={state.ville ?? ""}
+        email={state.email ?? ""}
+      />
     );
   }
 
@@ -124,11 +155,11 @@ export function ProspectForm({
         </div>
       </div>
 
-      {state.status === "error" && (
+      {courant.status === "error" && (
         <p className="text-sm text-red-600">
-          {state.error === "missing"
+          {courant.error === "missing"
             ? t.missingFields
-            : state.error === "quota"
+            : courant.error === "quota"
               ? t.quotaError
               : t.genericError}
         </p>

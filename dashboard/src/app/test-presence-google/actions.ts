@@ -11,7 +11,8 @@ import {
   empreinte,
   secretEmpreinte,
 } from "@/lib/limites/publiques";
-import { searchPlace, getPlaceDetails } from "@/lib/google/places";
+import { searchPlaces, getPlaceDetails } from "@/lib/google/places";
+import { trancher, type Candidat } from "@/lib/audit/correspondance";
 import { checkWebsite } from "@/lib/audit/website";
 import {
   scoreLocalSeo,
@@ -57,11 +58,20 @@ export type AuditResult = {
 };
 
 export type ProspectFormState = {
-  status: "idle" | "success" | "error";
+  status: "idle" | "success" | "error" | "choix";
   error?: "missing" | "generic" | "quota";
   audit?: AuditResult;
   /** Pour pré-remplir l'inscription plutôt que de la redemander. */
   email?: string;
+  /**
+   * Les établissements entre lesquels le restaurateur doit choisir, quand
+   * son nom ne désigne pas un seul endroit. Ses coordonnées sont déjà
+   * enregistrées : on ne lui redemande que ce point-là.
+   */
+  candidats?: Candidat[];
+  prospectId?: string;
+  entreprise?: string;
+  ville?: string;
 };
 
 /*
@@ -73,7 +83,67 @@ export type ProspectFormState = {
  * clé Anthropic.
  */
 
-async function runAudit(
+/** Ce qu'on a pu établir, une fois la recherche faite. */
+type Issue =
+  | { audit: AuditResult | undefined }
+  | { choix: Candidat[] }
+  | { introuvable: true };
+
+/**
+ * Cherche l'établissement, et n'audite que si l'on est sûr de l'avoir
+ * reconnu. Sinon on rend la liste : c'est au restaurateur de dire lequel
+ * est le sien, il le sait mieux que nous.
+ */
+async function identifier(
+  restaurantName: string,
+  ville: string,
+  prospectId: string,
+): Promise<Issue> {
+  let candidats;
+  try {
+    candidats = await searchPlaces(`${restaurantName} ${ville}`);
+  } catch (err) {
+    console.error("[identifier]", err);
+    return { audit: undefined };
+  }
+
+  const verdict = trancher(
+    candidats.map((place) => ({
+      id: place.id,
+      nom: place.displayName,
+      adresse: place.formattedAddress,
+    })),
+    restaurantName,
+  );
+
+  if ("aucun" in verdict) {
+    await noterIntrouvable(restaurantName, ville, prospectId);
+    return { introuvable: true };
+  }
+  if ("choix" in verdict) return { choix: verdict.choix };
+
+  return {
+    audit: await auditer(verdict.certain.id, restaurantName, ville, prospectId),
+  };
+}
+
+/** Un établissement que Google ne connaît pas : c'est déjà un résultat. */
+async function noterIntrouvable(
+  restaurantName: string,
+  ville: string,
+  prospectId: string,
+) {
+  const supabase = await createClient();
+  await supabase.from("visibility_audits").insert({
+    prospect_id: prospectId,
+    restaurant_name: restaurantName,
+    ville,
+    error: "Établissement introuvable sur Google Maps",
+  });
+}
+
+async function auditer(
+  placeId: string,
   restaurantName: string,
   ville: string,
   prospectId: string,
@@ -81,18 +151,7 @@ async function runAudit(
   const supabase = await createClient();
 
   try {
-    const place = await searchPlace(`${restaurantName} ${ville}`);
-    if (!place) {
-      await supabase.from("visibility_audits").insert({
-        prospect_id: prospectId,
-        restaurant_name: restaurantName,
-        ville,
-        error: "Établissement introuvable sur Google Maps",
-      });
-      return undefined;
-    }
-
-    const details = await getPlaceDetails(place.id);
+    const details = await getPlaceDetails(placeId);
     const website = await checkWebsite(details.websiteUri);
 
     const localSeo = scoreLocalSeo(details);
@@ -128,7 +187,7 @@ async function runAudit(
       prospect_id: prospectId,
       restaurant_name: restaurantName,
       ville,
-      google_place_id: place.id,
+      google_place_id: placeId,
       local_seo_score: localSeo,
       e_reputation_score: eReputation,
       geo_score: geo,
@@ -159,7 +218,7 @@ async function runAudit(
     // L'audit est un bonus : s'il échoue (clé API manquante, service
     // indisponible...), on garde quand même le lead et on retombe sur le
     // message de remerciement classique plutôt que de casser le formulaire.
-    console.error("[runAudit]", err);
+    console.error("[auditer]", err);
     return undefined;
   }
 }
@@ -225,21 +284,85 @@ export async function submitProspect(
     return { status: "error", error: "generic" };
   }
 
-  const audit = await runAudit(entreprise, ville, data.id as string);
+  const prospectId = data.id as string;
+  const issue = await identifier(entreprise, ville, prospectId);
 
-  // Un prospect rappelé dans les dix minutes est impressionné ; rappelé le
-  // soir, il est perdu. L'alerte part après l'audit pour porter le score :
-  // c'est lui qui donne la première phrase de l'appel.
+  // On n'attend pas de savoir quel établissement c'est pour prévenir
+  // l'équipe : le prospect, lui, est déjà là. S'il abandonne devant la
+  // liste, on a quand même son numéro.
+  if ("choix" in issue) {
+    await prevenirEquipe({ prenom, nom, email, telephone, entreprise, ville });
+    return {
+      status: "choix",
+      candidats: issue.choix,
+      prospectId,
+      entreprise,
+      ville,
+      email,
+    };
+  }
+
+  const audit = "audit" in issue ? issue.audit : undefined;
+  await prevenirEquipe(
+    { prenom, nom, email, telephone, entreprise, ville },
+    audit,
+  );
+  return { status: "success", audit, email };
+}
+
+/**
+ * Le second temps : le restaurateur a désigné son établissement.
+ *
+ * Ses coordonnées sont déjà en base — on ne refait que l'audit. Le
+ * compteur est reconsommé parce que ce geste-ci coûte deux appels
+ * facturés à Google, exactement comme le premier.
+ */
+export async function confirmerEtablissement(
+  _prevState: ProspectFormState,
+  formData: FormData,
+): Promise<ProspectFormState> {
+  const placeId = (formData.get("place_id") as string)?.trim() ?? "";
+  const prospectId = (formData.get("prospect_id") as string)?.trim();
+  const entreprise = (formData.get("entreprise") as string)?.trim();
+  const ville = (formData.get("ville") as string)?.trim();
+  const email = (formData.get("email") as string)?.trim();
+
+  if (!prospectId || !entreprise || !ville) {
+    return { status: "error", error: "generic" };
+  }
+
+  const entetes = await headers();
+  const service = createServiceClient();
+  const visiteur = empreinte(
+    "audit",
+    adresseIp(entetes),
+    entetes.get("user-agent") ?? "",
+    secretEmpreinte(),
+  );
+  const [sousPlafond, sousPlafondGlobal] = await Promise.all([
+    consommer(service, visiteur, AUDITS_PAR_JOUR),
+    consommer(service, "audit:global", AUDITS_PAR_JOUR_GLOBAL),
+  ]);
+  if (!sousPlafond || !sousPlafondGlobal) {
+    console.warn("[confirmerEtablissement] plafond atteint");
+    return { status: "error", error: "quota" };
+  }
+
+  // « Aucun de ces établissements » : son adresse n'est pas sur Google, ce
+  // qui est en soi le premier constat de l'audit.
+  if (!placeId) {
+    await noterIntrouvable(entreprise, ville, prospectId);
+    return { status: "success", email };
+  }
+
+  const audit = await auditer(placeId, entreprise, ville, prospectId);
   await notifierInterne({
-    titre: `Nouveau prospect — ${entreprise}`,
+    titre: `Établissement confirmé — ${entreprise}`,
     lignes: [
-      `${prenom} ${nom} — ${entreprise}, ${ville}`,
-      `${email} — ${telephone}`,
+      `${entreprise}, ${ville}`,
       audit
         ? `Score de visibilité : ${audit.score}/100 (${audit.label}).`
-        : "Audit indisponible (établissement introuvable sur Google).",
-      // Le meilleur argument d'ouverture pour l'appel : on lui dit qui
-      // l'IA cite à sa place, et il connaît ces noms.
+        : "Audit indisponible.",
       audit?.presenceIa
         ? audit.presenceIa.cite
           ? `Cité par l'IA sur « ${audit.presenceIa.question} ».`
@@ -250,4 +373,39 @@ export async function submitProspect(
   });
 
   return { status: "success", audit, email };
+}
+
+/**
+ * Un prospect rappelé dans les dix minutes est impressionné ; rappelé le
+ * soir, il est perdu. L'alerte porte le score quand on l'a : c'est lui qui
+ * donne la première phrase de l'appel.
+ */
+async function prevenirEquipe(
+  p: {
+    prenom: string;
+    nom: string;
+    email: string;
+    telephone: string;
+    entreprise: string;
+    ville: string;
+  },
+  audit?: AuditResult,
+) {
+  await notifierInterne({
+    titre: `Nouveau prospect — ${p.entreprise}`,
+    lignes: [
+      `${p.prenom} ${p.nom} — ${p.entreprise}, ${p.ville}`,
+      `${p.email} — ${p.telephone}`,
+      audit
+        ? `Score de visibilité : ${audit.score}/100 (${audit.label}).`
+        : "Audit indisponible (établissement introuvable ou à confirmer).",
+      audit?.presenceIa
+        ? audit.presenceIa.cite
+          ? `Cité par l'IA sur « ${audit.presenceIa.question} ».`
+          : `Non cité sur « ${audit.presenceIa.question} » — l'IA nomme ${audit.presenceIa.concurrents.join(", ") || "d'autres maisons"}.`
+        : "Présence IA non mesurée.",
+    ],
+    lien: { libelle: "Voir les prospects", url: `${siteUrl()}/admin` },
+    repondreA: p.email,
+  });
 }

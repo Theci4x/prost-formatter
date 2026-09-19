@@ -28,6 +28,10 @@ export const translations = {
       genericError: "Une erreur est survenue, réessaie dans un instant.",
       quotaError:
         "Tu as déjà lancé plusieurs tests aujourd'hui. Reviens demain, ou écris-nous : on le fait pour toi.",
+      choixTitle: "Lequel est le vôtre ?",
+      choixBody:
+        "Plusieurs établissements portent ce nom. Choisissez le bon : nous préférons vous le demander plutôt que d'analyser celui du voisin.",
+      choixAucun: "Aucun de ces établissements",
       successTitle: "Merci ! On revient vers vous très vite.",
       successBody:
         "On regarde votre fiche Google et on vous recontacte avec les résultats.",
@@ -193,6 +197,10 @@ export const translations = {
       genericError: "Something went wrong, please try again in a moment.",
       quotaError:
         "You have already run several tests today. Come back tomorrow, or write to us and we will run it for you.",
+      choixTitle: "Which one is yours?",
+      choixBody:
+        "Several places share that name. Pick the right one — we would rather ask than analyse your neighbour's.",
+      choixAucun: "None of these",
       successTitle: "Thanks! We'll be in touch shortly.",
       successBody:
         "We're reviewing your Google listing and will contact you with the results.",
@@ -355,6 +363,10 @@ export const translations = {
       genericError: "出现错误，请稍后重试。",
       quotaError:
         "您今天已经进行了多次测试。请明天再来，或与我们联系，我们代您完成。",
+      choixTitle: "哪一家是您的？",
+      choixBody:
+        "有多家同名商户。请选择正确的一家——我们宁可多问一句，也不愿分析邻店。",
+      choixAucun: "都不是",
       successTitle: "谢谢！我们会尽快与您联系。",
       successBody: "我们正在查看您的 Google 商家资料，稍后会把结果反馈给您。",
     },

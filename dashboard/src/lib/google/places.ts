@@ -40,10 +40,18 @@ function apiKey() {
   return key;
 }
 
-export async function searchPlace(
+/**
+ * Les établissements qui répondent à la recherche, dans l'ordre de Google.
+ *
+ * Plusieurs et non un seul : sur « Le Bistrot Paris », le premier résultat
+ * n'est pas forcément le bon, et prendre celui-là sans regarder revient à
+ * auditer l'établissement d'un autre.
+ */
+export async function searchPlaces(
   query: string,
+  limite = 5,
   fraicheur: number = FRAICHEUR_ECRAN,
-): Promise<PlaceSearchResult | null> {
+): Promise<PlaceSearchResult[]> {
   const res = await fetch(`${PLACES_BASE_URL}/places:searchText`, {
     method: "POST",
     headers: {
@@ -70,14 +78,24 @@ export async function searchPlace(
     }[];
   };
 
-  const first = data.places?.[0];
-  if (!first) return null;
+  return (data.places ?? []).slice(0, limite).map((place) => ({
+    id: place.id,
+    displayName: place.displayName?.text ?? query,
+    formattedAddress: place.formattedAddress ?? "",
+  }));
+}
 
-  return {
-    id: first.id,
-    displayName: first.displayName?.text ?? query,
-    formattedAddress: first.formattedAddress ?? "",
-  };
+/**
+ * Le premier résultat, pour les appelants qui savent déjà de quel
+ * établissement ils parlent — la fiche d'un restaurant déjà inscrit, par
+ * exemple, dont on connaît le nom exact.
+ */
+export async function searchPlace(
+  query: string,
+  fraicheur: number = FRAICHEUR_ECRAN,
+): Promise<PlaceSearchResult | null> {
+  const [premier] = await searchPlaces(query, 1, fraicheur);
+  return premier ?? null;
 }
 
 export type PlaceReview = {
