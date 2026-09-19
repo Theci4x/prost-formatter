@@ -12,9 +12,12 @@ import { LANGUES, NOM_LANGUE, type Langue } from "@/lib/i18n/langue";
 export function ChoixLangue({
   courante,
   libelle,
+  action = choisirLangue,
 }: {
   courante: Langue;
   libelle: string;
+  /** Le compte pour un inscrit, un témoin pour un visiteur. */
+  action?: (formData: FormData) => Promise<void>;
 }) {
   return (
     <form className="flex items-center gap-2">
@@ -23,7 +26,7 @@ export function ChoixLangue({
         <button
           key={langue}
           type="submit"
-          formAction={choisirLangue}
+          formAction={action}
           name="langue"
           value={langue}
           aria-current={langue === courante ? "true" : undefined}

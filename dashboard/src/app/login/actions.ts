@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { langueVisiteur } from "@/lib/i18n/langue";
 import { siteUrl } from "@/lib/site-url";
 
 export type AuthState = {
@@ -36,9 +37,14 @@ export async function signup(
   const password = formData.get("password") as string;
 
   const supabase = await createClient();
+  // La langue choisie avant l'inscription suit le compte : sans ça, un
+  // restaurateur qui lit la page en chinois se retrouverait dans un
+  // tableau de bord en français, et tout le travail de traduction
+  // s'arrêterait à la porte.
   const { error } = await supabase.auth.signUp({
     email,
     password,
+    options: { data: { langue: await langueVisiteur() } },
   });
 
   if (error) {

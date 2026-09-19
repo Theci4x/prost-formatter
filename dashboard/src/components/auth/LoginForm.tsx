@@ -1,5 +1,7 @@
 "use client";
 
+import type { ClesAuth } from "@/lib/i18n/authentification";
+
 import { useActionState } from "react";
 import Link from "next/link";
 import { login, signup, type AuthState } from "@/app/login/actions";
@@ -12,7 +14,13 @@ const initialState: AuthState = { error: null };
  *   adresse deux écrans plus tôt et à qui on la redemande se dit qu'on ne
  *   l'a pas écouté, et la moitié abandonne là.
  */
-export function LoginForm({ emailInitial }: { emailInitial?: string }) {
+export function LoginForm({
+  emailInitial,
+  t,
+}: {
+  emailInitial?: string;
+  t: ClesAuth;
+}) {
   const [loginState, loginAction, loginPending] = useActionState(
     login,
     initialState,
@@ -28,7 +36,7 @@ export function LoginForm({ emailInitial }: { emailInitial?: string }) {
     <form className="flex w-full max-w-sm flex-col gap-4">
       <div className="flex flex-col gap-1.5">
         <label htmlFor="email" className="text-sm font-medium text-zinc-700">
-          Email
+          {t.email}
         </label>
         <input
           id="email"
@@ -43,7 +51,7 @@ export function LoginForm({ emailInitial }: { emailInitial?: string }) {
 
       <div className="flex flex-col gap-1.5">
         <label htmlFor="password" className="text-sm font-medium text-zinc-700">
-          Mot de passe
+          {t.motDePasse}
         </label>
         <input
           id="password"
@@ -62,7 +70,7 @@ export function LoginForm({ emailInitial }: { emailInitial?: string }) {
         href="/mot-de-passe-oublie"
         className="w-fit text-sm text-zinc-500 hover:text-zinc-900"
       >
-        Mot de passe oublié ?
+        {t.oublie}
       </Link>
 
       <div className="mt-2 flex flex-col gap-2 sm:flex-row">
@@ -71,14 +79,14 @@ export function LoginForm({ emailInitial }: { emailInitial?: string }) {
           disabled={loginPending || signupPending}
           className="flex-1 rounded-lg bg-ink px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy disabled:opacity-50"
         >
-          {loginPending ? "Connexion..." : "Se connecter"}
+          {loginPending ? t.connexionEnCours : t.seConnecter}
         </button>
         <button
           formAction={signupAction}
           disabled={loginPending || signupPending}
           className="flex-1 rounded-lg border border-line bg-paper px-4 py-2.5 text-sm font-semibold text-ink transition-colors hover:border-ink disabled:opacity-50"
         >
-          {signupPending ? "Inscription..." : "Créer un compte"}
+          {signupPending ? t.inscriptionEnCours : t.creerCompte}
         </button>
       </div>
     </form>

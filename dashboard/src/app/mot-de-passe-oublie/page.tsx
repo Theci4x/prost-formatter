@@ -2,20 +2,22 @@ import type { Metadata } from "next";
 import { ForgotPasswordForm } from "@/components/auth/ForgotPasswordForm";
 import { KlarrMark, KlarrWordmark } from "@/components/brand/KlarrMark";
 import { LoginIllustration } from "@/components/brand/LoginIllustration";
+import { AUTH } from "@/lib/i18n/authentification";
+import { langueVisiteur } from "@/lib/i18n/langue";
 
 export const metadata: Metadata = {
   // Un formulaire de réinitialisation ne répond à aucune recherche.
   robots: { index: false, follow: false },
   title: "Mot de passe oublié",
-  description:
-    "Recevez un lien pour choisir un nouveau mot de passe Klarr.",
+  description: "Recevez un lien pour choisir un nouveau mot de passe Klarr.",
 };
 
-export default function ForgotPasswordPage() {
+export default async function ForgotPasswordPage() {
+  const t = AUTH[await langueVisiteur()];
   return (
     <div className="flex min-h-full flex-1 flex-col md:flex-row">
       <div className="hidden md:flex md:w-2/5">
-        <LoginIllustration />
+        <LoginIllustration accroche={t.accroche} />
       </div>
 
       <div className="flex flex-1 flex-col items-center justify-center gap-8 bg-brand-cream px-5 py-16">
@@ -24,9 +26,7 @@ export default function ForgotPasswordPage() {
             <KlarrMark size={40} />
             <KlarrWordmark className="text-2xl text-zinc-900" />
           </div>
-          <h1 className="font-serif text-4xl text-ink">
-            Mot de passe oublié
-          </h1>
+          <h1 className="font-serif text-4xl text-ink">Mot de passe oublié</h1>
           <p className="max-w-sm text-sm text-zinc-500">
             Indique ton adresse e-mail : on t&apos;envoie un lien pour en
             choisir un nouveau.
