@@ -9,35 +9,7 @@ import {
   PACK,
   type Achat,
 } from "@/lib/abonnement/modules";
-
-/**
- * Le tarif Stripe de chaque achat possible. Trois produits distincts, donc
- * trois identifiants : `STRIPE_PRICE_ID` couvre la visibilité et reste lu
- * tel quel, pour ne pas casser une configuration déjà en place.
- */
-/**
- * Le taux de TVA appliqué à l'abonnement.
- *
- * Sans lui, Stripe encaisse exactement le montant du prix : un tarif à
- * 29 € rapporterait 29 € dont 4,83 € dus au fisc, soit un cinquième de la
- * marge perdu sans s'en apercevoir. Avec lui, la facture affiche
- * « 29,00 € + 5,80 € de TVA = 34,80 € » — ce que des clients
- * professionnels attendent pour la récupérer.
- *
- * Optionnel : sans la variable, on retombe sur l'ancien comportement, et
- * les prix doivent alors être saisis toutes taxes comprises.
- */
-function tauxTva(): string[] | undefined {
-  const taux = process.env.STRIPE_TAX_RATE_ID?.trim();
-  return taux ? [taux] : undefined;
-}
-
-function tarif(requis: Achat): string | undefined {
-  if (requis === PACK) return process.env.STRIPE_PRICE_ID_PACK;
-  return requis === "reservations"
-    ? process.env.STRIPE_PRICE_ID_RESERVATIONS
-    : (process.env.STRIPE_PRICE_ID_VISIBILITE ?? process.env.STRIPE_PRICE_ID);
-}
+import { tarif, tauxTva } from "@/lib/stripe/tarifs";
 
 export async function GET(request: NextRequest) {
   const restaurantId = request.nextUrl.searchParams.get("restaurant_id");
@@ -49,7 +21,10 @@ export async function GET(request: NextRequest) {
   }
 
   const demande = request.nextUrl.searchParams.get("module") ?? "visibilite";
-  if (demande !== PACK && !MODULES.includes(demande as (typeof MODULES)[number])) {
+  if (
+    demande !== PACK &&
+    !MODULES.includes(demande as (typeof MODULES)[number])
+  ) {
     return NextResponse.json({ error: "module inconnu" }, { status: 400 });
   }
   const requis = demande as Achat;
@@ -82,9 +57,12 @@ export async function GET(request: NextRequest) {
     .maybeSingle();
 
   if (!restaurant) {
-    return NextResponse.json({ error: "restaurant introuvable" }, {
-      status: 404,
-    });
+    return NextResponse.json(
+      { error: "restaurant introuvable" },
+      {
+        status: 404,
+      },
+    );
   }
 
   // Payer deux fois le même module est trop facile : on clique, le webhook
@@ -153,8 +131,7 @@ export async function GET(request: NextRequest) {
       cancel_url: `${site}/dashboard/${restaurantId}/abonnement?checkout=cancel`,
     });
   } catch (erreur) {
-    const detail =
-      erreur instanceof Error ? erreur.message : String(erreur);
+    const detail = erreur instanceof Error ? erreur.message : String(erreur);
     console.error("[stripe/checkout]", requis, detail);
     return NextResponse.redirect(
       new URL(

@@ -71,12 +71,25 @@ export default async function AbonnementPage({
   );
   const acces = await chargerAcces(id, supabase);
 
-  // Rien de payé nulle part : c'est la seule situation où proposer le pack
-  // ne crée pas de doublon.
-  const aucunAbonnement = MODULES.every((cle) => {
+  const payes = MODULES.filter((cle) => {
     const abonnement = abonnements.get(cle);
-    return !abonnement || !abonnementOuvrant(abonnement.status);
+    return Boolean(abonnement && abonnementOuvrant(abonnement.status));
   });
+
+  // Rien de payé nulle part : on peut proposer le pack d'emblée.
+  const aucunAbonnement = payes.length === 0;
+
+  // Un seul module payé, et les deux lignes ne pendent pas déjà au même
+  // abonnement : c'est le cas de la bascule. Prendre l'autre module
+  // séparément coûterait 66,50 € HT là où le pack en vaut 59 — le client
+  // fidèle paierait 90 € de plus par an que le nouveau venu.
+  const abonnementsOuverts = new Set(
+    payes.map((cle) => abonnements.get(cle)?.stripe_subscription_id),
+  );
+  const basculePossible = payes.length === 1 && abonnementsOuverts.size === 1;
+  const manquant = basculePossible
+    ? MODULES.find((cle) => !payes.includes(cle))
+    : undefined;
 
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 px-6 py-8">
@@ -110,6 +123,17 @@ export default async function AbonnementPage({
       {query.checkout === "cancel" && (
         <p className="text-sm text-ink-soft">
           Souscription abandonnée. Rien n&apos;a été prélevé.
+        </p>
+      )}
+
+      {/* La bascule ne passe pas par une page de paiement : sans ce mot,
+          le restaurateur revient sur un écran qui a changé tout seul et
+          se demande s'il a été débité. */}
+      {query.checkout === "pack" && (
+        <p className="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-900">
+          C&apos;est fait : ton abonnement couvre maintenant les deux modules.
+          Seule la différence au prorata t&apos;a été facturée, et ta date de
+          renouvellement n&apos;a pas changé.
         </p>
       )}
 
@@ -255,6 +279,38 @@ export default async function AbonnementPage({
             className="w-fit rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-brand-navy-hover"
           >
             Prendre les deux
+          </a>
+        </div>
+      )}
+
+      {/* Ajouter le second module, c'est passer au pack — jamais souscrire
+          une seconde fois. On le dit avec les chiffres, parce que c'est là
+          que le restaurateur comprend qu'on ne cherche pas à lui vendre
+          deux abonnements. */}
+      {basculePossible && manquant && (
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-3 rounded-2xl border border-brand-navy/20 bg-brand-orange-soft p-6 shadow-sm">
+          <div className="flex min-w-0 flex-1 basis-64 flex-col gap-1">
+            <span className="text-base font-semibold text-zinc-900">
+              Ajouter {LIBELLE_MODULE[manquant]}
+            </span>
+            <span className="text-sm font-medium text-brand-navy">
+              {PRIX_PACK}{" "}
+              <span className="font-normal text-zinc-500">
+                ({PRIX_PACK_TTC})
+              </span>
+            </span>
+            <span className="text-sm leading-relaxed text-zinc-600">
+              Ton abonnement passe au pack, qui ouvre les deux modules pour
+              moins cher que les deux pris séparément. Tu ne paies
+              aujourd&apos;hui que la différence au prorata des jours restants,
+              et ta date de renouvellement ne change pas.
+            </span>
+          </div>
+          <a
+            href={`/api/stripe/pack?restaurant_id=${id}`}
+            className="w-fit rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-brand-navy-hover"
+          >
+            Passer au pack
           </a>
         </div>
       )}
