@@ -3,6 +3,7 @@ import { tousLesBillets, dateLisible } from "@/lib/blog/billets";
 import { tempsDeLecture } from "@/types/blog";
 import { Couverture } from "@/components/blog/Couverture";
 import { titreCategorieBillet } from "@/types/blog";
+import type { ClesAccueilPublic } from "@/lib/i18n/accueilPublic";
 
 /**
  * Les derniers billets, en bas de l'accueil.
@@ -16,13 +17,23 @@ import { titreCategorieBillet } from "@/types/blog";
  * Il sert aussi au référencement : Google suit les liens depuis la page
  * la plus visitée du site, et sans ce bloc les articles ne sont atteints
  * que par le plan du site et une ligne de pied de page.
+ *
+ * Il s'affichait un temps en français seulement, au motif que trois
+ * cartes françaises au milieu d'une page chinoise font désordre. C'était
+ * une erreur de jugement : le bloc disparaissait entièrement, et le site
+ * donnait l'impression de ne pas avoir de journal du tout. Il reste donc
+ * partout — l'habillage suit la langue, les articles restent en français,
+ * et une ligne le dit plutôt que de le laisser découvrir au clic.
  */
-export function Journal() {
+export function Journal({ t }: { t: ClesAccueilPublic["journal"] }) {
   const billets = tousLesBillets().slice(0, 3);
   if (billets.length === 0) return null;
 
   return (
-    <div className="px-5 py-16 sm:px-8 sm:py-20" style={{ background: "var(--bg-alt)" }}>
+    <div
+      className="px-5 py-16 sm:px-8 sm:py-20"
+      style={{ background: "var(--bg-alt)" }}
+    >
       <div
         style={{
           maxWidth: 1180,
@@ -51,7 +62,7 @@ export function Journal() {
                 color: "var(--accent-dark)",
               }}
             >
-              Le journal
+              {t.surtitre}
             </span>
             <h2
               style={{
@@ -62,7 +73,7 @@ export function Journal() {
                 lineHeight: 1.2,
               }}
             >
-              Ce qu&apos;on aurait aimé lire avant d&apos;ouvrir.
+              {t.titre}
             </h2>
             <p
               style={{
@@ -73,9 +84,13 @@ export function Journal() {
                 color: "var(--ink-soft)",
               }}
             >
-              Des articles gratuits sur les démarches, les diagnostics et les
-              autorisations — écrits à partir de ce qu&apos;on a découvert
-              trop tard, sources à l&apos;appui.
+              {t.chapo}
+              {t.enFrancais && (
+                <>
+                  {" "}
+                  <span style={{ opacity: 0.75 }}>{t.enFrancais}</span>
+                </>
+              )}
             </p>
           </div>
           <Link
@@ -87,7 +102,7 @@ export function Journal() {
               color: "var(--accent-dark)",
             }}
           >
-            Tous les articles →
+            {t.tous}
           </Link>
         </div>
 
@@ -153,7 +168,7 @@ export function Journal() {
                     }}
                   >
                     {dateLisible(billet.misAJourLe)} ·{" "}
-                    {tempsDeLecture(billet.markdown)} min de lecture
+                    {tempsDeLecture(billet.markdown)} {t.lecture}
                   </span>
                 </div>
               </Link>

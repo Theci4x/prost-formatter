@@ -32,6 +32,7 @@ export type ClesAccueilPublic = {
     fonctionnement: string;
     test: string;
     tarifs: string;
+    journal: string;
     connexion: string;
     essayerCourt: string;
     essayer: string;
@@ -118,6 +119,15 @@ export type ClesAccueilPublic = {
   test: { surtitre: string; titre: string; texte: string; bouton: string };
   bientot: { surtitre: string; titre: string; texte: string; puces: string[] };
   cta: { titre: string; texte: string; bouton: string };
+  journal: {
+    surtitre: string;
+    titre: string;
+    chapo: string;
+    tous: string;
+    lecture: string;
+    /** Vide en français ; ailleurs, dit la langue des articles. */
+    enFrancais: string;
+  };
   produit: {
     lieu: string;
     ficheAJour: string;
@@ -198,6 +208,7 @@ const fr: ClesAccueilPublic = {
     fonctionnement: "Comment ça marche",
     test: "Tester ma présence Google",
     tarifs: "Tarifs",
+    journal: "Le journal",
     connexion: "Connexion",
     essayerCourt: "Essayer",
     essayer: "Essayer gratuitement",
@@ -473,6 +484,15 @@ const fr: ClesAccueilPublic = {
     texte: "Pas de carte bancaire. Pas d'engagement. Pas de discours.",
     bouton: "Vérifier ma visibilité — gratuit, 2 minutes",
   },
+  journal: {
+    surtitre: "Le journal",
+    titre: "Ce qu'on aurait aimé lire avant d'ouvrir.",
+    chapo:
+      "Des articles gratuits sur les démarches, les diagnostics et les autorisations — écrits à partir de ce qu'on a découvert trop tard, sources à l'appui.",
+    tous: "Tous les articles →",
+    lecture: "min de lecture",
+    enFrancais: "",
+  },
   produit: {
     lieu: "Restaurant · Paris 3e",
     ficheAJour: "Fiche Google à jour",
@@ -518,6 +538,7 @@ const en: ClesAccueilPublic = {
     fonctionnement: "How it works",
     test: "Test my Google presence",
     tarifs: "Pricing",
+    journal: "Journal",
     connexion: "Sign in",
     essayerCourt: "Try it",
     essayer: "Try it free",
@@ -788,6 +809,15 @@ const en: ClesAccueilPublic = {
     texte: "No card. No contract. No sales pitch.",
     bouton: "Check my visibility — free, 2 minutes",
   },
+  journal: {
+    surtitre: "Journal",
+    titre: "What we wish we had read before opening.",
+    chapo:
+      "Free articles on the paperwork, the inspections and the permits — written from what we found out too late, with the sources.",
+    tous: "All articles →",
+    lecture: "min read",
+    enFrancais: "Written in French.",
+  },
   produit: {
     lieu: "Restaurant · Paris 3e",
     ficheAJour: "Google listing up to date",
@@ -821,6 +851,7 @@ const zh: ClesAccueilPublic = {
     fonctionnement: "运作方式",
     test: "检测我的 Google 曝光",
     tarifs: "价格",
+    journal: "专栏",
     connexion: "登录",
     essayerCourt: "试用",
     essayer: "免费试用",
@@ -1076,6 +1107,15 @@ const zh: ClesAccueilPublic = {
     titre: "您的 Google 商家资料，没有营销滤镜。",
     texte: "不用信用卡。不用签约。不讲空话。",
     bouton: "检查我的曝光度——免费，2 分钟",
+  },
+  journal: {
+    surtitre: "专栏",
+    titre: "开店之前，我们希望有人早点告诉我们的事。",
+    chapo:
+      "关于手续、检查和许可的免费文章——写的都是我们自己发现得太晚的事，并附上出处。",
+    tous: "全部文章 →",
+    lecture: "分钟阅读",
+    enFrancais: "文章为法语。",
   },
   produit: {
     lieu: "餐厅 · 巴黎三区",

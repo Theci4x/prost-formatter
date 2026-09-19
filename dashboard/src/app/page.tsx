@@ -201,6 +201,16 @@ export default async function Home() {
           >
             {t.nav.tarifs}
           </a>
+          {/* Le journal n'était atteignable que par le pied de page,
+              c'est-à-dire après avoir fait défiler toute la page. C'est
+              pourtant la porte d'entrée de ceux qui arrivent par une
+              recherche. */}
+          <Link
+            href="/blog"
+            style={{ fontSize: 14, fontWeight: 500, color: "var(--ink-soft)" }}
+          >
+            {t.nav.journal}
+          </Link>
           <Link
             href="/login"
             style={{ fontSize: 14, fontWeight: 500, color: "var(--ink-soft)" }}
@@ -793,17 +803,9 @@ export default async function Home() {
         </div>
       </Reveal>
 
-      {/* Les articles sont écrits en français et ne sont pas traduits :
-          trois cartes françaises au milieu d'une page chinoise donnent
-          l'impression d'une page à moitié cassée. Le lien du pied de page
-          reste, avec la mention de la langue. Un robot, lui, lit toujours
-          la version française — le maillage vers le journal est donc
-          intact. */}
-      {langue === "fr" && (
-        <Reveal>
-          <Journal />
-        </Reveal>
-      )}
+      <Reveal>
+        <Journal t={t.journal} />
+      </Reveal>
 
       {/* FOOTER */}
       <div
