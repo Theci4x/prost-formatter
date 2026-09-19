@@ -40,6 +40,11 @@ export const billet: Billet = {
       pourquoi:
         "Le pilier qui pèse le plus lourd, et celui où l'on a le moins le droit de tricher.",
     },
+    {
+      slug: "pourquoi-je-sors-derriere-mon-voisin-google-maps",
+      pourquoi:
+        "Une fiche parfaite ne garantit pas une place : ce que la distance décide à votre place.",
+    },
   ],
   markdown: `
 **Disons-le tout de suite : nous ne sommes pas neutres.** Klarr vend un outil qui note les fiches Google. Et la grille qui suit est **la nôtre** — pas celle de Google.
@@ -120,7 +125,7 @@ Dans cet ordre, parce qu'il suit les points gagnés par minute passée :
 
 1. **Les trois champs.** Téléphone, site, horaires. Dix minutes, quarante-cinq points.
 2. **Quinze photos.** Un midi, un téléphone correct, et c'est fait. Vingt-cinq points de plus.
-3. **Votre catégorie.** Elle ne rapporte pas de points chez nous mais décide des recherches où vous sortez : « bar à cocktails » et « restaurant » ne répondent pas aux mêmes questions.
+3. **Votre catégorie.** Elle ne rapporte pas de points chez nous mais [décide des recherches où vous sortez](/blog/pourquoi-je-sors-derriere-mon-voisin-google-maps) : « bar à cocktails » et « restaurant » ne répondent pas aux mêmes questions.
 4. **Répondez aux avis**, tous, y compris les mauvais. Ça ne change pas la note, ça change ce que lit le suivant.
 5. **Demandez des avis, en continu.** Pas une campagne : une habitude.
 6. **Le balisage du site**, en dernier, parce que c'est le seul point de cette liste qui demande quelqu'un de technique — ou un outil qui le pose pour vous.

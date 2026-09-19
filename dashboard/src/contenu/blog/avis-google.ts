@@ -61,6 +61,11 @@ export const billet: Billet = {
       pourquoi:
         "Ce que vos avis pèsent dans la note d'ensemble, et ce qui compte autant qu'eux.",
     },
+    {
+      slug: "pourquoi-je-sors-derriere-mon-voisin-google-maps",
+      pourquoi:
+        "Les avis nourrissent la notoriété, l'un des trois critères que Google publie.",
+    },
   ],
   markdown: `
 Il existe des centaines d'articles sur « comment obtenir plus d'avis Google ». Il n'en existe presque aucun sur ce qui est interdit — alors que c'est là que les restaurateurs se mettent en danger, souvent de bonne foi, en appliquant des conseils trouvés en ligne.

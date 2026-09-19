@@ -45,6 +45,11 @@ export const billet: Billet = {
       pourquoi:
         "La première des cinq sources, notée ligne par ligne, avec les points.",
     },
+    {
+      slug: "pourquoi-je-sors-derriere-mon-voisin-google-maps",
+      pourquoi:
+        "Le même travail, vu depuis Google Maps — et pourquoi votre position n'existe pas.",
+    },
   ],
   markdown: `
 **Disons-le tout de suite : nous ne sommes pas neutres.** Klarr vend un outil qui mesure ce que les assistants IA répondent sur un restaurant. Nous avons donc un intérêt direct à ce que le sujet vous inquiète.
