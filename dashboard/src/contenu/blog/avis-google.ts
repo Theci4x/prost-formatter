@@ -40,6 +40,18 @@ export const billet: Billet = {
     fichier: "/blog/avis-google.jpg",
     alt: "Un restaurateur regarde ses avis sur son ordinateur, à côté de notes sur les faux avis et les sanctions prévues par le code de la consommation.",
   },
+  suite: [
+    {
+      slug: "reservations-sans-commission-guide-restaurants-independants",
+      pourquoi:
+        "Votre fiche bien tenue vous amène des clients directs. Voilà ce qu'ils vous coûtent ailleurs.",
+    },
+    {
+      slug: "no-show-restaurant-cout-empreinte-bancaire",
+      pourquoi:
+        "Le revers d'une fiche qui marche : des réservations qui n'arrivent jamais.",
+    },
+  ],
   markdown: `
 Il existe des centaines d'articles sur « comment obtenir plus d'avis Google ». Il n'en existe presque aucun sur ce qui est interdit — alors que c'est là que les restaurateurs se mettent en danger, souvent de bonne foi, en appliquant des conseils trouvés en ligne.
 

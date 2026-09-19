@@ -35,6 +35,18 @@ export const billet: Billet = {
     fichier: "/blog/organisation-salle.jpg",
     alt: "Une restauratrice met au propre son organisation de salle : d'un côté la liste des fonctions, de l'autre les prénoms de l'équipe, pendant que le service se prépare derrière elle.",
   },
+  suite: [
+    {
+      slug: "no-show-restaurant-cout-empreinte-bancaire",
+      pourquoi:
+        "Une salle bien tenue ne rattrape pas une table qui ne vient pas.",
+    },
+    {
+      slug: "erp-restaurant-categorie-commission-securite",
+      pourquoi:
+        "Ce que la loi vous autorise à accueillir, avant même de savoir qui sert.",
+    },
+  ],
   markdown: `
 « Marc s'occupe de la cave. » « Julie sait faire la caisse. » « Pour les groupes, on demande à Sofiane. »
 

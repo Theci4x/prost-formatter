@@ -87,6 +87,31 @@ export function memeRubrique(billet: Billet, combien = 3): Billet[] {
     .slice(0, combien);
 }
 
+/**
+ * Ce qu'on propose de lire après, dans l'ordre choisi par l'article
+ * lui-même. À défaut, ses voisins de rubrique.
+ */
+export function aLireEnsuite(
+  billet: Billet,
+): { billet: Billet; pourquoi: string }[] {
+  if (!billet.suite?.length) {
+    return memeRubrique(billet).map((autre) => ({
+      billet: autre,
+      pourquoi: "",
+    }));
+  }
+  return billet.suite.flatMap(({ slug, pourquoi }) => {
+    const autre = billetParSlug(slug);
+    // Un slug qui ne répond plus est une erreur de saisie : on ne casse
+    // pas la page pour autant, mais la liaison manquante se voit ici.
+    if (!autre) {
+      console.warn(`[blog] suite introuvable depuis ${billet.slug} : ${slug}`);
+      return [];
+    }
+    return [{ billet: autre, pourquoi }];
+  });
+}
+
 /** « 14 septembre 2026 », pour l'affichage. */
 export function dateLisible(iso: string): string {
   return new Date(`${iso}T12:00:00`).toLocaleDateString("fr-FR", {

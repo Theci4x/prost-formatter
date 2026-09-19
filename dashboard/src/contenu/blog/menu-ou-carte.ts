@@ -45,6 +45,16 @@ export const billet: Billet = {
     fichier: "/blog/menu-carte.jpg",
     alt: "Un restaurateur compare deux documents sur sa table : une page de menus et formules, et une carte, avec une calculatrice et des relevés de coût matière.",
   },
+  suite: [
+    {
+      slug: "tva-restaurant-menu-avec-vin-ventilation",
+      pourquoi: "Le piège fiscal que le menu ajoute, et que la carte n'a pas.",
+    },
+    {
+      slug: "livraison-uber-eats-deliveroo-calcul-marge",
+      pourquoi: "Vos marges, vues depuis l'autre canal de vente.",
+    },
+  ],
   markdown: `
 « On met une carte, comme ça les gens choisissent. »
 

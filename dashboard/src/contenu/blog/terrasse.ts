@@ -45,6 +45,17 @@ export const billet: Billet = {
     fichier: "/blog/terrasse.jpg",
     alt: "Des agents de la police municipale contrôlent l'autorisation d'occupation du domaine public d'une terrasse, devant la restauratrice.",
   },
+  suite: [
+    {
+      slug: "erp-restaurant-categorie-commission-securite",
+      pourquoi: "Ce que la terrasse change à votre catégorie.",
+    },
+    {
+      slug: "no-show-restaurant-cout-empreinte-bancaire",
+      pourquoi:
+        "Une terrasse pleine de tables réservées et vides coûte plus qu'une redevance.",
+    },
+  ],
   markdown: `
 Vous reprenez un fonds « avec une terrasse de vingt couverts ». Le prix en tient compte, évidemment : vingt couverts de plus aux beaux jours, c'est une part sérieuse de la saison.
 

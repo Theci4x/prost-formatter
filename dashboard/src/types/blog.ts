@@ -88,6 +88,21 @@ export type Billet = {
    * quelqu'un qui y était, ce qu'aucun aplat de couleur ne dira jamais.
    */
   image?: Illustration;
+  /**
+   * Ce qu'il faut lire ensuite, choisi à la main et sans se limiter à la
+   * rubrique.
+   *
+   * « Dans la même rubrique » n'emmène nulle part : dix articles sur
+   * l'ouverture renvoient à neuf autres articles sur l'ouverture, et le
+   * lecteur tourne en rond dans la partie du journal qui ne lui vendra
+   * rien. Or celui qui lit le HACCP aujourd'hui ouvrira dans six mois et
+   * cherchera alors comment remplir sa salle : autant le lui dire
+   * maintenant.
+   *
+   * Chaque lien porte sa raison. Un titre seul ne se clique pas ; « vous
+   * ouvrez dans six mois, voilà comment on vous trouvera », si.
+   */
+  suite?: { slug: string; pourquoi: string }[];
   markdown: string;
 };
 

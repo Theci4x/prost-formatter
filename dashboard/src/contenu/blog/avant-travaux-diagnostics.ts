@@ -34,6 +34,22 @@ export const billet: Billet = {
     fichier: "/blog/diagnostics-mur.jpg",
     alt: "Un opérateur en gilet de chantier passe un appareil de mesure sur un mur décroûté, dans une pièce en travaux, un rapport à la main.",
   },
+  suite: [
+    {
+      slug: "ouvriers-sur-votre-chantier-obligations",
+      pourquoi:
+        "Les diagnostics faits, restent les ouvriers — et ce que vous devenez à leur égard.",
+    },
+    {
+      slug: "erp-restaurant-categorie-commission-securite",
+      pourquoi: "Ce que les travaux changent à votre capacité d'accueil.",
+    },
+    {
+      slug: "avis-google-restaurant-ce-qui-est-interdit",
+      pourquoi:
+        "Pendant les travaux, votre fiche Google se remplit sans vous. Autant savoir ce qu'on peut en faire.",
+    },
+  ],
   markdown: `
 Voici l'erreur que fait à peu près tout le monde, et je l'ai faite : **le diagnostic immobilier remis à la vente ou à la signature du bail ne vaut pas diagnostic avant travaux.** Ce sont deux documents différents, avec deux objets différents, et le second est à votre charge.
 

@@ -39,6 +39,17 @@ export const billet: Billet = {
     fichier: "/blog/livraison-plateformes.jpg",
     alt: "Un restaurateur devant son ordinateur, entouré de sacs de livraison en kraft et d'un sac isotherme de coursier, avec des notes sur les commissions et les marges.",
   },
+  suite: [
+    {
+      slug: "reservations-sans-commission-guide-restaurants-independants",
+      pourquoi: "La même arithmétique, appliquée aux réservations.",
+    },
+    {
+      slug: "menu-ou-carte-restaurant-marges",
+      pourquoi:
+        "Ce qui survit à la commission dépend d'abord de ce qu'il y a sur la carte.",
+    },
+  ],
   markdown: `
 **Disons-le tout de suite : nous ne sommes pas neutres.** Klarr vend une page de réservation et de commande sans commission. Nous avons donc un intérêt direct à ce que vous trouviez les commissions des plateformes trop chères.
 

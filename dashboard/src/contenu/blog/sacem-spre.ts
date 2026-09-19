@@ -40,6 +40,17 @@ export const billet: Billet = {
     fichier: "/blog/sacem-spre.jpg",
     alt: "Une restauratrice dans sa salle fermée, devant une facture unique SACEM-SPRE et une note qui sépare le droit d'auteur de la rémunération équitable.",
   },
+  suite: [
+    {
+      slug: "etude-impact-nuisances-sonores-restaurant",
+      pourquoi: "La même musique, vue par le voisinage cette fois.",
+    },
+    {
+      slug: "reservations-sans-commission-guide-restaurants-independants",
+      pourquoi:
+        "Une fois les charges fixes posées, celle qui grossit avec votre succès.",
+    },
+  ],
   markdown: `
 Presque tous les restaurateurs paient la SACEM. Presque aucun ne sait ce qu'il paie, ni qu'une seconde redevance existe — ni, surtout, que l'abonnement musical avec lequel ils passent la musique tous les soirs ne les autorise pas à le faire.
 

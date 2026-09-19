@@ -45,6 +45,17 @@ export const billet: Billet = {
     fichier: "/blog/declaration-classeurs.jpg",
     alt: "Une pile de classeurs — déclaration DDPP, licence IV, commission de sécurité, déclaration d'ouverture en mairie — surmontée d'un post-it « et le restaurant ?! », à côté d'un restaurateur qui lit son Kbis.",
   },
+  suite: [
+    {
+      slug: "haccp-plan-maitrise-sanitaire-restaurant",
+      pourquoi:
+        "La déclaration faite, c'est le plan de maîtrise sanitaire qu'on vous demandera.",
+    },
+    {
+      slug: "avis-google-restaurant-ce-qui-est-interdit",
+      pourquoi: "Ce qui se joue dehors pendant que vous réglez l'intérieur.",
+    },
+  ],
   markdown: `
 Quand on crée une société, on a le sentiment d'avoir tout déclaré. Le greffe a enregistré, l'INSEE a attribué un SIRET, le comptable a sa liasse. On se dit, raisonnablement, que l'administration sait qu'on ouvre un restaurant.
 

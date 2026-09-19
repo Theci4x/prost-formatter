@@ -44,6 +44,22 @@ export const billet: Billet = {
     fichier: "/blog/impact-sonore-mesure.jpg",
     alt: "Un acousticien relève un niveau sonore au sonomètre dans une salle de restaurant fermée, le rapport d'étude d'impact sonore posé devant lui, sous le regard du patron.",
   },
+  suite: [
+    {
+      slug: "sacem-spre-restaurant-musique",
+      pourquoi: "L'autre facture que la musique vous vaudra.",
+    },
+    {
+      slug: "terrasse-restaurant-autorisation-domaine-public",
+      pourquoi:
+        "Le bruit en terrasse est ce qui fait tomber les autorisations.",
+    },
+    {
+      slug: "organisation-service-salle-fonctions",
+      pourquoi:
+        "Le bruit se règle aussi en salle : qui fait quoi, et à quel moment.",
+    },
+  ],
   markdown: `
 On lit partout que « tout établissement qui diffuse de la musique » doit faire une étude d'impact des nuisances sonores. C'est faux, et l'approximation fait deux dégâts : elle fait dépenser de l'argent à des gens qui n'en ont pas besoin, et elle fait hausser les épaules à ceux qui devraient s'en soucier.
 

@@ -8,7 +8,7 @@ import { Couverture } from "@/components/blog/Couverture";
 import {
   billetParSlug,
   dateLisible,
-  memeRubrique,
+  aLireEnsuite,
   tousLesBillets,
 } from "@/lib/blog/billets";
 import { rendreBillet } from "@/lib/blog/rendu";
@@ -60,7 +60,7 @@ export default async function BilletPage({
   // Le contenu vient du dépôt, pas d'un utilisateur : il n'y a pas de saisie
   // hostile à filtrer ici, seulement notre propre texte.
   const { html, sommaire } = await rendreBillet(billet.markdown);
-  const voisins = memeRubrique(billet);
+  const voisins = aLireEnsuite(billet);
   const site = siteUrl();
   const couverture = `/blog/${billet.slug}/opengraph-image`;
 
@@ -301,15 +301,16 @@ export default async function BilletPage({
             style={{ borderTop: "1px solid var(--line)", paddingTop: "1.5rem" }}
           >
             <h2 style={{ fontSize: 15, fontWeight: 700, color: "var(--ink)" }}>
-              Dans la même rubrique
+              À lire ensuite
             </h2>
-            <ul className="flex flex-col gap-2">
-              {voisins.map((autre) => (
-                <li key={autre.slug}>
+            <ul className="flex flex-col gap-3">
+              {voisins.map(({ billet: autre, pourquoi }) => (
+                <li key={autre.slug} className="flex flex-col gap-0.5">
                   <Link
                     href={`/blog/${autre.slug}`}
                     style={{
-                      fontSize: 15,
+                      fontSize: 15.5,
+                      fontWeight: 600,
                       color: "var(--accent-dark)",
                       textDecoration: "underline",
                       textUnderlineOffset: 3,
@@ -317,6 +318,13 @@ export default async function BilletPage({
                   >
                     {autre.titre}
                   </Link>
+                  {/* La raison plutôt que le seul titre : un titre de plus
+                      se saute, une phrase qui dit ce qu'on y gagne se lit. */}
+                  {pourquoi && (
+                    <span style={{ fontSize: 14.5, color: "var(--ink-soft)" }}>
+                      {pourquoi}
+                    </span>
+                  )}
                 </li>
               ))}
             </ul>

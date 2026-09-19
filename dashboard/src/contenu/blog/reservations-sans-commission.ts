@@ -25,6 +25,17 @@ export const billet: Billet = {
     "L'abonnement n'est pas toujours le bon calcul. Une salle vide un mardi de janvier justifie n'importe quelle commission : mieux vaut 18 € de marge amputés que 0.",
     "Avant de couper quoi que ce soit, il faut un endroit où envoyer les clients : une fiche Google tenue, et un lien de réservation à son nom collé dedans.",
   ],
+  suite: [
+    {
+      slug: "avis-google-restaurant-ce-qui-est-interdit",
+      pourquoi: "Le canal direct commence par une fiche Google tenue.",
+    },
+    {
+      slug: "no-show-restaurant-cout-empreinte-bancaire",
+      pourquoi:
+        "Encaisser soi-même, c'est aussi pouvoir retenir quand personne ne vient.",
+    },
+  ],
   markdown: `
 **Disons-le tout de suite : nous ne sommes pas neutres.** Klarr vend une page de réservation à l'abonnement, sans commission. Nous avons donc un intérêt direct à ce que vous trouviez les commissions trop chères.
 

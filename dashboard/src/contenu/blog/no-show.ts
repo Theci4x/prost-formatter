@@ -43,6 +43,18 @@ export const billet: Billet = {
     fichier: "/blog/no-show.jpg",
     alt: "Un restaurateur devant un cahier de réservations couvert de mentions « no-show », dans une salle vide aux chaises encore relevées.",
   },
+  suite: [
+    {
+      slug: "reservations-sans-commission-guide-restaurants-independants",
+      pourquoi:
+        "L'empreinte suppose d'encaisser soi-même. Ce que ça change, et ce que ça coûte ailleurs.",
+    },
+    {
+      slug: "avis-google-restaurant-ce-qui-est-interdit",
+      pourquoi:
+        "Retenir un acompte finit parfois en avis. Ce qu'on a le droit d'en faire.",
+    },
+  ],
   markdown: `
 Demandez à dix restaurateurs leur taux de no-show. Dix vous répondront « beaucoup ». Aucun ne vous donnera un chiffre.
 

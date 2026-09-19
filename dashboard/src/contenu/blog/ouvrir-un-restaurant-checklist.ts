@@ -38,6 +38,23 @@ export const billet: Billet = {
     fichier: "/blog/ouvrir-paperasse.jpg",
     alt: "Un restaurateur assis seul dans sa salle fermée, la tête dans la main, devant des piles de courriers Urssaf, TVA, impôts et normes de sécurité.",
   },
+  suite: [
+    {
+      slug: "permis-exploitation-licence-restaurant",
+      pourquoi:
+        "Le premier piège de la liste, et le plus cher à découvrir tard.",
+    },
+    {
+      slug: "avis-google-restaurant-ce-qui-est-interdit",
+      pourquoi:
+        "Votre fiche Google existera avant votre ouverture, remplie sans vous. Autant savoir ce qu'on a le droit d'en faire.",
+    },
+    {
+      slug: "diagnostics-avant-travaux-restaurant",
+      pourquoi:
+        "Avant de toucher aux murs, ce qu'il faut avoir fait constater.",
+    },
+  ],
   markdown: `
 Cet article est né d'une ouverture ratée sur quatre points. Pas ratée au sens où le restaurant n'a pas ouvert — il a ouvert — mais ratée au sens où quatre obligations ont été découvertes après coup, chacune ayant coûté du temps, de l'argent, ou les deux.
 

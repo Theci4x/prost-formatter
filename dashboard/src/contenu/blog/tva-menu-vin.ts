@@ -45,6 +45,16 @@ export const billet: Billet = {
     fichier: "/blog/tva-menu-vin.jpg",
     alt: "Un restaurateur calcule la ventilation de TVA d'un menu, un verre de vin posé à côté de ses notes sur les taux à 10 et 20 %.",
   },
+  suite: [
+    {
+      slug: "menu-ou-carte-restaurant-marges",
+      pourquoi: "Le choix qui provoque cette ventilation.",
+    },
+    {
+      slug: "livraison-uber-eats-deliveroo-calcul-marge",
+      pourquoi: "Le troisième taux, celui de la vente à emporter.",
+    },
+  ],
   markdown: `
 « La restauration, c'est 10 %. »
 

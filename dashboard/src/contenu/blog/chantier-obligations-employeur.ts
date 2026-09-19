@@ -33,6 +33,17 @@ export const billet: Billet = {
     fichier: "/blog/chantier-contrats.jpg",
     alt: "Au fond, des ouvriers travaillent sur un chantier ; au premier plan, un homme inquiet devant des contrats de travaux et des courriers Urssaf.",
   },
+  suite: [
+    {
+      slug: "erp-restaurant-categorie-commission-securite",
+      pourquoi: "L'autre contrôle qui vous attend à la fin du chantier.",
+    },
+    {
+      slug: "reservations-sans-commission-guide-restaurants-independants",
+      pourquoi:
+        "Et une fois ouvert : ce que coûtent les plateformes qui vous amèneront vos premiers clients.",
+    },
+  ],
   markdown: `
 Vous avez signé un devis avec une entreprise. Elle envoie ses ouvriers. Vous vous dites, raisonnablement, que la manière dont elle emploie ses gens la regarde.
 

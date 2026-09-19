@@ -45,6 +45,16 @@ export const billet: Billet = {
     fichier: "/blog/haccp-pms.jpg",
     alt: "Un cuisinier en gants, dans une cuisine inox, devant un classeur « sécurité alimentaire » acheté tout fait et une liste des relevés obligatoires à tenir chaque jour.",
   },
+  suite: [
+    {
+      slug: "declaration-sanitaire-restaurant-ddpp",
+      pourquoi: "Le contrôle qui vient vérifier ce classeur.",
+    },
+    {
+      slug: "avis-google-restaurant-ce-qui-est-interdit",
+      pourquoi: "Un client ne lit pas votre plan sanitaire — il lit vos avis.",
+    },
+  ],
   markdown: `
 On dit « avoir son HACCP » comme on dirait avoir son permis. Ce n'est pas ça, et cette confusion coûte cher — en argent dépensé pour rien, et en sécurité qu'on croit avoir.
 

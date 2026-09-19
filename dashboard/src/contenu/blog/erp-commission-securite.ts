@@ -45,6 +45,17 @@ export const billet: Billet = {
     fichier: "/blog/erp-commission.jpg",
     alt: "Un technicien explique un plan de sécurité ERP à un restaurateur, mètre ruban sur la table, dans une salle fermée sous un panneau de sortie de secours.",
   },
+  suite: [
+    {
+      slug: "terrasse-restaurant-autorisation-domaine-public",
+      pourquoi:
+        "Les mètres carrés du dehors ne se comptent pas comme ceux du dedans.",
+    },
+    {
+      slug: "organisation-service-salle-fonctions",
+      pourquoi: "Une capacité autorisée n'est pas une capacité servable.",
+    },
+  ],
   markdown: `
 « On fera 60 couverts, on est un petit restaurant. »
 
