@@ -47,7 +47,7 @@ export const billet: Billet = {
   markdown: `
 Vous avez signé un devis avec une entreprise. Elle envoie ses ouvriers. Vous vous dites, raisonnablement, que la manière dont elle emploie ses gens la regarde.
 
-C'est faux, et c'est la mauvaise surprise la plus chère de l'ouverture, parce qu'elle n'arrive pas au moment des travaux : elle arrive des mois plus tard, par courrier.
+C'est faux, et c'est la mauvaise surprise la plus chère de l'ouverture, parce qu'elle n'arrive pas [au moment des travaux](/blog/diagnostics-avant-travaux-restaurant) : elle arrive des mois plus tard, par courrier.
 
 ## L'obligation de vigilance
 

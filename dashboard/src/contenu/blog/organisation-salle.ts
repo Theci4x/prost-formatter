@@ -109,7 +109,7 @@ Le temps entre le départ d'une table et la suivante est fait de débarrassage, 
 ::: chiffre Un dixième de rotation
 Sur une salle de quarante couverts, gagner **un dixième de rotation** — de 1,5 à 1,6 service par table — ce sont quatre couverts de plus. À 22 € de marge par couvert, environ **89 € par service**.
 
-C'est exactement ce que coûte un taux de no-show de 10 % sur la même salle. Autrement dit : bien organiser sa salle rapporte autant que supprimer tous ses no-shows — et ça ne dépend que de vous.
+C'est exactement ce que coûte un taux de [no-show](/blog/no-show-restaurant-cout-empreinte-bancaire) de 10 % sur la même salle. Autrement dit : bien organiser sa salle rapporte autant que supprimer tous ses no-shows — et ça ne dépend que de vous.
 :::
 
 La méthode pour établir votre marge par couvert est la même que pour un plat :

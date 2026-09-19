@@ -86,7 +86,7 @@ Dans la pratique, presque toutes les maisons qui tiennent font un mélange : **u
 
 Demandez à un restaurateur le coût matière de son plat phare : il vous donnera un pourcentage. C'est le réflexe du métier, et c'est le mauvais chiffre.
 
-Prenons deux plats, à 10 % de TVA :
+Prenons deux plats, à 10 % de [TVA](/blog/tva-restaurant-menu-avec-vin-ventilation) :
 
 | | Prix TTC | Prix HT | Coût matière | Ratio | **Marge** |
 |---|---|---|---|---|---|
@@ -107,7 +107,7 @@ La méthode date de 1982 — Michael Kasavana et Donald Smith, à l'école hôte
 
 Quatre cas, et quatre actions différentes :
 
-- **Les étoiles** — forte marge, forte vente. Ne touchez à rien. Pas à la recette, pas à la portion, pas au fournisseur. Donnez-leur la meilleure place sur la carte et parlez-en en salle.
+- **Les étoiles** — forte marge, forte vente. Ne touchez à rien. Pas à la recette, pas à la portion, pas au fournisseur. Donnez-leur la meilleure place sur la carte et parlez-en [en salle](/blog/organisation-service-salle-fonctions).
 - **Les chevaux de labour** — faible marge, forte vente. Les gens viennent pour ça : ne les supprimez pas. Travaillez le coût, la portion, l'accompagnement, ou montez le prix par petits pas. C'est le plat qui remplit la salle, pas celui qui la rentabilise.
 - **Les énigmes** — forte marge, faible vente. Le plat est bon et rapporte, mais personne ne le prend. C'est presque toujours un problème de description, de place sur la carte, ou de suggestion en salle. Avant de le retirer, essayez de le déplacer et de le faire annoncer.
 - **Les poids morts** — faible marge, faible vente. À retirer. C'est la décision la plus rentable de la liste, et la plus difficile : il y a toujours quelqu'un, en cuisine ou en salle, pour défendre le plat qui ne se vend pas.

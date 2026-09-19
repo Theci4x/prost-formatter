@@ -94,7 +94,7 @@ Ce que nous vendons n'amène personne. Klarr ne remplira pas votre mardi de janv
 
 L'erreur classique consiste à résilier d'abord et à se demander ensuite où envoyer les clients. Un canal direct ne se décrète pas : il se prépare, et deux choses suffisent.
 
-**Une fiche Google tenue.** C'est votre première vitrine, avant votre site. Horaires exacts, photos récentes, catégorie juste, avis auxquels vous répondez. Une fiche incomplète perd des places dans les résultats locaux, donc du flux direct — et vous rend mécaniquement plus dépendant des applications. C'est le cercle qu'il faut casser en premier.
+**Une [fiche Google](/blog/avis-google-restaurant-ce-qui-est-interdit) tenue.** C'est votre première vitrine, avant votre site. Horaires exacts, photos récentes, catégorie juste, avis auxquels vous répondez. Une fiche incomplète perd des places dans les résultats locaux, donc du flux direct — et vous rend mécaniquement plus dépendant des applications. C'est le cercle qu'il faut casser en premier.
 
 **Un lien de réservation à votre nom, collé dans cette fiche.** Google affiche alors un bouton qui renvoie vers votre page. C'est gratuit, immédiat, et ça ne dépend d'aucune validation.
 

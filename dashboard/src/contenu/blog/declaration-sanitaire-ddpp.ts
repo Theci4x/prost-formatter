@@ -100,7 +100,7 @@ Vous faites des terrines, l'épicerie d'en face en veut quelques-unes, vous dite
 
 La déclaration vous met sur la liste. Ce qui se passe ensuite, c'est le contrôle — et il ne porte pas sur la déclaration. Il porte sur trois choses.
 
-**Le plan de maîtrise sanitaire.** C'est le document central, celui qu'on vous demandera en premier. Il décrit vos bonnes pratiques d'hygiène, votre démarche fondée sur les principes HACCP et votre système de traçabilité. Ce n'est pas un classeur qu'on achète : c'est le vôtre, il décrit votre cuisine, vos circuits, vos fournisseurs. Un plan acheté tout fait se repère en trois questions.
+**Le [plan de maîtrise sanitaire](/blog/haccp-plan-maitrise-sanitaire-restaurant).** C'est le document central, celui qu'on vous demandera en premier. Il décrit vos bonnes pratiques d'hygiène, votre démarche fondée sur les principes HACCP et votre système de traçabilité. Ce n'est pas un classeur qu'on achète : c'est le vôtre, il décrit votre cuisine, vos circuits, vos fournisseurs. Un plan acheté tout fait se repère en trois questions.
 
 **La formation.** Depuis le décret n° 2011-731 du 24 juin 2011, tout établissement de restauration commerciale doit compter dans son effectif **au moins une personne** justifiant d'une formation en hygiène alimentaire — quatorze heures au minimum. Deux dispenses existent : un diplôme figurant sur la liste fixée par l'arrêté du 25 novembre 2011, ou trois ans d'expérience au moins comme gestionnaire ou exploitant dans une entreprise du secteur alimentaire.
 

@@ -82,7 +82,7 @@ Selon ce que vous servez, comptez entre 0,50 € et 1,50 € par commande. Sur u
 
 ## Le calcul, sur un plat
 
-Prenons un plat vendu **18 € en salle**, TVA à 10 %, coût matière 5,00 €.
+Prenons un plat vendu **18 € en salle**, [TVA](/blog/tva-restaurant-menu-avec-vin-ventilation) à 10 %, coût matière 5,00 €.
 
 | | En salle | En livraison |
 |---|---|---|

@@ -122,7 +122,7 @@ Cela dit, sur un repas de groupe ou un banquet, en faire reste une bonne idée �
 ::: attention Ce qu'on vous vend, et ce que la loi demande
 Beaucoup de choses se vendent au nom de l'HACCP : des classeurs tout faits, des sachets de plats témoins, des thermomètres connectés, des « recyclages obligatoires ».
 
-Le décret de 2011 ne fixe **aucune durée de validité** à la formation en hygiène alimentaire — contrairement au permis d'exploitation, qui vaut dix ans. Si on vous vend un recyclage comme une obligation légale, demandez le texte qui la prévoit.
+Le décret de 2011 ne fixe **aucune durée de validité** à la formation en hygiène alimentaire — contrairement au [permis d'exploitation](/blog/permis-exploitation-licence-restaurant), qui vaut dix ans. Si on vous vend un recyclage comme une obligation légale, demandez le texte qui la prévoit.
 
 Rien de tout cela n'est inutile. Mais utile et obligatoire sont deux choses différentes, et savoir laquelle est laquelle vous fait économiser plusieurs centaines d'euros par an.
 :::

@@ -62,7 +62,7 @@ C'est vrai pour la nourriture. Ça ne l'est pas pour l'alcool, et la difficulté
 
 ## Les trois taux, dans l'ordre où on les rencontre
 
-- **10 %** — les ventes à consommer sur place : nourriture et boissons non alcoolisées. Et, depuis 2012, la vente à emporter ou la livraison de produits alimentaires préparés **en vue d'une consommation immédiate**.
+- **10 %** — les ventes à consommer sur place : nourriture et boissons non alcoolisées. Et, depuis 2012, la vente à emporter ou la [livraison](/blog/livraison-uber-eats-deliveroo-calcul-marge) de produits alimentaires préparés **en vue d'une consommation immédiate**.
 - **20 %** — **toutes** les boissons alcooliques, sans exception et sans distinction : sur place, à emporter, livrées. Un verre de vin au comptoir et une bouteille vendue à emporter relèvent du même taux.
 - **5,5 %** — les produits alimentaires destinés à une **consommation différée**, c'est-à-dire conditionnés dans des contenants permettant leur conservation. Le pain, une terrine en bocal, un plat sous vide à réchauffer chez soi.
 
