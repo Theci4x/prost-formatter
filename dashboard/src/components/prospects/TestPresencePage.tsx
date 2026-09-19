@@ -42,13 +42,15 @@ export function TestPresencePage() {
           <span className="text-xs font-bold uppercase tracking-[0.08em] text-brand-orange-dark">
             {t.badge}
           </span>
-          <h1 className="font-serif text-[2.4rem] leading-[1.08] text-ink sm:text-[2.9rem]">{t.title}</h1>
+          <h1 className="font-serif text-[2.4rem] leading-[1.08] text-ink sm:text-[2.9rem]">
+            {t.title}
+          </h1>
           <p className="text-[15px] leading-relaxed text-ink-soft">
             {t.subtitle}
           </p>
         </div>
 
-        <ProspectForm t={t.form} auditT={t.audit} />
+        <ProspectForm t={t.form} auditT={t.audit} langue={lang} />
 
         <div className="flex flex-col gap-3">
           <h2 className="text-center font-serif text-2xl text-ink">

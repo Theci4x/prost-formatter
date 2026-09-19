@@ -28,6 +28,8 @@ import {
 } from "@/lib/audit/actions";
 import { mesurerPresenceIa, type PresenceIa } from "@/lib/audit/ia";
 import { notifierInterne } from "@/lib/notifications/interne";
+import { envoyerRapportAuProspect } from "@/lib/courriel/audit";
+import { estLangue, type Lang } from "@/lib/i18n/testPresence";
 import { siteUrl } from "@/lib/site-url";
 
 /** La carte d'identité de l'établissement, telle que Google la connaît. */
@@ -79,6 +81,8 @@ export type ProspectFormState = {
   prospectId?: string;
   entreprise?: string;
   ville?: string;
+  prenom?: string;
+  langue?: Lang;
 };
 
 /*
@@ -240,6 +244,8 @@ export async function submitProspect(
   const telephone = (formData.get("telephone") as string)?.trim();
   const entreprise = (formData.get("entreprise") as string)?.trim();
   const ville = (formData.get("ville") as string)?.trim();
+  const brut = (formData.get("langue") as string)?.trim();
+  const langue = estLangue(brut) ? brut : "fr";
 
   const valeurs = { prenom, nom, email, telephone, entreprise, ville };
 
@@ -330,10 +336,13 @@ export async function submitProspect(
       entreprise,
       ville,
       email,
+      prenom,
+      langue,
     };
   }
 
   const audit = "audit" in issue ? issue.audit : undefined;
+  await livrerRapport(audit, { email, prenom, entreprise, langue });
   await prevenirEquipe(
     { prenom, nom, email, telephone: telephoneNormalise, entreprise, ville },
     audit,
@@ -357,6 +366,9 @@ export async function confirmerEtablissement(
   const entreprise = (formData.get("entreprise") as string)?.trim();
   const ville = (formData.get("ville") as string)?.trim();
   const email = (formData.get("email") as string)?.trim();
+  const prenomConfirme = (formData.get("prenom") as string)?.trim() ?? "";
+  const brutConfirme = (formData.get("langue") as string)?.trim();
+  const langue = estLangue(brutConfirme) ? brutConfirme : "fr";
 
   if (!prospectId || !entreprise || !ville) {
     return { status: "error", error: "generic" };
@@ -387,6 +399,12 @@ export async function confirmerEtablissement(
   }
 
   const audit = await auditer(placeId, entreprise, ville, prospectId);
+  await livrerRapport(audit, {
+    email,
+    prenom: prenomConfirme,
+    entreprise,
+    langue,
+  });
   await notifierInterne({
     titre: `Établissement confirmé — ${entreprise}`,
     lignes: [
@@ -404,6 +422,36 @@ export async function confirmerEtablissement(
   });
 
   return { status: "success", audit, email };
+}
+
+/**
+ * Le rapport part chez celui qui l'a demandé.
+ *
+ * Sans audit, rien à envoyer : un courriel qui annoncerait un résultat
+ * absent vaut moins que pas de courriel. Et l'échec d'envoi ne remonte
+ * pas — le prospect est enregistré, l'écran affiche son score, ce n'est
+ * pas le moment de lui montrer une erreur.
+ */
+async function livrerRapport(
+  audit: AuditResult | undefined,
+  qui: { email: string; prenom: string; entreprise: string; langue: Lang },
+) {
+  if (!audit) return;
+  const bilan = await envoyerRapportAuProspect({
+    destinataire: qui.email,
+    prenom: qui.prenom,
+    etablissement: audit.fiche?.nom || qui.entreprise,
+    score: audit.score,
+    label: audit.label,
+    piliers: audit.pillars,
+    actions: audit.actions,
+    presenceIa: audit.presenceIa,
+    lienEssai: `${siteUrl()}/login?email=${encodeURIComponent(qui.email)}`,
+    langue: qui.langue,
+  });
+  if (!bilan.envoye) {
+    console.error("[livrerRapport]", bilan.erreur);
+  }
 }
 
 /**

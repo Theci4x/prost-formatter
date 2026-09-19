@@ -26,6 +26,8 @@ export function ChoixEtablissement({
   entreprise,
   ville,
   email,
+  prenom,
+  langue,
 }: {
   t: Libelles;
   action: (formData: FormData) => void;
@@ -35,6 +37,9 @@ export function ChoixEtablissement({
   entreprise: string;
   ville: string;
   email: string;
+  prenom: string;
+  /** Pour que le rapport parte dans la langue où la page a été lue. */
+  langue: string;
 }) {
   return (
     <form
@@ -45,6 +50,8 @@ export function ChoixEtablissement({
       <input type="hidden" name="entreprise" value={entreprise} />
       <input type="hidden" name="ville" value={ville} />
       <input type="hidden" name="email" value={email} />
+      <input type="hidden" name="prenom" value={prenom} />
+      <input type="hidden" name="langue" value={langue} />
 
       <div className="flex flex-col gap-1">
         <p className="font-serif text-xl text-ink">{t.choixTitle}</p>

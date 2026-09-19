@@ -9,7 +9,7 @@ import {
 import { AuditResultCard } from "@/components/prospects/AuditResultCard";
 import { ChoixEtablissement } from "@/components/prospects/ChoixEtablissement";
 import { BarreAnalyse } from "@/components/prospects/BarreAnalyse";
-import type { translations } from "@/lib/i18n/testPresence";
+import type { translations, Lang } from "@/lib/i18n/testPresence";
 
 const initialState: ProspectFormState = { status: "idle" };
 
@@ -18,9 +18,12 @@ type Translations = (typeof translations)[keyof typeof translations];
 export function ProspectForm({
   t,
   auditT,
+  langue,
 }: {
   t: Translations["form"];
   auditT: Translations["audit"];
+  /** Le rapport part dans la langue où la page a été lue. */
+  langue: Lang;
 }) {
   const [state, formAction, pending] = useActionState(
     submitProspect,
@@ -66,6 +69,8 @@ export function ProspectForm({
         entreprise={state.entreprise ?? ""}
         ville={state.ville ?? ""}
         email={state.email ?? ""}
+        prenom={state.prenom ?? ""}
+        langue={state.langue ?? langue}
       />
     );
   }
@@ -75,6 +80,7 @@ export function ProspectForm({
       action={formAction}
       className="flex flex-col gap-4 rounded-2xl border border-line bg-paper p-6 shadow-[0_24px_60px_-40px_oklch(20%_0.02_60/35%)] sm:p-7"
     >
+      <input type="hidden" name="langue" value={langue} />
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="flex flex-col gap-1.5">
           <label htmlFor="prenom" className="text-sm font-medium text-ink">

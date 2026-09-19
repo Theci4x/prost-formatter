@@ -6,6 +6,11 @@ export const languages: { code: Lang; label: string }[] = [
   { code: "zh", label: "中文" },
 ];
 
+/** Vrai quand la valeur reçue du formulaire est une langue connue. */
+export function estLangue(valeur: unknown): valeur is Lang {
+  return valeur === "fr" || valeur === "en" || valeur === "zh";
+}
+
 export const translations = {
   fr: {
     badge: "Offert",
