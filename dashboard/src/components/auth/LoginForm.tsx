@@ -6,7 +6,13 @@ import { login, signup, type AuthState } from "@/app/login/actions";
 
 const initialState: AuthState = { error: null };
 
-export function LoginForm() {
+/**
+ * @param emailInitial L'adresse déjà connue, quand on arrive d'ailleurs —
+ *   du test de présence, par exemple. Un prospect qui vient de laisser son
+ *   adresse deux écrans plus tôt et à qui on la redemande se dit qu'on ne
+ *   l'a pas écouté, et la moitié abandonne là.
+ */
+export function LoginForm({ emailInitial }: { emailInitial?: string }) {
   const [loginState, loginAction, loginPending] = useActionState(
     login,
     initialState,
@@ -29,16 +35,14 @@ export function LoginForm() {
           name="email"
           type="email"
           required
+          defaultValue={emailInitial}
           autoComplete="email"
           className="rounded-lg border border-line bg-paper px-3 py-2.5 text-sm outline-none transition-colors focus:border-brand-orange"
         />
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <label
-          htmlFor="password"
-          className="text-sm font-medium text-zinc-700"
-        >
+        <label htmlFor="password" className="text-sm font-medium text-zinc-700">
           Mot de passe
         </label>
         <input

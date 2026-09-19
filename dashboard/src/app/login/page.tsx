@@ -13,13 +13,12 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ confirm?: string }>;
+  searchParams: Promise<{ confirm?: string; email?: string }>;
 }) {
-  const { confirm } = await searchParams;
+  const { confirm, email } = await searchParams;
 
   return (
     <div className="flex min-h-full flex-1 flex-col md:flex-row">
@@ -40,21 +39,24 @@ export default async function LoginPage({
                 <span className="text-zinc-400">— connexion</span>
               </span>
             </span>
-            <span className="hidden font-serif text-4xl md:inline">Connexion</span>
+            <span className="hidden font-serif text-4xl md:inline">
+              Connexion
+            </span>
           </h1>
           <p className="max-w-sm text-sm text-zinc-500">
-            Connectez-vous, ou créez un compte : essai gratuit, sans carte bancaire.
+            Connectez-vous, ou créez un compte : essai gratuit, sans carte
+            bancaire.
           </p>
         </div>
 
         {confirm && (
           <p className="max-w-sm rounded-md bg-emerald-50 px-4 py-3 text-center text-sm text-emerald-700">
-            Compte créé ! Vérifie tes emails pour confirmer ton adresse avant
-            de te connecter.
+            Compte créé ! Vérifie tes emails pour confirmer ton adresse avant de
+            te connecter.
           </p>
         )}
 
-        <LoginForm />
+        <LoginForm emailInitial={email} />
 
         {/* Sans ce lien, le visiteur arrivé sur la connexion n'a aucun chemin
             de retour vers la page qui explique ce qu'est Klarr. */}

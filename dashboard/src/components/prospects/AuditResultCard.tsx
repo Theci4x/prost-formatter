@@ -35,9 +35,12 @@ function ScoreBar({ label, score }: { label: string; score: number }) {
 export function AuditResultCard({
   audit,
   t,
+  email,
 }: {
   audit: AuditResult;
   t: (typeof translations)[keyof typeof translations]["audit"];
+  /** Déjà saisie deux écrans plus tôt : on la transporte, on ne la redemande pas. */
+  email?: string;
 }) {
   return (
     <div className="flex flex-col gap-6 rounded-xl border border-line bg-white p-6 shadow-sm">
@@ -159,7 +162,22 @@ export function AuditResultCard({
         </div>
       )}
 
-      <p className="text-sm font-medium text-amber-700">{t.recontacted}</p>
+      {/* Le moment où il est piqué au vif est le seul où il agira. Lui
+          promettre un rappel sous 48 heures, c'est le laisser refroidir :
+          l'essai doit pouvoir commencer ici, tout de suite, et le rappel
+          devient un complément au lieu d'être la seule suite. */}
+      <div className="flex flex-col gap-3 rounded-xl border border-brand-orange/30 bg-brand-orange-soft px-5 py-5">
+        <span className="font-serif text-xl text-ink">{t.essai.titre}</span>
+        <p className="text-sm leading-relaxed text-ink-soft">{t.essai.corps}</p>
+        <a
+          href={`/login${email ? `?email=${encodeURIComponent(email)}` : ""}`}
+          className="w-fit rounded-md bg-brand-navy px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-brand-navy-hover"
+        >
+          {t.essai.bouton}
+        </a>
+      </div>
+
+      <p className="text-sm text-ink-soft">{t.recontacted}</p>
     </div>
   );
 }

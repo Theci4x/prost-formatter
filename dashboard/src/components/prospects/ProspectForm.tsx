@@ -1,7 +1,10 @@
 "use client";
 
 import { useActionState } from "react";
-import { submitProspect, type ProspectFormState } from "@/app/test-presence-google/actions";
+import {
+  submitProspect,
+  type ProspectFormState,
+} from "@/app/test-presence-google/actions";
 import { AuditResultCard } from "@/components/prospects/AuditResultCard";
 import type { translations } from "@/lib/i18n/testPresence";
 
@@ -23,7 +26,9 @@ export function ProspectForm({
 
   if (state.status === "success") {
     if (state.audit) {
-      return <AuditResultCard audit={state.audit} t={auditT} />;
+      return (
+        <AuditResultCard audit={state.audit} t={auditT} email={state.email} />
+      );
     }
     return (
       <div className="rounded-2xl border border-brand-orange/30 bg-brand-orange-soft px-6 py-8 text-center">

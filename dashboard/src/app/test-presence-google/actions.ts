@@ -42,6 +42,8 @@ export type ProspectFormState = {
   status: "idle" | "success" | "error";
   error?: "missing" | "generic";
   audit?: AuditResult;
+  /** Pour pré-remplir l'inscription plutôt que de la redemander. */
+  email?: string;
 };
 
 /*
@@ -207,5 +209,5 @@ export async function submitProspect(
     lien: { libelle: "Voir les prospects", url: `${siteUrl()}/admin` },
   });
 
-  return { status: "success", audit };
+  return { status: "success", audit, email };
 }

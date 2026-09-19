@@ -122,8 +122,14 @@ export const translations = {
         concurrents: "L'IA cite à votre place",
         aucun: "Aucun établissement n'est nommé.",
       },
+      essai: {
+        titre: "Corrigez tout ça dès maintenant",
+        corps:
+          "Les trente premiers jours sont offerts, sans carte bancaire. Vous repartez avec votre page de réservation en ligne, vos horaires et votre carte publiés, et le suivi de ce que l'IA dit de vous.",
+        bouton: "Commencer mon essai gratuit",
+      },
       recontacted:
-        "On vous recontacte pour approfondir ces résultats ensemble.",
+        "On vous recontacte aussi pour approfondir ces résultats ensemble.",
     },
     faqTitle: "Questions fréquentes",
     faq: [
@@ -261,7 +267,14 @@ export const translations = {
         concurrents: "AI names instead",
         aucun: "No venue is named.",
       },
-      recontacted: "We'll reach out to go through these results together.",
+      essai: {
+        titre: "Fix all this right now",
+        corps:
+          "The first thirty days are free, no card required. You leave with your booking page online, your hours and menu published, and a running check on what AI says about you.",
+        bouton: "Start my free trial",
+      },
+      recontacted:
+        "We'll also reach out to go through these results together.",
     },
     faqTitle: "Frequently asked questions",
     faq: [
@@ -396,7 +409,13 @@ export const translations = {
         concurrents: "人工智能提到的是",
         aucun: "没有提到任何商家。",
       },
-      recontacted: "我们会联系您，一起深入了解这些结果。",
+      essai: {
+        titre: "立即着手改进",
+        corps:
+          "前三十天免费，无需绑定银行卡。您将获得在线预订页面、已发布的营业时间和菜单，以及人工智能对您评价的持续跟踪。",
+        bouton: "开始免费试用",
+      },
+      recontacted: "我们也会联系您，一起深入了解这些结果。",
     },
     faqTitle: "常见问题",
     faq: [
