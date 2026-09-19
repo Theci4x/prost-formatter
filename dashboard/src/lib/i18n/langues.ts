@@ -27,3 +27,23 @@ export const CODE_LANGUE: Record<Langue, string> = {
   en: "EN",
   zh: "中文",
 };
+
+/** Le nom du témoin qui garde le choix d'un visiteur pas encore inscrit. */
+export const COOKIE_LANGUE = "klarr_langue";
+
+/**
+ * La langue lue dans le navigateur.
+ *
+ * Pour les pages pré-générées — le journal, l'aide —, où lire le témoin
+ * côté serveur les rendrait dynamiques et ferait perdre la génération
+ * statique. Rend `null` au rendu serveur, faute de `document` : l'appelant
+ * affiche alors le français, puis se corrige après l'hydratation.
+ */
+export function langueDuNavigateur(): Langue | null {
+  if (typeof document === "undefined") return null;
+  const trouve = document.cookie
+    .split("; ")
+    .find((morceau) => morceau.startsWith(`${COOKIE_LANGUE}=`));
+  const valeur = trouve?.slice(COOKIE_LANGUE.length + 1);
+  return estLangue(valeur) ? valeur : null;
+}

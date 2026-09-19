@@ -5,10 +5,26 @@ const CLIENTS: { name: string; node: React.ReactNode }[] = [
   {
     name: "炭TAN Barbeq",
     node: (
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 3,
+        }}
+      >
         <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
-          <span style={{ fontSize: 26, fontWeight: 800, lineHeight: 1 }}>炭</span>
-          <span style={{ fontSize: 26, fontWeight: 800, letterSpacing: "-0.01em", lineHeight: 1 }}>
+          <span style={{ fontSize: 26, fontWeight: 800, lineHeight: 1 }}>
+            炭
+          </span>
+          <span
+            style={{
+              fontSize: 26,
+              fontWeight: 800,
+              letterSpacing: "-0.01em",
+              lineHeight: 1,
+            }}
+          >
             TAN
           </span>
         </div>
@@ -29,7 +45,14 @@ const CLIENTS: { name: string; node: React.ReactNode }[] = [
   {
     name: "Prost",
     node: (
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 4,
+        }}
+      >
         <span
           style={{
             fontFamily: "var(--font-instrument-serif), Georgia, serif",
@@ -40,7 +63,9 @@ const CLIENTS: { name: string; node: React.ReactNode }[] = [
         >
           PROST
         </span>
-        <span style={{ fontSize: 7.5, fontWeight: 600, letterSpacing: "0.3em" }}>
+        <span
+          style={{ fontSize: 7.5, fontWeight: 600, letterSpacing: "0.3em" }}
+        >
           GERMAN · FRENCH
         </span>
       </div>
@@ -67,10 +92,19 @@ const CLIENTS: { name: string; node: React.ReactNode }[] = [
           404
         </span>
         <span style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: "0.02em", lineHeight: 1 }}>
+          <span
+            style={{
+              fontSize: 13,
+              fontWeight: 700,
+              letterSpacing: "0.02em",
+              lineHeight: 1,
+            }}
+          >
             NOT FOUND
           </span>
-          <span style={{ fontSize: 7.5, fontWeight: 600, letterSpacing: "0.28em" }}>
+          <span
+            style={{ fontSize: 7.5, fontWeight: 600, letterSpacing: "0.28em" }}
+          >
             SPEAKEASY
           </span>
         </span>
@@ -80,7 +114,14 @@ const CLIENTS: { name: string; node: React.ReactNode }[] = [
   {
     name: "Joayo 13",
     node: (
-      <span style={{ fontSize: 22, fontWeight: 400, letterSpacing: "0.2em", lineHeight: 1 }}>
+      <span
+        style={{
+          fontSize: 22,
+          fontWeight: 400,
+          letterSpacing: "0.2em",
+          lineHeight: 1,
+        }}
+      >
         JOAYO 13
       </span>
     ),
@@ -105,7 +146,9 @@ const CLIENTS: { name: string; node: React.ReactNode }[] = [
         >
           KK
         </span>
-        <span style={{ fontSize: 18, fontWeight: 700, letterSpacing: "0.05em" }}>
+        <span
+          style={{ fontSize: 18, fontWeight: 700, letterSpacing: "0.05em" }}
+        >
           KOKODAK
         </span>
       </div>
@@ -114,11 +157,32 @@ const CLIENTS: { name: string; node: React.ReactNode }[] = [
   {
     name: "Korean Crousty",
     node: (
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1 }}>
-        <span style={{ fontSize: 12, fontWeight: 400, letterSpacing: "0.04em", lineHeight: 1.1 }}>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 1,
+        }}
+      >
+        <span
+          style={{
+            fontSize: 12,
+            fontWeight: 400,
+            letterSpacing: "0.04em",
+            lineHeight: 1.1,
+          }}
+        >
           korean
         </span>
-        <span style={{ fontSize: 19, fontWeight: 800, letterSpacing: "0.03em", lineHeight: 1.1 }}>
+        <span
+          style={{
+            fontSize: 19,
+            fontWeight: 800,
+            letterSpacing: "0.03em",
+            lineHeight: 1.1,
+          }}
+        >
           CROUSTY
         </span>
       </div>
@@ -156,8 +220,16 @@ function LogoRow({ ariaHidden }: { ariaHidden?: boolean }) {
 
 export function ClientLogos({ confiance }: { confiance: string }) {
   return (
-    <div style={{ background: "var(--paper)", borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)" }}>
-      <div style={{ maxWidth: 1180, margin: "0 auto", padding: "34px 32px 38px" }}>
+    <div
+      style={{
+        background: "var(--paper)",
+        borderTop: "1px solid var(--line)",
+        borderBottom: "1px solid var(--line)",
+      }}
+    >
+      <div
+        style={{ maxWidth: 1180, margin: "0 auto", padding: "34px 32px 38px" }}
+      >
         <p
           style={{
             margin: "0 0 22px",
@@ -181,7 +253,10 @@ export function ClientLogos({ confiance }: { confiance: string }) {
               "linear-gradient(to right, transparent, black 8%, black 92%, transparent)",
           }}
         >
-          <div className="klarr-marquee-track" style={{ display: "flex", width: "max-content" }}>
+          <div
+            className="klarr-marquee-track"
+            style={{ display: "flex", width: "max-content" }}
+          >
             <LogoRow />
             <LogoRow ariaHidden />
           </div>

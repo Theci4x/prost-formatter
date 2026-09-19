@@ -2,8 +2,19 @@ import type { ClesAccueilPublic } from "@/lib/i18n/accueilPublic";
 
 export function Problem({ t }: { t: ClesAccueilPublic["probleme"] }) {
   return (
-    <div className="px-5 py-16 sm:px-8 sm:py-20" style={{ background: "var(--bg)" }}>
-      <div style={{ maxWidth: 760, margin: "0 auto", display: "flex", flexDirection: "column", gap: 22 }}>
+    <div
+      className="px-5 py-16 sm:px-8 sm:py-20"
+      style={{ background: "var(--bg)" }}
+    >
+      <div
+        style={{
+          maxWidth: 760,
+          margin: "0 auto",
+          display: "flex",
+          flexDirection: "column",
+          gap: 22,
+        }}
+      >
         <span
           style={{
             fontSize: 13,
@@ -26,10 +37,24 @@ export function Problem({ t }: { t: ClesAccueilPublic["probleme"] }) {
         >
           {t.titre}
         </h2>
-        <p style={{ margin: 0, fontSize: 17, lineHeight: 1.7, color: "var(--ink-soft)" }}>
+        <p
+          style={{
+            margin: 0,
+            fontSize: 17,
+            lineHeight: 1.7,
+            color: "var(--ink-soft)",
+          }}
+        >
           {t.p1}
         </p>
-        <p style={{ margin: 0, fontSize: 17, lineHeight: 1.7, color: "var(--ink-soft)" }}>
+        <p
+          style={{
+            margin: 0,
+            fontSize: 17,
+            lineHeight: 1.7,
+            color: "var(--ink-soft)",
+          }}
+        >
           {t.p2}
         </p>
         <p
@@ -49,12 +74,17 @@ export function Problem({ t }: { t: ClesAccueilPublic["probleme"] }) {
 
 export function Founder({ t }: { t: ClesAccueilPublic["fondateur"] }) {
   return (
-    <div className="px-5 py-16 sm:px-8 sm:py-20" style={{ background: "var(--bg-alt)" }}>
+    <div
+      className="px-5 py-16 sm:px-8 sm:py-20"
+      style={{ background: "var(--bg-alt)" }}
+    >
       <div
         className="flex-col sm:flex-row"
         style={{ maxWidth: 1180, margin: "0 auto", display: "flex", gap: 56 }}
       >
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 18 }}>
+        <div
+          style={{ flex: 1, display: "flex", flexDirection: "column", gap: 18 }}
+        >
           <span
             style={{
               fontSize: 13,
@@ -77,10 +107,24 @@ export function Founder({ t }: { t: ClesAccueilPublic["fondateur"] }) {
           >
             {t.titre}
           </h2>
-          <p style={{ margin: 0, fontSize: 16, lineHeight: 1.7, color: "var(--ink-soft)" }}>
+          <p
+            style={{
+              margin: 0,
+              fontSize: 16,
+              lineHeight: 1.7,
+              color: "var(--ink-soft)",
+            }}
+          >
             {t.p1}
           </p>
-          <p style={{ margin: 0, fontSize: 16, lineHeight: 1.7, color: "var(--ink-soft)" }}>
+          <p
+            style={{
+              margin: 0,
+              fontSize: 16,
+              lineHeight: 1.7,
+              color: "var(--ink-soft)",
+            }}
+          >
             {t.p2}
           </p>
         </div>

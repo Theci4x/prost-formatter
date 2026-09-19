@@ -119,7 +119,12 @@ export function Couverture({
           </radialGradient>
         </defs>
 
-        <rect width="320" height="96" fill={`url(#${hachures})`} opacity="0.12" />
+        <rect
+          width="320"
+          height="96"
+          fill={`url(#${hachures})`}
+          opacity="0.12"
+        />
         <rect width="320" height="96" fill={`url(#${halo})`} />
         <rect width="320" height="2.5" fill={trait} />
       </svg>

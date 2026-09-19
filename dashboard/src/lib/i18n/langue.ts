@@ -1,7 +1,7 @@
 import "server-only";
 import { cookies, headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
-import { estLangue, type Langue } from "@/lib/i18n/langues";
+import { COOKIE_LANGUE, estLangue, type Langue } from "@/lib/i18n/langues";
 
 /**
  * La langue du tableau de bord.
@@ -19,6 +19,7 @@ import { estLangue, type Langue } from "@/lib/i18n/langues";
  */
 
 export {
+  COOKIE_LANGUE,
   LANGUES,
   NOM_LANGUE,
   CODE_LANGUE,
@@ -44,9 +45,6 @@ export async function langueUtilisateur(): Promise<Langue> {
     return "fr";
   }
 }
-
-/** Le nom du témoin qui garde le choix d'un visiteur pas encore inscrit. */
-export const COOKIE_LANGUE = "klarr_langue";
 
 /**
  * La langue d'un visiteur, avant tout compte.

@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { KlarrMark, KlarrWordmark } from "@/components/brand/KlarrMark";
+import { ChoixLangueSite } from "@/components/landing/ChoixLangueSite";
+import { NoteLangueJournal } from "@/components/blog/NoteLangueJournal";
 
 const ACCENT = "#E8871E";
 
@@ -62,7 +64,16 @@ export function CadreJournal({
             <KlarrWordmark />
           </Link>
           {fil}
+          {/* Le sélecteur sans langue courante : ces pages sont
+              pré-générées, et le lire côté serveur les rendrait
+              dynamiques. Il ne change rien au journal, qui reste en
+              français — il rend le reste du site à la langue du visiteur,
+              qui sans lui se retrouvait coincé ici. */}
+          <div className="ml-auto">
+            <ChoixLangueSite />
+          </div>
         </div>
+        <NoteLangueJournal />
       </header>
 
       <main

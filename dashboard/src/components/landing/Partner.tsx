@@ -7,7 +7,10 @@ import type { ClesAccueilPublic } from "@/lib/i18n/accueilPublic";
 // leur étiquette change de langue, la valeur reste ce que dit le Kbis.
 export function Partner({ t }: { t: ClesAccueilPublic["editeur"] }) {
   return (
-    <div className="px-5 py-16 sm:px-8 sm:py-20" style={{ background: "var(--bg)" }}>
+    <div
+      className="px-5 py-16 sm:px-8 sm:py-20"
+      style={{ background: "var(--bg)" }}
+    >
       <div
         className="flex-col sm:flex-row"
         style={{ maxWidth: 1180, margin: "0 auto", display: "flex", gap: 56 }}

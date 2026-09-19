@@ -16,9 +16,36 @@ type Blob = {
 };
 
 const BLOBS: Blob[] = [
-  { hue: "232, 135, 30", radius: 0.42, x: 0.72, y: 0.28, ampX: 0.06, ampY: 0.05, speed: 0.00013, phase: 0 },
-  { hue: "15, 30, 61", radius: 0.34, x: 0.28, y: 0.68, ampX: 0.05, ampY: 0.04, speed: 0.00009, phase: 2.1 },
-  { hue: "240, 169, 60", radius: 0.3, x: 0.52, y: 0.12, ampX: 0.07, ampY: 0.03, speed: 0.00017, phase: 4.2 },
+  {
+    hue: "232, 135, 30",
+    radius: 0.42,
+    x: 0.72,
+    y: 0.28,
+    ampX: 0.06,
+    ampY: 0.05,
+    speed: 0.00013,
+    phase: 0,
+  },
+  {
+    hue: "15, 30, 61",
+    radius: 0.34,
+    x: 0.28,
+    y: 0.68,
+    ampX: 0.05,
+    ampY: 0.04,
+    speed: 0.00009,
+    phase: 2.1,
+  },
+  {
+    hue: "240, 169, 60",
+    radius: 0.3,
+    x: 0.52,
+    y: 0.12,
+    ampX: 0.07,
+    ampY: 0.03,
+    speed: 0.00017,
+    phase: 4.2,
+  },
 ];
 
 export function HeroBackdrop() {

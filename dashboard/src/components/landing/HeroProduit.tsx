@@ -284,7 +284,9 @@ export function HeroProduit({ t }: { t: ClesAccueilPublic["produit"] }) {
                       fontSize: 13.5,
                       fontWeight: 600,
                       border: `1px solid ${choisi ? "var(--accent)" : "var(--line)"}`,
-                      background: choisi ? "var(--accent-soft)" : "var(--paper)",
+                      background: choisi
+                        ? "var(--accent-soft)"
+                        : "var(--paper)",
                       color: choisi ? "var(--accent-dark)" : "var(--ink)",
                     }}
                   >

@@ -1,10 +1,17 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { useFormStatus } from "react-dom";
 import { choisirLangueVisiteur } from "@/app/langue-actions";
 import {
   CODE_LANGUE,
+  langueDuNavigateur,
   LANGUES,
   NOM_LANGUE,
   type Langue,
@@ -26,9 +33,29 @@ import {
  *
  * Le globe, lui, ne prétend rien : c'est le signe convenu, et il tient
  * dans la largeur qu'on a.
+ *
+ * `courante` est facultatif, et l'absence est un cas normal. Le journal
+ * et l'aide sont pré-générés : y lire le témoin côté serveur les rendrait
+ * dynamiques, et ferait perdre la génération statique des pages qui
+ * portent tout le référencement du site. Là, le composant lit le témoin
+ * dans le navigateur après l'hydratation, et tient son état lui-même —
+ * le serveur n'ayant rien à recalculer, personne ne le ferait pour lui.
  */
-export function ChoixLangueSite({ courante }: { courante: Langue }) {
+export function ChoixLangueSite({ courante }: { courante?: Langue }) {
   const menu = useRef<HTMLDetailsElement>(null);
+  const autonome = courante === undefined;
+
+  // Le témoin est un état extérieur à React : `useSyncExternalStore` est
+  // fait pour ça, et il rend le français au rendu serveur — ce que la
+  // page pré-générée contient de toute façon. Pas d'effet qui repose un
+  // état, donc pas de rendu en cascade.
+  const duTemoin = useSyncExternalStore(sabonner, lireTemoin, temoinServeur);
+
+  // Le choix tout juste fait, avant que le témoin ne soit posé. Sans lui,
+  // l'étiquette ne bougerait qu'au rechargement suivant.
+  const [choisie, setChoisie] = useState<Langue | null>(null);
+
+  const affichee = courante ?? choisie ?? duTemoin;
   // Une fonction plutôt que la référence elle-même : l'enfant n'a pas à
   // écrire dans ce qu'on lui passe, et le compilateur React le refuse.
   const fermer = useCallback(() => {
@@ -43,7 +70,7 @@ export function ChoixLangueSite({ courante }: { courante: Langue }) {
         style={{ fontSize: 13, fontWeight: 600, color: "var(--ink-soft)" }}
       >
         <Globe />
-        <span className="whitespace-nowrap">{CODE_LANGUE[courante]}</span>
+        <span className="whitespace-nowrap">{CODE_LANGUE[affichee]}</span>
       </summary>
 
       <form
@@ -54,7 +81,14 @@ export function ChoixLangueSite({ courante }: { courante: Langue }) {
           boxShadow: "0 18px 40px -20px oklch(20% 0.02 60 / 45%)",
         }}
       >
-        <Options courante={courante} fermer={fermer} />
+        <Options
+          courante={affichee}
+          fermer={fermer}
+          // Sur une page pré-générée, rien ne revient du serveur : c'est
+          // au composant de refléter le choix, sans quoi on croit que le
+          // clic n'a rien fait et on reclique.
+          surChoix={autonome ? setChoisie : undefined}
+        />
       </form>
     </details>
   );
@@ -71,12 +105,27 @@ export function ChoixLangueSite({ courante }: { courante: Langue }) {
  * supprimer : sans repère, une seconde de silence se lit comme un bouton
  * cassé, et on reclique.
  */
+/** Le témoin ne prévient de rien : il n'y a rien à quoi s'abonner. */
+function sabonner(): () => void {
+  return () => {};
+}
+
+function lireTemoin(): Langue {
+  return langueDuNavigateur() ?? "fr";
+}
+
+function temoinServeur(): Langue {
+  return "fr";
+}
+
 function Options({
   courante,
   fermer,
+  surChoix,
 }: {
   courante: Langue;
   fermer: () => void;
+  surChoix?: (langue: Langue) => void;
 }) {
   const { pending } = useFormStatus();
   const [demandee, setDemandee] = useState<Langue | null>(null);
@@ -108,7 +157,10 @@ function Options({
           // La langue par `bind` : le `name` d'un bouton qui porte une
           // action sert à React, pas à nous (voir `langue-actions.ts`).
           formAction={choisirLangueVisiteur.bind(null, langue)}
-          onClick={() => setDemandee(langue)}
+          onClick={() => {
+            setDemandee(langue);
+            surChoix?.(langue);
+          }}
           disabled={pending}
           aria-current={langue === courante ? "true" : undefined}
           className="flex items-center justify-between gap-3 px-3 py-2 text-left text-sm transition-colors disabled:opacity-60"
