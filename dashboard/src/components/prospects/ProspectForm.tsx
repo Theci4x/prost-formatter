@@ -181,18 +181,28 @@ export function ProspectForm({
       )}
 
       {/* Information au moment de la collecte : le RGPD l'exige là où la
-          donnée est saisie, pas seulement dans une page à part. */}
+          donnée est saisie, pas seulement dans une page à part.
+
+          Le lien est marqué dans la phrase plutôt que recollé ici. Le
+          gabarit posait une espace avant et un point après : les deux
+          sont faux en chinois, qui ne veut pas d'espace devant 《…》 et
+          termine par 。 Chaque langue garde donc sa ponctuation. */}
       <p className="max-w-prose text-xs leading-relaxed text-ink-soft">
-        {t.privacyNotice}{" "}
-        <a
-          href="/confidentialite"
-          target="_blank"
-          rel="noopener"
-          className="underline hover:text-ink"
-        >
-          {t.privacyLink}
-        </a>
-        .
+        {t.privacyNotice.split(/\[\[|\]\]/).map((morceau, rang) =>
+          rang % 2 === 1 ? (
+            <a
+              key={rang}
+              href="/confidentialite"
+              target="_blank"
+              rel="noopener"
+              className="underline hover:text-ink"
+            >
+              {morceau}
+            </a>
+          ) : (
+            <span key={rang}>{morceau}</span>
+          ),
+        )}
       </p>
 
       <button

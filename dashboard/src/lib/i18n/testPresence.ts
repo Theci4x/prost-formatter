@@ -25,8 +25,7 @@ export const translations = {
       email: "Email",
       telephone: "Téléphone",
       privacyNotice:
-        "Vos coordonnées servent uniquement à vous transmettre ce test et à vous recontacter à ce sujet. Elles ne sont ni revendues ni utilisées à des fins publicitaires. Vous pouvez en demander l'effacement à tout moment — voir notre",
-      privacyLink: "politique de confidentialité",
+        "Vos coordonnées servent uniquement à vous transmettre ce test et à vous recontacter à ce sujet. Elles ne sont ni revendues ni utilisées à des fins publicitaires. Vous pouvez en demander l'effacement à tout moment — voir notre [[politique de confidentialité]].",
       submit: "Demander mon test gratuit",
       submitting: "Analyse en cours...",
       submittingDetail:
@@ -198,8 +197,7 @@ export const translations = {
       email: "Email",
       telephone: "Phone",
       privacyNotice:
-        "Your details are used only to send you this review and to follow up about it. They are never sold or used for advertising. You can ask for them to be deleted at any time — see our",
-      privacyLink: "privacy policy",
+        "Your details are used only to send you this review and to follow up about it. They are never sold or used for advertising. You can ask for them to be deleted at any time — see our [[privacy policy]].",
       submit: "Request my free review",
       submitting: "Analyzing...",
       submittingDetail:
@@ -357,19 +355,18 @@ export const translations = {
   },
   zh: {
     badge: "免费",
-    title: "免费测评您餐厅的在线形象",
+    title: "免费测评您餐厅的线上形象",
     subtitle:
-      "留下您的联系方式，我们将查看您的 Google 商家资料，并把结果和建议反馈给您。",
+      "留下您的联系方式，我们会查看您的 Google 商家资料，并把结果和建议反馈给您。",
     form: {
       prenom: "名",
       nom: "姓",
       entreprise: "餐厅/店铺名称",
       ville: "城市",
-      email: "电子邮箱",
+      email: "邮箱",
       telephone: "电话",
       privacyNotice:
-        "您的联系方式仅用于向您发送本次测评并就此与您联系，绝不出售，也不用于广告。您可随时要求删除 — 详见我们的",
-      privacyLink: "隐私政策",
+        "您的联系方式仅用于向您发送本次测评结果，并就此与您联系，绝不会出售，也不会用于广告。您可以随时要求删除——详情请见我们的[[《隐私政策》]]。",
       submit: "申请免费测评",
       submitting: "分析中...",
       submittingDetail:
@@ -505,14 +502,14 @@ export const translations = {
       {
         question: "免费测评包含什么内容？",
         answer:
-          "我们会查看您的 Google 商家资料（信息、评价、照片、目标关键词），并告诉您可以改进的地方。",
+          "我们会查看您的 Google 商家资料（信息、评价、照片、关键词），并告诉您哪些地方可以改进。",
       },
       {
         question: "真的完全免费、无需承诺吗？",
-        answer: "是的，无需信用卡。这只是第一次沟通，看看 Klarr 是否能帮到您。",
+        answer: "是的，无需信用卡。这只是第一次沟通，看看 Klarr 能否帮到您。",
       },
       {
-        question: "多久会联系我？",
+        question: "你们多久会联系我？",
         answer: "通常在 48 个工作小时内，通过电话或邮件联系您。",
       },
       {

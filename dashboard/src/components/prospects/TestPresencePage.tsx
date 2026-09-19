@@ -1,14 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import Link from "next/link";
 import { ProspectForm } from "@/components/prospects/ProspectForm";
 import { languages, translations, type Lang } from "@/lib/i18n/testPresence";
+import { choisirLangueVisiteur } from "@/app/langue-actions";
 import { KlarrMark, KlarrWordmark } from "@/components/brand/KlarrMark";
 
-export function TestPresencePage() {
-  const [lang, setLang] = useState<Lang>("fr");
+export function TestPresencePage({ initiale = "fr" }: { initiale?: Lang }) {
+  const [lang, setLang] = useState<Lang>(initiale);
+  const [, enFond] = useTransition();
   const t = translations[lang];
+
+  // L'affichage change tout de suite, le témoin se met à jour derrière :
+  // le choix fait ici suit le visiteur sur le reste du site, sans le
+  // faire attendre pour autant.
+  const choisir = (code: Lang) => {
+    setLang(code);
+    enFond(() => {
+      void choisirLangueVisiteur(code);
+    });
+  };
 
   return (
     <div className="flex flex-1 flex-col items-center bg-brand-cream px-6 py-16 sm:py-20">
@@ -26,7 +38,7 @@ export function TestPresencePage() {
             <button
               key={l.code}
               type="button"
-              onClick={() => setLang(l.code)}
+              onClick={() => choisir(l.code)}
               className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
                 lang === l.code
                   ? "bg-ink text-white"
