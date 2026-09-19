@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
 import { FormulairePost } from "@/components/posts/FormulairePost";
+import { publicationsGoogleOuvertes } from "@/lib/google/business";
 import {
   suggestions,
   type EspaceSuggerable,
@@ -43,6 +44,11 @@ export default async function PostsPage({
   const { id } = await params;
   await exiger(id, "gerant");
   await exigerModule(id, "visibilite");
+
+  // Masqué tant que Google n'a pas accordé l'API de publication : une
+  // publication programmée qui ne part jamais coûte plus qu'un écran
+  // absent.
+  if (!publicationsGoogleOuvertes()) notFound();
 
   const supabase = await createClient();
   const [

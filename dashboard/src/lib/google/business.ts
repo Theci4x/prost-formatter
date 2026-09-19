@@ -6,6 +6,23 @@ const ACCOUNT_MANAGEMENT_BASE_URL =
 const BUSINESS_INFORMATION_BASE_URL =
   "https://mybusinessbusinessinformation.googleapis.com/v1";
 
+/**
+ * Google a-t-il ouvert la publication ?
+ *
+ * Les identifiants OAuth existent depuis longtemps ; ce qui manque est
+ * l'accès à l'API de publication, accordé sur dossier et encore en
+ * attente. Aucune variable existante ne le dit — d'où celle-ci, qu'on
+ * pose le jour où la réponse arrive.
+ *
+ * Tant qu'elle est absente, l'écran des publications disparaît. Un
+ * restaurateur qui programme cinq posts le lundi et découvre trois
+ * semaines plus tard qu'aucun n'est parti ne fait plus confiance au reste :
+ * mieux vaut ne rien proposer que proposer ce qu'on ne tient pas.
+ */
+export function publicationsGoogleOuvertes(): boolean {
+  return process.env.GOOGLE_POSTS_ACTIF === "1";
+}
+
 export type GoogleAccount = {
   name: string; // ex: "accounts/1234567890"
   accountName: string;

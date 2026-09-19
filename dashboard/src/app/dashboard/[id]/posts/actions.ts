@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { exiger } from "@/lib/equipe/roles";
 import { valider, type Bouton } from "@/lib/posts/regles";
+import { publicationsGoogleOuvertes } from "@/lib/google/business";
 
 export type PostState = {
   error: string | null;
@@ -31,6 +32,11 @@ export async function programmerPost(
     enregistre: false,
     version,
   });
+
+  // L'écran est masqué, mais une action serveur reste une adresse.
+  if (!publicationsGoogleOuvertes()) {
+    return echec("Les publications Google ne sont pas encore ouvertes.");
+  }
 
   const restaurantId = String(formData.get("restaurant_id") ?? "");
   if (!restaurantId) return echec("Établissement inconnu.");

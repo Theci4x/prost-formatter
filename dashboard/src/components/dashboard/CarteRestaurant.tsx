@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import type { Pouls } from "@/lib/dashboard/pouls";
+import { publicationsGoogleOuvertes } from "@/lib/google/business";
 import { peutGerer, type Role } from "@/lib/equipe/roles";
 import {
   type Acces,
@@ -249,7 +250,8 @@ const GROUPES: Groupe[] = [
       {
         href: "faq",
         label: "Questions fréquentes",
-        resume: "Ce qu'on te demande au téléphone, répondu une fois pour toutes.",
+        resume:
+          "Ce qu'on te demande au téléphone, répondu une fois pour toutes.",
         icone: ICONES.faq,
         minimum: "gerant",
         detail: (p) =>
@@ -278,7 +280,9 @@ const GROUPES: Groupe[] = [
         detail: (p) =>
           p.note != null
             ? `${p.note.toFixed(1).replace(".", ",")} ★ · ${p.nombreAvis ?? 0} avis${
-                p.avisCetteSemaine ? ` · ${p.avisCetteSemaine > 0 ? "+" : ""}${p.avisCetteSemaine} cette semaine` : ""
+                p.avisCetteSemaine
+                  ? ` · ${p.avisCetteSemaine > 0 ? "+" : ""}${p.avisCetteSemaine} cette semaine`
+                  : ""
               }`
             : "Premier relevé la nuit prochaine",
       },
@@ -289,9 +293,7 @@ const GROUPES: Groupe[] = [
         icone: ICONES.retours,
         minimum: "gerant",
         detail: (p) =>
-          p.retoursALire > 0
-            ? `${p.retoursALire} à lire`
-            : "Rien de nouveau",
+          p.retoursALire > 0 ? `${p.retoursALire} à lire` : "Rien de nouveau",
         attention: (p) => p.retoursALire > 0,
       },
       {
@@ -301,17 +303,24 @@ const GROUPES: Groupe[] = [
         icone: ICONES.seo,
         minimum: "gerant",
       },
-      {
-        href: "posts",
-        label: "Publications Google",
-        resume: "Écris tes posts à l'avance, Klarr les publie.",
-        icone: ICONES.posts,
-        minimum: "gerant",
-        detail: (p) =>
-          p.prochainPost
-            ? `Prochaine : ${dateCourte(p.prochainPost)}`
-            : "Aucune programmée",
-      },
+      // Masquée tant que Google n'a pas ouvert la publication : elle
+      // revient d'elle-même le jour où l'accès est accordé, sans toucher
+      // au code.
+      ...(publicationsGoogleOuvertes()
+        ? [
+            {
+              href: "posts",
+              label: "Publications Google",
+              resume: "Écris tes posts à l'avance, Klarr les publie.",
+              icone: ICONES.posts,
+              minimum: "gerant" as const,
+              detail: (p: Pouls) =>
+                p.prochainPost
+                  ? `Prochaine : ${dateCourte(p.prochainPost)}`
+                  : "Aucune programmée",
+            },
+          ]
+        : []),
       {
         href: "visibilite-ia",
         label: "Visibilité IA",
@@ -546,26 +555,34 @@ export function CarteRestaurant({
                 ? `${pouls.couvertsMidi} · ${pouls.couvertsSoir}`
                 : "—"
             }
-            libelle={couverts > 0 ? "couverts midi · soir" : "aucun couvert confirmé"}
+            libelle={
+              couverts > 0 ? "couverts midi · soir" : "aucun couvert confirmé"
+            }
             href={`${base}/service`}
           />
           <Chiffre
             valeur={String(pouls.aConfirmer)}
-            libelle={pouls.aConfirmer > 1 ? "demandes à confirmer" : "demande à confirmer"}
+            libelle={
+              pouls.aConfirmer > 1
+                ? "demandes à confirmer"
+                : "demande à confirmer"
+            }
             href={`${base}/reservations`}
             attention={pouls.aConfirmer > 0}
           />
           <Chiffre
             valeur={String(pouls.retoursALire)}
-            libelle={pouls.retoursALire > 1 ? "retours clients à lire" : "retour client à lire"}
+            libelle={
+              pouls.retoursALire > 1
+                ? "retours clients à lire"
+                : "retour client à lire"
+            }
             href={`${base}/retours`}
             attention={pouls.retoursALire > 0}
           />
           <Chiffre
             valeur={
-              pouls.note != null
-                ? pouls.note.toFixed(1).replace(".", ",")
-                : "—"
+              pouls.note != null ? pouls.note.toFixed(1).replace(".", ",") : "—"
             }
             libelle={
               pouls.note != null
@@ -643,7 +660,9 @@ export function CarteRestaurant({
                         <span className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-sand text-ink [&_svg]:h-4 [&_svg]:w-4">
                           {entree.icone}
                         </span>
-                        <span className="font-medium text-ink">{entree.label}</span>
+                        <span className="font-medium text-ink">
+                          {entree.label}
+                        </span>
                         {detail && (
                           <span className="hidden text-ink-soft sm:inline">
                             · {detail}
@@ -680,7 +699,9 @@ export function CarteRestaurant({
                         </span>
                         <span
                           className={`text-[13px] leading-relaxed ${
-                            detail ? "font-medium text-ink-soft" : "text-ink-soft/80"
+                            detail
+                              ? "font-medium text-ink-soft"
+                              : "text-ink-soft/80"
                           }`}
                         >
                           {detail ?? entree.resume}
