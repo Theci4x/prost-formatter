@@ -1,7 +1,12 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getValidAccessToken } from "@/lib/tiktok/connection";
-import { getUserInfo, getRecentVideos, type TikTokVideo } from "@/lib/tiktok/oauth";
+import {
+  getUserInfo,
+  getRecentVideos,
+  tiktokDisponible,
+  type TikTokVideo,
+} from "@/lib/tiktok/oauth";
 import { disconnectTikTok } from "./actions";
 import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
 import type { Restaurant } from "@/types/restaurant";
@@ -19,6 +24,9 @@ export default async function TikTokPage({
   const { id } = await params;
   await exiger(id, "gerant");
   await exigerModule(id, "visibilite");
+  // Masqué tant que l'application n'est pas validée chez TikTok : sans les
+  // clés, même un compte déjà relié ne pourrait plus rafraîchir son jeton.
+  if (!tiktokDisponible()) notFound();
   const { connected, error } = await searchParams;
 
   const supabase = await createClient();

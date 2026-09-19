@@ -12,6 +12,19 @@ const VIDEO_LIST_URL = "https://open.tiktokapis.com/v2/video/list/";
 
 const SCOPES = ["user.info.basic", "user.info.stats", "video.list"].join(",");
 
+/**
+ * TikTok exige une revue de l'application avant de délivrer ces scopes en
+ * production. Tant qu'elle n'est pas passée, les clés sont absentes et
+ * chaque « Connecter » finirait sur une erreur TikTok : on masque plutôt
+ * l'entrée partout. Poser les clés la fait réapparaître, sans toucher au
+ * code.
+ */
+export function tiktokDisponible(): boolean {
+  return Boolean(
+    process.env.TIKTOK_CLIENT_KEY && process.env.TIKTOK_CLIENT_SECRET,
+  );
+}
+
 function getRedirectUri() {
   return `${siteUrl()}/api/tiktok/callback`;
 }
@@ -57,7 +70,9 @@ export async function exchangeCodeForTokens(
   });
 
   if (!res.ok) {
-    throw new Error(`TikTok token exchange a échoué : ${res.status} ${await res.text()}`);
+    throw new Error(
+      `TikTok token exchange a échoué : ${res.status} ${await res.text()}`,
+    );
   }
 
   return res.json();
@@ -65,7 +80,9 @@ export async function exchangeCodeForTokens(
 
 export async function refreshAccessToken(
   refreshToken: string,
-): Promise<Pick<TikTokTokens, "access_token" | "refresh_token" | "expires_in">> {
+): Promise<
+  Pick<TikTokTokens, "access_token" | "refresh_token" | "expires_in">
+> {
   const res = await fetch(TOKEN_URL, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -78,7 +95,9 @@ export async function refreshAccessToken(
   });
 
   if (!res.ok) {
-    throw new Error(`TikTok token refresh a échoué : ${res.status} ${await res.text()}`);
+    throw new Error(
+      `TikTok token refresh a échoué : ${res.status} ${await res.text()}`,
+    );
   }
 
   return res.json();
@@ -106,7 +125,9 @@ export async function getUserInfo(
   });
 
   if (!res.ok) {
-    throw new Error(`TikTok user/info a échoué : ${res.status} ${await res.text()}`);
+    throw new Error(
+      `TikTok user/info a échoué : ${res.status} ${await res.text()}`,
+    );
   }
 
   const data = (await res.json()) as {
@@ -162,7 +183,9 @@ export async function getRecentVideos(
   });
 
   if (!res.ok) {
-    throw new Error(`TikTok video/list a échoué : ${res.status} ${await res.text()}`);
+    throw new Error(
+      `TikTok video/list a échoué : ${res.status} ${await res.text()}`,
+    );
   }
 
   const data = (await res.json()) as {

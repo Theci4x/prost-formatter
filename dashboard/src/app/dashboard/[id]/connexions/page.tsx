@@ -6,6 +6,7 @@ import { FacebookConnectButton } from "@/components/connections/FacebookConnectB
 import { platformIcons } from "@/components/connections/platformIcons";
 import type { Restaurant } from "@/types/restaurant";
 import { exiger } from "@/lib/equipe/roles";
+import { tiktokDisponible } from "@/lib/tiktok/oauth";
 
 type Platform = {
   key: string;
@@ -104,28 +105,28 @@ export default async function ConnexionsPage({
     tiktokResult,
     stripeResult,
   ] = await Promise.all([
-      supabase.from("restaurants").select("*").eq("id", id).maybeSingle(),
-      supabase
-        .from("google_business_connections")
-        .select("google_email, location_title")
-        .eq("restaurant_id", id)
-        .maybeSingle(),
-      supabase
-        .from("social_connections")
-        .select("facebook_page_name, instagram_username")
-        .eq("restaurant_id", id)
-        .maybeSingle(),
-      supabase
-        .from("tiktok_connections")
-        .select("display_name, tiktok_username")
-        .eq("restaurant_id", id)
-        .maybeSingle(),
-      supabase
-        .from("restaurant_stripe_connexions")
-        .select("nom_affiche, stripe_account_id, paiements_actifs")
-        .eq("restaurant_id", id)
-        .maybeSingle(),
-    ]);
+    supabase.from("restaurants").select("*").eq("id", id).maybeSingle(),
+    supabase
+      .from("google_business_connections")
+      .select("google_email, location_title")
+      .eq("restaurant_id", id)
+      .maybeSingle(),
+    supabase
+      .from("social_connections")
+      .select("facebook_page_name, instagram_username")
+      .eq("restaurant_id", id)
+      .maybeSingle(),
+    supabase
+      .from("tiktok_connections")
+      .select("display_name, tiktok_username")
+      .eq("restaurant_id", id)
+      .maybeSingle(),
+    supabase
+      .from("restaurant_stripe_connexions")
+      .select("nom_affiche, stripe_account_id, paiements_actifs")
+      .eq("restaurant_id", id)
+      .maybeSingle(),
+  ]);
 
   const restaurant = restaurantResult.data as Restaurant | null;
   if (!restaurant) {
@@ -150,6 +151,9 @@ export default async function ConnexionsPage({
     paiements_actifs: boolean;
   } | null;
 
+  // TikTok n'apparaît que le jour où l'application est validée chez eux :
+  // proposer un bouton qui mène à une erreur coûte plus de confiance que
+  // l'absence du bouton n'en fait perdre.
   const platforms: Platform[] = [
     {
       key: "google",
@@ -191,7 +195,9 @@ export default async function ConnexionsPage({
       color: "#c13584",
       tint: "#fce8f3",
       connected: Boolean(social?.instagram_username),
-      detail: social?.instagram_username ? `@${social.instagram_username}` : null,
+      detail: social?.instagram_username
+        ? `@${social.instagram_username}`
+        : null,
       managePath: `/dashboard/${id}/social`,
       connectButton: (
         <FacebookConnectButton
@@ -200,20 +206,6 @@ export default async function ConnexionsPage({
           label="Connecter via Facebook"
         />
       ),
-    },
-    {
-      key: "tiktok",
-      name: "TikTok",
-      purpose: "Ton compte, tes vidéos, tes vues.",
-      icon: platformIcons.tiktok,
-      color: "#111827",
-      tint: "#f1f2f4",
-      connected: Boolean(tiktok),
-      detail: tiktok?.tiktok_username
-        ? `@${tiktok.tiktok_username}`
-        : (tiktok?.display_name ?? null),
-      managePath: `/dashboard/${id}/tiktok`,
-      connectHref: `/api/tiktok/authorize?restaurant_id=${id}`,
     },
     {
       key: "stripe",
@@ -235,6 +227,23 @@ export default async function ConnexionsPage({
       connectHref: `/dashboard/${id}/paiements`,
     },
   ];
+
+  if (tiktokDisponible()) {
+    platforms.splice(2, 0, {
+      key: "tiktok",
+      name: "TikTok",
+      purpose: "Ton compte, tes vidéos, tes vues.",
+      icon: platformIcons.tiktok,
+      color: "#111827",
+      tint: "#f1f2f4",
+      connected: Boolean(tiktok),
+      detail: tiktok?.tiktok_username
+        ? `@${tiktok.tiktok_username}`
+        : (tiktok?.display_name ?? null),
+      managePath: `/dashboard/${id}/tiktok`,
+      connectHref: `/api/tiktok/authorize?restaurant_id=${id}`,
+    });
+  }
 
   const connectedCount = platforms.filter((p) => p.connected).length;
 
@@ -266,8 +275,8 @@ export default async function ConnexionsPage({
 
       <p className="max-w-2xl text-sm text-zinc-500">
         Relie tes comptes à Klarr pour qu&apos;il puisse lire tes avis, tes
-        publications et tes statistiques. Tu restes propriétaire de tes
-        comptes : la connexion se retire quand tu veux, depuis « Gérer ».
+        publications et tes statistiques. Tu restes propriétaire de tes comptes
+        : la connexion se retire quand tu veux, depuis « Gérer ».
       </p>
 
       <p className="text-sm font-medium text-zinc-700">

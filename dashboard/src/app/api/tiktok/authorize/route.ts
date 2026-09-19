@@ -1,9 +1,19 @@
 import { randomUUID, randomBytes } from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { buildTikTokAuthUrl, buildCodeChallenge } from "@/lib/tiktok/oauth";
+import {
+  buildTikTokAuthUrl,
+  buildCodeChallenge,
+  tiktokDisponible,
+} from "@/lib/tiktok/oauth";
 
 export async function GET(request: NextRequest) {
+  // Sans clés, TikTok renverrait une page d'erreur à son nom : mieux vaut
+  // que la route n'existe pas.
+  if (!tiktokDisponible()) {
+    return NextResponse.json({ error: "TikTok indisponible" }, { status: 404 });
+  }
+
   const restaurantId = request.nextUrl.searchParams.get("restaurant_id");
   if (!restaurantId) {
     return NextResponse.json(
@@ -27,9 +37,12 @@ export async function GET(request: NextRequest) {
     .maybeSingle();
 
   if (!restaurant) {
-    return NextResponse.json({ error: "restaurant introuvable" }, {
-      status: 404,
-    });
+    return NextResponse.json(
+      { error: "restaurant introuvable" },
+      {
+        status: 404,
+      },
+    );
   }
 
   const state = `${randomUUID()}.${restaurantId}`;

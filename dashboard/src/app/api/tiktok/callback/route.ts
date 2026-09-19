@@ -1,8 +1,16 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { exchangeCodeForTokens, getUserInfo } from "@/lib/tiktok/oauth";
+import {
+  exchangeCodeForTokens,
+  getUserInfo,
+  tiktokDisponible,
+} from "@/lib/tiktok/oauth";
 
 export async function GET(request: NextRequest) {
+  if (!tiktokDisponible()) {
+    return NextResponse.json({ error: "TikTok indisponible" }, { status: 404 });
+  }
+
   const code = request.nextUrl.searchParams.get("code");
   const state = request.nextUrl.searchParams.get("state");
   const cookieState = request.cookies.get("tiktok_oauth_state")?.value;
@@ -14,7 +22,13 @@ export async function GET(request: NextRequest) {
     return response;
   };
 
-  if (!code || !state || !cookieState || state !== cookieState || !codeVerifier) {
+  if (
+    !code ||
+    !state ||
+    !cookieState ||
+    state !== cookieState ||
+    !codeVerifier
+  ) {
     return clearStateCookies(
       NextResponse.redirect(new URL("/dashboard?tiktok_error=1", request.url)),
     );
@@ -32,7 +46,9 @@ export async function GET(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) {
-    return clearStateCookies(NextResponse.redirect(new URL("/login", request.url)));
+    return clearStateCookies(
+      NextResponse.redirect(new URL("/login", request.url)),
+    );
   }
 
   try {
