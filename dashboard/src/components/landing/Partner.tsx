@@ -1,14 +1,11 @@
+import type { ClesAccueilPublic } from "@/lib/i18n/accueilPublic";
+
 // Les chiffres avancés ici sont ceux de l'extrait Kbis d'EDIREF : début
 // d'activité au 1er avril 2008, objet social « hébergement et développement
 // de sites internet, leur optimisation et référencement ». Rien qui ne soit
-// vérifiable au registre du commerce.
-const FAITS = [
-  { valeur: "2008", libelle: "Début d'activité" },
-  { valeur: "Paris 8e", libelle: "Siège social" },
-  { valeur: "SEO & web", libelle: "Métier d'origine" },
-];
-
-export function Partner() {
+// vérifiable au registre du commerce. Ils ne se traduisent pas : seule
+// leur étiquette change de langue, la valeur reste ce que dit le Kbis.
+export function Partner({ t }: { t: ClesAccueilPublic["editeur"] }) {
   return (
     <div className="px-5 py-16 sm:px-8 sm:py-20" style={{ background: "var(--bg)" }}>
       <div
@@ -27,7 +24,7 @@ export function Partner() {
               color: "var(--accent-dark)",
             }}
           >
-            L&apos;autre moitié de Klarr
+            {t.surtitre}
           </span>
           <h2
             style={{
@@ -38,7 +35,7 @@ export function Partner() {
               lineHeight: 1.2,
             }}
           >
-            Une agence de référencement qui fait ça depuis dix-huit ans.
+            {t.titre}
           </h2>
           <p
             style={{
@@ -48,12 +45,7 @@ export function Partner() {
               color: "var(--ink-soft)",
             }}
           >
-            Klarr est édité par <strong>EDIREF</strong>, société parisienne
-            spécialisée depuis 2008 dans le développement de sites internet,
-            leur optimisation et leur référencement. Là où beaucoup
-            découvrent le SEO en même temps que leurs clients, Thomas Bavoil
-            et son équipe le pratiquent depuis avant que Google Business
-            Profile ne s&apos;appelle ainsi.
+            {t.p1}
           </p>
           <p
             style={{
@@ -63,10 +55,7 @@ export function Partner() {
               color: "var(--ink-soft)",
             }}
           >
-            C&apos;est ce qui fait la différence entre un outil qui affiche
-            des chiffres et un outil qui sait lesquels comptent : le métier
-            d&apos;un restaurateur d&apos;un côté, dix-huit ans de
-            référencement de l&apos;autre.
+            {t.p2}
           </p>
           <a
             href="https://www.ediref.com"
@@ -79,7 +68,7 @@ export function Partner() {
               width: "fit-content",
             }}
           >
-            Découvrir EDIREF →
+            {t.lien}
           </a>
         </div>
 
@@ -96,7 +85,7 @@ export function Partner() {
               gap: 22,
             }}
           >
-            {FAITS.map((fait) => (
+            {t.faits.map((fait) => (
               <div
                 key={fait.libelle}
                 style={{
@@ -130,8 +119,7 @@ export function Partner() {
                 color: "var(--ink-soft)",
               }}
             >
-              EDIREF, SARL au capital de 1 000 € — RCS Paris 503 428 369.
-              Vérifiable au registre du commerce.
+              {t.mention}
             </p>
           </div>
         </div>

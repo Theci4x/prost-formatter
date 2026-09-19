@@ -17,7 +17,7 @@ export function ChoixLangue({
   courante: Langue;
   libelle: string;
   /** Le compte pour un inscrit, un témoin pour un visiteur. */
-  action?: (formData: FormData) => Promise<void>;
+  action?: (langue: string) => Promise<void>;
 }) {
   return (
     <form className="flex items-center gap-2">
@@ -26,9 +26,9 @@ export function ChoixLangue({
         <button
           key={langue}
           type="submit"
-          formAction={action}
-          name="langue"
-          value={langue}
+          // La langue par `bind` : le `name` d'un bouton qui porte une
+          // action sert à React, pas à nous (voir `langue-actions.ts`).
+          formAction={action.bind(null, langue)}
           aria-current={langue === courante ? "true" : undefined}
           className={`rounded-full px-2.5 py-1 text-xs font-medium transition-colors ${
             langue === courante

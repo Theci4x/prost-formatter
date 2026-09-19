@@ -1,4 +1,4 @@
-import { QUESTIONS } from "@/lib/seo/klarr";
+import type { ClesAccueilPublic } from "@/lib/i18n/accueilPublic";
 
 /**
  * Les questions qu'on nous pose avant de signer.
@@ -12,18 +12,18 @@ import { QUESTIONS } from "@/lib/seo/klarr";
  * Les réponses sont rédigées pour être citées telles quelles : chacune
  * tient debout seule, sans la question ni le reste de la page.
  */
-export function Faq() {
+export function Faq({ t }: { t: ClesAccueilPublic["faq"] }) {
   return (
     <section
       id="questions"
       className="mx-auto w-full max-w-3xl px-6 py-16 sm:py-20"
     >
       <h2 className="text-center font-serif text-3xl text-ink sm:text-4xl">
-        Questions fréquentes
+        {t.titre}
       </h2>
 
       <div className="mt-8 flex flex-col divide-y divide-line rounded-2xl border border-line bg-paper shadow-sm">
-        {QUESTIONS.map(({ question, reponse }) => (
+        {t.questions.map(({ question, reponse }) => (
           <details key={question} className="group px-5 py-4 sm:px-6 sm:py-5">
             <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-left text-[15px] font-semibold text-ink">
               {question}

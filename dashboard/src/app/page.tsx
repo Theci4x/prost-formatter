@@ -11,6 +11,9 @@ import { Reservation } from "@/components/landing/Reservation";
 import { Tarifs } from "@/components/landing/Tarifs";
 import { Faq } from "@/components/landing/Faq";
 import { balisageAccueil } from "@/lib/seo/klarr";
+import { ACCUEIL_PUBLIC } from "@/lib/i18n/accueilPublic";
+import { langueIndexable } from "@/lib/i18n/langue";
+import { ChoixLangueSite } from "@/components/landing/ChoixLangueSite";
 import { HeroBackdrop } from "@/components/landing/HeroBackdrop";
 import { HeroProduit } from "@/components/landing/HeroProduit";
 import { Reveal } from "@/components/landing/Reveal";
@@ -18,14 +21,70 @@ import { Reveal } from "@/components/landing/Reveal";
 import type { Metadata } from "next";
 import { Commis } from "@/components/commis/Commis";
 
-export const metadata: Metadata = {
-  // La page d'accueil garde le titre par défaut du gabarit, mais elle a
-  // droit à sa propre adresse canonique : sans elle, klarr.net et
-  // www.klarr.net se font concurrence dans l'index de Google.
-  alternates: { canonical: "/" },
-};
+// Le titre et la description suivent la langue lue, l'adresse canonique
+// non : klarr.net et www.klarr.net se feraient concurrence dans l'index,
+// et les trois langues vivent à la même adresse — il n'y a donc qu'une
+// page à déclarer, pas trois.
+export async function generateMetadata(): Promise<Metadata> {
+  const t = ACCUEIL_PUBLIC[await langueIndexable()].meta;
+  return {
+    title: { absolute: t.titre },
+    description: t.description,
+    alternates: { canonical: "/" },
+  };
+}
 
 const ACCENT = "#E8871E";
+
+// Une icône par bénéfice, dans l'ordre des cartes du dictionnaire. Elles
+// vivent hors de la boucle parce qu'un dessin ne se traduit pas — et
+// hors du composant parce qu'elles ne dépendent de rien.
+const ICONES_BENEFICES = [
+  <svg
+    key="1"
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="var(--accent-dark)"
+    strokeWidth="1.8"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0 1 18 0z" />
+    <circle cx="12" cy="10" r="3" />
+  </svg>,
+  <svg
+    key="2"
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="var(--accent-dark)"
+    strokeWidth="1.8"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <circle cx="11" cy="11" r="7" />
+    <path d="M21 21l-4.3-4.3" />
+  </svg>,
+  <svg
+    key="3"
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="var(--accent-dark)"
+    strokeWidth="1.8"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <rect x="3" y="3" width="7" height="7" rx="1.5" />
+    <rect x="14" y="3" width="7" height="7" rx="1.5" />
+    <rect x="3" y="14" width="7" height="7" rx="1.5" />
+    <rect x="14" y="14" width="7" height="7" rx="1.5" />
+  </svg>,
+];
 
 export default async function Home() {
   const supabase = await createClient();
@@ -37,8 +96,17 @@ export default async function Home() {
     redirect("/dashboard");
   }
 
+  // Le témoin seul, jamais « Accept-Language » : voir `langueIndexable`.
+  // Un robot doit toujours tomber sur la même page, sinon le balisage
+  // FAQ et la fiche de résultat cessent de correspondre au texte.
+  const langue = await langueIndexable();
+  const t = ACCUEIL_PUBLIC[langue];
+
   return (
     <div
+      // Les trois langues partagent une adresse ; c'est donc l'attribut
+      // qui dit laquelle est servie, au lecteur d'écran comme au moteur.
+      lang={langue}
       className="klarr-grain"
       style={{
         // @ts-expect-error -- CSS custom properties aren't in React's style typings.
@@ -63,7 +131,7 @@ export default async function Home() {
       {/* Ce que Klarr déclare aux moteurs et aux assistants. La doc de
           Next le veut dans la page et non dans le <head>, et l'échappement
           de « < » évite qu'une chaîne du balisage ne ferme le script. */}
-      {balisageAccueil().map((bloc, rang) => (
+      {balisageAccueil(langue).map((bloc, rang) => (
         <script
           key={rang}
           type="application/ld+json"
@@ -119,34 +187,38 @@ export default async function Home() {
             href="#benefices"
             style={{ fontSize: 14, fontWeight: 500, color: "var(--ink-soft)" }}
           >
-            Comment ça marche
+            {t.nav.fonctionnement}
           </a>
           <a
             href="#test-presence"
             style={{ fontSize: 14, fontWeight: 500, color: "var(--ink-soft)" }}
           >
-            Tester ma présence Google
+            {t.nav.test}
           </a>
           <a
             href="#tarifs"
             style={{ fontSize: 14, fontWeight: 500, color: "var(--ink-soft)" }}
           >
-            Tarifs
+            {t.nav.tarifs}
           </a>
           <Link
             href="/login"
             style={{ fontSize: 14, fontWeight: 500, color: "var(--ink-soft)" }}
           >
-            Connexion
+            {t.nav.connexion}
           </Link>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          {/* Avant le bouton d'essai et visible dès le téléphone : quelqu'un
+              qui ne lit pas le français doit pouvoir en sortir sans avoir
+              à faire défiler toute la page. */}
+          <ChoixLangueSite courante={langue} />
           <Link
             href="/login"
             className="sm:hidden"
             style={{ fontSize: 14, fontWeight: 500, color: "var(--ink-soft)" }}
           >
-            Connexion
+            {t.nav.connexion}
           </Link>
           <Link
             href="/login"
@@ -161,8 +233,8 @@ export default async function Home() {
           >
             {/* « gratuitement » ne tient pas à côté de « Connexion » sur un
                 téléphone étroit, et le bouton sortait de l'écran. */}
-            <span className="sm:hidden">Essayer</span>
-            <span className="hidden sm:inline">Essayer gratuitement</span>
+            <span className="sm:hidden">{t.nav.essayerCourt}</span>
+            <span className="hidden sm:inline">{t.nav.essayer}</span>
           </Link>
         </div>
       </div>
@@ -218,7 +290,7 @@ export default async function Home() {
                   letterSpacing: "0.02em",
                 }}
               >
-                Pensé pour les restaurateurs indépendants et petits groupes
+                {t.hero.badge}
               </span>
             </div>
             <h1
@@ -232,11 +304,11 @@ export default async function Home() {
                 textWrap: "pretty",
               }}
             >
-              Vos réservations sans commission.{" "}
+              {t.hero.titreDebut}{" "}
               <em style={{ fontStyle: "italic", color: "var(--accent-dark)" }}>
-                Votre visibilité sans y penser
+                {t.hero.titreAccent}
               </em>
-              .
+              {t.hero.titreFin}
             </h1>
             <p
               style={{
@@ -247,10 +319,7 @@ export default async function Home() {
                 maxWidth: 480,
               }}
             >
-              Le carnet, la vitrine, les avis et la fiche Google au même
-              endroit. Les acomptes vont sur votre compte, pas le nôtre. Et
-              chaque chiffre vient avec la donnée brute derrière, que vous
-              pouvez vérifier vous-même.
+              {t.hero.chapo}
             </p>
             <div
               style={{
@@ -274,7 +343,7 @@ export default async function Home() {
                   boxShadow: "0 14px 30px -14px oklch(20% 0.02 60 / 50%)",
                 }}
               >
-                Tester ma présence Google — gratuit
+                {t.hero.ctaTest}
               </Link>
               <Link
                 href="/login"
@@ -287,7 +356,7 @@ export default async function Home() {
                   gap: 6,
                 }}
               >
-                Essayer Klarr gratuitement
+                {t.hero.ctaEssai}
                 <svg
                   width="14"
                   height="14"
@@ -312,11 +381,12 @@ export default async function Home() {
                 gap: "4px 10px",
               }}
             >
-              <span>Sans carte bancaire</span>
-              <span aria-hidden="true">·</span>
-              <span>Sans engagement</span>
-              <span aria-hidden="true">·</span>
-              <span>Résiliable en un clic</span>
+              {t.hero.garanties.map((garantie, rang) => (
+                <span key={garantie} style={{ display: "contents" }}>
+                  {rang > 0 && <span aria-hidden="true">·</span>}
+                  <span>{garantie}</span>
+                </span>
+              ))}
             </p>
           </div>
 
@@ -328,17 +398,17 @@ export default async function Home() {
               position: "relative",
             }}
           >
-            <HeroProduit />
+            <HeroProduit t={t.produit} />
           </div>
         </div>
       </div>
 
       <Reveal>
-        <ClientLogos />
+        <ClientLogos confiance={t.clients.confiance} />
       </Reveal>
 
       <Reveal>
-        <Problem />
+        <Problem t={t.probleme} />
       </Reveal>
 
       {/* BENEFITS */}
@@ -366,7 +436,7 @@ export default async function Home() {
                 color: "var(--accent-dark)",
               }}
             >
-              Comment ça marche
+              {t.benefices.surtitre}
             </span>
             <h2
               style={{
@@ -377,276 +447,106 @@ export default async function Home() {
                 lineHeight: 1.2,
               }}
             >
-              La donnée brute, l&apos;historique, et ce qui cloche.
+              {t.benefices.titre}
             </h2>
           </div>
           <div
             className="flex-col sm:flex-row"
             style={{ display: "flex", gap: 20 }}
           >
-            <div
-              style={{
-                flex: 1,
-                position: "relative",
-                display: "flex",
-                flexDirection: "column",
-                gap: 16,
-                background: "var(--paper)",
-                border: "1px solid var(--line)",
-                borderRadius: 20,
-                padding: "30px 28px 32px",
-              }}
-            >
-              <span
-                aria-hidden="true"
-                style={{
-                  position: "absolute",
-                  top: 22,
-                  right: 26,
-                  fontFamily: "var(--font-instrument-serif), Georgia, serif",
-                  fontSize: 40,
-                  lineHeight: 1,
-                  color: "var(--accent-dark)",
-                  opacity: 0.55,
-                }}
-              >
-                01
-              </span>
+            {t.benefices.cartes.map((carte, rang) => (
               <div
+                key={carte.titre}
                 style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 11,
+                  flex: 1,
+                  position: "relative",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 16,
                   background: "var(--paper)",
                   border: "1px solid var(--line)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
+                  borderRadius: 20,
+                  padding: "30px 28px 32px",
                 }}
               >
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="var(--accent-dark)"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+                <span
+                  aria-hidden="true"
+                  style={{
+                    position: "absolute",
+                    top: 22,
+                    right: 26,
+                    fontFamily: "var(--font-instrument-serif), Georgia, serif",
+                    fontSize: 40,
+                    lineHeight: 1,
+                    color: "var(--accent-dark)",
+                    opacity: 0.55,
+                  }}
                 >
-                  <path d="M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0 1 18 0z" />
-                  <circle cx="12" cy="10" r="3" />
-                </svg>
-              </div>
-              <h3
-                style={{
-                  fontSize: 20,
-                  fontFamily: "var(--font-manrope), sans-serif",
-                  fontWeight: 700,
-                  margin: 0,
-                  paddingRight: 56,
-                }}
-              >
-                La donnée brute
-              </h3>
-              <p
-                style={{
-                  margin: 0,
-                  fontSize: 15,
-                  lineHeight: 1.65,
-                  color: "var(--ink-soft)",
-                }}
-              >
-                Votre fiche Google telle qu&apos;elle est, vos avis tels
-                qu&apos;ils sont écrits, et la réponse exacte que donne une IA
-                quand un client demande où manger. Vous pouvez reposer la même
-                question de votre côté et retomber sur la même chose.
-              </p>
-            </div>
-            <div
-              style={{
-                flex: 1,
-                position: "relative",
-                display: "flex",
-                flexDirection: "column",
-                gap: 16,
-                background: "var(--paper)",
-                border: "1px solid var(--line)",
-                borderRadius: 20,
-                padding: "30px 28px 32px",
-              }}
-            >
-              <span
-                aria-hidden="true"
-                style={{
-                  position: "absolute",
-                  top: 22,
-                  right: 26,
-                  fontFamily: "var(--font-instrument-serif), Georgia, serif",
-                  fontSize: 40,
-                  lineHeight: 1,
-                  color: "var(--accent-dark)",
-                  opacity: 0.55,
-                }}
-              >
-                02
-              </span>
-              <div
-                style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 11,
-                  background: "var(--paper)",
-                  border: "1px solid var(--line)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="var(--accent-dark)"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+                  0{rang + 1}
+                </span>
+                <div
+                  style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: 11,
+                    background: "var(--paper)",
+                    border: "1px solid var(--line)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
                 >
-                  <circle cx="11" cy="11" r="7" />
-                  <path d="M21 21l-4.3-4.3" />
-                </svg>
-              </div>
-              <h3
-                style={{
-                  fontSize: 20,
-                  fontFamily: "var(--font-manrope), sans-serif",
-                  fontWeight: 700,
-                  margin: 0,
-                  paddingRight: 56,
-                }}
-              >
-                L&apos;historique, pas le pipeau
-              </h3>
-              <p
-                style={{
-                  margin: 0,
-                  fontSize: 15,
-                  lineHeight: 1.65,
-                  color: "var(--ink-soft)",
-                }}
-              >
-                Chaque analyse est horodatée et conservée. Même quand c&apos;est
-                mauvais. Surtout quand c&apos;est mauvais — vous voyez si vous
-                montez ou si vous descendez.
-              </p>
-            </div>
-            <div
-              style={{
-                flex: 1,
-                position: "relative",
-                display: "flex",
-                flexDirection: "column",
-                gap: 16,
-                background: "var(--paper)",
-                border: "1px solid var(--line)",
-                borderRadius: 20,
-                padding: "30px 28px 32px",
-              }}
-            >
-              <span
-                aria-hidden="true"
-                style={{
-                  position: "absolute",
-                  top: 22,
-                  right: 26,
-                  fontFamily: "var(--font-instrument-serif), Georgia, serif",
-                  fontSize: 40,
-                  lineHeight: 1,
-                  color: "var(--accent-dark)",
-                  opacity: 0.55,
-                }}
-              >
-                03
-              </span>
-              <div
-                style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 11,
-                  background: "var(--paper)",
-                  border: "1px solid var(--line)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="var(--accent-dark)"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+                  {ICONES_BENEFICES[rang]}
+                </div>
+                <h3
+                  style={{
+                    fontSize: 20,
+                    fontFamily: "var(--font-manrope), sans-serif",
+                    fontWeight: 700,
+                    margin: 0,
+                    paddingRight: 56,
+                  }}
                 >
-                  <rect x="3" y="3" width="7" height="7" rx="1.5" />
-                  <rect x="14" y="3" width="7" height="7" rx="1.5" />
-                  <rect x="3" y="14" width="7" height="7" rx="1.5" />
-                  <rect x="14" y="14" width="7" height="7" rx="1.5" />
-                </svg>
+                  {carte.titre}
+                </h3>
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: 15,
+                    lineHeight: 1.65,
+                    color: "var(--ink-soft)",
+                  }}
+                >
+                  {carte.texte}
+                </p>
               </div>
-              <h3
-                style={{
-                  fontSize: 20,
-                  fontFamily: "var(--font-manrope), sans-serif",
-                  fontWeight: 700,
-                  margin: 0,
-                  paddingRight: 56,
-                }}
-              >
-                Ce qui cloche, pas la tape dans le dos
-              </h3>
-              <p
-                style={{
-                  margin: 0,
-                  fontSize: 15,
-                  lineHeight: 1.65,
-                  color: "var(--ink-soft)",
-                }}
-              >
-                On ne vous félicite pas. On vous montre les questions où vous
-                n&apos;apparaissez pas, et ce qui manque sur votre fiche. Utile
-                plutôt qu&apos;agréable.
-              </p>
-            </div>
+            ))}
           </div>
         </div>
       </div>
 
       <Reveal>
-        <Comparison />
+        <Comparison t={t.difference} />
       </Reveal>
 
       <Reveal>
-        <Reservation />
+        <Reservation t={t.reservations} />
       </Reveal>
 
       <Reveal>
-        <Tarifs />
+        <Tarifs t={t.tarifs} />
       </Reveal>
 
       <Reveal>
-        <Faq />
+        <Faq t={t.faq} />
       </Reveal>
 
       <Reveal>
-        <Founder />
+        <Founder t={t.fondateur} />
       </Reveal>
 
       <Reveal>
-        <Partner />
+        <Partner t={t.editeur} />
       </Reveal>
 
       {/* FREE GOOGLE PRESENCE TEST */}
@@ -711,7 +611,7 @@ export default async function Home() {
                 color: "var(--accent-dark)",
               }}
             >
-              Gratuit, sans engagement
+              {t.test.surtitre}
             </span>
             <h2
               style={{
@@ -722,7 +622,7 @@ export default async function Home() {
                 lineHeight: 1.25,
               }}
             >
-              Pas encore client ? Testez votre présence sur Google.
+              {t.test.titre}
             </h2>
             <p
               style={{
@@ -732,8 +632,7 @@ export default async function Home() {
                 color: "var(--ink-soft)",
               }}
             >
-              En 2 minutes, on analyse la fiche Google de votre restaurant et on
-              vous envoie un score de visibilité détaillé, gratuitement.
+              {t.test.texte}
             </p>
           </div>
           <Link
@@ -750,7 +649,7 @@ export default async function Home() {
               whiteSpace: "nowrap",
             }}
           >
-            Faire mon test gratuit
+            {t.test.bouton}
           </Link>
         </div>
       </div>
@@ -786,7 +685,7 @@ export default async function Home() {
                 color: "var(--ink-soft)",
               }}
             >
-              Bientôt sur Klarr
+              {t.bientot.surtitre}
             </span>
             <h2
               style={{
@@ -797,7 +696,7 @@ export default async function Home() {
                 lineHeight: 1.25,
               }}
             >
-              Et la suite est déjà en préparation.
+              {t.bientot.titre}
             </h2>
             <p
               style={{
@@ -807,9 +706,7 @@ export default async function Home() {
                 color: "var(--ink-soft)",
               }}
             >
-              Les réponses aux avis, les posts programmés et le suivi de
-              position sont arrivés. Voilà ce qui manque encore — et on le dit
-              aussi franchement.
+              {t.bientot.texte}
             </p>
           </div>
           <div
@@ -820,58 +717,22 @@ export default async function Home() {
               maxWidth: 420,
             }}
           >
-            <span
-              style={{
-                fontSize: 13,
-                fontWeight: 600,
-                color: "var(--ink-soft)",
-                background: "var(--bg-alt)",
-                border: "1px solid var(--line)",
-                borderRadius: 100,
-                padding: "8px 16px",
-              }}
-            >
-              Statistiques du carnet
-            </span>
-            <span
-              style={{
-                fontSize: 13,
-                fontWeight: 600,
-                color: "var(--ink-soft)",
-                background: "var(--bg-alt)",
-                border: "1px solid var(--line)",
-                borderRadius: 100,
-                padding: "8px 16px",
-              }}
-            >
-              Fichier client
-            </span>
-            <span
-              style={{
-                fontSize: 13,
-                fontWeight: 600,
-                color: "var(--ink-soft)",
-                background: "var(--bg-alt)",
-                border: "1px solid var(--line)",
-                borderRadius: 100,
-                padding: "8px 16px",
-              }}
-            >
-              Statistiques de la fiche Google
-            </span>
-            <span
-              style={{
-                fontSize: 13,
-                fontWeight: 600,
-                color: "var(--ink-soft)",
-                background: "var(--bg-alt)",
-                border: "1px solid var(--line)",
-                borderRadius: 100,
-                padding: "8px 16px",
-              }}
-            >
-              Liste d&apos;attente
-            </span>
+            {t.bientot.puces.map((puce) => (
+              <span
+                key={puce}
+                style={{
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: "var(--ink-soft)",
+                  background: "var(--bg-alt)",
+                  border: "1px solid var(--line)",
+                  borderRadius: 100,
+                  padding: "8px 16px",
+                }}
+              >
+                {puce}
+              </span>
+            ))}
           </div>
         </div>
       </div>
@@ -903,7 +764,7 @@ export default async function Home() {
                 color: "var(--paper)",
               }}
             >
-              Votre fiche Google, sans filtre marketing.
+              {t.cta.titre}
             </h2>
             <p
               style={{
@@ -913,7 +774,7 @@ export default async function Home() {
                 color: "oklch(80% 0.01 60)",
               }}
             >
-              Pas de carte bancaire. Pas d&apos;engagement. Pas de discours.
+              {t.cta.texte}
             </p>
             <Link
               href="/login"
@@ -926,15 +787,23 @@ export default async function Home() {
                 borderRadius: 9,
               }}
             >
-              Vérifier ma visibilité — gratuit, 2 minutes
+              {t.cta.bouton}
             </Link>
           </div>
         </div>
       </Reveal>
 
-      <Reveal>
-        <Journal />
-      </Reveal>
+      {/* Les articles sont écrits en français et ne sont pas traduits :
+          trois cartes françaises au milieu d'une page chinoise donnent
+          l'impression d'une page à moitié cassée. Le lien du pied de page
+          reste, avec la mention de la langue. Un robot, lui, lit toujours
+          la version française — le maillage vers le journal est donc
+          intact. */}
+      {langue === "fr" && (
+        <Reveal>
+          <Journal />
+        </Reveal>
+      )}
 
       {/* FOOTER */}
       <div
@@ -974,30 +843,34 @@ export default async function Home() {
               de ceux qui arrivent par une recherche, et la seule page du
               site qui leur parle avant qu'ils sachent ce qu'est Klarr. */}
           <Link href="/blog" style={{ color: "inherit" }}>
-            Le journal
+            {t.pied.journal}
           </Link>
           <Link href="/aide" style={{ color: "inherit" }}>
-            Aide
+            {t.pied.aide}
           </Link>
           <Link href="/mentions-legales" style={{ color: "inherit" }}>
-            Mentions légales
+            {t.pied.mentions}
           </Link>
           <Link href="/cgu" style={{ color: "inherit" }}>
-            Conditions d&apos;utilisation
+            {t.pied.cgu}
           </Link>
           <Link href="/confidentialite" style={{ color: "inherit" }}>
-            Confidentialité
+            {t.pied.confidentialite}
           </Link>
           <Link href="/suppression-donnees" style={{ color: "inherit" }}>
-            Suppression des données
+            {t.pied.suppression}
           </Link>
           <a href="mailto:contact@klarr.net" style={{ color: "inherit" }}>
             contact@klarr.net
           </a>
-          <span>© 2026 Klarr — édité par EDIREF.</span>
+          <span>{t.pied.copyright}</span>
         </div>
       </div>
-      <Commis />
+      {/* Le Commis ne répond qu'à partir du mode d'emploi, qui est en
+          français : lui ouvrir la bulle dans une autre langue, c'est
+          promettre une réponse qu'il donnera en français. Même règle que
+          pour le journal. */}
+      {langue === "fr" && <Commis />}
     </div>
   );
 }

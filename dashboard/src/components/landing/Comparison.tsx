@@ -1,19 +1,5 @@
 import Link from "next/link";
-const WITH_KLARR = [
-  "Fiche Google, avis, réseaux sociaux et menu au même endroit",
-  "Des mots-clés choisis à partir d'une analyse, pas au hasard",
-  "Les avis Google, Yelp et Tripadvisor centralisés",
-  "Photos et carte mises à jour en quelques clics",
-  "Vous restez autonome, sans dépendre de personne",
-];
-
-const WITHOUT_KLARR = [
-  "Un outil et un mot de passe différents par plateforme",
-  "Des mots-clés au doigt mouillé, quand il y en a",
-  "Des avis dispersés, et des réponses qui passent à la trappe",
-  "Des informations périmées sur la moitié des sites",
-  "Une agence à payer, ou des heures perdues chaque semaine",
-];
+import type { ClesAccueilPublic } from "@/lib/i18n/accueilPublic";
 
 function CheckIcon() {
   return (
@@ -131,7 +117,7 @@ function Column({
   );
 }
 
-export function Comparison() {
+export function Comparison({ t }: { t: ClesAccueilPublic["difference"] }) {
   return (
     <div style={{ background: "var(--bg)", padding: "90px 32px" }}>
       <div style={{ maxWidth: 1180, margin: "0 auto" }}>
@@ -153,7 +139,7 @@ export function Comparison() {
               color: "var(--accent-dark)",
             }}
           >
-            La différence
+            {t.surtitre}
           </span>
           <h2
             style={{
@@ -164,18 +150,18 @@ export function Comparison() {
               lineHeight: 1.2,
             }}
           >
-            Ce que ça change, concrètement.
+            {t.titre}
           </h2>
         </div>
         <div
           className="flex-col sm:flex-row"
           style={{ display: "flex", gap: 24 }}
         >
-          <Column title="Avec" highlight="Klarr" items={WITH_KLARR} positive />
+          <Column title={t.avec} highlight="Klarr" items={t.oui} positive />
           <Column
-            title="Sans"
+            title={t.sans}
             highlight="Klarr"
-            items={WITHOUT_KLARR}
+            items={t.non}
             positive={false}
           />
         </div>
@@ -192,7 +178,7 @@ export function Comparison() {
               textUnderlineOffset: 3,
             }}
           >
-            Voir le comparatif avec TheFork, Zenchef et Guestonline
+            {t.comparatif}
           </Link>
         </p>
       </div>

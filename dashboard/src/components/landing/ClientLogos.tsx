@@ -154,7 +154,7 @@ function LogoRow({ ariaHidden }: { ariaHidden?: boolean }) {
   );
 }
 
-export function ClientLogos() {
+export function ClientLogos({ confiance }: { confiance: string }) {
   return (
     <div style={{ background: "var(--paper)", borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)" }}>
       <div style={{ maxWidth: 1180, margin: "0 auto", padding: "34px 32px 38px" }}>
@@ -169,7 +169,7 @@ export function ClientLogos() {
             color: "var(--ink-soft)",
           }}
         >
-          Ils nous font déjà confiance
+          {confiance}
         </p>
         <div
           className="klarr-marquee"

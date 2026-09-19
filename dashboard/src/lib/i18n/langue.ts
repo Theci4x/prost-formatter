@@ -77,3 +77,40 @@ export async function langueVisiteur(): Promise<Langue> {
   }
   return "fr";
 }
+
+/** Deux caractères, pour un sélecteur qui doit tenir dans une barre de nav. */
+export const CODE_LANGUE: Record<Langue, string> = {
+  fr: "FR",
+  en: "EN",
+  zh: "中文",
+};
+
+/**
+ * La langue d'une page *indexée*.
+ *
+ * Même chose que `langueVisiteur`, sauf qu'on n'y regarde pas
+ * « Accept-Language ». C'est délibéré, et ça vaut pour toute page que
+ * Google lit.
+ *
+ * Un robot d'indexation envoie l'en-tête de son choix, souvent
+ * « en-US », parfois rien. Si la page d'accueil s'y pliait, Google
+ * indexerait la version anglaise d'un site dont toutes les autres pages
+ * — le journal, les mentions, le comparatif — sont en français, et la
+ * fiche de résultat cesserait de correspondre à la page. Pire : le
+ * balisage FAQ suit la langue affichée, et un balisage qui contredit le
+ * texte visible est une raison documentée de perdre l'affichage enrichi.
+ *
+ * Donc : le français pour tout le monde, et une autre langue seulement
+ * pour qui l'a demandée en cliquant. Le choix, lui, se propage
+ * normalement vers la connexion et le tableau de bord, qui portent
+ * « noindex » et peuvent, eux, deviner.
+ */
+export async function langueIndexable(): Promise<Langue> {
+  try {
+    const choisie = (await cookies()).get(COOKIE_LANGUE)?.value;
+    if (estLangue(choisie)) return choisie;
+  } catch {
+    // Rendu statique, sans requête : le français, comme pour un robot.
+  }
+  return "fr";
+}

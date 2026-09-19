@@ -1,4 +1,6 @@
-export function Problem() {
+import type { ClesAccueilPublic } from "@/lib/i18n/accueilPublic";
+
+export function Problem({ t }: { t: ClesAccueilPublic["probleme"] }) {
   return (
     <div className="px-5 py-16 sm:px-8 sm:py-20" style={{ background: "var(--bg)" }}>
       <div style={{ maxWidth: 760, margin: "0 auto", display: "flex", flexDirection: "column", gap: 22 }}>
@@ -11,7 +13,7 @@ export function Problem() {
             color: "var(--accent-dark)",
           }}
         >
-          Le problème
+          {t.surtitre}
         </span>
         <h2
           style={{
@@ -22,18 +24,13 @@ export function Problem() {
             lineHeight: 1.2,
           }}
         >
-          Vous avez déjà vu un tableau de bord vous annoncer «&nbsp;1er sur
-          Google&nbsp;» pendant que vos clients, eux, vous trouvent en page
-          2&nbsp;?
+          {t.titre}
         </h2>
         <p style={{ margin: 0, fontSize: 17, lineHeight: 1.7, color: "var(--ink-soft)" }}>
-          Un score flatteur ne remplit pas votre restaurant. Une donnée que
-          vous pouvez vérifier, si.
+          {t.p1}
         </p>
         <p style={{ margin: 0, fontSize: 17, lineHeight: 1.7, color: "var(--ink-soft)" }}>
-          La plupart des outils marketing vivent de votre satisfaction, pas de
-          vos résultats. Plus vous êtes content, plus vous restez abonné. Alors
-          le chiffre qu&apos;on vous montre a tendance à… vous arranger.
+          {t.p2}
         </p>
         <p
           style={{
@@ -43,15 +40,14 @@ export function Problem() {
             fontWeight: 700,
           }}
         >
-          Klarr ne vend pas de la satisfaction. Klarr montre ce qui est là,
-          même quand ça ne fait pas plaisir.
+          {t.chute}
         </p>
       </div>
     </div>
   );
 }
 
-export function Founder() {
+export function Founder({ t }: { t: ClesAccueilPublic["fondateur"] }) {
   return (
     <div className="px-5 py-16 sm:px-8 sm:py-20" style={{ background: "var(--bg-alt)" }}>
       <div
@@ -68,7 +64,7 @@ export function Founder() {
               color: "var(--accent-dark)",
             }}
           >
-            Qui est derrière Klarr
+            {t.surtitre}
           </span>
           <h2
             style={{
@@ -79,19 +75,13 @@ export function Founder() {
               lineHeight: 1.2,
             }}
           >
-            Un restaurateur, pas une startup qui a découvert le métier dans un
-            pitch deck.
+            {t.titre}
           </h2>
           <p style={{ margin: 0, fontSize: 16, lineHeight: 1.7, color: "var(--ink-soft)" }}>
-            Klarr est fait par un restaurateur avec vingt ans de métier. On
-            sait ce que c&apos;est de vérifier soi-même sa fiche Google entre
-            deux services, de se faire vendre un score qui ne colle pas à la
-            réalité, et de perdre du temps sur des outils pensés pour
-            impressionner des investisseurs plutôt que des restaurateurs.
+            {t.p1}
           </p>
           <p style={{ margin: 0, fontSize: 16, lineHeight: 1.7, color: "var(--ink-soft)" }}>
-            Sans engagement, résiliable en un clic. Vous partez quand vous
-            voulez, sans avoir à écrire à personne.
+            {t.p2}
           </p>
         </div>
 
@@ -117,12 +107,10 @@ export function Founder() {
                 fontStyle: "italic",
               }}
             >
-              «&nbsp;On nous annonçait 1ers sur “restaurant allemand”. En
-              navigation privée, on était 4e. J&apos;ai vérifié avec
-              d&apos;autres restaurateurs — même souci partout.&nbsp;»
+              {t.citation}
             </blockquote>
             <figcaption style={{ fontSize: 14, color: "var(--ink-soft)" }}>
-              Ce qui a donné l&apos;idée de Klarr.
+              {t.legende}
             </figcaption>
           </figure>
         </div>

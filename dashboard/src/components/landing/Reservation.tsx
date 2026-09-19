@@ -1,49 +1,10 @@
+import type { ClesAccueilPublic } from "@/lib/i18n/accueilPublic";
+
 // Formulations volontairement limitées à ce qui existe : page publique,
 // tables et privatisation, jauges, aucune commission. Pas un mot sur la
 // publication automatique chez Google ni sur les paiements, qui n'existent
-// pas encore.
-const POINTS = [
-  {
-    titre: "Votre page de réservation, à votre nom",
-    texte:
-      "Une adresse à vous, à partager sur votre fiche Google, votre Instagram ou votre page Facebook. Vos clients réservent en deux clics, sans créer de compte.",
-  },
-  {
-    titre: "Une table, ou toute une salle",
-    texte:
-      "Le même outil prend une table pour deux et la privatisation de votre cave pour un anniversaire de trente. Vous fixez le minimum de couverts à partir duquel vous privatisez.",
-  },
-  {
-    titre: "Jamais deux groupes dans la même salle",
-    texte:
-      "Chaque espace a sa capacité et chaque service sa jauge. Une demande non tranchée pose une option qui expire, pour qu'un curieux ne gèle pas votre vendredi soir.",
-  },
-];
-
-// Ce qui se passe une fois la table prise. Quatre lignes courtes : c'est
-// la partie du métier qu'on connaît déjà, on n'a pas à la raconter.
-const ENSUITE = [
-  {
-    titre: "Le carnet",
-    texte:
-      "Demandes, confirmations, plan de salle et écran de service pour le coup de feu.",
-  },
-  {
-    titre: "Moins de no-show",
-    texte:
-      "Rappel la veille, annulation en un clic, acompte quand la table le mérite.",
-  },
-  {
-    titre: "Les privatisations",
-    texte:
-      "Minimum de couverts, minimum de consommation, conditions annoncées avant de réserver.",
-  },
-  {
-    titre: "Rien à relancer",
-    texte:
-      "Le lien de paiement part seul, se relance avant l'échéance, et ce qui rate se rejoue.",
-  },
-];
+// pas encore. La règle vaut dans les trois langues : traduire une promesse
+// ne la rend pas vraie.
 
 /**
  * La section sombre de la page.
@@ -55,7 +16,7 @@ const ENSUITE = [
  * dessus. Le « 0 % » reste sur une carte blanche, la seule de la section,
  * pour que l'œil tombe dessus.
  */
-export function Reservation() {
+export function Reservation({ t }: { t: ClesAccueilPublic["reservations"] }) {
   return (
     <div
       id="reservations"
@@ -116,7 +77,7 @@ export function Reservation() {
                 color: "#F0A93C",
               }}
             >
-              Réservations
+              {t.surtitre}
             </span>
             <h2
               style={{
@@ -128,9 +89,9 @@ export function Reservation() {
                 textWrap: "balance",
               }}
             >
-              Vos réservations vous appartiennent.{" "}
+              {t.titreDebut}{" "}
               <em style={{ fontStyle: "italic", color: "#F0A93C" }}>
-                Klarr ne touche rien dessus.
+                {t.titreAccent}
               </em>
             </h2>
             <p
@@ -142,10 +103,7 @@ export function Reservation() {
                 maxWidth: 520,
               }}
             >
-              Les plateformes prennent une commission sur chaque couvert
-              qu&apos;elles vous envoient — y compris sur les clients qui
-              seraient venus de toute façon. Klarr ne prend rien. Les acomptes
-              vont sur votre compte Stripe, pas sur le nôtre.
+              {t.chapo}
             </p>
 
             <div
@@ -156,7 +114,7 @@ export function Reservation() {
                 marginTop: 10,
               }}
             >
-              {POINTS.map((point) => (
+              {t.points.map((point) => (
                 <div
                   key={point.titre}
                   style={{
@@ -241,7 +199,7 @@ export function Reservation() {
                 0 %
               </span>
               <span style={{ fontSize: 18, fontWeight: 700 }}>
-                de commission sur vos réservations
+                {t.zeroLegende}
               </span>
               <p
                 style={{
@@ -251,9 +209,7 @@ export function Reservation() {
                   color: "var(--ink-soft)",
                 }}
               >
-                Ni sur les couverts, ni sur les privatisations. Le module
-                Réservations coûte 29 € HT par mois — 34,80 € TTC — et rien
-                d&apos;autre.
+                {t.zeroTexte}
               </p>
               <span
                 style={{
@@ -266,7 +222,7 @@ export function Reservation() {
                   padding: "6px 12px",
                 }}
               >
-                Sur 400 couverts par mois, une plateforme à 2&nbsp;€ le couvert prend 800&nbsp;€.
+                {t.zeroExemple}
               </span>
             </div>
           </div>
@@ -279,7 +235,7 @@ export function Reservation() {
             paddingTop: 40,
           }}
         >
-          {ENSUITE.map((bloc) => (
+          {t.ensuite.map((bloc) => (
             <div
               key={bloc.titre}
               style={{ display: "flex", flexDirection: "column", gap: 6 }}

@@ -9,36 +9,10 @@
 //
 // Le TTC reste juste en dessous : c'est le montant réellement prélevé, et
 // une surprise au débit coûte plus cher qu'une ligne de plus.
-const OFFRES = [
-  {
-    nom: "Klarr",
-    ht: "37,50 €",
-    ttc: "45 € TTC",
-    essai: "14 jours d'essai",
-    resume: "Votre visibilité, en clair.",
-    lignes: [
-      "Votre fiche Google, vos avis, vos réseaux au même endroit",
-      "Les mots-clés sur lesquels vous sortez vraiment",
-      "Ce que répondent ChatGPT, Gemini et les autres quand on cherche où manger",
-      "Une alerte quand un avis tombe ou que la note bouge",
-    ],
-    accent: false,
-  },
-  {
-    nom: "Réservations",
-    ht: "29 €",
-    ttc: "34,80 € TTC",
-    essai: "30 jours d'essai",
-    resume: "Votre page de réservation, sans intermédiaire.",
-    lignes: [
-      "Une adresse à votre nom, à partager où vous voulez",
-      "Réservations individuelles et privatisation d'espaces",
-      "Jauges par service : jamais deux groupes dans la même salle",
-      "Photos de vos espaces, vues avant de réserver",
-    ],
-    accent: true,
-  },
-];
+// Les montants ne sont plus écrits ici : ils viennent des constantes
+// d'abonnement, formatées dans la langue lue (voir `accueilPublic.ts`).
+// Un tarif écrit à la main dans trois langues finit faux dans deux.
+import type { ClesAccueilPublic } from "@/lib/i18n/accueilPublic";
 
 function Coche() {
   return (
@@ -59,9 +33,37 @@ function Coche() {
   );
 }
 
-export function Tarifs() {
+/**
+ * Rend en gras ce que le dictionnaire encadre de `**`.
+ *
+ * Le montant du pack était en gras avant la traduction, et le mettre
+ * dans le texte plutôt que dans le gabarit évite de découper la phrase
+ * en trois clés : le chinois ne place pas le montant au même endroit que
+ * le français.
+ */
+function Phrase({ texte }: { texte: string }) {
   return (
-    <div id="tarifs" className="px-5 py-20 sm:px-8 sm:py-24" style={{ background: "var(--bg)" }}>
+    <>
+      {texte.split("**").map((morceau, rang) =>
+        rang % 2 === 1 ? (
+          <strong key={rang} style={{ color: "var(--ink)" }}>
+            {morceau}
+          </strong>
+        ) : (
+          <span key={rang}>{morceau}</span>
+        ),
+      )}
+    </>
+  );
+}
+
+export function Tarifs({ t }: { t: ClesAccueilPublic["tarifs"] }) {
+  return (
+    <div
+      id="tarifs"
+      className="px-5 py-20 sm:px-8 sm:py-24"
+      style={{ background: "var(--bg)" }}
+    >
       <div
         style={{
           maxWidth: 1180,
@@ -88,7 +90,7 @@ export function Tarifs() {
               color: "var(--accent-dark)",
             }}
           >
-            Tarifs
+            {t.surtitre}
           </span>
           <h2
             style={{
@@ -99,7 +101,7 @@ export function Tarifs() {
               lineHeight: 1.2,
             }}
           >
-            Deux offres, affichées. Pas de devis à demander.
+            {t.titre}
           </h2>
           <p
             style={{
@@ -109,9 +111,7 @@ export function Tarifs() {
               color: "var(--ink-soft)",
             }}
           >
-            Par établissement, sans engagement, résiliable en un clic depuis
-            votre tableau de bord. Prenez l&apos;une, l&apos;autre, ou les
-            deux.
+            {t.chapo}
           </p>
         </div>
 
@@ -119,14 +119,14 @@ export function Tarifs() {
           className="flex-col sm:flex-row"
           style={{ display: "flex", gap: 24, alignItems: "stretch" }}
         >
-          {OFFRES.map((offre) => (
+          {t.offres.map((offre, rang) => (
             <div
               key={offre.nom}
               style={{
                 flex: 1,
                 background: "var(--paper)",
                 border: "1px solid var(--line)",
-                borderTop: `3px solid ${offre.accent ? "var(--accent)" : "var(--line)"}`,
+                borderTop: `3px solid ${rang === 1 ? "var(--accent)" : "var(--line)"}`,
                 borderRadius: 16,
                 padding: "32px 30px",
                 display: "flex",
@@ -134,9 +134,7 @@ export function Tarifs() {
                 gap: 18,
               }}
             >
-              <div
-                style={{ display: "flex", flexDirection: "column", gap: 4 }}
-              >
+              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                 <span
                   style={{
                     fontSize: 13,
@@ -153,9 +151,7 @@ export function Tarifs() {
                 </span>
               </div>
 
-              <div
-                style={{ display: "flex", alignItems: "baseline", gap: 8 }}
-              >
+              <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
                 <span
                   style={{
                     fontFamily: "var(--font-instrument-serif), Georgia, serif",
@@ -163,10 +159,10 @@ export function Tarifs() {
                     lineHeight: 1,
                   }}
                 >
-                  {offre.ht}
+                  {offre.prix}
                 </span>
                 <span style={{ fontSize: 15, color: "var(--ink-soft)" }}>
-                  HT / mois
+                  {t.parMois}
                 </span>
               </div>
               <span
@@ -176,7 +172,7 @@ export function Tarifs() {
                   marginTop: -12,
                 }}
               >
-                soit {offre.ttc} · {offre.essai}
+                {offre.ttcEtEssai}
               </span>
 
               <ul
@@ -206,7 +202,7 @@ export function Tarifs() {
                 ))}
               </ul>
 
-              {offre.accent && (
+              {rang === 1 && (
                 <span
                   style={{
                     marginTop: "auto",
@@ -217,7 +213,7 @@ export function Tarifs() {
                     color: "var(--accent-dark)",
                   }}
                 >
-                  0 % de commission par couvert
+                  {t.commission}
                 </span>
               )}
             </div>
@@ -236,9 +232,7 @@ export function Tarifs() {
             color: "var(--ink-soft)",
           }}
         >
-          Les deux ensemble :{" "}
-          <strong style={{ color: "var(--ink)" }}>59 € HT par mois</strong>{" "}
-          — 70,80 € TTC, soit onze pour cent de moins que séparément.
+          <Phrase texte={t.pack} />
         </p>
       </div>
     </div>

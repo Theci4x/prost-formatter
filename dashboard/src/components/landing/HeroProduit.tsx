@@ -1,4 +1,5 @@
 import { FloatingChip, Tilt } from "@/components/landing/Tilt";
+import type { ClesAccueilPublic } from "@/lib/i18n/accueilPublic";
 
 /**
  * Le visuel du hero : ce que voit un client, pas ce que voit le patron.
@@ -16,11 +17,13 @@ import { FloatingChip, Tilt } from "@/components/landing/Tilt";
 const CRENEAUX = ["19:00", "19:30", "20:00", "20:30", "21:00", "21:30"];
 const CHOISI = "20:00";
 
+// Les quantièmes ne se traduisent pas ; le nom du jour, si. On garde donc
+// les nombres ici et on prend les abréviations dans le dictionnaire.
 const JOURS = [
-  { jour: "Ven.", num: "19" },
-  { jour: "Sam.", num: "20", choisi: true },
-  { jour: "Dim.", num: "21" },
-  { jour: "Lun.", num: "22", ferme: true },
+  { num: "19" },
+  { num: "20", choisi: true },
+  { num: "21" },
+  { num: "22", ferme: true },
 ];
 
 function Ligne({ style }: { style?: React.CSSProperties }) {
@@ -37,7 +40,7 @@ function Ligne({ style }: { style?: React.CSSProperties }) {
   );
 }
 
-export function HeroProduit() {
+export function HeroProduit({ t }: { t: ClesAccueilPublic["produit"] }) {
   return (
     <div style={{ position: "relative", padding: "28px 0 24px" }}>
       {/* La fiche Google, derrière : la moitié « visibilité ». */}
@@ -79,7 +82,7 @@ export function HeroProduit() {
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
             <span style={{ fontSize: 13, fontWeight: 700 }}>Prost</span>
             <span style={{ fontSize: 11, color: "var(--ink-soft)" }}>
-              Restaurant · Paris 3e
+              {t.lieu}
             </span>
           </div>
         </div>
@@ -100,7 +103,7 @@ export function HeroProduit() {
               background: "oklch(62% 0.15 145)",
             }}
           />
-          Fiche Google à jour
+          {t.ficheAJour}
         </div>
         <Ligne style={{ width: "90%" }} />
         <Ligne style={{ width: "70%" }} />
@@ -118,7 +121,7 @@ export function HeroProduit() {
           >
             0 %
           </span>
-          de commission
+          {t.commission}
         </FloatingChip>
         <FloatingChip depth={60} style={{ bottom: -16, right: -14 }}>
           <span
@@ -130,7 +133,7 @@ export function HeroProduit() {
               flex: "none",
             }}
           />
-          Table confirmée · il y a 2 min
+          {t.tableConfirmee}
         </FloatingChip>
 
         {/* La page de réservation, telle que la reçoit un client. */}
@@ -188,7 +191,7 @@ export function HeroProduit() {
                 padding: "5px 10px",
               }}
             >
-              Réserver une table
+              {t.reserver}
             </span>
           </div>
 
@@ -201,7 +204,7 @@ export function HeroProduit() {
             }}
           >
             <div style={{ display: "flex", gap: 8 }}>
-              {JOURS.map((j) => (
+              {JOURS.map((j, rang) => (
                 <div
                   key={j.num}
                   style={{
@@ -219,7 +222,7 @@ export function HeroProduit() {
                   }}
                 >
                   <span style={{ fontSize: 10.5, fontWeight: 600 }}>
-                    {j.jour}
+                    {t.jours[rang]}
                   </span>
                   <span style={{ fontSize: 16, fontWeight: 700 }}>{j.num}</span>
                 </div>
@@ -234,7 +237,7 @@ export function HeroProduit() {
                 fontSize: 13,
               }}
             >
-              <span style={{ color: "var(--ink-soft)" }}>Samedi soir</span>
+              <span style={{ color: "var(--ink-soft)" }}>{t.service}</span>
               <span
                 style={{
                   fontWeight: 600,
@@ -258,7 +261,7 @@ export function HeroProduit() {
                   <circle cx="9" cy="7" r="4" />
                   <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
                 </svg>
-                2 personnes
+                {t.couverts}
               </span>
             </div>
 
@@ -302,7 +305,7 @@ export function HeroProduit() {
                 fontWeight: 600,
               }}
             >
-              Demander une table
+              {t.demander}
             </div>
             <span
               style={{
@@ -311,7 +314,7 @@ export function HeroProduit() {
                 color: "var(--ink-soft)",
               }}
             >
-              Aucun compte à créer. Aucune commission pour le restaurant.
+              {t.mention}
             </span>
           </div>
         </div>
