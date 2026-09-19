@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Commis } from "@/components/commis/Commis";
 import { CadreJournal, Separateur } from "@/components/blog/CadreJournal";
+import { InvitationTest } from "@/components/blog/InvitationTest";
 import { Couverture } from "@/components/blog/Couverture";
 import {
   billetParSlug,
@@ -289,8 +290,7 @@ export default async function BilletPage({
             <p style={{ fontSize: 13 }}>
               Ces règles changent. Cet article est à jour au{" "}
               {dateLisible(billet.misAJourLe)} ; confirmez auprès de
-              l&apos;administration concernée avant d&apos;engager une
-              dépense.
+              l&apos;administration concernée avant d&apos;engager une dépense.
             </p>
           </section>
         )}
@@ -323,36 +323,7 @@ export default async function BilletPage({
           </section>
         )}
 
-        {/* Une seule mention de Klarr, à la fin, et sans transition forcée :
-            quelqu'un venu chercher une obligation réglementaire n'est pas
-            venu acheter un logiciel. Le lui rappeler trois fois dans
-            l'article le ferait partir. */}
-        <aside
-          style={{
-            borderRadius: "1rem",
-            border: "1px solid var(--line)",
-            background: "var(--paper)",
-            padding: "1.35rem 1.5rem",
-            fontSize: 15,
-            lineHeight: 1.65,
-          }}
-        >
-          Klarr est un outil de réservation pour restaurants indépendants :
-          une page de réservation, une carte en ligne, un carnet. Si vous
-          ouvrez bientôt,{" "}
-          <Link
-            href="/"
-            style={{
-              fontWeight: 600,
-              color: "var(--accent-dark)",
-              textDecoration: "underline",
-              textUnderlineOffset: 3,
-            }}
-          >
-            voyez à quoi ça ressemble
-          </Link>
-          .
-        </aside>
+        <InvitationTest categorie={billet.categorie} />
       </CadreJournal>
       <Commis />
     </>
