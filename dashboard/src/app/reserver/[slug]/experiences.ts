@@ -8,6 +8,7 @@ import { etatSeance, montantSeance } from "@/lib/experiences/seances";
 import { OCTETS_JETON } from "@/lib/reservations/acompte";
 import { enregistrerContact } from "@/lib/contacts/fichier";
 import type { Experience, PlaceReservee } from "@/types/experience";
+import { telephoneAEnregistrer } from "@/lib/contact/telephone";
 
 export type InscriptionState = { error: string | null };
 
@@ -28,7 +29,9 @@ export async function inscrire(
   const places = Number(formData.get("places"));
   const nom = ((formData.get("client_nom") as string) ?? "").trim();
   const email = ((formData.get("client_email") as string) ?? "").trim();
-  const telephone = ((formData.get("client_telephone") as string) ?? "").trim();
+  const telephone = telephoneAEnregistrer(
+    formData.get("client_telephone") as string | null,
+  );
   const communications = formData.get("accepte_communications") === "on";
 
   if (!nom || !email) return { error: "Indiquez votre nom et votre e-mail." };
@@ -90,7 +93,7 @@ export async function inscrire(
       montant_centimes: montant,
       client_nom: nom,
       client_email: email,
-      client_telephone: telephone || null,
+      client_telephone: telephone,
       accepte_communications: communications,
       // Sans prépaiement, la place est acquise tout de suite : le client
       // règlera sur place, il n'y a rien à attendre.

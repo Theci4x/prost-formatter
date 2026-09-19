@@ -1,5 +1,6 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { telephoneAEnregistrer } from "@/lib/contact/telephone";
 
 /**
  * Le fichier client, tenu à jour au fil des réservations.
@@ -69,7 +70,11 @@ export async function enregistrerContact({
   const email = normaliserEmail(emailBrut);
   if (!email) return;
 
-  const tel = (telephone ?? "").trim() || null;
+  // Normalisé ici, et pas seulement chez l'appelant : c'est la règle de
+  // l'adresse au-dessus, appliquée au numéro. Une fiche client sert à
+  // écrire à quelqu'un ; un numéro rangé sous trois formes selon le
+  // formulaire d'origine ne sert à personne.
+  const tel = telephoneAEnregistrer(telephone);
   const quand = maintenant.toISOString();
 
   try {

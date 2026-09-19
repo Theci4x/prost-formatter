@@ -44,6 +44,7 @@ import {
   type ServiceValeurs,
   SAISIE_VIDE,
 } from "@/types/reservation";
+import { telephoneAEnregistrer } from "@/lib/contact/telephone";
 
 // « rendu » s'incrémente à chaque tentative : le formulaire s'en sert comme
 // clé React pour se remonter et reprendre les valeurs ci-dessous, qu'il
@@ -949,7 +950,12 @@ export async function ajouterReservation(
   const type: "table" | "privatisation" =
     texte(formData.get("type")) === "privatisation" ? "privatisation" : "table";
   const nom = texte(formData.get("client_nom"));
-  const telephone = texte(formData.get("client_telephone"));
+  // Deux variables, et c'est voulu : `telephone` part en base sous sa
+  // forme internationale, `telephoneSaisi` revient dans le champ si le
+  // formulaire échoue pour une autre raison. Réécrire le numéro sous les
+  // doigts de quelqu'un qu'on renvoie corriger une date serait gratuit.
+  const telephoneSaisi = texte(formData.get("client_telephone"));
+  const telephone = telephoneAEnregistrer(telephoneSaisi);
   const note = texte(formData.get("note_interne"));
   const heureDemandee = texte(formData.get("heure")).slice(0, 5);
   const forcer = formData.get("forcer") === "on";
@@ -959,7 +965,7 @@ export async function ajouterReservation(
   // lui rend la saisie pour qu'une erreur ne coûte pas tout à retaper.
   const valeurs: SaisieValeurs = {
     nom,
-    telephone,
+    telephone: telephoneSaisi,
     date,
     couverts: texte(formData.get("couverts")),
     serviceId,
@@ -1082,7 +1088,7 @@ export async function ajouterReservation(
     // ne peut pas être vide, on y met une marque explicite plutôt qu'une
     // adresse inventée.
     client_email: texte(formData.get("client_email")) || "—",
-    client_telephone: telephone || null,
+    client_telephone: telephone,
     note_interne: note || null,
     // Même une réservation prise au téléphone reçoit son jeton : si le
     // client a laissé une adresse, le rappel de la veille pourra lui
@@ -1627,7 +1633,9 @@ export async function corrigerCoordonnees(
   const restaurantId = (formData.get("restaurant_id") as string)?.trim();
   const nom = texte(formData.get("client_nom"));
   const email = texte(formData.get("client_email")).toLowerCase();
-  const telephone = texte(formData.get("client_telephone"));
+  const telephone = telephoneAEnregistrer(
+    texte(formData.get("client_telephone")),
+  );
 
   if (!reservationId || !restaurantId) {
     return { error: "Réservation introuvable." };
@@ -1645,7 +1653,7 @@ export async function corrigerCoordonnees(
     .update({
       client_nom: nom,
       client_email: email,
-      client_telephone: telephone || null,
+      client_telephone: telephone,
     })
     .eq("id", reservationId)
     // Le carnet d'un autre établissement ne se corrige pas d'ici, même

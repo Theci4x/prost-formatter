@@ -33,6 +33,7 @@ import {
   type Reservation,
 } from "@/lib/reservations/disponibilite";
 import type { Espace, Service } from "@/types/reservation";
+import { telephoneAEnregistrer } from "@/lib/contact/telephone";
 
 // Durée de vie de l'option posée par une demande. Trop court on perd les
 // hésitants, trop long on gèle les vendredis soir.
@@ -69,7 +70,11 @@ export async function demanderReservation(
   const type = texte(formData.get("type"));
   const nom = texte(formData.get("client_nom"));
   const email = texte(formData.get("client_email"));
-  const telephone = texte(formData.get("client_telephone"));
+  // Rangé sous sa forme internationale dès la saisie : c'est la seule
+  // occasion où l'on a le texte tapé par celui qui connaît son numéro.
+  const telephone = telephoneAEnregistrer(
+    texte(formData.get("client_telephone")),
+  );
   const occasion = texte(formData.get("occasion"));
   const message = texte(formData.get("message"), TEXTE_MAX);
   const accepteCommunications = formData.get("accepte_communications") === "on";
@@ -290,7 +295,7 @@ export async function demanderReservation(
       origine: "client",
       client_nom: nom,
       client_email: email,
-      client_telephone: telephone || null,
+      client_telephone: telephone,
       occasion: occasion || null,
       message: message || null,
       accepte_communications: accepteCommunications,

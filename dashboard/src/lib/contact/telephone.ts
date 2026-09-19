@@ -54,3 +54,41 @@ export function normaliserTelephone(saisie: string): string | null {
 export function telephoneValide(saisie: string): boolean {
   return normaliserTelephone(saisie) !== null;
 }
+
+/**
+ * Le numéro tel qu'on le range en base.
+ *
+ * Normalisé quand il tient debout, **tel qu'il a été tapé** sinon. Ce
+ * n'est pas un compromis mou, c'est la seule règle qui serve les deux
+ * lecteurs de cette colonne.
+ *
+ * Une machine qui enverra un SMS ne peut rien faire d'un « 06 49 47 46 »
+ * tronqué : elle filtre sur la forme internationale et l'ignore. Mais le
+ * restaurateur, lui, en fait quelque chose — il voit qu'il manque un
+ * chiffre et retrouve l'appel dans son journal. Effacer ce qu'on ne sait
+ * pas lire lui retirerait l'indice sans rien apporter à personne.
+ *
+ * D'où une colonne à deux formes, assumée : `+33…` se compose, le reste
+ * se relit. `telephoneJoignable` est le seul endroit qui tranche.
+ */
+export function telephoneAEnregistrer(
+  saisie: string | null | undefined,
+): string | null {
+  const brut = (saisie ?? "").trim();
+  if (!brut) return null;
+  return normaliserTelephone(brut) ?? brut;
+}
+
+/**
+ * Le numéro sur lequel on peut réellement envoyer quelque chose, ou rien.
+ *
+ * L'autre moitié de la règle ci-dessus, et le seul endroit qui décide :
+ * tout ce qui n'est pas sous forme internationale n'est pas joignable par
+ * une machine, quoi qu'on en devine à l'œil.
+ */
+export function telephoneJoignable(
+  range: string | null | undefined,
+): string | null {
+  const valeur = (range ?? "").trim();
+  return /^\+\d{8,15}$/.test(valeur) ? valeur : null;
+}
