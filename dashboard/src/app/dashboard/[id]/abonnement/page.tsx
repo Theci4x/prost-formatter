@@ -60,9 +60,11 @@ export default async function AbonnementPage({
     .eq("restaurant_id", id);
 
   const abonnements = new Map(
-    ((subscriptionsData ?? []) as (RestaurantSubscription & {
-      module?: string;
-    })[]).map((abonnement) => [
+    (
+      (subscriptionsData ?? []) as (RestaurantSubscription & {
+        module?: string;
+      })[]
+    ).map((abonnement) => [
       (abonnement.module ?? "visibilite") as Module,
       abonnement,
     ]),
@@ -77,7 +79,7 @@ export default async function AbonnementPage({
   });
 
   return (
-    <div className="flex flex-1 flex-col gap-6 px-6 py-8">
+    <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 px-6 py-8">
       <PageHeader
         icon={dashboardIcons.abonnement}
         title={`Abonnement — ${restaurant.nom}`}
@@ -89,10 +91,12 @@ export default async function AbonnementPage({
           rien ne se cherche pas. */}
       {query.stripe_error && (
         <div
-          className="max-w-2xl rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-900"
+          className="rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-900"
           role="alert"
         >
-          <p className="font-medium">La souscription n&apos;a pas pu s&apos;ouvrir.</p>
+          <p className="font-medium">
+            La souscription n&apos;a pas pu s&apos;ouvrir.
+          </p>
           <p className="mt-1 font-mono text-xs leading-relaxed">
             {query.stripe_error === "configuration"
               ? "Aucun tarif n'est configuré pour ce module (STRIPE_PRICE_ID_…)."
@@ -104,7 +108,7 @@ export default async function AbonnementPage({
       )}
 
       {query.checkout === "cancel" && (
-        <p className="max-w-2xl text-sm text-ink-soft">
+        <p className="text-sm text-ink-soft">
           Souscription abandonnée. Rien n&apos;a été prélevé.
         </p>
       )}
@@ -113,20 +117,19 @@ export default async function AbonnementPage({
           annonce le plus long — la date à laquelle tout se referme — et
           chaque carte porte le sien. */}
       {acces.enEssai && essaiLePlusLong(acces) && (
-        <p className="max-w-2xl rounded-2xl border border-brand-orange/30 bg-brand-orange-soft px-5 py-4 text-sm text-brand-navy">
+        <p className="rounded-2xl border border-brand-orange/30 bg-brand-orange-soft px-5 py-4 text-sm text-brand-navy">
           <span className="font-medium">
             Essai gratuit — {essaiLePlusLong(acces)!.joursRestants} jour
             {essaiLePlusLong(acces)!.joursRestants > 1 ? "s" : ""} restant
             {essaiLePlusLong(acces)!.joursRestants > 1 ? "s" : ""}.
           </span>{" "}
-          Chaque module a sa propre période, indiquée ci-dessous. Ensuite ils
-          se paient séparément, et ta page de réservation comme ton site
-          vitrine restent en ligne tant que le module correspondant
-          l&apos;est.
+          Chaque module a sa propre période, indiquée ci-dessous. Ensuite ils se
+          paient séparément, et ta page de réservation comme ton site vitrine
+          restent en ligne tant que le module correspondant l&apos;est.
         </p>
       )}
 
-      <div className="grid max-w-4xl gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-2">
         {MODULES.map((cle) => {
           const abonnement = abonnements.get(cle);
           const paye = abonnement
@@ -232,7 +235,7 @@ export default async function AbonnementPage({
           une chose payée en double. Ce cas-là se règle au portail Stripe,
           ou par un message. */}
       {aucunAbonnement && (
-        <div className="flex max-w-4xl flex-wrap items-center gap-x-6 gap-y-3 rounded-2xl border border-brand-navy/20 bg-brand-orange-soft p-6 shadow-sm">
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-3 rounded-2xl border border-brand-navy/20 bg-brand-orange-soft p-6 shadow-sm">
           <div className="flex min-w-0 flex-1 basis-64 flex-col gap-1">
             <span className="text-base font-semibold text-zinc-900">
               {LIBELLE_PACK}
@@ -256,14 +259,13 @@ export default async function AbonnementPage({
         </div>
       )}
 
-      <p className="max-w-2xl text-sm text-zinc-500">
+      <p className="text-sm text-zinc-500">
         Les deux modules s&apos;achètent séparément : tu peux prendre la
-        visibilité sans les réservations, ou l&apos;inverse. Un abonnement
-        vaut pour cet établissement — un second restaurant a son propre
-        carnet, sa propre fiche Google et sa propre clientèle, donc ses
-        propres abonnements. Aucune commission par couvert, jamais.
+        visibilité sans les réservations, ou l&apos;inverse. Un abonnement vaut
+        pour cet établissement — un second restaurant a son propre carnet, sa
+        propre fiche Google et sa propre clientèle, donc ses propres
+        abonnements. Aucune commission par couvert, jamais.
       </p>
-
     </div>
   );
 }
