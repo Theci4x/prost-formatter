@@ -14,9 +14,12 @@ export const billet: Billet = {
       url: "https://schema.org/Restaurant",
     },
     {
-      intitule:
-        "Google Search Central — données structurées pour les établissements locaux",
-      url: "https://developers.google.com/search/docs/appearance/structured-data/local-business",
+      intitule: "Google Search Central — la documentation du référencement",
+      url: "https://developers.google.com/search",
+    },
+    {
+      intitule: "schema.org — type LocalBusiness",
+      url: "https://schema.org/LocalBusiness",
     },
     {
       intitule: "Google — aide sur la fiche d'établissement",
