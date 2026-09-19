@@ -217,7 +217,7 @@ const zh: ClesAccueil = {
   entrees: {
     reservations: {
       label: "订座",
-      resume: "订座本、包间、服务时段和座位图。",
+      resume: "预订簿、包间、服务时段和座位图。",
     },
     clients: {
       label: "顾客档案",
@@ -247,7 +247,7 @@ const zh: ClesAccueil = {
     },
     avis: {
       label: "评价",
-      resume: "您的谷歌评价，以及可供过目的回复。",
+      resume: "您的 Google 评价，以及可供过目的回复。",
     },
     retours: {
       label: "客人反馈",
@@ -255,10 +255,10 @@ const zh: ClesAccueil = {
     },
     seo: {
       label: "搜索排名",
-      resume: "谷歌对您的了解，以及还缺什么。",
+      resume: "Google 对您的了解，以及还缺什么。",
     },
     posts: {
-      label: "谷歌动态",
+      label: "Google 动态",
       resume: "提前写好动态，Klarr 按时发布。",
     },
     visibiliteIa: {
@@ -268,7 +268,7 @@ const zh: ClesAccueil = {
     notifications: { label: "通知", resume: "在手机上收到提醒。" },
     connexions: {
       label: "账号连接",
-      resume: "谷歌、Facebook、Instagram、TikTok。",
+      resume: "Google、Facebook、Instagram、TikTok。",
     },
     paiements: { label: "收款", resume: "订金、押金、Stripe 账户。" },
     equipe: { label: "团队", resume: "谁能访问什么。" },

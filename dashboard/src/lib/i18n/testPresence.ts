@@ -469,7 +469,7 @@ export const translations = {
       avis: "条评价",
       poids: "权重",
       piliers: {
-        local: "谷歌商家资料",
+        local: "Google 商家资料",
         reputation: "评价",
         geo: "人工智能中的可见度",
       },
