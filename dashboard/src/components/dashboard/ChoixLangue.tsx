@@ -1,5 +1,5 @@
 import { choisirLangue } from "@/app/dashboard/langue-actions";
-import { LANGUES, NOM_LANGUE, type Langue } from "@/lib/i18n/langue";
+import { LANGUES, NOM_LANGUE, type Langue } from "@/lib/i18n/langues";
 
 /**
  * Le choix de la langue, en trois boutons plutôt qu'en liste déroulante.

@@ -82,6 +82,22 @@ body {
   }
 }
 
+/* La roue du sélecteur de langue : changer de langue fait un aller-retour
+   au serveur, et une seconde de silence se lit comme un bouton cassé. */
+@keyframes klarr-tourne {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  /* Immobile, la roue ne dit plus rien : on la laisse en place, à demi
+     effacée, plutôt que de faire tourner ce que quelqu'un a refusé. */
+  [style*="klarr-tourne"] {
+    animation: none !important;
+    opacity: 0.5;
+  }
+}
+
 /* Bandeau de logos clients (landing) : deux copies de la liste se
    suivent, translater de -50% boucle donc sans saut visible. */
 @keyframes klarr-marquee {

@@ -1,6 +1,7 @@
 import "server-only";
 import { cookies, headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
+import { estLangue, type Langue } from "@/lib/i18n/langues";
 
 /**
  * La langue du tableau de bord.
@@ -17,18 +18,13 @@ import { createClient } from "@/lib/supabase/server";
  * établissement à l'autre — un gérant qui lit l'anglais le lit partout.
  */
 
-export const LANGUES = ["fr", "en", "zh"] as const;
-export type Langue = (typeof LANGUES)[number];
-
-export const NOM_LANGUE: Record<Langue, string> = {
-  fr: "Français",
-  en: "English",
-  zh: "中文",
-};
-
-export function estLangue(valeur: unknown): valeur is Langue {
-  return (LANGUES as readonly unknown[]).includes(valeur);
-}
+export {
+  LANGUES,
+  NOM_LANGUE,
+  CODE_LANGUE,
+  estLangue,
+  type Langue,
+} from "@/lib/i18n/langues";
 
 /**
  * Celle du compte, ou le français.
@@ -77,13 +73,6 @@ export async function langueVisiteur(): Promise<Langue> {
   }
   return "fr";
 }
-
-/** Deux caractères, pour un sélecteur qui doit tenir dans une barre de nav. */
-export const CODE_LANGUE: Record<Langue, string> = {
-  fr: "FR",
-  en: "EN",
-  zh: "中文",
-};
 
 /**
  * La langue d'une page *indexée*.

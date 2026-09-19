@@ -1,25 +1,106 @@
+"use client";
+
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useFormStatus } from "react-dom";
 import { choisirLangueVisiteur } from "@/app/langue-actions";
-import { CODE_LANGUE, LANGUES, type Langue } from "@/lib/i18n/langue";
+import {
+  CODE_LANGUE,
+  LANGUES,
+  NOM_LANGUE,
+  type Langue,
+} from "@/lib/i18n/langues";
 
 /**
  * Le choix de langue dans la barre de la page d'accueil.
  *
- * Il double celui du tableau de bord (`components/dashboard/ChoixLangue`)
- * parce que les deux écrans ne partagent pas leurs couleurs : le tableau
- * de bord est en zinc et bleu, la page d'accueil en crème et orange, avec
- * des variables CSS posées par la page elle-même. Un composant commun
- * demanderait autant de conditions qu'il économise de lignes.
+ * Trois boutons côte à côte ne tenaient pas : sur un iPhone, « 中文 » se
+ * cassait en deux lignes et poussait « Connexion » contre le bord. Un
+ * menu ne montre qu'une chose fermé, et les trois noms ouvert.
  *
- * Deux caractères par langue, sans étiquette : la barre porte déjà quatre
- * liens et un bouton, et « 中文 » se reconnaît sans qu'on explique ce
- * qu'est le champ — c'est précisément le but.
+ * **Pas de drapeau.** Un drapeau désigne un pays, pas une langue, et
+ * celui du chinois n'existe pas : en poser un revient à dire à un
+ * restaurateur taïwanais ou hongkongais qu'on l'a rangé ailleurs. C'est
+ * aussi pour ça que chaque langue s'écrit dans sa propre langue —
+ * « 中文 » se reconnaît quand tout le reste de l'écran est illisible, un
+ * drapeau ne se reconnaît que si on a deviné l'intention.
+ *
+ * Le globe, lui, ne prétend rien : c'est le signe convenu, et il tient
+ * dans la largeur qu'on a.
  */
 export function ChoixLangueSite({ courante }: { courante: Langue }) {
+  const menu = useRef<HTMLDetailsElement>(null);
+  // Une fonction plutôt que la référence elle-même : l'enfant n'a pas à
+  // écrire dans ce qu'on lui passe, et le compilateur React le refuse.
+  const fermer = useCallback(() => {
+    if (menu.current) menu.current.open = false;
+  }, []);
+
   return (
-    <form
-      style={{ display: "flex", alignItems: "center", gap: 2 }}
-      aria-label="Langue / Language / 语言"
-    >
+    <details ref={menu} className="relative">
+      <summary
+        aria-label="Langue / Language / 语言"
+        className="flex cursor-pointer list-none items-center gap-1.5 rounded-lg px-2 py-1.5 [&::-webkit-details-marker]:hidden"
+        style={{ fontSize: 13, fontWeight: 600, color: "var(--ink-soft)" }}
+      >
+        <Globe />
+        <span className="whitespace-nowrap">{CODE_LANGUE[courante]}</span>
+      </summary>
+
+      <form
+        className="absolute right-0 z-20 mt-1 flex min-w-40 flex-col overflow-hidden rounded-xl border py-1 shadow-lg"
+        style={{
+          background: "var(--paper)",
+          borderColor: "var(--line)",
+          boxShadow: "0 18px 40px -20px oklch(20% 0.02 60 / 45%)",
+        }}
+      >
+        <Options courante={courante} fermer={fermer} />
+      </form>
+    </details>
+  );
+}
+
+/**
+ * Les trois entrées, et l'attente.
+ *
+ * Changer de langue fait un aller-retour au serveur : la page est
+ * recalculée entière, dans l'autre dictionnaire. On ne peut pas
+ * l'éviter sans embarquer les trois traductions dans le navigateur — ce
+ * qui alourdirait la page pour tout le monde afin d'accélérer un geste
+ * qu'on fait une fois. On montre donc l'attente plutôt que de la
+ * supprimer : sans repère, une seconde de silence se lit comme un bouton
+ * cassé, et on reclique.
+ */
+function Options({
+  courante,
+  fermer,
+}: {
+  courante: Langue;
+  fermer: () => void;
+}) {
+  const { pending } = useFormStatus();
+  const [demandee, setDemandee] = useState<Langue | null>(null);
+
+  // Le menu reste ouvert tant que ça tourne — c'est là qu'est le repère —
+  // puis se referme une fois la page revenue.
+  //
+  // C'est le passage de « en cours » à « fini » qu'on guette, pas l'état
+  // lui-même : se contenter de « rien en cours » refermerait le menu à
+  // l'instant où on l'ouvre, avant même le premier clic.
+  const tournait = useRef(false);
+  useEffect(() => {
+    if (pending) {
+      tournait.current = true;
+      return;
+    }
+    if (tournait.current) {
+      tournait.current = false;
+      fermer();
+    }
+  }, [pending, fermer]);
+
+  return (
+    <>
       {LANGUES.map((langue) => (
         <button
           key={langue}
@@ -27,20 +108,84 @@ export function ChoixLangueSite({ courante }: { courante: Langue }) {
           // La langue par `bind` : le `name` d'un bouton qui porte une
           // action sert à React, pas à nous (voir `langue-actions.ts`).
           formAction={choisirLangueVisiteur.bind(null, langue)}
+          onClick={() => setDemandee(langue)}
+          disabled={pending}
           aria-current={langue === courante ? "true" : undefined}
+          className="flex items-center justify-between gap-3 px-3 py-2 text-left text-sm transition-colors disabled:opacity-60"
           style={{
-            fontSize: 13,
-            fontWeight: 600,
-            padding: "4px 8px",
-            borderRadius: 7,
             color: langue === courante ? "var(--ink)" : "var(--ink-soft)",
+            fontWeight: langue === courante ? 600 : 500,
             background:
               langue === courante ? "var(--accent-soft)" : "transparent",
           }}
         >
-          {CODE_LANGUE[langue]}
+          <span className="whitespace-nowrap">{NOM_LANGUE[langue]}</span>
+          {demandee === langue && pending ? (
+            <Sablier />
+          ) : (
+            langue === courante && <Coche />
+          )}
         </button>
       ))}
-    </form>
+    </>
+  );
+}
+
+function Globe() {
+  return (
+    <svg
+      width="15"
+      height="15"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      style={{ flex: "none" }}
+    >
+      <circle cx="12" cy="12" r="9" />
+      <path d="M3 12h18" />
+      <path d="M12 3a15 15 0 0 1 0 18a15 15 0 0 1 0-18z" />
+    </svg>
+  );
+}
+
+function Coche() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="var(--accent-dark)"
+      strokeWidth="2.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      style={{ flex: "none" }}
+    >
+      <path d="M20 6 9 17l-5-5" />
+    </svg>
+  );
+}
+
+/** Une roue qui tourne, sans dépendre d'une feuille de style extérieure. */
+function Sablier() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.4"
+      strokeLinecap="round"
+      aria-hidden="true"
+      style={{ flex: "none", animation: "klarr-tourne 0.8s linear infinite" }}
+    >
+      <path d="M21 12a9 9 0 1 1-6.2-8.5" />
+    </svg>
   );
 }

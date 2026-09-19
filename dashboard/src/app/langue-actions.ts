@@ -1,7 +1,6 @@
 "use server";
 
 import { cookies } from "next/headers";
-import { revalidatePath } from "next/cache";
 import { COOKIE_LANGUE, estLangue } from "@/lib/i18n/langue";
 
 /**
@@ -30,5 +29,18 @@ export async function choisirLangueVisiteur(demandee: string): Promise<void> {
     sameSite: "lax",
     path: "/",
   });
-  revalidatePath("/", "layout");
+
+  // Pas de `revalidatePath` ici, et c'est délibéré.
+  //
+  // Il y en avait un — « / », type « layout » —, qui invalidait bien plus
+  // que la page d'accueil : la documentation précise qu'un layout
+  // invalide « tous les layouts imbriqués en dessous et toutes les pages
+  // en dessous d'eux », c'est-à-dire le site entier. Les articles du
+  // journal, pré-générés, étaient donc jetés à chaque clic sur un
+  // drapeau, et se reconstruisaient à la visite suivante.
+  //
+  // Rien ne le remplace parce que rien n'en a besoin : les pages qui
+  // lisent ce témoin sont toutes rendues à la demande, et l'action
+  // renvoie de toute façon la page recalculée à celui qui vient de
+  // cliquer.
 }
