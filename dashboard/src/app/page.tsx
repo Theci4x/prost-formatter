@@ -9,6 +9,8 @@ import { Partner } from "@/components/landing/Partner";
 import { Journal } from "@/components/landing/Journal";
 import { Reservation } from "@/components/landing/Reservation";
 import { Tarifs } from "@/components/landing/Tarifs";
+import { Faq } from "@/components/landing/Faq";
+import { balisageAccueil } from "@/lib/seo/klarr";
 import { HeroBackdrop } from "@/components/landing/HeroBackdrop";
 import { HeroProduit } from "@/components/landing/HeroProduit";
 import { Reveal } from "@/components/landing/Reveal";
@@ -58,6 +60,19 @@ export default async function Home() {
         position: "relative",
       }}
     >
+      {/* Ce que Klarr déclare aux moteurs et aux assistants. La doc de
+          Next le veut dans la page et non dans le <head>, et l'échappement
+          de « < » évite qu'une chaîne du balisage ne ferme le script. */}
+      {balisageAccueil().map((bloc, rang) => (
+        <script
+          key={rang}
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(bloc).replace(/</g, "\\u003c"),
+          }}
+        />
+      ))}
+
       {/* Tache décorative derrière le hero, même esprit que le panneau de connexion */}
       <div
         aria-hidden="true"
@@ -620,6 +635,10 @@ export default async function Home() {
 
       <Reveal>
         <Tarifs />
+      </Reveal>
+
+      <Reveal>
+        <Faq />
       </Reveal>
 
       <Reveal>
