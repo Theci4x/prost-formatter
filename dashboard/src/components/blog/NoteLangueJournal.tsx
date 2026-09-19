@@ -6,10 +6,13 @@ import { langueDuNavigateur, type Langue } from "@/lib/i18n/langues";
 /**
  * « Les articles sont en français. »
  *
- * Dite ici plutôt que découverte au premier titre. Le journal ne sera pas
- * traduit : vingt articles de fond, avec leurs sources et leurs dates,
- * passés à la machine, feraient un contenu que personne ne relit et que
- * Google classe comme tel. Mieux vaut l'annoncer que le laisser croire.
+ * Dite ici plutôt que découverte au premier titre. Une partie du journal
+ * est traduite, pas tout : là où elle ne l'est pas, mieux vaut l'annoncer
+ * que le laisser croire.
+ *
+ * D'où `disponibles` : quand la page existe dans la langue du lecteur, le
+ * sélecteur l'y emmène en un clic et cette ligne n'aurait rien à dire —
+ * elle démentirait même le bouton juste au-dessus.
  *
  * Rien en français, évidemment — et rien non plus au rendu serveur, ce
  * qui laisse la page pré-générée strictement identique à ce qu'elle
@@ -32,9 +35,15 @@ function auServeur(): Langue {
   return "fr";
 }
 
-export function NoteLangueJournal() {
+export function NoteLangueJournal({
+  disponibles,
+}: {
+  /** Les langues dans lesquelles cette page-ci existe. */
+  disponibles?: Langue[];
+}) {
   const langue = useSyncExternalStore(sabonner, lire, auServeur);
   if (langue === "fr") return null;
+  if (disponibles?.includes(langue)) return null;
 
   return (
     <p

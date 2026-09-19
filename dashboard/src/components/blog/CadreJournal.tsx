@@ -20,6 +20,7 @@ export function CadreJournal({
   children,
   large = false,
   langue,
+  journal,
 }: {
   /** Ce qui suit le logo, en haut : « Le journal », puis la rubrique. */
   fil: React.ReactNode;
@@ -32,6 +33,14 @@ export function CadreJournal({
    * au-dessus d'un article chinois.
    */
   langue?: Langue;
+  /**
+   * Les pages du journal proprement dit, où chaque langue a son adresse :
+   * le slug français de l'article ouvert, ou rien sur un index. Le
+   * sélecteur y emmène alors vers la page traduite au lieu de se
+   * contenter du témoin. Les pages qui empruntent ce gabarit sans être
+   * du journal ne le passent pas.
+   */
+  journal?: { article?: string; langues?: Langue[] };
 }) {
   return (
     <div
@@ -73,16 +82,24 @@ export function CadreJournal({
             <KlarrWordmark />
           </Link>
           {fil}
-          {/* Le sélecteur sans langue courante : ces pages sont
-              pré-générées, et le lire côté serveur les rendrait
-              dynamiques. Il ne change rien au journal, qui reste en
-              français — il rend le reste du site à la langue du visiteur,
-              qui sans lui se retrouvait coincé ici. */}
+          {/* Dans le journal, la langue courante est celle de la page —
+              une constante, pas un témoin lu côté serveur : les pages
+              restent pré-générées. Ailleurs (le comparatif, qui emprunte
+              ce gabarit), le sélecteur lit le témoin lui-même. */}
           <div className="ml-auto">
-            <ChoixLangueSite courante={langue} />
+            <ChoixLangueSite
+              courante={langue}
+              journal={journal && { article: journal.article }}
+            />
           </div>
         </div>
-        {langue === undefined && <NoteLangueJournal />}
+        {/* Le rappel « les articles sont en français » : sur les pages
+            françaises, et pour qui ne lit pas le français. Il ne
+            s'affiche pas tout seul — c'est le témoin du navigateur qui
+            décide, après l'hydratation. */}
+        {journal && (langue === undefined || langue === "fr") && (
+          <NoteLangueJournal disponibles={journal.langues} />
+        )}
       </header>
 
       <main

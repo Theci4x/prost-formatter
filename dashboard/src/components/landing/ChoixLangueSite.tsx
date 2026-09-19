@@ -9,6 +9,7 @@ import {
 } from "react";
 import { useFormStatus } from "react-dom";
 import { choisirLangueVisiteur } from "@/app/langue-actions";
+import { choisirLangueJournal } from "@/app/blog/langue-actions";
 import {
   CODE_LANGUE,
   langueDuNavigateur,
@@ -34,6 +35,12 @@ import {
  * Le globe, lui, ne prétend rien : c'est le signe convenu, et il tient
  * dans la largeur qu'on a.
  *
+ * `journal` dit qu'on est dans le journal, où chaque langue a sa propre
+ * adresse : y choisir une langue doit emmener à la page correspondante,
+ * et pas seulement poser un témoin sous un texte qu'on ne lit toujours
+ * pas. Ailleurs — l'accueil, l'aide —, c'est la même URL qui se
+ * recalcule dans l'autre dictionnaire, et il n'y a nulle part où aller.
+ *
  * `courante` est facultatif, et l'absence est un cas normal. Le journal
  * et l'aide sont pré-générés : y lire le témoin côté serveur les rendrait
  * dynamiques, et ferait perdre la génération statique des pages qui
@@ -41,7 +48,17 @@ import {
  * dans le navigateur après l'hydratation, et tient son état lui-même —
  * le serveur n'ayant rien à recalculer, personne ne le ferait pour lui.
  */
-export function ChoixLangueSite({ courante }: { courante?: Langue }) {
+export function ChoixLangueSite({
+  courante,
+  journal,
+}: {
+  courante?: Langue;
+  /**
+   * Dans le journal : le slug français de l'article ouvert, ou rien sur
+   * un index. Sa seule présence fait changer d'adresse.
+   */
+  journal?: { article?: string };
+}) {
   const menu = useRef<HTMLDetailsElement>(null);
   const autonome = courante === undefined;
 
@@ -84,6 +101,7 @@ export function ChoixLangueSite({ courante }: { courante?: Langue }) {
         <Options
           courante={affichee}
           fermer={fermer}
+          journal={journal}
           // Sur une page pré-générée, rien ne revient du serveur : c'est
           // au composant de refléter le choix, sans quoi on croit que le
           // clic n'a rien fait et on reclique.
@@ -122,10 +140,12 @@ function Options({
   courante,
   fermer,
   surChoix,
+  journal,
 }: {
   courante: Langue;
   fermer: () => void;
   surChoix?: (langue: Langue) => void;
+  journal?: { article?: string };
 }) {
   const { pending } = useFormStatus();
   const [demandee, setDemandee] = useState<Langue | null>(null);
@@ -156,7 +176,11 @@ function Options({
           type="submit"
           // La langue par `bind` : le `name` d'un bouton qui porte une
           // action sert à React, pas à nous (voir `langue-actions.ts`).
-          formAction={choisirLangueVisiteur.bind(null, langue)}
+          formAction={
+            journal
+              ? choisirLangueJournal.bind(null, journal.article ?? null, langue)
+              : choisirLangueVisiteur.bind(null, langue)
+          }
           onClick={() => {
             setDemandee(langue);
             surChoix?.(langue);

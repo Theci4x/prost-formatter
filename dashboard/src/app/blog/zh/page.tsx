@@ -37,6 +37,7 @@ export default function Page() {
     <CadreJournal
       large
       langue={LANGUE}
+      journal={{}}
       fil={
         <>
           <Separateur />

@@ -4,7 +4,11 @@ import { Commis } from "@/components/commis/Commis";
 import { CadreJournal, Separateur } from "@/components/blog/CadreJournal";
 import { Couverture } from "@/components/blog/Couverture";
 import { rubriquesBlog, tousLesBillets, dateLisible } from "@/lib/blog/billets";
-import { tempsDeLecture, titreCategorieBillet } from "@/types/blog";
+import {
+  LANGUES_JOURNAL,
+  tempsDeLecture,
+  titreCategorieBillet,
+} from "@/types/blog";
 import { DonneesStructurees } from "@/components/seo/DonneesStructurees";
 import { siteUrl } from "@/lib/site-url";
 
@@ -25,6 +29,10 @@ export default function BlogPage() {
     <>
       <CadreJournal
         large
+        langue="fr"
+        // L'index existe dans les trois langues : d'où qu'on vienne, le
+        // sélecteur a une page à proposer.
+        journal={{ langues: LANGUES_JOURNAL }}
         fil={
           <>
             <Separateur />

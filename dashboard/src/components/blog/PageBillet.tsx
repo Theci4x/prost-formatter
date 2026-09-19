@@ -70,7 +70,12 @@ export async function PageBillet({
   return (
     <>
       <CadreJournal
-        langue={langue === "fr" ? undefined : langue}
+        langue={langue}
+        // Le sélecteur emmène vers ce même article dans la langue
+        // choisie ; `langues` dit lesquelles existent, pour que le rappel
+        // « c'est en français » ne s'affiche pas là où il y a mieux à
+        // proposer qu'une excuse.
+        journal={{ article: slug, langues: languesDe(slug) }}
         fil={
           <>
             <Separateur />
