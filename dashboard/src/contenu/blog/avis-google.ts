@@ -56,6 +56,11 @@ export const billet: Billet = {
       pourquoi:
         "Vos avis ne servent pas qu'à vos clients : ce sont eux que les assistants IA lisent pour décider s'ils vous citent.",
     },
+    {
+      slug: "fiche-google-restaurant-ce-qui-compte-vraiment",
+      pourquoi:
+        "Ce que vos avis pèsent dans la note d'ensemble, et ce qui compte autant qu'eux.",
+    },
   ],
   markdown: `
 Il existe des centaines d'articles sur « comment obtenir plus d'avis Google ». Il n'en existe presque aucun sur ce qui est interdit — alors que c'est là que les restaurateurs se mettent en danger, souvent de bonne foi, en appliquant des conseils trouvés en ligne.

@@ -40,6 +40,11 @@ export const billet: Billet = {
       pourquoi:
         "La deuxième porte d'entrée, celle qu'on ne peut pas mesurer sans poser la question.",
     },
+    {
+      slug: "fiche-google-restaurant-ce-qui-compte-vraiment",
+      pourquoi:
+        "Le canal direct commence là : une fiche qu'on tient, champ par champ.",
+    },
   ],
   markdown: `
 **Disons-le tout de suite : nous ne sommes pas neutres.** Klarr vend une page de réservation à l'abonnement, sans commission. Nous avons donc un intérêt direct à ce que vous trouviez les commissions trop chères.

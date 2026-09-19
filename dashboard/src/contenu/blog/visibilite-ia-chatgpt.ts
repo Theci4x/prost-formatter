@@ -40,6 +40,11 @@ export const billet: Billet = {
       pourquoi:
         "Être trouvé sans payer de commission suppose un endroit où envoyer les gens.",
     },
+    {
+      slug: "fiche-google-restaurant-ce-qui-compte-vraiment",
+      pourquoi:
+        "La première des cinq sources, notée ligne par ligne, avec les points.",
+    },
   ],
   markdown: `
 **Disons-le tout de suite : nous ne sommes pas neutres.** Klarr vend un outil qui mesure ce que les assistants IA répondent sur un restaurant. Nous avons donc un intérêt direct à ce que le sujet vous inquiète.
@@ -66,7 +71,7 @@ D'où la conclusion la plus utile de cet article, et elle est rassurante : **le 
 
 ## Les cinq choses qui décident
 
-**1. Une fiche Google complète et vivante.** Horaires exacts, catégorie juste — « bar à cocktails » et non « restaurant » si c'est ce que vous êtes —, photos récentes, description qui dit ce qu'on mange. Une fiche à moitié remplie est une source à moitié muette.
+**1. [Une fiche Google complète et vivante](/blog/fiche-google-restaurant-ce-qui-compte-vraiment).** Horaires exacts, catégorie juste — « bar à cocktails » et non « restaurant » si c'est ce que vous êtes —, photos récentes, description qui dit ce qu'on mange. Une fiche à moitié remplie est une source à moitié muette.
 
 **2. Des avis, et surtout des avis récents.** Vingt avis dont le dernier date de deux ans disent « cet endroit a peut-être fermé ». Dix avis dont trois de ce mois-ci disent « cet endroit tourne ». La fraîcheur pèse au moins autant que la quantité.
 
