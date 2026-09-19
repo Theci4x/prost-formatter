@@ -2,6 +2,11 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
 import { FormulairePost } from "@/components/posts/FormulairePost";
+import {
+  suggestions,
+  type EspaceSuggerable,
+  type PlatSuggerable,
+} from "@/lib/posts/suggestions";
 import { annulerPost } from "./actions";
 import { LIBELLE_BOUTON, type Bouton } from "@/lib/posts/regles";
 import type { Restaurant } from "@/types/restaurant";
@@ -40,28 +45,51 @@ export default async function PostsPage({
   await exigerModule(id, "visibilite");
 
   const supabase = await createClient();
-  const [{ data: restaurantData }, { data: postsData }, { data: photosData }] =
-    await Promise.all([
-      supabase.from("restaurants").select("*").eq("id", id).maybeSingle(),
-      supabase
-        .from("restaurant_posts")
-        .select("*")
-        .eq("restaurant_id", id)
-        .order("publier_le", { ascending: false })
-        .limit(30),
-      supabase
-        .from("restaurant_photos")
-        .select("*")
-        .eq("restaurant_id", id)
-        .order("ordre")
-        .order("created_at"),
-    ]);
+  const [
+    { data: restaurantData },
+    { data: postsData },
+    { data: photosData },
+    { data: platsData },
+    { data: espacesData },
+  ] = await Promise.all([
+    supabase.from("restaurants").select("*").eq("id", id).maybeSingle(),
+    supabase
+      .from("restaurant_posts")
+      .select("*")
+      .eq("restaurant_id", id)
+      .order("publier_le", { ascending: false })
+      .limit(30),
+    supabase
+      .from("restaurant_photos")
+      .select("*")
+      .eq("restaurant_id", id)
+      .order("ordre")
+      .order("created_at"),
+    // La carte et les espaces alimentent les suggestions : une
+    // publication se compose à partir de ce qui est déjà saisi, pas
+    // d'une page blanche.
+    supabase
+      .from("menu_items")
+      .select("id, nom, description, prix_centimes")
+      .eq("restaurant_id", id)
+      .eq("actif", true)
+      .order("ordre", { ascending: true }),
+    supabase
+      .from("espaces")
+      .select("id, nom, description, capacite, privatisation_minimum")
+      .eq("restaurant_id", id)
+      .order("ordre", { ascending: true }),
+  ]);
 
   const restaurant = restaurantData as Restaurant | null;
   if (!restaurant) notFound();
 
   const posts = (postsData ?? []) as Post[];
   const photos = (photosData ?? []) as RestaurantPhoto[];
+  const pistes = suggestions(
+    (platsData ?? []) as PlatSuggerable[],
+    (espacesData ?? []) as EspaceSuggerable[],
+  );
 
   return (
     <div className="flex flex-1 flex-col gap-6 px-6 py-8">
@@ -78,7 +106,11 @@ export default async function PostsPage({
       </p>
 
       <div className="flex max-w-2xl flex-col gap-4">
-        <FormulairePost restaurantId={id} photos={photos} />
+        <FormulairePost
+          restaurantId={id}
+          photos={photos}
+          suggestions={pistes}
+        />
 
         {/* Dit avant qu'on s'en aperçoive : l'attente vient de Google, pas
             d'une panne, et l'imprécision de l'heure vient du plan Vercel. */}

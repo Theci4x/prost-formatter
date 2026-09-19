@@ -7,6 +7,7 @@ import {
 } from "@/app/dashboard/[id]/posts/actions";
 import { LIBELLE_BOUTON, LONGUEUR_MAX } from "@/lib/posts/regles";
 import type { RestaurantPhoto } from "@/types/photo";
+import type { Suggestion } from "@/lib/posts/suggestions";
 
 const initial: PostState = { error: null, enregistre: false, version: 0 };
 
@@ -20,9 +21,12 @@ const initial: PostState = { error: null, enregistre: false, version: 0 };
 export function FormulairePost({
   restaurantId,
   photos,
+  suggestions,
 }: {
   restaurantId: string;
   photos: RestaurantPhoto[];
+  /** De quoi partir : un plat de la carte, un espace à privatiser. */
+  suggestions: Suggestion[];
 }) {
   const [state, action, pending] = useActionState(programmerPost, initial);
 
@@ -39,6 +43,7 @@ export function FormulairePost({
       <Champs
         key={state.version}
         photos={photos}
+        suggestions={suggestions}
         pending={pending}
         state={state}
       />
@@ -48,10 +53,12 @@ export function FormulairePost({
 
 function Champs({
   photos,
+  suggestions,
   pending,
   state,
 }: {
   photos: RestaurantPhoto[];
+  suggestions: Suggestion[];
   pending: boolean;
   state: PostState;
 }) {
@@ -64,6 +71,31 @@ function Champs({
   return (
     <>
       <input type="hidden" name="photo_id" value={photoId} />
+
+      {/* La page blanche est ce qui fait abandonner : on part d'un plat de
+          sa carte, dont le texte est déjà écrit, et on le retouche. C'est
+          ce qu'un outil de planification générique ne peut pas faire — il
+          ne connaît ni la carte ni les espaces. */}
+      {suggestions.length > 0 && (
+        <div className="flex flex-col gap-1.5">
+          <span className="text-xs font-medium text-zinc-500">Partir de…</span>
+          <div className="flex flex-wrap gap-1.5">
+            {suggestions.map((suggestion) => (
+              <button
+                key={suggestion.cle}
+                type="button"
+                onClick={() => {
+                  setTexte(suggestion.texte);
+                  if (suggestion.bouton) setBouton(suggestion.bouton);
+                }}
+                className="rounded-full border border-zinc-200 px-3 py-1 text-xs text-zinc-700 transition-colors hover:border-brand-orange hover:bg-brand-orange-soft"
+              >
+                {suggestion.libelle}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <label className="flex flex-col gap-1 text-sm font-medium text-zinc-700">
         La publication
