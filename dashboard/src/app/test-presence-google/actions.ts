@@ -24,6 +24,7 @@ import {
   actionsPrioritaires,
   type ActionPrioritaire,
 } from "@/lib/audit/actions";
+import { mesurerPresenceIa, type PresenceIa } from "@/lib/audit/ia";
 import { notifierInterne } from "@/lib/notifications/interne";
 import { siteUrl } from "@/lib/site-url";
 
@@ -33,6 +34,8 @@ export type AuditResult = {
   pillars: { localSeo: number; eReputation: number; geo: number };
   /** Les gestes à faire, du plus lourd au plus léger. */
   actions: ActionPrioritaire[];
+  /** Ce que l'IA répond vraiment. Absent sans clé, ou sans genre connu. */
+  presenceIa?: PresenceIa;
 };
 
 export type ProspectFormState = {
@@ -92,6 +95,15 @@ async function runAudit(
 
     const actions = actionsPrioritaires(details, website);
 
+    // La seule mesure de l'audit qui interroge vraiment un assistant. Elle
+    // vient après les scores : ceux-ci ne doivent pas dépendre d'elle, et
+    // l'audit reste complet quand elle manque.
+    const presenceIa = await mesurerPresenceIa(
+      details.displayName || restaurantName,
+      details.primaryType,
+      ville,
+    );
+
     await supabase.from("visibility_audits").insert({
       prospect_id: prospectId,
       restaurant_name: restaurantName,
@@ -104,7 +116,7 @@ async function runAudit(
       // Les actions dorment avec les signaux : un audit qu'on relit six mois
       // plus tard doit dire ce qu'on avait conseillé, pas seulement ce qu'on
       // avait mesuré.
-      raw_signals: { ...signals, actions },
+      raw_signals: { ...signals, actions, presenceIa },
     });
 
     return {
@@ -112,6 +124,7 @@ async function runAudit(
       label: scoreLabel(global),
       pillars: { localSeo, eReputation, geo },
       actions,
+      presenceIa: presenceIa ?? undefined,
     };
   } catch (err) {
     // L'audit est un bonus : s'il échoue (clé API manquante, service
@@ -183,6 +196,13 @@ export async function submitProspect(
       audit
         ? `Score de visibilité : ${audit.score}/100 (${audit.label}).`
         : "Audit indisponible (établissement introuvable sur Google).",
+      // Le meilleur argument d'ouverture pour l'appel : on lui dit qui
+      // l'IA cite à sa place, et il connaît ces noms.
+      audit?.presenceIa
+        ? audit.presenceIa.cite
+          ? `Cité par l'IA sur « ${audit.presenceIa.question} ».`
+          : `Non cité sur « ${audit.presenceIa.question} » — l'IA nomme ${audit.presenceIa.concurrents.join(", ") || "d'autres maisons"}.`
+        : "Présence IA non mesurée.",
     ],
     lien: { libelle: "Voir les prospects", url: `${siteUrl()}/admin` },
   });

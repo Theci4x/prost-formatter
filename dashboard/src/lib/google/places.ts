@@ -17,6 +17,13 @@ export type PlaceSearchResult = {
 
 export type PlaceDetails = {
   displayName: string;
+  /**
+   * Le genre de l'établissement, tel que Google le nomme : « Bar à bière »,
+   * « Restaurant italien ». C'est avec ça qu'on formule la question posée
+   * aux assistants — « le meilleur bar à bière à Paris » est ce qu'un
+   * client tape vraiment, là où « le meilleur restaurant » ne mesure rien.
+   */
+  primaryType: string | null;
   formattedAddress: string;
   nationalPhoneNumber: string | null;
   websiteUri: string | null;
@@ -130,6 +137,7 @@ export async function getPlaceDetails(
 ): Promise<PlaceDetails> {
   const fields = [
     "displayName",
+    "primaryTypeDisplayName",
     "formattedAddress",
     "nationalPhoneNumber",
     "websiteUri",
@@ -156,6 +164,7 @@ export async function getPlaceDetails(
 
   const data = (await res.json()) as {
     displayName?: { text?: string };
+    primaryTypeDisplayName?: { text?: string };
     formattedAddress?: string;
     nationalPhoneNumber?: string;
     websiteUri?: string;
@@ -168,6 +177,7 @@ export async function getPlaceDetails(
 
   return {
     displayName: data.displayName?.text ?? "",
+    primaryType: data.primaryTypeDisplayName?.text ?? null,
     formattedAddress: data.formattedAddress ?? "",
     nationalPhoneNumber: data.nationalPhoneNumber ?? null,
     websiteUri: data.websiteUri ?? null,

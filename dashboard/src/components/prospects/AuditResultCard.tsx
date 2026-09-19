@@ -51,9 +51,7 @@ export function AuditResultCard({
       </div>
 
       <div className="flex items-center gap-4">
-        <span className="text-5xl font-bold text-ink">
-          {audit.score}
-        </span>
+        <span className="text-5xl font-bold text-ink">{audit.score}</span>
         <span className="text-sm text-ink-soft">{t.globalLabel} /100</span>
       </div>
 
@@ -67,9 +65,7 @@ export function AuditResultCard({
           ligne porte le chiffre qui la déclenche : « 8 photos » se discute,
           « votre visibilité est perfectible » ne se discute pas. */}
       <div className="flex flex-col gap-3 border-t border-stone-100 pt-5">
-        <h4 className="text-sm font-semibold text-ink">
-          {t.actionsTitre}
-        </h4>
+        <h4 className="text-sm font-semibold text-ink">{t.actionsTitre}</h4>
 
         {audit.actions.length === 0 ? (
           <p className="text-sm text-ink-soft">{t.actionsVide}</p>
@@ -107,6 +103,61 @@ export function AuditResultCard({
           </ul>
         )}
       </div>
+
+      {/* La seule mesure de cet audit qui interroge vraiment un assistant.
+          Elle vient après les actions parce qu'elle ne se corrige pas d'un
+          geste — mais c'est elle qu'on retient, parce qu'elle nomme des
+          maisons que le restaurateur connaît. */}
+      {audit.presenceIa && (
+        <div className="flex flex-col gap-3 rounded-xl border border-brand-navy/20 bg-brand-navy px-5 py-5 text-white">
+          <span className="text-xs font-bold uppercase tracking-[0.08em] text-brand-orange">
+            {t.ia.titre}
+          </span>
+
+          <div className="flex flex-col gap-1">
+            <span className="text-[11px] uppercase tracking-wider text-white/50">
+              {t.ia.question}
+            </span>
+            <p className="font-serif text-lg leading-snug">
+              « {audit.presenceIa.question} »
+            </p>
+          </div>
+
+          <p
+            className={`text-sm font-medium ${
+              audit.presenceIa.cite ? "text-emerald-300" : "text-orange-300"
+            }`}
+          >
+            {audit.presenceIa.cite
+              ? audit.presenceIa.rang
+                ? formater(t.ia.citeRang, {
+                    rang: String(audit.presenceIa.rang),
+                  })
+                : t.ia.cite
+              : t.ia.pasCite}
+          </p>
+
+          {audit.presenceIa.concurrents.length > 0 ? (
+            <div className="flex flex-col gap-2">
+              <span className="text-[11px] uppercase tracking-wider text-white/50">
+                {t.ia.concurrents}
+              </span>
+              <ol className="flex flex-col gap-1">
+                {audit.presenceIa.concurrents.map((nom, rang) => (
+                  <li key={nom} className="flex items-baseline gap-2 text-sm">
+                    <span className="font-mono text-xs text-white/40">
+                      #{rang + 1}
+                    </span>
+                    <span>{nom}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          ) : (
+            <p className="text-sm text-white/60">{t.ia.aucun}</p>
+          )}
+        </div>
+      )}
 
       <p className="text-sm font-medium text-amber-700">{t.recontacted}</p>
     </div>
