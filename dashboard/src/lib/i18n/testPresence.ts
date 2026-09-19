@@ -113,6 +113,23 @@ export const translations = {
           klarr: null,
         },
       },
+      avis: "avis",
+      poids: "pondération",
+      piliers: {
+        local: "Fiche Google",
+        reputation: "Avis",
+        geo: "Présence IA",
+      },
+      oral: {
+        titre: "À passer en revue ensemble",
+        sousTitre: "Des points qui comptent, mais qu'aucun outil ne mesure.",
+        points: [
+          "Vos réseaux sociaux : nombre d'abonnés, régularité des publications, réponses aux messages.",
+          "Vos photos : celles du plat contre celles de la salle, ce qu'elles promettent.",
+          "Vos privatisations : ce que vous vendez déjà, et à quel prix.",
+          "Votre saisonnalité : les creux qu'il faudrait remplir en priorité.",
+        ],
+      },
       ia: {
         titre: "Ce que l'IA répond à vos clients",
         question: "Question posée",
@@ -189,8 +206,7 @@ export const translations = {
         critique: "Critical",
       },
       actionsTitre: "Where to start",
-      actionsVide:
-        "Nothing urgent: everything we look at is already in place.",
+      actionsVide: "Nothing urgent: everything we look at is already in place.",
       avecKlarr: "With Klarr",
       impacts: {
         fort: "High impact",
@@ -258,6 +274,23 @@ export const translations = {
           klarr: null,
         },
       },
+      avis: "reviews",
+      poids: "weight",
+      piliers: {
+        local: "Google listing",
+        reputation: "Reviews",
+        geo: "AI presence",
+      },
+      oral: {
+        titre: "To go through together",
+        sousTitre: "Things that matter, that no tool can measure.",
+        points: [
+          "Your social accounts: followers, how regularly you post, how you reply.",
+          "Your photos: the dish versus the room, and what they promise.",
+          "Your private hire: what you already sell, and at what price.",
+          "Your seasons: the quiet weeks worth filling first.",
+        ],
+      },
       ia: {
         titre: "What AI tells your customers",
         question: "Question asked",
@@ -273,8 +306,7 @@ export const translations = {
           "The first thirty days are free, no card required. You leave with your booking page online, your hours and menu published, and a running check on what AI says about you.",
         bouton: "Start my free trial",
       },
-      recontacted:
-        "We'll also reach out to go through these results together.",
+      recontacted: "We'll also reach out to go through these results together.",
     },
     faqTitle: "Frequently asked questions",
     faq: [
@@ -399,6 +431,23 @@ export const translations = {
             "在分析的 {total} 条评价中，有 {n} 条是近六个月内的。只读到两年前评价的顾客，会怀疑这期间发生了什么。",
           klarr: null,
         },
+      },
+      avis: "条评价",
+      poids: "权重",
+      piliers: {
+        local: "谷歌商家资料",
+        reputation: "评价",
+        geo: "人工智能中的可见度",
+      },
+      oral: {
+        titre: "需要一起讨论的内容",
+        sousTitre: "这些很重要，但没有任何工具能衡量。",
+        points: [
+          "您的社交账号：粉丝数量、发布频率、回复情况。",
+          "您的照片：菜品与环境，它们传达了什么。",
+          "您的包场业务：目前销售的内容和价格。",
+          "您的淡旺季：最需要优先填补的空档。",
+        ],
       },
       ia: {
         titre: "人工智能如何回答您的顾客",

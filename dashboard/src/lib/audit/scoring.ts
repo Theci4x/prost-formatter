@@ -59,12 +59,31 @@ export function scoreGeo(w: WebsiteSignals): number {
   return Math.round(Math.min(score, 100));
 }
 
+/**
+ * Ce que pèse chaque pilier dans la note finale.
+ *
+ * Sorti en constante pour être montré au restaurateur : un score qu'on ne
+ * sait pas expliquer ne se défend pas. La fiche Google et les avis pèsent
+ * autant l'un que l'autre — ce sont les deux choses qu'un client regarde
+ * avant de pousser la porte ; la visibilité IA pèse un peu moins parce
+ * qu'elle se construit sur les deux premières.
+ */
+export const POIDS_PILIERS = {
+  localSeo: 0.35,
+  eReputation: 0.35,
+  geo: 0.3,
+} as const;
+
 export function scoreGlobal(
   localSeo: number,
   eReputation: number,
   geo: number,
 ): number {
-  return Math.round(localSeo * 0.35 + eReputation * 0.35 + geo * 0.3);
+  return Math.round(
+    localSeo * POIDS_PILIERS.localSeo +
+      eReputation * POIDS_PILIERS.eReputation +
+      geo * POIDS_PILIERS.geo,
+  );
 }
 
 export function scoreLabel(

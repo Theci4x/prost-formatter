@@ -1,6 +1,7 @@
 import type { AuditResult } from "@/app/test-presence-google/actions";
 import type { translations } from "@/lib/i18n/testPresence";
-import { formater, type Impact } from "@/lib/audit/actions";
+import { formater, type Impact, type Pilier } from "@/lib/audit/actions";
+import { POIDS_PILIERS } from "@/lib/audit/scoring";
 
 const LABEL_COLORS: Record<AuditResult["label"], string> = {
   excellent: "bg-emerald-50 text-emerald-700 border-emerald-200",
@@ -15,11 +16,29 @@ const COULEURS_IMPACT: Record<Impact, string> = {
   faible: "bg-brand-sand text-ink-soft border-line",
 };
 
-function ScoreBar({ label, score }: { label: string; score: number }) {
+function ScoreBar({
+  label,
+  score,
+  poids,
+  poidsLabel,
+}: {
+  label: string;
+  score: number;
+  /** La part de ce pilier dans la note finale, en pourcentage. */
+  poids: number;
+  poidsLabel: string;
+}) {
   return (
     <div className="flex flex-col gap-1.5">
       <div className="flex items-center justify-between text-sm">
-        <span className="font-medium text-ink">{label}</span>
+        <span className="flex items-baseline gap-2">
+          <span className="font-medium text-ink">{label}</span>
+          {/* Un score qu'on ne sait pas expliquer ne se défend pas : on
+              montre ce que chaque pilier pèse dans la note. */}
+          <span className="rounded-full border border-line px-1.5 py-px text-[10px] uppercase tracking-wider text-ink-soft">
+            {poidsLabel} {Math.round(poids * 100)} %
+          </span>
+        </span>
         <span className="text-ink-soft">{score}/100</span>
       </div>
       <div className="h-2 w-full overflow-hidden rounded-full bg-brand-sand">
@@ -44,6 +63,49 @@ export function AuditResultCard({
 }) {
   return (
     <div className="flex flex-col gap-6 rounded-xl border border-line bg-white p-6 shadow-sm">
+      {/* Le prospect doit reconnaître son établissement avant de lire un
+          seul chiffre : sa note, ses avis, son adresse. Sans ça, le
+          rapport a l'air d'un document type, et tout ce qui suit perd sa
+          crédibilité. */}
+      {audit.fiche && (
+        <div className="flex flex-col gap-1.5 border-b border-line pb-5">
+          <h3 className="font-serif text-2xl leading-tight text-ink">
+            {audit.fiche.nom}
+          </h3>
+          {audit.fiche.genre && (
+            <span className="text-sm text-ink-soft">{audit.fiche.genre}</span>
+          )}
+          {audit.fiche.note !== null && (
+            <div className="flex items-baseline gap-2">
+              <span className="text-sm font-semibold text-ink">
+                ★ {audit.fiche.note.toLocaleString("fr-FR")}
+              </span>
+              {audit.fiche.avis !== null && (
+                <span className="text-sm text-ink-soft">
+                  ({audit.fiche.avis.toLocaleString("fr-FR")} {t.avis})
+                </span>
+              )}
+            </div>
+          )}
+          <span className="text-sm leading-relaxed text-ink-soft">
+            {audit.fiche.adresse}
+          </span>
+          <div className="flex flex-wrap gap-x-4 text-sm text-ink-soft">
+            {audit.fiche.telephone && <span>{audit.fiche.telephone}</span>}
+            {audit.fiche.siteWeb && (
+              <a
+                href={audit.fiche.siteWeb}
+                target="_blank"
+                rel="noreferrer"
+                className="text-brand-orange hover:underline"
+              >
+                {new URL(audit.fiche.siteWeb).hostname}
+              </a>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-ink">{t.title}</h3>
         <span
@@ -59,9 +121,24 @@ export function AuditResultCard({
       </div>
 
       <div className="flex flex-col gap-4">
-        <ScoreBar label={t.localSeo} score={audit.pillars.localSeo} />
-        <ScoreBar label={t.eReputation} score={audit.pillars.eReputation} />
-        <ScoreBar label={t.geo} score={audit.pillars.geo} />
+        <ScoreBar
+          label={t.localSeo}
+          score={audit.pillars.localSeo}
+          poids={POIDS_PILIERS.localSeo}
+          poidsLabel={t.poids}
+        />
+        <ScoreBar
+          label={t.eReputation}
+          score={audit.pillars.eReputation}
+          poids={POIDS_PILIERS.eReputation}
+          poidsLabel={t.poids}
+        />
+        <ScoreBar
+          label={t.geo}
+          score={audit.pillars.geo}
+          poids={POIDS_PILIERS.geo}
+          poidsLabel={t.poids}
+        />
       </div>
 
       {/* Un score sans quoi faire ensuite n'est qu'un reproche. Chaque
@@ -84,6 +161,12 @@ export function AuditResultCard({
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="text-sm font-medium text-ink">
                       {texte.titre}
+                    </span>
+                    {/* De quoi relève cette action. Cinq lignes se
+                        parcourent du regard quand elles sont étiquetées,
+                        se lisent une à une quand elles ne le sont pas. */}
+                    <span className="rounded-full border border-line bg-brand-sand px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-ink-soft">
+                      {t.piliers[action.pilier as Pilier]}
                     </span>
                     <span
                       className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold ${COULEURS_IMPACT[action.impact]}`}
@@ -161,6 +244,28 @@ export function AuditResultCard({
           )}
         </div>
       )}
+
+      {/* Ce qu'aucun outil ne mesure, et qu'on dit honnêtement ne pas
+          noter. Ces quatre lignes ne servent pas le diagnostic : elles
+          donnent une raison de se parler, et c'est pour ça qu'on les
+          assume comme telles plutôt que de feindre de les scorer. */}
+      <div className="flex flex-col gap-2 rounded-xl border border-dashed border-line px-5 py-4">
+        <div className="flex flex-col gap-0.5">
+          <span className="text-sm font-semibold text-ink">{t.oral.titre}</span>
+          <span className="text-xs text-ink-soft">{t.oral.sousTitre}</span>
+        </div>
+        <ul className="flex flex-col gap-1.5">
+          {t.oral.points.map((point) => (
+            <li
+              key={point}
+              className="flex gap-2 text-sm leading-relaxed text-ink-soft"
+            >
+              <span className="text-brand-orange">—</span>
+              {point}
+            </li>
+          ))}
+        </ul>
+      </div>
 
       {/* Le moment où il est piqué au vif est le seul où il agira. Lui
           promettre un rappel sous 48 heures, c'est le laisser refroidir :

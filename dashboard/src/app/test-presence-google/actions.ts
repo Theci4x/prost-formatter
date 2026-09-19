@@ -28,7 +28,25 @@ import { mesurerPresenceIa, type PresenceIa } from "@/lib/audit/ia";
 import { notifierInterne } from "@/lib/notifications/interne";
 import { siteUrl } from "@/lib/site-url";
 
+/** La carte d'identité de l'établissement, telle que Google la connaît. */
+export type FicheEtablissement = {
+  nom: string;
+  genre: string | null;
+  adresse: string;
+  telephone: string | null;
+  siteWeb: string | null;
+  note: number | null;
+  avis: number | null;
+};
+
 export type AuditResult = {
+  /**
+   * Montrée en tête du rapport. Un prospect qui reconnaît sa note, son
+   * nombre d'avis et son adresse sait qu'on a regardé son établissement,
+   * et non produit un document type — c'est ce qui rend crédible tout ce
+   * qui suit.
+   */
+  fiche?: FicheEtablissement;
   score: number;
   label: "excellent" | "bon" | "moyen" | "critique";
   pillars: { localSeo: number; eReputation: number; geo: number };
@@ -124,6 +142,15 @@ async function runAudit(
     return {
       score: global,
       label: scoreLabel(global),
+      fiche: {
+        nom: details.displayName || restaurantName,
+        genre: details.primaryType,
+        adresse: details.formattedAddress,
+        telephone: details.nationalPhoneNumber,
+        siteWeb: details.websiteUri,
+        note: details.rating,
+        avis: details.userRatingCount,
+      },
       pillars: { localSeo, eReputation, geo },
       actions,
       presenceIa: presenceIa ?? undefined,
