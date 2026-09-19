@@ -292,6 +292,11 @@ const fr: ClesAccueilPublic = {
         texte:
           "Chaque espace a sa capacité et chaque service sa jauge. Une demande non tranchée pose une option qui expire, pour qu'un curieux ne gèle pas votre vendredi soir.",
       },
+      {
+        titre: "Votre fichier client, et il est à vous",
+        texte:
+          "Qui est venu, combien de fois, quand pour la dernière fois — reconstitué tout seul à partir du carnet. Et un message à leur écrire quand vous avez quelque chose à dire, parti le jour que vous choisissez. À ceux qui ont accepté de le recevoir, évidemment.",
+      },
     ],
     zeroLegende: "de commission sur vos réservations",
     zeroTexte: `Ni sur les couverts, ni sur les privatisations. Le module Réservations coûte ${euros(HT.reservations, "fr")} HT par mois — ${euros(TTC.reservations, "fr")} TTC — et rien d'autre.`,
@@ -317,6 +322,11 @@ const fr: ClesAccueilPublic = {
         titre: "Rien à relancer",
         texte:
           "Le lien de paiement part seul, se relance avant l'échéance, et ce qui rate se rejoue.",
+      },
+      {
+        titre: "Les campagnes",
+        texte:
+          "Un message écrit à l'avance, parti le jour dit. Désinscription en un clic dans chaque envoi.",
       },
     ],
   },
@@ -349,6 +359,7 @@ const fr: ClesAccueilPublic = {
           "Réservations individuelles et privatisation d'espaces",
           "Jauges par service : jamais deux groupes dans la même salle",
           "Photos de vos espaces, vues avant de réserver",
+          "Votre fichier client, et des e-mails à lui envoyer",
         ],
       },
     ],
@@ -398,6 +409,11 @@ const fr: ClesAccueilPublic = {
           "Oui. Le module Réservations gère la table et la privatisation d'espaces. Le restaurateur fixe un minimum de couverts ou de consommation, pose des jauges par service pour qu'un curieux ne gèle pas une salle entière, et les conditions s'affichent avant la réservation.",
       },
       {
+        question: "Peut-on écrire à ses clients avec Klarr ?",
+        reponse:
+          "Oui. Klarr reconstitue le fichier client à partir du carnet — qui est venu, combien de fois, quand pour la dernière fois — et permet d'écrire aux personnes qui ont accepté de recevoir des e-mails au moment de réserver. Les messages se programment à l'avance, se destinent à un groupe choisi (les habitués, ceux qu'on n'a pas revus depuis six mois) et portent tous un lien de désinscription. Klarr n'envoie rien à quelqu'un qui n'a pas coché la case.",
+      },
+      {
         question: "Klarr est-il sans engagement ?",
         reponse:
           "Oui. Les deux offres sont sans engagement et se résilient en un clic depuis le tableau de bord, sans écrire à personne.",
@@ -444,11 +460,11 @@ const fr: ClesAccueilPublic = {
     surtitre: "Bientôt sur Klarr",
     titre: "Et la suite est déjà en préparation.",
     texte:
-      "Les réponses aux avis, les posts programmés et le suivi de position sont arrivés. Voilà ce qui manque encore — et on le dit aussi franchement.",
+      "Le fichier client, les campagnes e-mail et les réponses aux avis sont arrivés. Voilà ce qui manque encore — et on le dit aussi franchement.",
     puces: [
       "Statistiques du carnet",
-      "Fichier client",
       "Statistiques de la fiche Google",
+      "Publications Google programmées",
       "Liste d'attente",
     ],
   },
@@ -592,6 +608,11 @@ const en: ClesAccueilPublic = {
         texte:
           "Every space has its capacity and every service its limit. An undecided request holds an option that expires, so a browser can't freeze your Friday night.",
       },
+      {
+        titre: "Your customer list, and it is yours",
+        texte:
+          "Who came, how often, when they last did — put together on its own from the book. And a message to send them when you have something to say, going out on the day you choose. To those who agreed to receive it, of course.",
+      },
     ],
     zeroLegende: "commission on your bookings",
     zeroTexte: `Not on covers, not on private hire. The Bookings module costs ${ht(HT.reservations, "en")} per month — ${ttc(TTC.reservations, "en")} — and nothing else.`,
@@ -617,6 +638,11 @@ const en: ClesAccueilPublic = {
         titre: "Nothing to chase",
         texte:
           "The payment link goes out on its own, follows up before the deadline, and retries what fails.",
+      },
+      {
+        titre: "Campaigns",
+        texte:
+          "A message written ahead, sent on the day. One-click unsubscribe in every send.",
       },
     ],
   },
@@ -649,6 +675,7 @@ const en: ClesAccueilPublic = {
           "Individual bookings and private hire of your spaces",
           "Limits per service: never two parties in the same room",
           "Photos of your spaces, seen before booking",
+          "Your customer list, and emails to send it",
         ],
       },
     ],
@@ -697,6 +724,11 @@ const en: ClesAccueilPublic = {
           "Yes. The Bookings module handles both tables and the private hire of spaces. The restaurant sets a minimum party size or minimum spend, puts limits on each service so a browser can't freeze a whole room, and the terms are shown before anyone books.",
       },
       {
+        question: "Can you email your customers with Klarr?",
+        reponse:
+          "Yes. Klarr builds the customer list from the booking book — who came, how often, when they last did — and lets you write to the people who agreed to receive emails when they booked. Messages can be scheduled ahead, aimed at a chosen group (regulars, customers not seen for six months) and all carry an unsubscribe link. Klarr sends nothing to anyone who did not tick the box.",
+      },
+      {
         question: "Is Klarr contract-free?",
         reponse:
           "Yes. Both plans are contract-free and can be cancelled in one click from the dashboard, without writing to anyone.",
@@ -743,11 +775,11 @@ const en: ClesAccueilPublic = {
     surtitre: "Coming to Klarr",
     titre: "And what comes next is already under way.",
     texte:
-      "Review replies, scheduled posts and rank tracking have landed. Here is what is still missing — and we say so just as plainly.",
+      "Customer records, email campaigns and review replies have landed. Here is what is still missing — and we say so just as plainly.",
     puces: [
       "Booking statistics",
-      "Customer records",
       "Google listing statistics",
+      "Scheduled Google posts",
       "Waiting list",
     ],
   },
@@ -878,6 +910,11 @@ const zh: ClesAccueilPublic = {
         texte:
           "每个空间有各自的容纳人数，每个餐市有各自的上限。尚未确认的申请会占一个会过期的名额，以免有人随口一问就冻结您的周五晚上。",
       },
+      {
+        titre: "顾客档案，属于您自己",
+        texte:
+          "谁来过、来过几次、最近一次是什么时候——全部由订座本自动整理。有话要说时写一封邮件，选好日子自动发出。当然，只发给同意接收的人。",
+      },
     ],
     zeroLegende: "订位抽成",
     zeroTexte: `无论是散客还是包场，都不抽成。订位模块每月 ${ht(HT.reservations, "zh")}——即 ${ttc(TTC.reservations, "zh")}——没有其他费用。`,
@@ -898,6 +935,10 @@ const zh: ClesAccueilPublic = {
       {
         titre: "无需催款",
         texte: "付款链接自动发出，到期前自动提醒，失败的会自动重试。",
+      },
+      {
+        titre: "邮件推送",
+        texte: "提前写好，到日子自动发出。每一封都带一键退订。",
       },
     ],
   },
@@ -930,6 +971,7 @@ const zh: ClesAccueilPublic = {
           "散客订位与空间包场",
           "按餐市设上限：同一空间不会撞团",
           "空间照片，订位前就能看到",
+          "顾客档案，以及发给他们的邮件",
         ],
       },
     ],
@@ -977,6 +1019,11 @@ const zh: ClesAccueilPublic = {
           "可以。订位模块同时处理散客订位和空间包场。餐厅设定最低人数或最低消费，为每个餐市设上限，避免有人随口一问就冻结整个空间，相关条件在订位前就会显示。",
       },
       {
+        question: "可以用 Klarr 给顾客发邮件吗？",
+        reponse:
+          "可以。Klarr 从订座本整理出顾客档案——谁来过、来过几次、最近一次是什么时候——并且可以写信给那些在订位时同意接收邮件的人。邮件可以提前安排发送日期，也可以只发给选定的人群（熟客，或者超过六个月没再来的顾客），每一封都带退订链接。没有勾选同意的人，Klarr 一封也不会发。",
+      },
+      {
         question: "Klarr 需要签约吗？",
         reponse:
           "不需要。两个套餐都无需签约，在后台一键即可取消，不用写信给任何人。",
@@ -1022,8 +1069,8 @@ const zh: ClesAccueilPublic = {
     surtitre: "即将上线",
     titre: "后续功能已经在做了。",
     texte:
-      "评价回复、定时发布和排名跟踪已经上线。以下是目前还缺的部分——我们同样照实说。",
-    puces: ["订位统计", "顾客档案", "谷歌商家资料统计", "候补名单"],
+      "顾客档案、邮件推送和评价回复已经上线。以下是目前还缺的部分——我们同样照实说。",
+    puces: ["订位统计", "谷歌商家资料统计", "谷歌定时发布", "候补名单"],
   },
   cta: {
     titre: "您的谷歌商家资料，没有营销滤镜。",

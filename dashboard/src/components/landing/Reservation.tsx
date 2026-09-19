@@ -229,7 +229,7 @@ export function Reservation({ t }: { t: ClesAccueilPublic["reservations"] }) {
         </div>
 
         <div
-          className="grid grid-cols-1 gap-x-10 gap-y-7 sm:grid-cols-2 lg:grid-cols-4"
+          className="grid grid-cols-1 gap-x-10 gap-y-7 sm:grid-cols-2 lg:grid-cols-5"
           style={{
             borderTop: "1px solid oklch(100% 0 0 / 14%)",
             paddingTop: 40,
