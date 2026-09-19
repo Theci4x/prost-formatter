@@ -119,10 +119,15 @@ export function aLireEnsuite(
 }
 
 /** « 14 septembre 2026 », pour l'affichage. */
-export function dateLisible(iso: string): string {
-  return new Date(`${iso}T12:00:00`).toLocaleDateString("fr-FR", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
+const ETIQUETTE_DATE: Record<string, string> = {
+  fr: "fr-FR",
+  en: "en-GB",
+  zh: "zh-CN",
+};
+
+export function dateLisible(iso: string, langue = "fr"): string {
+  return new Date(`${iso}T12:00:00`).toLocaleDateString(
+    ETIQUETTE_DATE[langue] ?? "fr-FR",
+    { day: "numeric", month: "long", year: "numeric" },
+  );
 }

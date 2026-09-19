@@ -116,6 +116,53 @@ export function titreCategorieBillet(cle: CategorieBillet): string {
  * parce que personne n'a jamais lu quoi que ce soit en « 4,3 minutes ».
  */
 export function tempsDeLecture(markdown: string): number {
-  const mots = markdown.trim().split(/\s+/).length;
+  // Le chinois ne sépare pas ses mots par des espaces : compter les
+  // groupes séparés par des blancs donnait « 1 minute » pour un article
+  // entier. On compte donc les idéogrammes, à quatre cents la minute —
+  // le rythme couramment retenu pour une lecture à l'écran —, et les
+  // mots pour le reste.
+  const texte = markdown.trim();
+  const ideogrammes = (texte.match(/[\u4e00-\u9fff]/g) ?? []).length;
+  if (ideogrammes > 50) return Math.max(1, Math.ceil(ideogrammes / 400));
+
+  const mots = texte.split(/\s+/).length;
   return Math.max(1, Math.ceil(mots / 230));
+}
+
+/**
+ * Les langues du journal.
+ *
+ * Le français fait foi : c'est lui qui porte la catégorie, les dates, les
+ * sources et les liens de suite. Une traduction n'est pas une variante
+ * d'affichage — c'est un article, avec sa propre adresse, qui se référence
+ * et s'indexe pour lui-même. D'où le slug dans chaque langue.
+ */
+export type LangueJournal = "fr" | "en" | "zh";
+
+export const LANGUES_JOURNAL: LangueJournal[] = ["fr", "en", "zh"];
+
+export type TraductionBillet = {
+  /**
+   * L'adresse dans cette langue, sans préfixe : « opening-a-restaurant-in-
+   * france-checklist ». Traduite plutôt que recopiée du français — c'est
+   * la moitié du bénéfice qu'on attend d'une page traduite.
+   */
+  slug: string;
+  titre: string;
+  resume: string;
+  essentiel?: string[];
+  markdown: string;
+  /**
+   * Les sources restent en français, et ce n'est pas un oubli : ce sont
+   * les intitulés exacts de textes de loi français, et les traduire
+   * empêcherait le lecteur de les retrouver. Ce champ ne sert qu'à en
+   * ajouter une propre à la version traduite — un guide officiel en
+   * anglais, par exemple.
+   */
+  sources?: Source[];
+};
+
+/** Le préfixe d'adresse d'une langue. Le français n'en a pas : ses URL sont déjà indexées. */
+export function cheminJournal(langue: LangueJournal): string {
+  return langue === "fr" ? "/blog" : `/blog/${langue}`;
 }

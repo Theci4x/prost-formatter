@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { KlarrMark, KlarrWordmark } from "@/components/brand/KlarrMark";
 import { ChoixLangueSite } from "@/components/landing/ChoixLangueSite";
+import type { Langue } from "@/lib/i18n/langues";
 import { NoteLangueJournal } from "@/components/blog/NoteLangueJournal";
 
 const ACCENT = "#E8871E";
@@ -18,11 +19,19 @@ export function CadreJournal({
   fil,
   children,
   large = false,
+  langue,
 }: {
   /** Ce qui suit le logo, en haut : « Le journal », puis la rubrique. */
   fil: React.ReactNode;
   children: React.ReactNode;
   large?: boolean;
+  /**
+   * La langue de la page, sur les versions traduites. Sans elle, le
+   * sélecteur lit le témoin du navigateur — ce qu'il faut sur les pages
+   * françaises, qui ne sont pas traduites, mais qui afficherait « FR »
+   * au-dessus d'un article chinois.
+   */
+  langue?: Langue;
 }) {
   return (
     <div
@@ -70,10 +79,10 @@ export function CadreJournal({
               français — il rend le reste du site à la langue du visiteur,
               qui sans lui se retrouvait coincé ici. */}
           <div className="ml-auto">
-            <ChoixLangueSite />
+            <ChoixLangueSite courante={langue} />
           </div>
         </div>
-        <NoteLangueJournal />
+        {langue === undefined && <NoteLangueJournal />}
       </header>
 
       <main

@@ -3,6 +3,8 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { siteUrl } from "@/lib/site-url";
 import { tousLesArticles } from "@/lib/aide/articles";
 import { tousLesBillets } from "@/lib/blog/billets";
+import { billetsPour } from "@/lib/blog/traductions";
+import { cheminJournal } from "@/types/blog";
 
 // Sans cette ligne, le plan du site est figé au moment du déploiement : une
 // page de réservation ouverte après coup n'y entrerait jamais.
@@ -17,6 +19,8 @@ const PAGES_FIXES = [
   { chemin: "/aide", priorite: 0.6 },
   { chemin: "/aide/contact", priorite: 0.4 },
   { chemin: "/blog", priorite: 0.8 },
+  { chemin: "/blog/en", priorite: 0.6 },
+  { chemin: "/blog/zh", priorite: 0.6 },
   // Une page d'intention d'achat : quelqu'un qui compare est à deux
   // doigts de choisir.
   { chemin: "/comparatif-logiciels-reservation-restaurant", priorite: 0.9 },
@@ -50,6 +54,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(`${billet.misAJourLe}T12:00:00`),
       priority: 0.7,
     })),
+    // Les traductions sont des pages à part entière : sans elles au plan
+    // du site, Google ne les découvre que par les liens, c'est-à-dire
+    // tard. Elles portent la date du texte français, qui fait foi.
+    ...(["en", "zh"] as const).flatMap((langue) =>
+      billetsPour(langue).map((billet) => ({
+        url: `${site}${cheminJournal(langue)}/${billet.slug}`,
+        lastModified: new Date(`${billet.misAJourLe}T12:00:00`),
+        priority: 0.6,
+      })),
+    ),
   ];
 
   try {

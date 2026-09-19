@@ -8,7 +8,7 @@ import {
 } from "@/lib/blog/traductions";
 import { cheminJournal } from "@/types/blog";
 
-const LANGUE = "fr" as const;
+const LANGUE = "en" as const;
 
 type Params = { slug: string };
 

@@ -23,7 +23,15 @@ export default function BlogPage() {
 
   return (
     <>
-      <CadreJournal large fil={<><Separateur /><span style={{ fontSize: 14 }}>Le journal</span></>}>
+      <CadreJournal
+        large
+        fil={
+          <>
+            <Separateur />
+            <span style={{ fontSize: 14 }}>Le journal</span>
+          </>
+        }
+      >
         <DonneesStructurees
           donnees={{
             "@context": "https://schema.org",
@@ -54,10 +62,10 @@ export default function BlogPage() {
             Le journal
           </h1>
           <p style={{ maxWidth: "36rem", fontSize: 17, lineHeight: 1.65 }}>
-            Ce qu&apos;on aurait aimé lire avant d&apos;ouvrir un restaurant,
-            et ce qu&apos;on a appris depuis. Les articles qui affirment une
-            obligation légale citent leurs sources et portent leur date :
-            ces règles changent.
+            Ce qu&apos;on aurait aimé lire avant d&apos;ouvrir un restaurant, et
+            ce qu&apos;on a appris depuis. Les articles qui affirment une
+            obligation légale citent leurs sources et portent leur date : ces
+            règles changent.
           </p>
         </div>
 
