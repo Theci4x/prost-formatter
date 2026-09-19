@@ -104,7 +104,7 @@ function echapperUrl(url: string): string {
  * trente caractères aléatoires au milieu d'un paragraphe fait douter de
  * l'expéditeur, alors même qu'elle prouve le contraire.
  */
-function lien(libelle: string, url: string): string {
+export function lien(libelle: string, url: string): string {
   return `<a href="${echapperUrl(url)}" style="color:${MARQUE};text-decoration:underline">${echapper(libelle)}</a>`;
 }
 
@@ -177,12 +177,23 @@ function encadreHtml(lignes: string[]): string {
  * tête plutôt qu'en pied. Tout est en tableaux et en styles en ligne —
  * c'est laid à écrire, c'est la seule chose qui s'affiche partout.
  */
-export function enveloppe(blocs: Bloc[], signature: string): string {
+export function enveloppe(
+  blocs: Bloc[],
+  signature: string,
+  /**
+   * Les mentions de pied, pour les messages qui en ont l'obligation :
+   * qui écrit, et comment ne plus recevoir. Une confirmation de
+   * réservation n'en a pas besoin — ce n'est pas de la prospection —, une
+   * campagne ne peut pas s'en passer.
+   */
+  pied?: string,
+): string {
   const corps = blocs
     .filter((bloc) => bloc !== "")
     .map((bloc) => {
       if (typeof bloc === "string") return paragraphe(bloc);
-      if ("bouton" in bloc) return boutonHtml(bloc.bouton.libelle, bloc.bouton.url);
+      if ("bouton" in bloc)
+        return boutonHtml(bloc.bouton.libelle, bloc.bouton.url);
       return encadreHtml(bloc.encadre);
     })
     .join("");
@@ -195,6 +206,9 @@ export function enveloppe(blocs: Bloc[], signature: string): string {
     `<p style="margin:0 0 22px;font-size:12px;letter-spacing:0.14em;text-transform:uppercase;font-weight:700;color:${MARQUE}">${echapper(signature)}</p>`,
     corps,
     `</td></tr></table>`,
+    pied
+      ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:544px"><tr><td style="padding:18px 32px 0;font-family:${POLICE};font-size:11px;line-height:1.6;color:${ENCRE_DOUCE};text-align:center">${pied}</td></tr></table>`
+      : "",
     `<p style="margin:16px 0 0;font-family:${POLICE};font-size:11px;color:${ENCRE_DOUCE}">Envoyé par Klarr</p>`,
     `</td></tr></table>`,
   ].join("");
@@ -203,14 +217,17 @@ export function enveloppe(blocs: Bloc[], signature: string): string {
 /** Reçue, mais pas encore confirmée : le restaurant doit se prononcer. */
 export function demandeRecue(c: Contexte): Message {
   const quoi =
-    c.type === "privatisation" ? "votre demande de privatisation" : "votre demande de réservation";
+    c.type === "privatisation"
+      ? "votre demande de privatisation"
+      : "votre demande de réservation";
   const blocs: Bloc[] = [
     `Bonjour ${echapper(c.clientNom)},`,
     `Nous avons bien reçu ${quoi} chez ${echapper(c.restaurantNom)}.`,
     encadre(c),
     ligneMinimum(c),
     `Elle n'est pas encore confirmée — le restaurant revient vers vous très vite. Vous recevrez un second message dès que ce sera fait.`,
-    ligneAnnulation(c) || `Si vos plans changent, répondez simplement à cet e-mail.`,
+    ligneAnnulation(c) ||
+      `Si vos plans changent, répondez simplement à cet e-mail.`,
   ];
   return {
     sujet: sujet(`Demande reçue — ${c.restaurantNom}`),
@@ -304,10 +321,7 @@ export function alerteModification(c: Contexte, avant: string): Message {
   };
 }
 
-export function alerteRestaurateur(
-  c: Contexte,
-  confirmee: boolean,
-): Message {
+export function alerteRestaurateur(c: Contexte, confirmee: boolean): Message {
   const etat = confirmee
     ? "Elle est déjà confirmée automatiquement."
     : "<strong>Elle attend votre validation.</strong>";
@@ -424,26 +438,39 @@ function texteDe(blocs: Bloc[], c: Contexte): string {
 }
 
 /** La version texte d'un message, signée du nom qu'on lui donne. */
-export function texteNu(blocs: Bloc[], signature: string): string {
+export function texteNu(
+  blocs: Bloc[],
+  signature: string,
+  pied?: string,
+): string {
   const nu = blocs
     .filter((bloc) => bloc !== "")
     .map((bloc) => {
       if (typeof bloc === "string") return deshtml(bloc);
-      if ("bouton" in bloc) return `${bloc.bouton.libelle} : ${bloc.bouton.url}`;
+      if ("bouton" in bloc)
+        return `${bloc.bouton.libelle} : ${bloc.bouton.url}`;
       return bloc.encadre.join("\n");
     });
-  return `${nu.join("\n\n")}\n\n— ${signature}`;
+  const corps = `${nu.join("\n\n")}\n\n— ${signature}`;
+  return pied ? `${corps}\n\n—\n${deshtml(pied)}` : corps;
 }
 
 function deshtml(html: string): string {
-  return html
-    .replace(/<a href="([^"]*)"[^>]*>([^<]*)<\/a>/g, "$2 : $1")
-    // Le point de la phrase collé à l'adresse : plusieurs messageries
-    // l'avalent dans le lien cliquable, et le lien ne mène nulle part.
-    .replace(/(https?:\/\/[^\s]*[^\s.])\.(?=\s|$)/g, "$1")
-    .replace(/<[^>]+>/g, "")
-    .replace(/&quot;/g, '"')
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&amp;/g, "&");
+  return (
+    html
+      .replace(/<a href="([^"]*)"[^>]*>([^<]*)<\/a>/g, "$2 : $1")
+      // Le point de la phrase collé à l'adresse : plusieurs messageries
+      // l'avalent dans le lien cliquable, et le lien ne mène nulle part.
+      .replace(/(https?:\/\/[^\s]*[^\s.])\.(?=\s|$)/g, "$1")
+      // Une coupure de ligne se retire du HTML, elle ne disparaît pas du
+      // texte : sans ça, deux lignes écrites l'une sous l'autre par le
+      // restaurateur arrivent collées bout à bout — « … du marché.Et la
+      // tarte aux quetsches ». Vu sur la première campagne d'essai.
+      .replace(/<br\s*\/?>/gi, "\n")
+      .replace(/<[^>]+>/g, "")
+      .replace(/&quot;/g, '"')
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&amp;/g, "&")
+  );
 }

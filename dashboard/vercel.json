@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/cron/reputation",
-      "schedule": "0 5 * * *"
+      "schedule": "0 8 * * *"
     },
     {
       "path": "/api/cron/options-expirees",

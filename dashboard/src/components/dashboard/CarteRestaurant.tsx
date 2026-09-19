@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import type { Pouls } from "@/lib/dashboard/pouls";
 import { publicationsGoogleOuvertes } from "@/lib/google/business";
+import { campagnesOuvertes } from "@/lib/campagnes/message";
 import type { ClesAccueil } from "@/lib/i18n/accueil";
 import { peutGerer, type Role } from "@/lib/equipe/roles";
 import {
@@ -68,6 +69,12 @@ const ICONES = {
     <Icone>
       <rect x="3" y="4" width="18" height="17" rx="2" />
       <path d="M8 2v4M16 2v4M3 10h18" />
+    </Icone>
+  ),
+  campagnes: (
+    <Icone>
+      <path d="M4 4h16v16H4z" />
+      <path d="m4 6 8 6 8-6" />
     </Icone>
   ),
   clients: (
@@ -219,6 +226,24 @@ function groupes(t: ClesAccueil): Groupe[] {
               ? `${p.contacts.total} client${p.contacts.total > 1 ? "s" : ""} · ${p.contacts.joignables} joignable${p.contacts.joignables > 1 ? "s" : ""}`
               : "Aucun client enregistré",
         },
+        // Masquées tant que le domaine d'envoi n'est pas vérifié : une
+        // campagne programmée qui ne part jamais coûte plus cher qu'une
+        // entrée de menu absente.
+        ...(campagnesOuvertes()
+          ? [
+              {
+                href: "campagnes",
+                label: t.entrees.campagnes.label,
+                resume: t.entrees.campagnes.resume,
+                icone: ICONES.campagnes,
+                minimum: "gerant" as const,
+                detail: (p: Pouls) =>
+                  p.contacts.joignables > 0
+                    ? `${p.contacts.joignables} destinataire${p.contacts.joignables > 1 ? "s" : ""}`
+                    : "Personne n'a encore accepté",
+              },
+            ]
+          : []),
         {
           href: "service",
           label: t.entrees.service.label,

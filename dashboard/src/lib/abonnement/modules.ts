@@ -206,8 +206,7 @@ export function calculerAcces({
   // « En essai » ne se dit que si l'on n'a rien payé : un établissement
   // qui paie la visibilité et découvre les réservations pendant son essai
   // ne doit pas voir son module payé étiqueté comme un essai.
-  const enEssai =
-    paye.size === 0 && MODULES.some((cle) => essai[cle] !== null);
+  const enEssai = paye.size === 0 && MODULES.some((cle) => essai[cle] !== null);
 
   return { ouvert, essai, enEssai };
 }
@@ -243,8 +242,9 @@ export const MODULE_DE_LA_SECTION: Record<string, Module> = {
   reservations: "reservations",
   service: "reservations",
   // Le fichier client se remplit des réservations : sans le carnet, il
-  // n'a rien à montrer.
+  // n'a rien à montrer. Les campagnes écrivent à ce fichier.
   clients: "reservations",
+  campagnes: "reservations",
   experiences: "reservations",
   paiements: "reservations",
 };

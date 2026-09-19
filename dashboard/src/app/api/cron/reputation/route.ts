@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { jetonValide } from "@/lib/limites/publiques";
+import { envoyerLesCampagnes } from "@/lib/campagnes/envoi";
 import { TOUJOURS_FRAIS } from "@/lib/reviews/fraicheur";
 import {
   fetchGooglePlatformReviews,
@@ -52,6 +53,22 @@ export async function GET(request: Request) {
   }
 
   const supabase = createServiceClient();
+
+  // Les campagnes d'abord, et avec un budget serré.
+  //
+  // Elles partagent ce passage faute de place : Vercel n'accorde que deux
+  // tâches planifiées sur ce forfait, et les deux servent déjà. Elles
+  // passent devant parce qu'un e-mail attendu le mardi n'a aucun sens le
+  // mercredi, tandis qu'un relevé de note qui saute une nuit se rattrape
+  // au tour suivant — la rotation dure une semaine.
+  const campagnes = await envoyerLesCampagnes({ supabase, budgetMs: 30_000 });
+  if (campagnes.campagnes > 0) {
+    console.log(
+      `[cron/reputation] campagnes : ${campagnes.envoyes} envoyé(s), ` +
+        `${campagnes.echoues} en échec sur ${campagnes.campagnes} campagne(s)` +
+        `${campagnes.interrompu ? " — interrompu, reprise au prochain passage" : ""}`,
+    );
+  }
 
   const { count, error: comptageError } = await supabase
     .from("restaurants")
@@ -181,5 +198,6 @@ export async function GET(request: Request) {
     lot,
     traites,
     releves,
+    campagnes,
   });
 }

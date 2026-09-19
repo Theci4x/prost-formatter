@@ -19,6 +19,7 @@ export type ClesAccueil = {
   entrees: Record<
     | "reservations"
     | "clients"
+    | "campagnes"
     | "service"
     | "vitrine"
     | "carte"
@@ -54,7 +55,13 @@ const fr: ClesAccueil = {
     },
     clients: {
       label: "Fichier client",
-      resume: "Qui est venu, combien de fois, et à qui tu as le droit d'écrire.",
+      resume:
+        "Qui est venu, combien de fois, et à qui tu as le droit d'écrire.",
+    },
+    campagnes: {
+      label: "Campagnes e-mail",
+      resume:
+        "Un message à tes clients, écrit à l'avance et parti le jour dit.",
     },
     service: {
       label: "Service",
@@ -134,6 +141,10 @@ const en: ClesAccueil = {
       label: "Customer records",
       resume: "Who came, how often, and who you are allowed to write to.",
     },
+    campagnes: {
+      label: "Email campaigns",
+      resume: "A message to your customers, written ahead and sent on the day.",
+    },
     service: {
       label: "Service",
       resume: "The floor screen, for the rush.",
@@ -211,6 +222,10 @@ const zh: ClesAccueil = {
     clients: {
       label: "顾客档案",
       resume: "谁来过、来过几次，以及您有权给谁写信。",
+    },
+    campagnes: {
+      label: "邮件推送",
+      resume: "提前写好给顾客的消息，到日子自动发出。",
     },
     service: { label: "现场", resume: "用餐高峰时的现场屏幕。" },
     vitrine: {
