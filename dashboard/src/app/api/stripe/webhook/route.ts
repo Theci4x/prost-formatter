@@ -3,6 +3,12 @@ import Stripe from "stripe";
 import { getStripe } from "@/lib/stripe/client";
 import { createServiceClient } from "@/lib/supabase/service";
 import { prevenirFactureEnAttente } from "@/lib/push/abonnement";
+import {
+  annoncerAbonnement,
+  annoncerFinAbonnement,
+  annoncerImpaye,
+  annoncerResiliation,
+} from "@/lib/notifications/abonnes";
 import { cautionEnregistree } from "@/lib/stripe/caution";
 import {
   prevenirAcompteRegle,
@@ -217,6 +223,49 @@ function verifier(body: string, signature: string): Stripe.Event {
   throw derniere;
 }
 
+/**
+ * Retrouve l'établissement derrière une facture.
+ *
+ * Les factures de Stripe ne portent pas nos étiquettes : elles pendent au
+ * client, pas à l'abonnement. On remonte donc par le client, que toutes
+ * les lignes d'un établissement partagent.
+ */
+async function facturePrevenue(
+  facture: Stripe.Invoice,
+  authentification: boolean,
+): Promise<void> {
+  const client = facture.customer;
+  if (typeof client !== "string") return;
+
+  const supabase = createServiceClient();
+  const { data } = await supabase
+    .from("restaurant_subscriptions")
+    .select("restaurant_id")
+    .eq("stripe_customer_id", client)
+    .limit(1)
+    .maybeSingle();
+
+  const restaurantId = (data as { restaurant_id: string } | null)
+    ?.restaurant_id;
+  if (!restaurantId) {
+    console.error("[stripe webhook] facture sans établissement", facture.id);
+    return;
+  }
+
+  await prevenirFactureEnAttente(
+    supabase,
+    restaurantId,
+    facture.amount_due ?? 0,
+    authentification,
+  );
+  await annoncerImpaye(
+    supabase,
+    restaurantId,
+    facture.amount_due ?? 0,
+    authentification,
+  );
+}
+
 export async function POST(request: NextRequest) {
   const body = await request.text();
   const signature = request.headers.get("stripe-signature");
@@ -240,43 +289,6 @@ export async function POST(request: NextRequest) {
       {
         status: 400,
       },
-    );
-  }
-
-  /**
-   * Retrouve l'établissement derrière une facture.
-   *
-   * Les factures de Stripe ne portent pas nos étiquettes : elles pendent au
-   * client, pas à l'abonnement. On remonte donc par le client, que toutes
-   * les lignes d'un établissement partagent.
-   */
-  async function facturePrevenue(
-    facture: Stripe.Invoice,
-    authentification: boolean,
-  ): Promise<void> {
-    const client = facture.customer;
-    if (typeof client !== "string") return;
-
-    const supabase = createServiceClient();
-    const { data } = await supabase
-      .from("restaurant_subscriptions")
-      .select("restaurant_id")
-      .eq("stripe_customer_id", client)
-      .limit(1)
-      .maybeSingle();
-
-    const restaurantId = (data as { restaurant_id: string } | null)
-      ?.restaurant_id;
-    if (!restaurantId) {
-      console.error("[stripe webhook] facture sans établissement", facture.id);
-      return;
-    }
-
-    await prevenirFactureEnAttente(
-      supabase,
-      restaurantId,
-      facture.amount_due ?? 0,
-      authentification,
     );
   }
 
@@ -309,6 +321,19 @@ export async function POST(request: NextRequest) {
           session.subscription as string,
         );
         await upsertSubscription(subscription);
+
+        // On annonce depuis la séance de paiement, et non depuis la mise
+        // à jour d'abonnement : celle-ci se déclenche à chaque
+        // renouvellement et à chaque changement de carte. Ici, on ne
+        // passe qu'une fois.
+        const nouveau = subscription.metadata.restaurant_id;
+        if (nouveau) {
+          await annoncerAbonnement(
+            createServiceClient(),
+            nouveau,
+            subscription.metadata.module,
+          );
+        }
       } else {
         console.error(
           "[stripe webhook] séance sans jeton ni abonnement",
@@ -332,6 +357,27 @@ export async function POST(request: NextRequest) {
     case "customer.subscription.deleted": {
       const subscription = event.data.object as Stripe.Subscription;
       await upsertSubscription(subscription);
+
+      const concerne = subscription.metadata.restaurant_id;
+      if (concerne) {
+        const supabase = createServiceClient();
+        if (event.type === "customer.subscription.deleted") {
+          await annoncerFinAbonnement(supabase, concerne);
+        } else if (
+          subscription.cancel_at_period_end &&
+          // « previous_attributes » ne porte que ce qui vient de changer :
+          // sans ce garde-fou, chaque mise à jour ultérieure d'un
+          // abonnement déjà résilié rejouerait l'alerte.
+          "cancel_at_period_end" in (event.data.previous_attributes ?? {})
+        ) {
+          const fin = subscription.items.data[0]?.current_period_end;
+          await annoncerResiliation(
+            supabase,
+            concerne,
+            fin ? new Date(fin * 1000).toISOString() : null,
+          );
+        }
+      }
       break;
     }
   }
