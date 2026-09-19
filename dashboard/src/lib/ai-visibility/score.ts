@@ -152,3 +152,118 @@ export function classement(
 
   return { lignes: visibles, rang, total, omis };
 }
+
+/* ——— Évolution dans le temps —————————————————————————————————— */
+
+/** Une analyse, réduite à ce que la courbe en retient. */
+export type Releve = {
+  /** Le jour, en AAAA-MM-JJ. */
+  jour: string;
+  estCite: boolean;
+  concurrents: string[];
+};
+
+export type Point = { jour: string; part: number };
+
+export type Serie = {
+  nom: string;
+  toi: boolean;
+  points: Point[];
+  /** La part au dernier relevé, pour l'étiquette de fin de ligne. */
+  derniere: number;
+};
+
+function jours(releves: Releve[]): string[] {
+  return [...new Set(releves.map((r) => r.jour))].sort();
+}
+
+/**
+ * La part des réponses où chaque nom apparaît, jour par jour.
+ *
+ * Un taux du moment ne dit pas si le travail a payé : c'est la courbe qui
+ * le dit, et c'est elle qu'un restaurateur montre à son associé pour
+ * justifier l'abonnement. On la trace pour lui et pour les deux
+ * concurrents qu'on voit le plus souvent : au-delà, les gris ne se
+ * distinguent plus les uns des autres et on lit un plat de spaghettis au
+ * lieu de reconnaître ses voisins.
+ */
+export function evolution(
+  releves: Releve[],
+  restaurantNom: string,
+  maxConcurrents = 2,
+): Serie[] {
+  const dates = jours(releves);
+  if (dates.length === 0) return [];
+
+  const totalParJour = new Map<string, number>();
+  for (const releve of releves) {
+    totalParJour.set(releve.jour, (totalParJour.get(releve.jour) ?? 0) + 1);
+  }
+
+  // Combien de fois chaque nom est cité, par jour et en tout.
+  const citations = new Map<string, Map<string, number>>();
+  const cumul = new Map<string, number>();
+  const compter = (nom: string, jour: string) => {
+    const parJour = citations.get(nom) ?? new Map<string, number>();
+    parJour.set(jour, (parJour.get(jour) ?? 0) + 1);
+    citations.set(nom, parJour);
+    cumul.set(nom, (cumul.get(nom) ?? 0) + 1);
+  };
+
+  for (const releve of releves) {
+    if (releve.estCite) compter(restaurantNom, releve.jour);
+    for (const brut of releve.concurrents) {
+      const nom = brut.trim();
+      if (nom && nom !== restaurantNom) compter(nom, releve.jour);
+    }
+  }
+
+  const retenus = [...cumul.entries()]
+    .filter(([nom]) => nom !== restaurantNom)
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .slice(0, maxConcurrents)
+    .map(([nom]) => nom);
+
+  const serie = (nom: string, toi: boolean): Serie => {
+    const parJour = citations.get(nom) ?? new Map<string, number>();
+    const points = dates.map((jour) => ({
+      jour,
+      // Un jour sans citation vaut zéro, pas un trou : une ligne
+      // interrompue se lit comme une absence de mesure, alors que c'est
+      // une absence de citation — l'inverse de ce qu'on veut montrer.
+      part: (parJour.get(jour) ?? 0) / (totalParJour.get(jour) || 1),
+    }));
+    return { nom, toi, points, derniere: points.at(-1)?.part ?? 0 };
+  };
+
+  return [serie(restaurantNom, true), ...retenus.map((n) => serie(n, false))];
+}
+
+/**
+ * La part de voix : sur tous les noms cités, quelle part est la sienne.
+ *
+ * Le taux de citation dit si l'on figure dans la réponse ; la part de voix
+ * dit quelle place on y prend. Être nommé dans neuf réponses sur dix mais
+ * toujours en dernier sur six maisons, ce n'est pas la même chose qu'être
+ * seul cité une fois sur deux.
+ *
+ * Null quand rien n'a été cité : zéro sur zéro n'est pas zéro.
+ */
+export function partDeVoix(
+  releves: Releve[],
+  restaurantNom: string,
+): number | null {
+  let miennes = 0;
+  let total = 0;
+  for (const releve of releves) {
+    if (releve.estCite) {
+      miennes += 1;
+      total += 1;
+    }
+    for (const brut of releve.concurrents) {
+      const nom = brut.trim();
+      if (nom && nom !== restaurantNom) total += 1;
+    }
+  }
+  return total === 0 ? null : miennes / total;
+}

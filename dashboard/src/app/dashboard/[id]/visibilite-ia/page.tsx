@@ -30,12 +30,15 @@ import { ECRANS, type ActionPlan } from "@/lib/ai-visibility/plan";
 import {
   POIDS,
   classement,
+  evolution,
+  partDeVoix,
   positionMoyenne,
   scoreGlobal,
   tauxParAssistant,
   tauxParIntention,
   type Mesure,
 } from "@/lib/ai-visibility/score";
+import { PartDeVoix } from "@/components/visibilite-ia/PartDeVoix";
 
 // Interroger un assistant puis en extraire les noms cités dépasse largement
 // la durée par défaut d'une fonction serveur. Posée sur la page, la valeur
@@ -161,6 +164,22 @@ export default async function VisibiliteIaPage({
   const reservation = reponsesOu((intention) => intention === "reservation");
   const podium = classement(restaurant.nom, toutes);
   const podiumReservation = classement(restaurant.nom, reservation);
+
+  // La courbe et la part de voix se lisent sur tout l'historique, pas sur
+  // la dernière analyse : c'est leur seul intérêt.
+  const releves = checks.flatMap((check) =>
+    intentionDe.has(check.question_id)
+      ? [
+          {
+            jour: check.created_at.slice(0, 10),
+            estCite: check.est_cite,
+            concurrents: check.concurrents,
+          },
+        ]
+      : [],
+  );
+  const series = evolution(releves, restaurant.nom);
+  const voix = partDeVoix(releves, restaurant.nom);
 
   const latestByQuestion = new Map<string, AiVisibilityCheck[]>();
   for (const check of dernieres.values()) {
@@ -456,9 +475,17 @@ export default async function VisibiliteIaPage({
         </div>
       )}
 
+      {/* ——— L'évolution ——————————————————————————————————————— */}
+      {aDesAnalyses && voix !== null && (
+        <section className="flex flex-col gap-3">
+          <Titre numero="03">Ta part de voix</Titre>
+          <PartDeVoix series={series} voix={voix} reponses={releves.length} />
+        </section>
+      )}
+
       {/* ——— Les questions suivies ————————————————————————————— */}
       <section className="flex flex-col gap-4">
-        <Titre numero={aDesAnalyses ? "03" : "01"}>Tes questions</Titre>
+        <Titre numero={aDesAnalyses ? "04" : "01"}>Tes questions</Titre>
 
         <div className="flex flex-col gap-3 rounded-2xl border border-line bg-paper p-5 shadow-sm">
           <form action={addQuestion} className="flex flex-wrap items-end gap-2">
