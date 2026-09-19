@@ -1,0 +1,175 @@
+import "server-only";
+import Anthropic from "@anthropic-ai/sdk";
+
+// Chaque assistant est optionnel : sans sa clé d'API il est simplement
+// ignoré, et il s'active sans changement de code le jour où la clé est
+// renseignée. Le nom du modèle est lui aussi surchargeable, pour absorber
+// les renommages côté fournisseurs sans redéploiement de code.
+export type ProviderId =
+  | "claude"
+  | "chatgpt"
+  | "gemini"
+  | "perplexity"
+  | "mistral";
+
+export type Provider = {
+  id: ProviderId;
+  label: string;
+  isConfigured: () => boolean;
+  ask: (question: string) => Promise<string>;
+};
+
+const ANSWER_SYSTEM =
+  "Tu réponds comme un assistant grand public à qui quelqu'un demande une " +
+  "recommandation de restaurant. Cite des établissements précis quand tu " +
+  "en connais, et n'invente pas d'adresses. Réponds en texte simple, sans " +
+  "mise en forme Markdown : la réponse est relue telle quelle.";
+
+async function askClaude(question: string): Promise<string> {
+  const client = new Anthropic();
+  const response = await client.messages.create({
+    model: process.env.ANTHROPIC_MODEL ?? "claude-opus-5",
+    // Le modèle réfléchit avant de répondre, et cette réflexion se prend
+    // sur le même budget que la réponse. Avec 1500 jetons, elle pouvait le
+    // consommer en entier : l'appel réussissait, le texte revenait vide, et
+    // l'analyse se terminait sans rien écrire — un bouton qui ne fait rien.
+    max_tokens: 4000,
+    // On mesure ce qu'un assistant grand public répond spontanément, pas ce
+    // qu'il trouve en y réfléchissant longuement. L'effort le plus bas est
+    // donc le plus fidèle — et le moins cher.
+    output_config: { effort: "low" },
+    system: ANSWER_SYSTEM,
+    messages: [{ role: "user", content: question }],
+  });
+
+  return response.content
+    .filter((block): block is Anthropic.TextBlock => block.type === "text")
+    .map((block) => block.text)
+    .join("\n")
+    .trim();
+}
+
+// OpenAI, Perplexity et Mistral partagent le même format de requête.
+async function askOpenAiCompatible({
+  url,
+  apiKey,
+  model,
+  question,
+}: {
+  url: string;
+  apiKey: string;
+  model: string;
+  question: string;
+}): Promise<string> {
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model,
+      messages: [
+        { role: "system", content: ANSWER_SYSTEM },
+        { role: "user", content: question },
+      ],
+    }),
+  });
+
+  if (!res.ok) {
+    throw new Error(`${url} a répondu ${res.status} : ${await res.text()}`);
+  }
+
+  const data = (await res.json()) as {
+    choices?: { message?: { content?: string } }[];
+  };
+  return (data.choices?.[0]?.message?.content ?? "").trim();
+}
+
+async function askGemini(question: string): Promise<string> {
+  const model = process.env.GEMINI_MODEL ?? "gemini-2.5-pro";
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-goog-api-key": process.env.GEMINI_API_KEY!,
+      },
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: ANSWER_SYSTEM }] },
+        contents: [{ role: "user", parts: [{ text: question }] }],
+      }),
+    },
+  );
+
+  if (!res.ok) {
+    throw new Error(`Gemini a répondu ${res.status} : ${await res.text()}`);
+  }
+
+  const data = (await res.json()) as {
+    candidates?: { content?: { parts?: { text?: string }[] } }[];
+  };
+  return (data.candidates?.[0]?.content?.parts ?? [])
+    .map((part) => part.text ?? "")
+    .join("\n")
+    .trim();
+}
+
+export const PROVIDERS: Provider[] = [
+  {
+    id: "claude",
+    label: "Claude",
+    isConfigured: () => Boolean(process.env.ANTHROPIC_API_KEY),
+    ask: askClaude,
+  },
+  {
+    id: "chatgpt",
+    label: "ChatGPT",
+    isConfigured: () => Boolean(process.env.OPENAI_API_KEY),
+    ask: (question) =>
+      askOpenAiCompatible({
+        url: "https://api.openai.com/v1/chat/completions",
+        apiKey: process.env.OPENAI_API_KEY!,
+        model: process.env.OPENAI_MODEL ?? "gpt-5",
+        question,
+      }),
+  },
+  {
+    id: "gemini",
+    label: "Gemini",
+    isConfigured: () => Boolean(process.env.GEMINI_API_KEY),
+    ask: askGemini,
+  },
+  {
+    // Le français de la bande. Sur « où manger à Paris », un modèle entraîné
+    // ici ne cite pas tout à fait les mêmes maisons — et pour un produit
+    // vendu à des restaurateurs français, l'écart mérite d'être mesuré.
+    id: "mistral",
+    label: "Le Chat (Mistral)",
+    isConfigured: () => Boolean(process.env.MISTRAL_API_KEY),
+    ask: (question) =>
+      askOpenAiCompatible({
+        url: "https://api.mistral.ai/v1/chat/completions",
+        apiKey: process.env.MISTRAL_API_KEY!,
+        model: process.env.MISTRAL_MODEL ?? "mistral-large-latest",
+        question,
+      }),
+  },
+  {
+    id: "perplexity",
+    label: "Perplexity",
+    isConfigured: () => Boolean(process.env.PERPLEXITY_API_KEY),
+    ask: (question) =>
+      askOpenAiCompatible({
+        url: "https://api.perplexity.ai/chat/completions",
+        apiKey: process.env.PERPLEXITY_API_KEY!,
+        model: process.env.PERPLEXITY_MODEL ?? "sonar",
+        question,
+      }),
+  },
+];
+
+export function configuredProviders(): Provider[] {
+  return PROVIDERS.filter((provider) => provider.isConfigured());
+}

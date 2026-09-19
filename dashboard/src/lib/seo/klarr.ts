@@ -1,0 +1,139 @@
+import { siteUrl } from "@/lib/site-url";
+import { ACCUEIL_PUBLIC } from "@/lib/i18n/accueilPublic";
+import type { Langue } from "@/lib/i18n/langue";
+
+/**
+ * Ce que Klarr déclare de lui-même aux moteurs et aux assistants.
+ *
+ * Une seule source pour la FAQ visible et pour son balisage : Google
+ * sanctionne le JSON-LD qui ne correspond pas à ce que la page montre, et
+ * deux listes tenues à la main finissent toujours par diverger — celle
+ * qu'on nous a proposée comptait déjà dix questions à l'écran contre six
+ * dans le balisage, avec des réponses raccourcies.
+ *
+ * Depuis la traduction, cette source est le dictionnaire de la page
+ * d'accueil : les questions y sont écrites une fois par langue, la
+ * section les affiche et le balisage les reprend. Un visiteur qui a
+ * choisi l'anglais voit donc une page anglaise et un balisage anglais —
+ * jamais l'un dans l'autre.
+ */
+
+export type Question = { question: string; reponse: string };
+
+/** Les questions affichées par la section FAQ, dans la langue lue. */
+export function questions(langue: Langue): Question[] {
+  return ACCUEIL_PUBLIC[langue].faq.questions;
+}
+
+/**
+ * L'éditeur, tel que les mentions légales le disent — et pas autrement.
+ *
+ * On nous proposait de dater la fondation de Klarr à 2008 et d'en nommer
+ * Thomas Bavoil fondateur : 2008 est l'année d'EDIREF, et il en est le
+ * gérant. Un balisage qui contredit la page qu'il accompagne dessert le
+ * référencement au lieu de le servir.
+ */
+const EDIREF = {
+  "@type": "Organization",
+  name: "EDIREF",
+  foundingDate: "2008",
+  description:
+    "Société parisienne de création de sites web et de référencement. RCS Paris 503 428 369.",
+  address: {
+    "@type": "PostalAddress",
+    streetAddress: "10 rue de Penthièvre",
+    addressLocality: "Paris",
+    addressRegion: "Île-de-France",
+    postalCode: "75008",
+    addressCountry: "FR",
+  },
+};
+
+function offre(nom: string, prix: string, description: string) {
+  return {
+    "@type": "Offer",
+    name: nom,
+    price: prix,
+    priceCurrency: "EUR",
+    priceSpecification: {
+      "@type": "UnitPriceSpecification",
+      price: prix,
+      priceCurrency: "EUR",
+      valueAddedTaxIncluded: false,
+      billingDuration: 1,
+      billingIncrement: 1,
+      unitCode: "MON",
+    },
+    description,
+  };
+}
+
+/**
+ * Le balisage de l'accueil : l'éditeur, le logiciel, et la FAQ.
+ *
+ * Il suit la langue affichée, sans exception. Le montant, lui, ne la
+ * suit pas : `price` est un nombre lisible par une machine, que
+ * schema.org veut en notation anglo-saxonne quelle que soit la langue du
+ * texte.
+ */
+export function balisageAccueil(langue: Langue): object[] {
+  const url = siteUrl();
+  const t = ACCUEIL_PUBLIC[langue];
+  const description = t.meta.description;
+
+  // Les trois offres, décrites dans la langue de la page. Le nom du
+  // module et son résumé sont déjà écrits pour la grille tarifaire :
+  // les redoubler ici les ferait diverger.
+  const offres = [
+    offre(
+      `Klarr — ${t.tarifs.offres[0].nom}`,
+      "37.50",
+      `${t.tarifs.offres[0].resume} ${t.tarifs.offres[0].lignes.join(" · ")}`,
+    ),
+    offre(
+      `Klarr — ${t.tarifs.offres[1].nom}`,
+      "29.00",
+      `${t.tarifs.offres[1].resume} ${t.tarifs.offres[1].lignes.join(" · ")}`,
+    ),
+    offre(
+      `Klarr — ${t.tarifs.offres[0].nom} + ${t.tarifs.offres[1].nom}`,
+      "59.00",
+      // Le dictionnaire marque le montant d'un `**` pour le gras à
+      // l'écran ; un balisage n'a que faire de la mise en forme.
+      t.tarifs.pack.replaceAll("**", ""),
+    ),
+  ];
+
+  return [
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      name: "Klarr",
+      url,
+      description,
+      parentOrganization: EDIREF,
+      address: EDIREF.address,
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      name: "Klarr",
+      applicationCategory: "BusinessApplication",
+      operatingSystem: "Web",
+      url,
+      description,
+      publisher: EDIREF,
+      offers: offres,
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      inLanguage: langue,
+      mainEntity: questions(langue).map(({ question, reponse }) => ({
+        "@type": "Question",
+        name: question,
+        acceptedAnswer: { "@type": "Answer", text: reponse },
+      })),
+    },
+  ];
+}

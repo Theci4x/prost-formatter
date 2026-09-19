@@ -1,0 +1,54 @@
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import { LogoutButton } from "@/components/auth/LogoutButton";
+import { Commis } from "@/components/commis/Commis";
+import { KlarrMark, KlarrWordmark } from "@/components/brand/KlarrMark";
+import { BandeauInstallation } from "@/components/dashboard/BandeauInstallation";
+
+export default async function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  // Le middleware protege deja /dashboard ; cette verification serveur est
+  // une deuxieme ligne de defense (defense en profondeur).
+  if (!user) {
+    redirect("/login");
+  }
+
+  return (
+    <div className="flex min-h-screen flex-1 flex-col bg-brand-cream">
+      <header className="sticky top-0 z-10 flex items-center justify-between border-b border-zinc-200/70 bg-white/90 px-6 py-4 shadow-sm backdrop-blur">
+        <span className="flex items-center gap-2">
+          <KlarrMark size={22} />
+          <KlarrWordmark className="text-lg text-zinc-900" />
+        </span>
+        <div className="flex items-center gap-4">
+          {/* L'aide se cherche au moment où l'on bloque, pas après : elle
+              doit être atteignable depuis n'importe quel écran. */}
+          <Link
+            href="/aide"
+            className="text-sm text-zinc-500 transition-colors hover:text-brand-navy"
+          >
+            Aide
+          </Link>
+          <span className="hidden text-sm text-zinc-500 sm:inline">
+            {user.email}
+          </span>
+          <LogoutButton />
+        </div>
+      </header>
+      {/* Sous l'en-tête, au-dessus du travail : visible sans couvrir quoi
+          que ce soit, et absent dès que Klarr est installé. */}
+      <BandeauInstallation />
+      <main className="flex flex-1 flex-col">{children}</main>
+          <Commis connecte />
+    </div>
+  );
+}
