@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import Stripe from "stripe";
 import { getStripe } from "@/lib/stripe/client";
 import { createServiceClient } from "@/lib/supabase/service";
+import { prevenirFactureEnAttente } from "@/lib/push/abonnement";
 import { cautionEnregistree } from "@/lib/stripe/caution";
 import {
   prevenirAcompteRegle,
@@ -53,12 +54,10 @@ async function upsertSubscription(subscription: Stripe.Subscription) {
     updated_at: new Date().toISOString(),
   };
 
-  const { error } = await supabase
-    .from("restaurant_subscriptions")
-    .upsert(
-      payes.map((module) => ({ ...commun, module })),
-      { onConflict: "restaurant_id,module" },
-    );
+  const { error } = await supabase.from("restaurant_subscriptions").upsert(
+    payes.map((module) => ({ ...commun, module })),
+    { onConflict: "restaurant_id,module" },
+  );
   if (error) console.error("[stripe webhook] abonnement", error);
 }
 
@@ -223,9 +222,12 @@ export async function POST(request: NextRequest) {
   const signature = request.headers.get("stripe-signature");
 
   if (!signature) {
-    return NextResponse.json({ error: "signature manquante" }, {
-      status: 400,
-    });
+    return NextResponse.json(
+      { error: "signature manquante" },
+      {
+        status: 400,
+      },
+    );
   }
 
   let event: Stripe.Event;
@@ -233,9 +235,49 @@ export async function POST(request: NextRequest) {
     event = verifier(body, signature);
   } catch (err) {
     console.error("[stripe webhook] signature invalide", err);
-    return NextResponse.json({ error: "signature invalide" }, {
-      status: 400,
-    });
+    return NextResponse.json(
+      { error: "signature invalide" },
+      {
+        status: 400,
+      },
+    );
+  }
+
+  /**
+   * Retrouve l'établissement derrière une facture.
+   *
+   * Les factures de Stripe ne portent pas nos étiquettes : elles pendent au
+   * client, pas à l'abonnement. On remonte donc par le client, que toutes
+   * les lignes d'un établissement partagent.
+   */
+  async function facturePrevenue(
+    facture: Stripe.Invoice,
+    authentification: boolean,
+  ): Promise<void> {
+    const client = facture.customer;
+    if (typeof client !== "string") return;
+
+    const supabase = createServiceClient();
+    const { data } = await supabase
+      .from("restaurant_subscriptions")
+      .select("restaurant_id")
+      .eq("stripe_customer_id", client)
+      .limit(1)
+      .maybeSingle();
+
+    const restaurantId = (data as { restaurant_id: string } | null)
+      ?.restaurant_id;
+    if (!restaurantId) {
+      console.error("[stripe webhook] facture sans établissement", facture.id);
+      return;
+    }
+
+    await prevenirFactureEnAttente(
+      supabase,
+      restaurantId,
+      facture.amount_due ?? 0,
+      authentification,
+    );
   }
 
   switch (event.type) {
@@ -273,6 +315,17 @@ export async function POST(request: NextRequest) {
           session.id,
         );
       }
+      break;
+    }
+    // Un prélèvement qui n'aboutit pas ne se voit nulle part : l'abonnement
+    // reste « actif » pendant les relances. On prévient donc tout de suite,
+    // pendant qu'il est encore temps d'agir.
+    case "invoice.payment_action_required":
+    case "invoice.payment_failed": {
+      await facturePrevenue(
+        event.data.object as Stripe.Invoice,
+        event.type === "invoice.payment_action_required",
+      );
       break;
     }
     case "customer.subscription.updated":
