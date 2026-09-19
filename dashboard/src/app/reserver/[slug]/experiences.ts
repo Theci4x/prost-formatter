@@ -6,6 +6,7 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { chargerFermetures } from "@/lib/reservations/fermetures";
 import { etatSeance, montantSeance } from "@/lib/experiences/seances";
 import { OCTETS_JETON } from "@/lib/reservations/acompte";
+import { enregistrerContact } from "@/lib/contacts/fichier";
 import type { Experience, PlaceReservee } from "@/types/experience";
 
 export type InscriptionState = { error: string | null };
@@ -101,6 +102,16 @@ export async function inscrire(
     console.error("[inscrire]", error);
     return { error: "L'inscription a échoué. Réessayez dans un instant." };
   }
+
+  await enregistrerContact({
+    supabase,
+    restaurantId: restaurant.id,
+    nom,
+    email,
+    telephone,
+    accepte: communications,
+    source: "experience",
+  });
 
   redirect(
     experience.prepaiement

@@ -23,6 +23,7 @@ import {
 import type { Contexte } from "@/lib/courriel/messages";
 import { siteUrl } from "@/lib/site-url";
 import { notifierEtablissement } from "@/lib/push/envoyer";
+import { enregistrerContact } from "@/lib/contacts/fichier";
 import { chargerAcces } from "@/lib/abonnement/acces";
 import {
   disponibiliteEspace,
@@ -119,7 +120,8 @@ export async function demanderReservation(
         .eq("slug_reservation", slug)
         .maybeSingle();
 
-  const restaurant = ((complet.data ?? replis?.data) ??
+  const restaurant = (complet.data ??
+    replis?.data ??
     null) as Etablissement | null;
   if (!restaurant) return { error: "Établissement introuvable." };
 
@@ -149,7 +151,11 @@ export async function demanderReservation(
   );
   const [sousPlafondGlobal, sousPlafondMaison] = await Promise.all([
     consommer(supabase, visiteur, DEMANDES_PAR_JOUR),
-    consommer(supabase, `${visiteur}:${restaurant.id}`, DEMANDES_PAR_RESTAURANT),
+    consommer(
+      supabase,
+      `${visiteur}:${restaurant.id}`,
+      DEMANDES_PAR_RESTAURANT,
+    ),
   ]);
   if (!sousPlafondGlobal || !sousPlafondMaison) {
     return {
@@ -267,38 +273,42 @@ export async function demanderReservation(
   // de rendre sa table sans téléphoner en plein service.
   const annulation = jetonAnnulation();
 
-  const { data: creee, error } = await supabase.from("restaurant_reservations").insert({
-    restaurant_id: restaurant.id,
-    espace_id: espace.id,
-    service_id: service.id,
-    date_reservation: date,
-    heure_arrivee: heure,
-    couverts,
-    type,
-    statut: decision.statut,
-    // Écrit explicitement plutôt que laissé au défaut de la base : la
-    // provenance se lit dans le tableau de bord, elle ne doit pas dépendre
-    // d'un réglage de schéma.
-    origine: "client",
-    client_nom: nom,
-    client_email: email,
-    client_telephone: telephone || null,
-    occasion: occasion || null,
-    message: message || null,
-    accepte_communications: accepteCommunications,
-    // Une réservation confirmée ne pose plus d'option : elle est acquise,
-    // et une date d'expiration traînante la ferait disparaître du carnet.
-    option_expire_le: confirmee ? null : expiration.toISOString(),
-    annulation_token: annulation,
-    // Recopié depuis l'espace, et non relu plus tard : ce qui a été
-    // annoncé au client sur la page ne doit pas changer si le
-    // restaurateur révise son tarif la semaine suivante.
-    minimum_consommation_centimes:
-      type === "privatisation"
-        ? (espace.minimum_consommation_centimes ?? null)
-        : null,
-    minimum_consommation_ht: espace.minimum_consommation_ht ?? true,
-  }).select("id").maybeSingle();
+  const { data: creee, error } = await supabase
+    .from("restaurant_reservations")
+    .insert({
+      restaurant_id: restaurant.id,
+      espace_id: espace.id,
+      service_id: service.id,
+      date_reservation: date,
+      heure_arrivee: heure,
+      couverts,
+      type,
+      statut: decision.statut,
+      // Écrit explicitement plutôt que laissé au défaut de la base : la
+      // provenance se lit dans le tableau de bord, elle ne doit pas dépendre
+      // d'un réglage de schéma.
+      origine: "client",
+      client_nom: nom,
+      client_email: email,
+      client_telephone: telephone || null,
+      occasion: occasion || null,
+      message: message || null,
+      accepte_communications: accepteCommunications,
+      // Une réservation confirmée ne pose plus d'option : elle est acquise,
+      // et une date d'expiration traînante la ferait disparaître du carnet.
+      option_expire_le: confirmee ? null : expiration.toISOString(),
+      annulation_token: annulation,
+      // Recopié depuis l'espace, et non relu plus tard : ce qui a été
+      // annoncé au client sur la page ne doit pas changer si le
+      // restaurateur révise son tarif la semaine suivante.
+      minimum_consommation_centimes:
+        type === "privatisation"
+          ? (espace.minimum_consommation_centimes ?? null)
+          : null,
+      minimum_consommation_ht: espace.minimum_consommation_ht ?? true,
+    })
+    .select("id")
+    .maybeSingle();
 
   if (error) {
     console.error("[demanderReservation]", error);
@@ -326,6 +336,18 @@ export async function demanderReservation(
     };
     const couvertsLisibles = `${couverts} couvert${couverts > 1 ? "s" : ""}`;
     await Promise.all([
+      // La fiche client se range en même temps que partent les e-mails,
+      // et elle ne défait rien non plus : la table est prise, que le
+      // fichier s'écrive ou non.
+      enregistrerContact({
+        supabase,
+        restaurantId: restaurant.id,
+        nom,
+        email,
+        telephone,
+        accepte: accepteCommunications,
+        source: "reservation",
+      }),
       prevenirClient({
         supabase,
         reservationId,

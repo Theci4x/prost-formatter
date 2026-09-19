@@ -45,9 +45,20 @@ export type Pouls = {
   couvertureUrl: string | null;
   sitePublie: boolean;
   nombreQuestions: number;
-  connexions: { google: boolean; facebook: boolean; instagram: boolean; tiktok: boolean };
+  connexions: {
+    google: boolean;
+    facebook: boolean;
+    instagram: boolean;
+    tiktok: boolean;
+  };
   /** Sur les questions posées aux IA, combien citent la maison au dernier passage. */
   ia: { citees: number; total: number } | null;
+  /**
+   * Le fichier client : tout le monde, et ceux à qui on a le droit
+   * d'écrire. L'écart entre les deux est le chiffre utile — il dit
+   * combien de clients sont passés sans cocher la case.
+   */
+  contacts: { total: number; joignables: number };
 };
 
 /** Même convention que l'écran de service : le jour, tel que le serveur le voit. */
@@ -59,7 +70,11 @@ export function jourDuPouls(maintenant: Date): string {
 const HEURE_SOIR = "17:00";
 
 type Reservation = { heure_arrivee: string | null; couverts: number | null };
-type Snapshot = { note: number | string | null; nombre_avis: number | null; releve_le: string };
+type Snapshot = {
+  note: number | string | null;
+  nombre_avis: number | null;
+  releve_le: string;
+};
 type Check = { question_id: string; est_cite: boolean; created_at: string };
 
 type Filtres = Record<string, string | boolean>;
@@ -108,7 +123,9 @@ export async function chargerPouls(
 ): Promise<Pouls> {
   const id = restaurant.id;
   const jour = jourDuPouls(maintenant);
-  const ilYAUneSemaine = new Date(maintenant.getTime() - 7 * 86400000).toISOString();
+  const ilYAUneSemaine = new Date(
+    maintenant.getTime() - 7 * 86400000,
+  ).toISOString();
 
   const [
     tablesDuJour,
@@ -124,6 +141,8 @@ export async function chargerPouls(
     social,
     tiktok,
     checks,
+    contactsTotal,
+    contactsJoignables,
   ] = await Promise.all([
     supabase
       .from("restaurant_reservations")
@@ -141,7 +160,10 @@ export async function chargerPouls(
       { restaurant_id: id, statut: "demande" },
       { colonne: "date_reservation", valeur: jour },
     ),
-    compter(supabase, "restaurant_retours", { restaurant_id: id, traite: false }),
+    compter(supabase, "restaurant_retours", {
+      restaurant_id: id,
+      traite: false,
+    }),
     supabase
       .from("restaurant_reputation_snapshots")
       .select("note, nombre_avis, releve_le")
@@ -159,8 +181,14 @@ export async function chargerPouls(
       .order("publier_le", { ascending: true })
       .limit(1)
       .maybeSingle()
-      .then(({ data }) => (data as { publier_le: string } | null)?.publier_le ?? null),
-    compter(supabase, "restaurant_menu_items", { restaurant_id: id, actif: true }),
+      .then(
+        ({ data }) =>
+          (data as { publier_le: string } | null)?.publier_le ?? null,
+      ),
+    compter(supabase, "restaurant_menu_items", {
+      restaurant_id: id,
+      actif: true,
+    }),
     compter(supabase, "restaurant_photos", { restaurant_id: id }),
     restaurant.photo_couverture_id
       ? supabase
@@ -178,7 +206,10 @@ export async function chargerPouls(
       .eq("restaurant_id", id)
       .limit(1)
       .maybeSingle()
-      .then(({ data }) => data as { instagram_business_account_id: string | null } | null),
+      .then(
+        ({ data }) =>
+          data as { instagram_business_account_id: string | null } | null,
+      ),
     compter(supabase, "tiktok_connections", { restaurant_id: id }),
     supabase
       .from("ai_visibility_checks")
@@ -187,6 +218,20 @@ export async function chargerPouls(
       .order("created_at", { ascending: false })
       .limit(200)
       .then(({ data }) => (data ?? []) as Check[]),
+    compter(supabase, "restaurant_contacts", { restaurant_id: id }),
+    // `compter` ne sait poser que des égalités, et « pas désinscrit »
+    // s'écrit `is null`. L'index partiel de la migration rend la requête
+    // immédiate malgré la table entière.
+    supabase
+      .from("restaurant_contacts")
+      .select("id", { count: "exact", head: true })
+      .eq("restaurant_id", id)
+      .eq("consentement", true)
+      .is("desabonne_le", null)
+      .then(({ count, error }) => {
+        if (error) console.error("[pouls] contacts joignables", error.message);
+        return count ?? 0;
+      }),
   ]);
 
   let couvertsMidi = 0;
@@ -200,7 +245,8 @@ export async function chargerPouls(
   // Le relevé le plus récent donne la note ; le premier relevé d'il y a au
   // moins sept jours donne le recul. Sans lui, on ne prétend pas savoir.
   const dernier = snapshots[0] ?? null;
-  const reference = snapshots.find((s) => s.releve_le <= ilYAUneSemaine) ?? null;
+  const reference =
+    snapshots.find((s) => s.releve_le <= ilYAUneSemaine) ?? null;
   const avisCetteSemaine =
     dernier?.nombre_avis != null && reference?.nombre_avis != null
       ? dernier.nombre_avis - reference.nombre_avis
@@ -246,5 +292,6 @@ export async function chargerPouls(
       tiktok: tiktok > 0,
     },
     ia,
+    contacts: { total: contactsTotal, joignables: contactsJoignables },
   };
 }

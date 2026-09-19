@@ -242,6 +242,9 @@ export const MODULE_DE_LA_SECTION: Record<string, Module> = {
   tiktok: "visibilite",
   reservations: "reservations",
   service: "reservations",
+  // Le fichier client se remplit des réservations : sans le carnet, il
+  // n'a rien à montrer.
+  clients: "reservations",
   experiences: "reservations",
   paiements: "reservations",
 };

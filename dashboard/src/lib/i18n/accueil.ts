@@ -18,6 +18,7 @@ export type ClesAccueil = {
   groupes: Record<"service" | "maison" | "visibilite" | "reglages", string>;
   entrees: Record<
     | "reservations"
+    | "clients"
     | "service"
     | "vitrine"
     | "carte"
@@ -50,6 +51,10 @@ const fr: ClesAccueil = {
     reservations: {
       label: "Réservations",
       resume: "Le carnet, tes salles, tes services et ton plan de salle.",
+    },
+    clients: {
+      label: "Fichier client",
+      resume: "Qui est venu, combien de fois, et à qui tu as le droit d'écrire.",
     },
     service: {
       label: "Service",
@@ -125,6 +130,10 @@ const en: ClesAccueil = {
       label: "Bookings",
       resume: "The book, your rooms, your services and your floor plan.",
     },
+    clients: {
+      label: "Customer records",
+      resume: "Who came, how often, and who you are allowed to write to.",
+    },
     service: {
       label: "Service",
       resume: "The floor screen, for the rush.",
@@ -198,6 +207,10 @@ const zh: ClesAccueil = {
     reservations: {
       label: "订座",
       resume: "订座本、包间、服务时段和座位图。",
+    },
+    clients: {
+      label: "顾客档案",
+      resume: "谁来过、来过几次，以及您有权给谁写信。",
     },
     service: { label: "现场", resume: "用餐高峰时的现场屏幕。" },
     vitrine: {

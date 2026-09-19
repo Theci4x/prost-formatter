@@ -70,6 +70,13 @@ const ICONES = {
       <path d="M8 2v4M16 2v4M3 10h18" />
     </Icone>
   ),
+  clients: (
+    <Icone>
+      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+    </Icone>
+  ),
   service: (
     <Icone>
       <path d="M4 20h16" />
@@ -197,6 +204,20 @@ function groupes(t: ClesAccueil): Groupe[] {
               ? `${p.aConfirmer} demande${p.aConfirmer > 1 ? "s" : ""} à confirmer`
               : "Rien en attente",
           attention: (p) => p.aConfirmer > 0,
+        },
+        {
+          href: "clients",
+          label: t.entrees.clients.label,
+          resume: t.entrees.clients.resume,
+          icone: ICONES.clients,
+          minimum: "gerant",
+          // L'écart entre les deux chiffres est ce qu'on veut lui
+          // montrer : il dit combien de clients sont passés sans cocher
+          // la case, donc ce que vaut le fichier aujourd'hui.
+          detail: (p) =>
+            p.contacts.total > 0
+              ? `${p.contacts.total} client${p.contacts.total > 1 ? "s" : ""} · ${p.contacts.joignables} joignable${p.contacts.joignables > 1 ? "s" : ""}`
+              : "Aucun client enregistré",
         },
         {
           href: "service",
