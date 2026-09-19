@@ -126,7 +126,11 @@ export function ProspectForm({
 
       {state.status === "error" && (
         <p className="text-sm text-red-600">
-          {state.error === "missing" ? t.missingFields : t.genericError}
+          {state.error === "missing"
+            ? t.missingFields
+            : state.error === "quota"
+              ? t.quotaError
+              : t.genericError}
         </p>
       )}
 

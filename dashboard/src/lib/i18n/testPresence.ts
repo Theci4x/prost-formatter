@@ -26,6 +26,8 @@ export const translations = {
       submitting: "Analyse en cours...",
       missingFields: "Merci de remplir tous les champs.",
       genericError: "Une erreur est survenue, réessaie dans un instant.",
+      quotaError:
+        "Tu as déjà lancé plusieurs tests aujourd'hui. Reviens demain, ou écris-nous : on le fait pour toi.",
       successTitle: "Merci ! On revient vers vous très vite.",
       successBody:
         "On regarde votre fiche Google et on vous recontacte avec les résultats.",
@@ -189,6 +191,8 @@ export const translations = {
       submitting: "Analyzing...",
       missingFields: "Please fill in all fields.",
       genericError: "Something went wrong, please try again in a moment.",
+      quotaError:
+        "You have already run several tests today. Come back tomorrow, or write to us and we will run it for you.",
       successTitle: "Thanks! We'll be in touch shortly.",
       successBody:
         "We're reviewing your Google listing and will contact you with the results.",
@@ -349,6 +353,8 @@ export const translations = {
       submitting: "分析中...",
       missingFields: "请填写所有字段。",
       genericError: "出现错误，请稍后重试。",
+      quotaError:
+        "您今天已经进行了多次测试。请明天再来，或与我们联系，我们代您完成。",
       successTitle: "谢谢！我们会尽快与您联系。",
       successBody: "我们正在查看您的 Google 商家资料，稍后会把结果反馈给您。",
     },

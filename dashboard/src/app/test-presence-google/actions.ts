@@ -58,7 +58,7 @@ export type AuditResult = {
 
 export type ProspectFormState = {
   status: "idle" | "success" | "error";
-  error?: "missing" | "generic";
+  error?: "missing" | "generic" | "quota";
   audit?: AuditResult;
   /** Pour pré-remplir l'inscription plutôt que de la redemander. */
   email?: string;
@@ -185,7 +185,7 @@ export async function submitProspect(
   // service : la fonction n'est pas ouverte au visiteur, qui pourrait
   // sinon gonfler le compteur d'autrui jusqu'à le bloquer.
   const entetes = await headers();
-  const compteurs = createServiceClient();
+  const service = createServiceClient();
   const visiteur = empreinte(
     "audit",
     adresseIp(entetes),
@@ -193,15 +193,28 @@ export async function submitProspect(
     secretEmpreinte(),
   );
   const [sousPlafond, sousPlafondGlobal] = await Promise.all([
-    consommer(compteurs, visiteur, AUDITS_PAR_JOUR),
-    consommer(compteurs, "audit:global", AUDITS_PAR_JOUR_GLOBAL),
+    consommer(service, visiteur, AUDITS_PAR_JOUR),
+    consommer(service, "audit:global", AUDITS_PAR_JOUR_GLOBAL),
   ]);
+  // Un refus de plafond n'est pas une panne : le dire franchement, sinon le
+  // restaurateur réessaie deux fois « dans un instant » et s'en va. Et le
+  // journaliser, sinon on ne sait même pas qu'il est passé.
   if (!sousPlafond || !sousPlafondGlobal) {
-    return { status: "error", error: "generic" };
+    console.warn(
+      `[submitProspect] plafond atteint (${sousPlafond ? "global" : "visiteur"})`,
+    );
+    return { status: "error", error: "quota" };
   }
 
-  const supabase = await createClient();
-  const { data, error } = await supabase
+  // Écrit avec la clé de service, et non avec celle du visiteur. La table
+  // n'a qu'une politique d'insertion, jamais de lecture — c'est voulu,
+  // personne ne doit pouvoir lister les prospects par l'API publique. Mais
+  // « insert ... returning », que produit `.select()`, se fait refuser par
+  // cette politique de lecture manquante : l'insertion partait, et Postgres
+  // répondait « new row violates row-level security policy », un message
+  // qui accuse la politique d'insertion alors qu'elle est correcte. Le
+  // formulaire échouait à chaque envoi.
+  const { data, error } = await service
     .from("prospects")
     .insert({ prenom, nom, email, telephone, entreprise, ville })
     .select("id")

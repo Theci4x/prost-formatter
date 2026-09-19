@@ -31,7 +31,7 @@ export const DEMANDES_PAR_RESTAURANT = 3;
  * adresse publique — à un par adresse, le deuxième restaurateur d'une ville
  * serait refusé sans comprendre pourquoi.
  */
-export const AUDITS_PAR_JOUR = 3;
+export const AUDITS_PAR_JOUR = 5;
 
 /**
  * Et pour tout le monde réuni. Chaque test consomme deux appels facturés à
