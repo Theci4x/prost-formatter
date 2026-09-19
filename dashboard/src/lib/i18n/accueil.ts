@@ -216,7 +216,7 @@ const zh: ClesAccueil = {
   },
   entrees: {
     reservations: {
-      label: "订座",
+      label: "订位",
       resume: "预订簿、包间、服务时段和座位图。",
     },
     clients: {
