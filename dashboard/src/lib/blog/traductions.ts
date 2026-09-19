@@ -7,7 +7,17 @@ import {
 import { billetParSlug, tousLesBillets } from "@/lib/blog/billets";
 
 import { traduction as ouvrirChecklistEn } from "@/contenu/blog/traductions/en/ouvrir-un-restaurant-checklist";
+import { traduction as permisLicenceEn } from "@/contenu/blog/traductions/en/permis-exploitation-licence";
+import { traduction as declarationSanitaireEn } from "@/contenu/blog/traductions/en/declaration-sanitaire-ddpp";
+import { traduction as haccpEn } from "@/contenu/blog/traductions/en/haccp-pms";
+import { traduction as erpEn } from "@/contenu/blog/traductions/en/erp-commission-securite";
+import { traduction as avantTravauxEn } from "@/contenu/blog/traductions/en/avant-travaux-diagnostics";
 import { traduction as ouvrirChecklistZh } from "@/contenu/blog/traductions/zh/ouvrir-un-restaurant-checklist";
+import { traduction as permisLicenceZh } from "@/contenu/blog/traductions/zh/permis-exploitation-licence";
+import { traduction as declarationSanitaireZh } from "@/contenu/blog/traductions/zh/declaration-sanitaire-ddpp";
+import { traduction as haccpZh } from "@/contenu/blog/traductions/zh/haccp-pms";
+import { traduction as erpZh } from "@/contenu/blog/traductions/zh/erp-commission-securite";
+import { traduction as avantTravauxZh } from "@/contenu/blog/traductions/zh/avant-travaux-diagnostics";
 
 /**
  * Le journal dans les autres langues.
@@ -32,9 +42,19 @@ const TRADUCTIONS: Record<
 > = {
   en: {
     "ouvrir-un-restaurant-demarches": ouvrirChecklistEn,
+    "permis-exploitation-licence-restaurant": permisLicenceEn,
+    "declaration-sanitaire-restaurant-ddpp": declarationSanitaireEn,
+    "haccp-plan-maitrise-sanitaire-restaurant": haccpEn,
+    "erp-restaurant-categorie-commission-securite": erpEn,
+    "diagnostics-avant-travaux-restaurant": avantTravauxEn,
   },
   zh: {
     "ouvrir-un-restaurant-demarches": ouvrirChecklistZh,
+    "permis-exploitation-licence-restaurant": permisLicenceZh,
+    "declaration-sanitaire-restaurant-ddpp": declarationSanitaireZh,
+    "haccp-plan-maitrise-sanitaire-restaurant": haccpZh,
+    "erp-restaurant-categorie-commission-securite": erpZh,
+    "diagnostics-avant-travaux-restaurant": avantTravauxZh,
   },
 };
 
@@ -89,9 +109,7 @@ export function adressePour(
   langue: LangueJournal,
 ): string | null {
   if (langue === "fr") {
-    return billetParSlug(slugFrancais)
-      ? `/blog/${slugFrancais}`
-      : null;
+    return billetParSlug(slugFrancais) ? `/blog/${slugFrancais}` : null;
   }
   const traduite = TRADUCTIONS[langue][slugFrancais];
   return traduite ? `${cheminJournal(langue)}/${traduite.slug}` : null;
@@ -107,10 +125,7 @@ export function adressePour(
  * texte, quand elle n'existe pas encore. Renvoyer un lecteur anglophone
  * vers une page française serait une impasse annoncée comme une piste.
  */
-export function reecrireLiens(
-  markdown: string,
-  langue: LangueJournal,
-): string {
+export function reecrireLiens(markdown: string, langue: LangueJournal): string {
   if (langue === "fr") return markdown;
   return markdown.replace(
     /\[([^\]]+)\]\(\/blog\/([a-z0-9-]+)\)/g,
