@@ -29,15 +29,28 @@ export async function GET(request: NextRequest) {
     .maybeSingle();
 
   if (!restaurant) {
-    return NextResponse.json({ error: "restaurant introuvable" }, {
-      status: 404,
-    });
+    return NextResponse.json(
+      { error: "restaurant introuvable" },
+      {
+        status: 404,
+      },
+    );
   }
 
+  // Une seule ligne suffit, et il peut y en avoir plusieurs : le pack en
+  // écrit une par module ouvert. `maybeSingle()` exigeait au plus une
+  // ligne et échouait dès qu'un restaurateur passait au pack — le bouton
+  // « Gérer » répondait alors « aucun abonnement » à quelqu'un qui payait.
+  //
+  // Toutes les lignes d'un établissement portent le même client Stripe :
+  // n'importe laquelle donne le bon portail, et le portail montre de
+  // toute façon l'ensemble de ses abonnements.
   const { data: subscription } = await supabase
     .from("restaurant_subscriptions")
     .select("stripe_customer_id")
     .eq("restaurant_id", restaurantId)
+    .order("updated_at", { ascending: false })
+    .limit(1)
     .maybeSingle();
 
   if (!subscription) {
