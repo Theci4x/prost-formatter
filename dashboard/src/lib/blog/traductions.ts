@@ -21,6 +21,11 @@ import { traduction as ficheGoogleEn } from "@/contenu/blog/traductions/en/fiche
 import { traduction as avisGoogleEn } from "@/contenu/blog/traductions/en/avis-google";
 import { traduction as classementLocalEn } from "@/contenu/blog/traductions/en/classement-local-maps";
 import { traduction as menuOuCarteEn } from "@/contenu/blog/traductions/en/menu-ou-carte";
+import { traduction as sansCommissionEn } from "@/contenu/blog/traductions/en/reservations-sans-commission";
+import { traduction as noShowEn } from "@/contenu/blog/traductions/en/no-show";
+import { traduction as tvaMenuVinEn } from "@/contenu/blog/traductions/en/tva-menu-vin";
+import { traduction as livraisonEn } from "@/contenu/blog/traductions/en/livraison-plateformes";
+import { traduction as organisationSalleEn } from "@/contenu/blog/traductions/en/organisation-salle";
 import { traduction as ouvrirChecklistZh } from "@/contenu/blog/traductions/zh/ouvrir-un-restaurant-checklist";
 import { traduction as permisLicenceZh } from "@/contenu/blog/traductions/zh/permis-exploitation-licence";
 import { traduction as declarationSanitaireZh } from "@/contenu/blog/traductions/zh/declaration-sanitaire-ddpp";
@@ -36,6 +41,11 @@ import { traduction as ficheGoogleZh } from "@/contenu/blog/traductions/zh/fiche
 import { traduction as avisGoogleZh } from "@/contenu/blog/traductions/zh/avis-google";
 import { traduction as classementLocalZh } from "@/contenu/blog/traductions/zh/classement-local-maps";
 import { traduction as menuOuCarteZh } from "@/contenu/blog/traductions/zh/menu-ou-carte";
+import { traduction as sansCommissionZh } from "@/contenu/blog/traductions/zh/reservations-sans-commission";
+import { traduction as noShowZh } from "@/contenu/blog/traductions/zh/no-show";
+import { traduction as tvaMenuVinZh } from "@/contenu/blog/traductions/zh/tva-menu-vin";
+import { traduction as livraisonZh } from "@/contenu/blog/traductions/zh/livraison-plateformes";
+import { traduction as organisationSalleZh } from "@/contenu/blog/traductions/zh/organisation-salle";
 
 /**
  * Le journal dans les autres langues.
@@ -74,6 +84,12 @@ const TRADUCTIONS: Record<
     "avis-google-restaurant-ce-qui-est-interdit": avisGoogleEn,
     "pourquoi-je-sors-derriere-mon-voisin-google-maps": classementLocalEn,
     "menu-ou-carte-restaurant-marges": menuOuCarteEn,
+    "reservations-sans-commission-guide-restaurants-independants":
+      sansCommissionEn,
+    "no-show-restaurant-cout-empreinte-bancaire": noShowEn,
+    "tva-restaurant-menu-avec-vin-ventilation": tvaMenuVinEn,
+    "livraison-uber-eats-deliveroo-calcul-marge": livraisonEn,
+    "organisation-service-salle-fonctions": organisationSalleEn,
   },
   zh: {
     "ouvrir-un-restaurant-demarches": ouvrirChecklistZh,
@@ -91,6 +107,12 @@ const TRADUCTIONS: Record<
     "avis-google-restaurant-ce-qui-est-interdit": avisGoogleZh,
     "pourquoi-je-sors-derriere-mon-voisin-google-maps": classementLocalZh,
     "menu-ou-carte-restaurant-marges": menuOuCarteZh,
+    "reservations-sans-commission-guide-restaurants-independants":
+      sansCommissionZh,
+    "no-show-restaurant-cout-empreinte-bancaire": noShowZh,
+    "tva-restaurant-menu-avec-vin-ventilation": tvaMenuVinZh,
+    "livraison-uber-eats-deliveroo-calcul-marge": livraisonZh,
+    "organisation-service-salle-fonctions": organisationSalleZh,
   },
 };
 

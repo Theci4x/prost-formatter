@@ -66,7 +66,7 @@ const en: ClesJournal = {
   index: {
     titre: "Opening and running a restaurant in France",
     chapo:
-      "The paperwork, the inspections and the permits — written for people who run a restaurant in France without French as a first language. Each article cites the legal text it relies on, and carries its date.",
+      "The paperwork, the inspections and the permits — then what comes after opening: margins, reviews, bookings, delivery. Written for people who run a restaurant in France without French as a first language. Each article cites what it relies on, and carries its date.",
     vide: "Nothing translated yet.",
   },
   rubriques: {
@@ -91,7 +91,7 @@ const zh: ClesJournal = {
   index: {
     titre: "在法国开餐厅、经营餐厅",
     chapo:
-      "手续、检查和许可——写给在法国经营餐厅、而法语并非母语的人。每篇文章都注明所依据的法律条文，并标有日期。",
+      "手续、检查和许可，以及开业之后的事：毛利、评价、订位、外卖。写给在法国经营餐厅、而法语并非母语的人。每篇文章都注明所依据的材料，并标有日期。",
     vide: "暂无译文。",
   },
   rubriques: {
