@@ -5,6 +5,7 @@ import type { Restaurant } from "@/types/restaurant";
 import type { RestaurantSubscription } from "@/types/subscription";
 import { exiger } from "@/lib/equipe/roles";
 import { chargerAcces } from "@/lib/abonnement/acces";
+import { factureEnAttente } from "@/lib/stripe/factures";
 import {
   LIBELLE_MODULE,
   MODULES,
@@ -91,6 +92,12 @@ export default async function AbonnementPage({
     ? MODULES.find((cle) => !payes.includes(cle))
     : undefined;
 
+  // Toutes les lignes d'un établissement portent le même client Stripe.
+  const clientStripe = payes
+    .map((cle) => abonnements.get(cle)?.stripe_customer_id)
+    .find(Boolean);
+  const facture = clientStripe ? await factureEnAttente(clientStripe) : null;
+
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 px-6 py-8">
       <PageHeader
@@ -117,6 +124,34 @@ export default async function AbonnementPage({
                 ? "Ce module est déjà payé. Utilisez « Gérer » pour changer de carte ou résilier — souscrire une seconde fois vous ferait payer deux fois."
                 : query.stripe_error}
           </p>
+        </div>
+      )}
+
+      {/* Une facture ouverte prime sur le reste de l'écran : le module
+          tourne encore, mais il se fermera si personne ne fait ce geste.
+          Le restaurateur doit le voir avant les tarifs. */}
+      {facture && (
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-3 rounded-2xl border border-amber-300 bg-amber-50 px-5 py-4">
+          <div className="flex min-w-0 flex-1 basis-64 flex-col gap-1">
+            <span className="text-sm font-semibold text-amber-900">
+              {facture.authentification
+                ? `Ta banque attend ta confirmation pour ${facture.montant}.`
+                : `Une facture de ${facture.montant} attend son règlement.`}
+            </span>
+            <span className="text-sm leading-relaxed text-amber-800">
+              {facture.authentification
+                ? "Ta carte est bonne — il manque seulement la validation de sécurité de ta banque. Sans elle, le paiement n'aboutit pas et ton abonnement finira par se fermer."
+                : "Ton abonnement reste ouvert le temps des relances, puis se fermera. Régler maintenant évite la coupure."}
+            </span>
+          </div>
+          <a
+            href={facture.url}
+            target="_blank"
+            rel="noreferrer"
+            className="w-fit rounded-md bg-amber-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-amber-800"
+          >
+            {facture.authentification ? "Confirmer le paiement" : "Régler"}
+          </a>
         </div>
       )}
 
