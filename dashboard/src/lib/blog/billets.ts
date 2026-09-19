@@ -21,6 +21,7 @@ import { billet as haccp } from "@/contenu/blog/haccp-pms";
 import { billet as terrasse } from "@/contenu/blog/terrasse";
 import { billet as organisationSalle } from "@/contenu/blog/organisation-salle";
 import { billet as sansCommission } from "@/contenu/blog/reservations-sans-commission";
+import { billet as visibiliteIa } from "@/contenu/blog/visibilite-ia-chatgpt";
 
 /**
  * Les billets, importés un par un plutôt que lus sur le disque.
@@ -47,6 +48,7 @@ const TOUS: Billet[] = [
   terrasse,
   organisationSalle,
   sansCommission,
+  visibiliteIa,
 ];
 
 /** Du plus récent au plus ancien : c'est l'ordre d'un blog. */

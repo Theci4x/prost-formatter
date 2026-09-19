@@ -51,6 +51,11 @@ export const billet: Billet = {
       pourquoi:
         "Le revers d'une fiche qui marche : des réservations qui n'arrivent jamais.",
     },
+    {
+      slug: "pourquoi-chatgpt-ne-parle-pas-de-votre-restaurant",
+      pourquoi:
+        "Vos avis ne servent pas qu'à vos clients : ce sont eux que les assistants IA lisent pour décider s'ils vous citent.",
+    },
   ],
   markdown: `
 Il existe des centaines d'articles sur « comment obtenir plus d'avis Google ». Il n'en existe presque aucun sur ce qui est interdit — alors que c'est là que les restaurateurs se mettent en danger, souvent de bonne foi, en appliquant des conseils trouvés en ligne.

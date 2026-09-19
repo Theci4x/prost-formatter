@@ -35,6 +35,11 @@ export const billet: Billet = {
       pourquoi:
         "Encaisser soi-même, c'est aussi pouvoir retenir quand personne ne vient.",
     },
+    {
+      slug: "pourquoi-chatgpt-ne-parle-pas-de-votre-restaurant",
+      pourquoi:
+        "La deuxième porte d'entrée, celle qu'on ne peut pas mesurer sans poser la question.",
+    },
   ],
   markdown: `
 **Disons-le tout de suite : nous ne sommes pas neutres.** Klarr vend une page de réservation à l'abonnement, sans commission. Nous avons donc un intérêt direct à ce que vous trouviez les commissions trop chères.
@@ -104,7 +109,7 @@ Une précision honnête au passage, parce qu'on lit souvent le contraire : ce bo
 
 Une deuxième porte s'est ouverte ces deux dernières années, et elle ne ressemble pas à la première.
 
-Quand quelqu'un demande à ChatGPT, Gemini ou Perplexity « où dîner à six dans le 11e », l'assistant ne rend pas une liste de résultats : **il choisit**. Il nomme deux ou trois maisons, et les autres n'existent pas dans cette réponse-là. Il n'y a pas de deuxième page.
+Quand quelqu'un [demande à ChatGPT, Gemini ou Perplexity](/blog/pourquoi-chatgpt-ne-parle-pas-de-votre-restaurant) « où dîner à six dans le 11e », l'assistant ne rend pas une liste de résultats : **il choisit**. Il nomme deux ou trois maisons, et les autres n'existent pas dans cette réponse-là. Il n'y a pas de deuxième page.
 
 Ce qui décide de qui est nommé ressemble à ce qui décide du référencement local, mais en plus exigeant sur la cohérence :
 
