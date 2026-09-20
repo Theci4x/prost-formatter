@@ -9,6 +9,7 @@ import {
   type Acces,
   LIBELLE_MODULE,
   moduleDeLaSection,
+  sectionOuverte,
   PRIX_MODULE,
 } from "@/lib/abonnement/modules";
 import { DeleteRestaurantButton } from "@/components/restaurants/DeleteRestaurantButton";
@@ -301,10 +302,14 @@ function groupes(t: ClesAccueil): Groupe[] {
           resume: t.entrees.faq.resume,
           icone: ICONES.faq,
           minimum: "gerant",
+          // Un avancement plutôt qu'un total : « 7 questions » se lit
+          // comme un travail fini, « 3 sur 7 » dit qu'il en reste. Et la
+          // case s'allume tant que ce n'est pas le cas — ces réponses
+          // sont ce qui épargne les appels en plein service.
           detail: (p) =>
-            p.nombreQuestions > 0
-              ? `${p.nombreQuestions} question${p.nombreQuestions > 1 ? "s" : ""}`
-              : null,
+            `${p.questionsSuggerees.repondues} sur ${p.questionsSuggerees.attendues}`,
+          attention: (p) =>
+            p.questionsSuggerees.repondues < p.questionsSuggerees.attendues,
         },
         {
           href: "experiences",
@@ -669,8 +674,11 @@ export function CarteRestaurant({
                 }
               >
                 {entrees.map((entree) => {
+                  // Une section ouverte par deux modules reste accessible
+                  // dès que l'un des deux est pris ; `requis` ne sert plus
+                  // qu'à nommer celui qu'on propose d'acheter.
                   const requis = moduleDeLaSection(entree.href);
-                  const ferme = requis ? !acces.ouvert[requis] : false;
+                  const ferme = !sectionOuverte(acces, entree.href);
                   const detail = entree.detail?.(pouls) ?? null;
                   const alerte = entree.attention?.(pouls) ?? false;
 

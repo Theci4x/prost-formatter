@@ -219,21 +219,28 @@ export const ACCES_COMPLET: Acces = {
 };
 
 /**
- * Le module dont dépend une section du tableau de bord.
+ * Le ou les modules dont dépend une section du tableau de bord.
  *
  * Ce qui n'est listé nulle part reste toujours accessible : la fiche de
  * l'établissement, l'équipe, les connexions et l'abonnement lui-même. On
  * n'enferme jamais quelqu'un dehors de sa propre porte — il doit pouvoir
  * relire ses données et payer.
+ *
+ * **Une liste veut dire « l'un des deux suffit ».** La FAQ est le cas qui
+ * l'a introduite : les mêmes réponses servent deux fois — le balisage
+ * FAQPage, qui relève de la visibilité, et le téléphone qui sonne moins
+ * en plein service, qui relève des réservations. La saisie appartient
+ * donc aux deux ; c'est ce qu'on en tire ensuite qui se facture d'un côté
+ * ou de l'autre.
  */
-export const MODULE_DE_LA_SECTION: Record<string, Module> = {
+export const MODULE_DE_LA_SECTION: Record<string, Module | Module[]> = {
   vitrine: "visibilite",
   menu: "visibilite",
   photos: "visibilite",
   avis: "visibilite",
   retours: "visibilite",
   seo: "visibilite",
-  faq: "visibilite",
+  faq: ["visibilite", "reservations"],
   "visibilite-ia": "visibilite",
   google: "visibilite",
   posts: "visibilite",
@@ -249,6 +256,27 @@ export const MODULE_DE_LA_SECTION: Record<string, Module> = {
   paiements: "reservations",
 };
 
+/** Tous les modules qui ouvrent cette section ; vide si elle est libre. */
+export function modulesDeLaSection(section: string): Module[] {
+  const requis = MODULE_DE_LA_SECTION[section];
+  if (!requis) return [];
+  return Array.isArray(requis) ? requis : [requis];
+}
+
+/**
+ * Celui qu'on met en avant quand la section est fermée.
+ *
+ * Le premier de la liste, et l'ordre n'est donc pas indifférent : c'est
+ * le module qu'on propose d'acheter à quelqu'un qui n'a ni l'un ni
+ * l'autre.
+ */
 export function moduleDeLaSection(section: string): Module | null {
-  return MODULE_DE_LA_SECTION[section] ?? null;
+  return modulesDeLaSection(section)[0] ?? null;
+}
+
+/** La section est-elle ouverte ? Un seul module suffit quand il y en a deux. */
+export function sectionOuverte(acces: Acces, section: string): boolean {
+  const requis = modulesDeLaSection(section);
+  if (requis.length === 0) return true;
+  return requis.some((module) => acces.ouvert[module]);
 }

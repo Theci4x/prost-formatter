@@ -1,5 +1,6 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { completude } from "@/lib/seo/questions-suggerees";
 
 /**
  * Le pouls d'un établissement : les quelques chiffres qui changent chaque
@@ -45,6 +46,15 @@ export type Pouls = {
   couvertureUrl: string | null;
   sitePublie: boolean;
   nombreQuestions: number;
+  /**
+   * L'avancement sur les questions qu'on propose : combien sont
+   * répondues, sur combien concernent cette maison — celle qui n'ouvre
+   * que le soir n'est pas comptée en retard sur le menu du midi.
+   *
+   * Distinct de `nombreQuestions`, qui compte tout ce qu'elle a écrit,
+   * ses propres questions comprises.
+   */
+  questionsSuggerees: { repondues: number; attendues: number };
   connexions: {
     google: boolean;
     facebook: boolean;
@@ -136,13 +146,14 @@ export async function chargerPouls(
     nombrePlats,
     nombrePhotos,
     couverture,
-    nombreQuestions,
+    questionsPosees,
     google,
     social,
     tiktok,
     checks,
     contactsTotal,
     contactsJoignables,
+    services,
   ] = await Promise.all([
     supabase
       .from("restaurant_reservations")
@@ -198,7 +209,14 @@ export async function chargerPouls(
           .maybeSingle()
           .then(({ data }) => (data as { url: string } | null)?.url ?? null)
       : Promise.resolve<string | null>(null),
-    compter(supabase, "restaurant_faq", { restaurant_id: id }),
+    supabase
+      .from("restaurant_faq")
+      .select("question")
+      .eq("restaurant_id", id)
+      .then(({ data, error }) => {
+        if (error) console.error("[pouls] faq", error.message);
+        return ((data ?? []) as { question: string }[]).map((q) => q.question);
+      }),
     compter(supabase, "google_business_connections", { restaurant_id: id }),
     supabase
       .from("social_connections")
@@ -232,6 +250,11 @@ export async function chargerPouls(
         if (error) console.error("[pouls] contacts joignables", error.message);
         return count ?? 0;
       }),
+    supabase
+      .from("restaurant_services")
+      .select("heure_debut")
+      .eq("restaurant_id", id)
+      .then(({ data }) => (data ?? []) as { heure_debut: string | null }[]),
   ]);
 
   let couvertsMidi = 0;
@@ -268,6 +291,18 @@ export async function chargerPouls(
         }
       : null;
 
+  // La même règle que l'écran des questions : une maison qui n'ouvre que
+  // le soir n'a pas à répondre sur le menu du midi, et ne doit donc pas
+  // rester éternellement « 6 sur 7 » pour une question hors sujet.
+  const avancement = completude(
+    {
+      serviceMidi: services.some(
+        (service) => (service.heure_debut ?? "").slice(0, 5) < "15:00",
+      ),
+    },
+    questionsPosees,
+  );
+
   return {
     jour,
     couvertsMidi,
@@ -284,7 +319,11 @@ export async function chargerPouls(
     nombrePhotos,
     couvertureUrl: couverture,
     sitePublie: restaurant.site_publie === true,
-    nombreQuestions,
+    nombreQuestions: questionsPosees.length,
+    questionsSuggerees: {
+      repondues: avancement.repondues,
+      attendues: avancement.attendues,
+    },
     connexions: {
       google: google > 0,
       facebook: social !== null,

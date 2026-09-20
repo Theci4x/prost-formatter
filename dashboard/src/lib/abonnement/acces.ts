@@ -6,6 +6,8 @@ import {
   ACCES_COMPLET,
   calculerAcces,
   moduleDeLaSection,
+  modulesDeLaSection,
+  sectionOuverte,
   type Acces,
   type EtatAbonnement,
   type Module,
@@ -70,12 +72,23 @@ export async function exigerModule(
   return acces;
 }
 
-/** La même chose, à partir du nom de la section. */
+/**
+ * La même chose, à partir du nom de la section.
+ *
+ * Une section ouverte par deux modules se contente de l'un des deux ; on
+ * ne renvoie vers l'abonnement que si aucun n'est ouvert, et on y met
+ * alors en avant le premier de la liste.
+ */
 export async function exigerSection(
   restaurantId: string,
   section: string,
 ): Promise<Acces> {
-  const requis = moduleDeLaSection(section);
-  if (!requis) return ACCES_COMPLET;
-  return exigerModule(restaurantId, requis);
+  if (modulesDeLaSection(section).length === 0) return ACCES_COMPLET;
+
+  const acces = await chargerAcces(restaurantId);
+  if (!sectionOuverte(acces, section)) {
+    const aProposer = moduleDeLaSection(section);
+    redirect(`/dashboard/${restaurantId}/abonnement?module=${aProposer}`);
+  }
+  return acces;
 }
