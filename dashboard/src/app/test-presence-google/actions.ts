@@ -246,12 +246,6 @@ export async function submitProspect(
   const ville = (formData.get("ville") as string)?.trim();
   const brut = (formData.get("langue") as string)?.trim();
   const langue = estLangue(brut) ? brut : "fr";
-  // Un accord de canal, pas une case marketing : il porte sur le même
-  // sujet que le reste du formulaire — ce test et sa suite. Ce qu'il
-  // ajoute, c'est de nommer WhatsApp, ce que Meta exige d'un opt-in et
-  // qu'un numéro laissé dans un champ ne dit pas.
-  const whatsapp = formData.get("whatsapp") === "on";
-
   const valeurs = { prenom, nom, email, telephone, entreprise, ville };
 
   if (!prenom || !nom || !email || !telephone || !entreprise || !ville) {
@@ -310,7 +304,6 @@ export async function submitProspect(
       telephone: telephoneNormalise,
       entreprise,
       ville,
-      whatsapp,
     })
     .select("id")
     .single();

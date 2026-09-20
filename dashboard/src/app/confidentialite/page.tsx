@@ -115,8 +115,7 @@ export default function ConfidentialitePage() {
           <li>
             <strong>Prospects</strong> — si vous utilisez le formulaire public «
             test de présence Google » : prénom, nom, e-mail, téléphone,
-            établissement, ville, et le cas échéant votre accord pour une
-            réponse sur WhatsApp.
+            établissement et ville.
           </li>
           <li>
             <strong>Demandes de rappel</strong> — si vous demandez à être

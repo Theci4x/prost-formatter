@@ -26,11 +26,6 @@ export const translations = {
       telephone: "Téléphone",
       privacyNotice:
         "Vos coordonnées servent uniquement à vous transmettre ce test et à vous recontacter à ce sujet. Elles ne sont ni revendues ni utilisées à des fins publicitaires. Vous pouvez en demander l'effacement à tout moment — voir notre [[politique de confidentialité]].",
-      // Nomme WhatsApp et nomme Klarr : c'est ce que Meta exige d'un
-      // consentement, et ce qui le distingue d'un numéro laissé « au
-      // cas où ». Décochée par défaut, comme celle des réservations.
-      whatsapp:
-        "Klarr peut me répondre sur WhatsApp, au numéro ci-dessus, au sujet de ce test.",
       submit: "Demander mon test gratuit",
       submitting: "Analyse en cours...",
       submittingDetail:
@@ -165,15 +160,6 @@ export const translations = {
         bouton: "Commencer mon essai gratuit",
       },
       imprimer: "Imprimer / Enregistrer en PDF",
-      whatsapp: {
-        libelle: "En discuter sur WhatsApp",
-        // « [[nom]] » et « [[note]] » sont remplacés avant l'envoi. Le
-        // message part de son téléphone, en son nom : il est donc écrit
-        // à la première personne, et il donne d'emblée le contexte qu'on
-        // aurait mis trois messages à lui redemander.
-        message:
-          "Bonjour, je viens de faire le test de présence Google pour [[nom]] ([[note]]/100) et j'aimerais en discuter.",
-      },
       recontacted:
         "On vous recontacte aussi pour approfondir ces résultats ensemble.",
     },
@@ -213,8 +199,6 @@ export const translations = {
       telephone: "Phone",
       privacyNotice:
         "Your details are used only to send you this review and to follow up about it. They are never sold or used for advertising. You can ask for them to be deleted at any time — see our [[privacy policy]].",
-      whatsapp:
-        "Klarr may reply on WhatsApp, on the number above, about this review.",
       submit: "Request my free review",
       submitting: "Analyzing...",
       submittingDetail:
@@ -347,11 +331,6 @@ export const translations = {
         bouton: "Start my free trial",
       },
       imprimer: "Print / Save as PDF",
-      whatsapp: {
-        libelle: "Discuss it on WhatsApp",
-        message:
-          "Hello, I've just run the Google presence check for [[nom]] ([[note]]/100) and I'd like to talk it through.",
-      },
       recontacted: "We'll also reach out to go through these results together.",
     },
     faqTitle: "Frequently asked questions",
@@ -390,7 +369,6 @@ export const translations = {
       telephone: "电话",
       privacyNotice:
         "您的联系方式仅用于向您发送本次测评结果，并就此与您联系，绝不会出售，也不会用于广告。您可以随时要求删除——详情请见我们的[[《隐私政策》]]。",
-      whatsapp: "Klarr 可以就本次测评，通过上方号码在 WhatsApp 上回复我。",
       submit: "申请免费测评",
       submitting: "分析中...",
       submittingDetail:
@@ -520,11 +498,6 @@ export const translations = {
         bouton: "开始免费试用",
       },
       imprimer: "打印 / 保存为 PDF",
-      whatsapp: {
-        libelle: "用 WhatsApp 聊聊",
-        message:
-          "您好，我刚做完 [[nom]] 的 Google 曝光检测（[[note]]/100），想就此聊一聊。",
-      },
       recontacted: "我们也会联系您，一起深入了解这些结果。",
     },
     faqTitle: "常见问题",

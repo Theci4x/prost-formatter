@@ -45,7 +45,6 @@ export function ProspectForm({
           audit={courant.audit}
           t={auditT}
           email={courant.email}
-          entreprise={courant.entreprise}
         />
       );
     }
@@ -180,16 +179,6 @@ export function ProspectForm({
                 : t.genericError}
         </p>
       )}
-
-      {/* Décochée par défaut, comme celle des réservations : une case
-          pré-cochée ne vaut pas consentement. Ce qu'elle change n'est pas
-          le motif — c'est le même test, la même suite — mais le canal, et
-          elle nomme WhatsApp pour que Meta la reconnaisse comme un
-          accord. */}
-      <label className="flex items-start gap-2.5 text-sm text-ink-soft">
-        <input type="checkbox" name="whatsapp" className="mt-0.5" />
-        <span>{t.whatsapp}</span>
-      </label>
 
       {/* Information au moment de la collecte : le RGPD l'exige là où la
           donnée est saisie, pas seulement dans une page à part.
