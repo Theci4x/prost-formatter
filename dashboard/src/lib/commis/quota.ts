@@ -50,18 +50,39 @@ export function adresseIp(entetes: Headers): string {
   return entetes.get("x-real-ip")?.trim() || "inconnue";
 }
 
+/** Une relecture depuis le cache coûte un dixième du tarif d'entrée. */
+const LECTURE_CACHE = 0.1;
+
+/**
+ * Le surcoût d'une écriture en cache, selon la durée demandée.
+ *
+ * Les deux durées ne coûtent pas la même chose, et l'écart n'est pas
+ * anecdotique : garder une heure coûte le double du tarif d'entrée, contre
+ * une fois et quart pour cinq minutes. Compter une écriture d'une heure au
+ * prix de cinq minutes sous-estime l'échange de près de quarante pour
+ * cent — et c'est ce compteur qui décide quand le Commis s'arrête.
+ */
+export const ECRITURE_CACHE = { "5m": 1.25, "1h": 2 } as const;
+
+export type DureeCache = keyof typeof ECRITURE_CACHE;
+
 /**
  * Ce que coûte un échange, en centimes, d'après les jetons consommés.
  *
  * Les jetons relus depuis le cache coûtent un dixième du plein tarif : sans
  * les distinguer, on surestimerait d'un facteur dix sur un assistant dont
  * la consigne — le mode d'emploi entier — est justement mise en cache.
+ *
+ * `dureeCache` doit être celle réellement demandée à l'API. L'appelant
+ * n'a pas à s'en souvenir deux fois : il tient la durée dans une seule
+ * constante et la passe ici comme il la passe à `cache_control`.
  */
 export function coutCentimes({
   entree,
   sortie,
   cacheEcriture = 0,
   cacheLecture = 0,
+  dureeCache,
   dollarsEntreeParMillion,
   dollarsSortieParMillion,
   eurosParDollar = 0.92,
@@ -70,14 +91,16 @@ export function coutCentimes({
   sortie: number;
   cacheEcriture?: number;
   cacheLecture?: number;
+  /** La durée passée à `cache_control`, qui fixe le prix de l'écriture. */
+  dureeCache: DureeCache;
   dollarsEntreeParMillion: number;
   dollarsSortieParMillion: number;
   eurosParDollar?: number;
 }): number {
   const dollars =
     (entree * dollarsEntreeParMillion +
-      cacheEcriture * dollarsEntreeParMillion * 1.25 +
-      cacheLecture * dollarsEntreeParMillion * 0.1 +
+      cacheEcriture * dollarsEntreeParMillion * ECRITURE_CACHE[dureeCache] +
+      cacheLecture * dollarsEntreeParMillion * LECTURE_CACHE +
       sortie * dollarsSortieParMillion) /
     1_000_000;
   return Math.round(dollars * eurosParDollar * 100);

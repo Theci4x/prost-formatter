@@ -15,6 +15,7 @@ import {
   empreinteVisiteur,
   facturer,
   reserver,
+  type DureeCache,
 } from "@/lib/commis/quota";
 import { modeleDuCommis } from "@/lib/commis/modeles";
 
@@ -22,6 +23,11 @@ import { modeleDuCommis } from "@/lib/commis/modeles";
 // curseur qui ne bouge pas donne l'impression que c'est cassé.
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
+
+// Une seule déclaration pour les deux usages : la durée demandée à l'API
+// et celle qui sert à en calculer le prix. Séparées, elles auraient fini
+// par diverger, et le compteur aurait menti sans que rien ne le dise.
+const DUREE_CACHE: DureeCache = "1h";
 
 function texte(message: string, statut = 200): Response {
   return new Response(message, {
@@ -90,7 +96,7 @@ export async function POST(request: Request) {
             {
               type: "text",
               text: consigne(corpusComplet(), destinataire),
-              cache_control: { type: "ephemeral", ttl: "1h" },
+              cache_control: { type: "ephemeral", ttl: DUREE_CACHE },
             },
           ],
           // Répondre à partir d'un texte fourni ne demande pas de longues
@@ -118,6 +124,7 @@ export async function POST(request: Request) {
           sortie: finale.usage.output_tokens,
           cacheEcriture: finale.usage.cache_creation_input_tokens ?? 0,
           cacheLecture: finale.usage.cache_read_input_tokens ?? 0,
+          dureeCache: DUREE_CACHE,
           dollarsEntreeParMillion: tarif.entree,
           dollarsSortieParMillion: tarif.sortie,
         });
