@@ -118,6 +118,14 @@ export default function ConfidentialitePage() {
             établissement, ville, et le cas échéant votre accord pour une
             réponse sur WhatsApp.
           </li>
+          <li>
+            <strong>Demandes de rappel</strong> — si vous demandez à être
+            rappelé depuis notre assistant : nom, établissement, e-mail,
+            téléphone si vous le laissez, et la dernière question que vous lui
+            avez posée. Ces éléments ne sont pas enregistrés dans le service :
+            ils partent vers notre messagerie et notre outil interne de
+            discussion, comme une demande d&apos;assistance.
+          </li>
         </ul>
         <p>
           <strong>En tant que sous-traitant</strong>, pour le compte du
@@ -398,7 +406,7 @@ export default function ConfidentialitePage() {
                 <td>Douze mois, chez notre hébergeur de base de données</td>
               </tr>
               <tr>
-                <td>Échanges avec l&apos;assistance</td>
+                <td>Échanges avec l&apos;assistance et demandes de rappel</td>
                 <td>
                   Trois ans après la clôture, dans notre messagerie — ils ne
                   sont pas enregistrés dans le service

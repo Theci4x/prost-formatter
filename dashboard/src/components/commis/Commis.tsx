@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { DemanderRappel } from "@/components/commis/DemanderRappel";
 
 type Tour = { role: "user" | "assistant"; content: string };
 
@@ -32,10 +33,27 @@ export function Commis({ connecte = false }: { connecte?: boolean }) {
   const [tours, setTours] = useState<Tour[]>([]);
   const [saisie, setSaisie] = useState("");
   const [enCours, setEnCours] = useState(false);
+  // Le formulaire de rappel : ouvert à la demande, ou proposé tout seul
+  // quand la conversation a montré de l'intérêt. `envoye` le remplace par
+  // un remerciement — on ne redemande pas ses coordonnées à quelqu'un qui
+  // vient de les laisser.
+  const [rappel, setRappel] = useState(false);
+  const [envoye, setEnvoye] = useState(false);
   const fin = useRef<HTMLDivElement>(null);
   const champ = useRef<HTMLInputElement>(null);
 
   const suggestions = connecte ? SUGGESTIONS_CLIENT : SUGGESTIONS_VISITEUR;
+
+  // Un abonné a déjà son écran d'aide, qui joint son établissement et
+  // l'écran d'où il écrit : lui proposer « on vous rappelle » serait un
+  // formulaire moins bon pour la même chose.
+  const prospect = !connecte;
+  // Deux questions posées : l'intérêt est démontré, on peut proposer.
+  // Avant, c'est un formulaire jeté au visage de quelqu'un qui découvre.
+  const aMontreDeLInteret =
+    tours.filter((tour) => tour.role === "user").length >= 2;
+  const derniereQuestion =
+    [...tours].reverse().find((tour) => tour.role === "user")?.content ?? null;
 
   useEffect(() => {
     fin.current?.scrollIntoView({ block: "end" });
@@ -177,6 +195,32 @@ export function Commis({ connecte = false }: { connecte?: boolean }) {
               (enCours && index === tours.length - 1 ? "…" : "")}
           </div>
         ))}
+        {prospect && (envoye || rappel || aMontreDeLInteret) && (
+          <div className="pt-1">
+            {envoye ? (
+              <p className="rounded-2xl border border-emerald-200 bg-emerald-50 px-3.5 py-2.5 text-sm text-emerald-900">
+                C&apos;est noté. On vous rappelle sous 24 h ouvrées.
+              </p>
+            ) : rappel ? (
+              <DemanderRappel
+                question={derniereQuestion}
+                onFait={() => {
+                  setRappel(false);
+                  setEnvoye(true);
+                }}
+              />
+            ) : (
+              <button
+                type="button"
+                onClick={() => setRappel(true)}
+                className="w-fit rounded-full border border-brand-navy/30 px-3 py-1.5 text-sm font-medium text-brand-navy transition-colors hover:bg-brand-cream"
+              >
+                Préférez-vous qu&apos;on vous rappelle ?
+              </button>
+            )}
+          </div>
+        )}
+
         <div ref={fin} />
       </div>
 

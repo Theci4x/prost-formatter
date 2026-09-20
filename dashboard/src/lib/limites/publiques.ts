@@ -49,6 +49,15 @@ export const AUDITS_PAR_JOUR_GLOBAL = 200;
 export const AIDES_PAR_JOUR = 5;
 
 /**
+ * Les demandes de rappel laissées depuis le Commis.
+ *
+ * Trois par jour et par visiteur : celui qui veut vraiment être rappelé
+ * laisse ses coordonnées une fois. Au-delà, c'est un formulaire qu'on
+ * remplit en boucle, et chaque envoi sonne sur le téléphone de quelqu'un.
+ */
+export const RAPPELS_PAR_JOUR = 3;
+
+/**
  * L'empreinte d'un visiteur : son adresse et son navigateur, hachés avec un
  * secret. On ne veut pas d'un journal d'adresses IP en base — ce compteur
  * sert à limiter, pas à ficher.
