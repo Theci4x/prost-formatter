@@ -17,6 +17,52 @@ export const QUESTIONS_VISITEUR = 10;
 /** Plafond quotidien, tous demandeurs confondus, en centimes d'euro. */
 export const PLAFOND_JOUR_CENTIMES = 2000;
 
+/**
+ * Le plafond partagé : la clé qui l'accumule, et ce qu'elle ne doit pas
+ * dépasser dans la journée.
+ *
+ * `requetes` existe parce que `centimes` ment sur les petits modèles. Le
+ * compteur est un entier de centimes, et `coutCentimes` arrondit : un
+ * échange à 0,13 centime — l'ordre de grandeur d'une question de relance
+ * sur Haiku — compte pour zéro et disparaît. Le plafond en euros reste
+ * utile comme ordre de grandeur, mais c'est le nombre de questions qui
+ * borne vraiment la dépense, parce que lui se compte juste.
+ */
+export type Plafond = {
+  /** « global » pour Klarr, « r:<identifiant> » pour un établissement. */
+  cle: string;
+  centimes: number;
+  /** Plafond en nombre de questions. Absent = pas de limite de ce type. */
+  requetes?: number;
+};
+
+/** L'assistant d'aide de Klarr : une seule enveloppe pour tout le monde. */
+export const PLAFOND_KLARR: Plafond = {
+  cle: "global",
+  centimes: PLAFOND_JOUR_CENTIMES,
+};
+
+/**
+ * Un établissement, qui a la sienne.
+ *
+ * Par maison et non globale, sinon un restaurant très fréquenté éteindrait
+ * l'assistant de tous les autres — et c'est le genre de panne qu'on ne
+ * comprend qu'après l'avoir cherchée ailleurs.
+ *
+ * Deux cents questions par jour, là où l'usage attendu en compte trois :
+ * ce n'est pas une limite d'usage, c'est un garde-fou contre l'emballement.
+ */
+export const QUESTIONS_JOUR_ETABLISSEMENT = 200;
+export const PLAFOND_JOUR_ETABLISSEMENT_CENTIMES = 50;
+
+export function plafondEtablissement(restaurantId: string): Plafond {
+  return {
+    cle: `r:${restaurantId}`,
+    centimes: PLAFOND_JOUR_ETABLISSEMENT_CENTIMES,
+    requetes: QUESTIONS_JOUR_ETABLISSEMENT,
+  };
+}
+
 export type Verdict =
   | { autorise: true }
   | { autorise: false; motif: "visiteur" | "plafond" };
@@ -138,11 +184,22 @@ async function consommer(
 export async function reserver(
   supabase: SupabaseClient,
   cle: string,
-  { illimite = false }: { illimite?: boolean } = {},
+  {
+    illimite = false,
+    plafond = PLAFOND_KLARR,
+  }: { illimite?: boolean; plafond?: Plafond } = {},
 ): Promise<Verdict> {
-  const global = await consommer(supabase, "global", illimite ? 0 : 0, 0);
-  if (global && global.centimes >= PLAFOND_JOUR_CENTIMES) {
-    return { autorise: false, motif: "plafond" };
+  // La question compte pour l'enveloppe partagée au moment où on la
+  // réserve : c'est ce compteur-là qui est juste, celui en centimes
+  // n'arrivant qu'après la réponse et arrondi.
+  const partage = await consommer(supabase, plafond.cle, 1, 0);
+  if (partage) {
+    if (partage.centimes >= plafond.centimes) {
+      return { autorise: false, motif: "plafond" };
+    }
+    if (plafond.requetes !== undefined && partage.requetes > plafond.requetes) {
+      return { autorise: false, motif: "plafond" };
+    }
   }
 
   const demandeur = await consommer(supabase, cle, 1, 0);
@@ -158,10 +215,11 @@ export async function facturer(
   supabase: SupabaseClient,
   cle: string,
   centimes: number,
+  plafond: Plafond = PLAFOND_KLARR,
 ): Promise<void> {
   if (centimes <= 0) return;
   await Promise.all([
     consommer(supabase, cle, 0, centimes),
-    consommer(supabase, "global", 0, centimes),
+    consommer(supabase, plafond.cle, 0, centimes),
   ]);
 }

@@ -34,6 +34,9 @@ import { restaurantSchema } from "@/lib/seo/donnees-structurees";
 import { reseauxPublics } from "@/lib/seo/reseaux";
 import { siteUrl } from "@/lib/site-url";
 import { chargerAcces } from "@/lib/abonnement/acces";
+import { chargerFiche, ficheUtile } from "@/lib/commis/fiche";
+import { CommisEtablissement } from "@/components/commis/CommisEtablissement";
+import { suggestionsPour } from "@/lib/commis/suggestions-etablissement";
 
 type Params = { slug: string };
 type Query = {
@@ -213,6 +216,7 @@ export default async function ReserverPage({
     reputationResult,
     carteResult,
     reseaux,
+    fiche,
   ] = await Promise.all([
     supabase
       .from("restaurant_espaces")
@@ -273,6 +277,13 @@ export default async function ReserverPage({
     // Les comptes du restaurant, pour le « sameAs » du balisage. Lecture
     // sans jetons et sans exception : c'est du bonus, jamais du contenu.
     reseauxPublics(supabase, restaurant.id, restaurant.site_web),
+    // La fiche que lira l'assistant. Elle relit des tables déjà
+    // interrogées plus haut, et c'est assumé : la frontière entre ce qui
+    // est public et ce qui ne l'est pas se compose à un seul endroit
+    // (`lib/commis/fiche.ts`), et l'y dupliquer pour économiser trois
+    // lectures indexées la rendrait vérifiable à deux endroits. Elle ne
+    // lève jamais : sans fiche, la page s'affiche sans assistant.
+    chargerFiche(supabase, restaurant.id),
   ]);
 
   const espaces = (espacesResult.data ?? []) as Espace[];
@@ -738,6 +749,21 @@ export default async function ReserverPage({
           className="mx-auto max-w-3xl"
         />
       </footer>
+
+      {/* L'assistant n'apparaît que s'il a de quoi répondre. Une fiche
+          réduite au nom et à l'adresse donnerait un assistant qui dit « je
+          n'ai pas cette information » à tout, et qui vaudrait moins qu'un
+          numéro de téléphone affiché. */}
+      {fiche && ficheUtile(fiche) && (
+        <CommisEtablissement
+          restaurantId={restaurant.id}
+          nom={restaurant.nom}
+          suggestions={suggestionsPour({
+            carte: carteResult.publiee,
+            privatisation: offre !== null,
+          })}
+        />
+      )}
     </div>
   );
 }

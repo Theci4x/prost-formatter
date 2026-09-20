@@ -27,11 +27,30 @@ export type Tarif = {
 
 export const MODELE_PAR_DEFAUT = "claude-opus-5";
 
+/**
+ * Le modèle de l'assistant d'un restaurant.
+ *
+ * Haiku, et fixé ici plutôt que réglable : ce Commis-là relit trois
+ * phrases dans une fiche pour répondre « nous fermons à 23h ». C'est du
+ * travail de lecture, pas de raisonnement, et il tourne sur toutes les
+ * pages publiques de tous les établissements — cinq fois moins cher y
+ * change l'ordre de grandeur de la facture.
+ */
+export const MODELE_ETABLISSEMENT = "claude-haiku-4-5";
+
 export const MODELES: Record<string, Tarif> = {
   "claude-opus-5": { entree: 5, sortie: 25, effort: true },
   "claude-sonnet-5": { entree: 2, sortie: 10, effort: true },
   "claude-haiku-4-5": { entree: 1, sortie: 5, effort: false },
 };
+
+/** Le modèle d'un assistant d'établissement, avec son tarif. */
+export function modeleEtablissement(): { nom: string; tarif: Tarif } {
+  return {
+    nom: MODELE_ETABLISSEMENT,
+    tarif: MODELES[MODELE_ETABLISSEMENT]!,
+  };
+}
 
 /**
  * Le modèle demandé par la configuration, ou celui par défaut.
