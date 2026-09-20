@@ -95,8 +95,23 @@ export type ClesAccueilPublic = {
       lignes: string[];
     }[];
     commission: string;
-    /** Le montant du pack s'écrit entre `**`, et sort en gras. */
-    pack: string;
+    /**
+     * Les deux modules ensemble.
+     *
+     * Ce n'est pas une troisième offre — rien ne s'y ouvre qui ne soit
+     * déjà dans l'une des deux — mais c'est la plus avantageuse, et elle
+     * tenait jusqu'ici dans une ligne grise sous les cartes. D'où un
+     * bandeau : le poids d'une offre, sans la carte qui ferait croire à
+     * un produit de plus.
+     */
+    pack: {
+      etiquette: string;
+      resume: string;
+      prix: string;
+      ttc: string;
+      /** L'écart avec les deux pris séparément, au mois et à l'année. */
+      economie: string;
+    };
   };
   faq: { titre: string; questions: Question[] };
   fondateur: {
@@ -189,6 +204,18 @@ const TTC = {
   visibilite: nombre(PRIX_MODULE_TTC.visibilite),
   reservations: nombre(PRIX_MODULE_TTC.reservations),
   pack: nombre(PRIX_PACK_TTC),
+};
+
+/**
+ * Ce que le pack fait gagner, dérivé des tarifs et non recopié.
+ *
+ * « Onze pour cent » ne dit rien à personne ; « 90 € sur l'année », si.
+ * Et le jour où l'un des trois prix bouge, cette phrase bouge avec lui —
+ * un montant écrit à la main dans trois langues finit faux dans deux.
+ */
+const ECONOMIE = {
+  mois: HT.visibilite + HT.reservations - HT.pack,
+  an: (HT.visibilite + HT.reservations - HT.pack) * 12,
 };
 
 /** La date du relevé des tarifs concurrents, dans chaque langue. */
@@ -382,7 +409,13 @@ const fr: ClesAccueilPublic = {
       },
     ],
     commission: "0 % de commission par couvert",
-    pack: `Les deux ensemble : **${euros(HT.pack, "fr")} HT par mois** — ${euros(TTC.pack, "fr")} TTC, soit onze pour cent de moins que séparément.`,
+    pack: {
+      etiquette: "Les deux ensemble",
+      resume: "La visibilité et les réservations, d'un seul abonnement.",
+      prix: euros(HT.pack, "fr"),
+      ttc: `soit ${euros(TTC.pack, "fr")} TTC`,
+      economie: `Vous économisez ${euros(ECONOMIE.mois, "fr")} HT par mois — ${euros(ECONOMIE.an, "fr")} sur l'année.`,
+    },
   },
   faq: {
     titre: "Questions fréquentes",
@@ -720,7 +753,13 @@ const en: ClesAccueilPublic = {
       },
     ],
     commission: "0% commission per cover",
-    pack: `Both together: **${ht(HT.pack, "en")} per month** — ${ttc(TTC.pack, "en")}, eleven per cent less than buying them separately.`,
+    pack: {
+      etiquette: "Both together",
+      resume: "Visibility and bookings, on a single subscription.",
+      prix: euros(HT.pack, "en"),
+      ttc: `that is ${ttc(TTC.pack, "en")}`,
+      economie: `You save ${ht(ECONOMIE.mois, "en")} a month — ${euros(ECONOMIE.an, "en")} over a year.`,
+    },
   },
   faq: {
     titre: "Frequently asked questions",
@@ -1038,7 +1077,13 @@ const zh: ClesAccueilPublic = {
       },
     ],
     commission: "每位客人 0% 抽成",
-    pack: `两个一起：每月 **${ht(HT.pack, "zh")}**——即 ${ttc(TTC.pack, "zh")}，比分开购买便宜百分之十一。`,
+    pack: {
+      etiquette: "两个一起",
+      resume: "曝光与订位，合成一份订阅。",
+      prix: euros(HT.pack, "zh"),
+      ttc: `即 ${ttc(TTC.pack, "zh")}`,
+      economie: `每月省下 ${ht(ECONOMIE.mois, "zh")}——一年省 ${euros(ECONOMIE.an, "zh")}。`,
+    },
   },
   faq: {
     titre: "常见问题",

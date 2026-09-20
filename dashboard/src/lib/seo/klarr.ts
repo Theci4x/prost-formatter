@@ -98,9 +98,12 @@ export function balisageAccueil(langue: Langue): object[] {
     offre(
       `Klarr — ${t.tarifs.offres[0].nom} + ${t.tarifs.offres[1].nom}`,
       "59.00",
-      // Le dictionnaire marque le montant d'un `**` pour le gras à
-      // l'écran ; un balisage n'a que faire de la mise en forme.
-      t.tarifs.pack.replaceAll("**", ""),
+      // La description reprend ce que la page affiche, dans le même
+      // ordre. Un balisage qui annoncerait autre chose que le bandeau
+      // visible serait une raison documentée de perdre l'affichage
+      // enrichi — et ici il n'y a plus de `**` à retirer, la mise en
+      // forme ayant quitté le texte pour le gabarit.
+      `${t.tarifs.pack.resume} ${t.tarifs.pack.economie}`,
     ),
   ];
 

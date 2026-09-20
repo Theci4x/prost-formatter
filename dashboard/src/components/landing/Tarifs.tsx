@@ -33,30 +33,6 @@ function Coche() {
   );
 }
 
-/**
- * Rend en gras ce que le dictionnaire encadre de `**`.
- *
- * Le montant du pack était en gras avant la traduction, et le mettre
- * dans le texte plutôt que dans le gabarit évite de découper la phrase
- * en trois clés : le chinois ne place pas le montant au même endroit que
- * le français.
- */
-function Phrase({ texte }: { texte: string }) {
-  return (
-    <>
-      {texte.split("**").map((morceau, rang) =>
-        rang % 2 === 1 ? (
-          <strong key={rang} style={{ color: "var(--ink)" }}>
-            {morceau}
-          </strong>
-        ) : (
-          <span key={rang}>{morceau}</span>
-        ),
-      )}
-    </>
-  );
-}
-
 export function Tarifs({ t }: { t: ClesAccueilPublic["tarifs"] }) {
   return (
     <div
@@ -222,18 +198,87 @@ export function Tarifs({ t }: { t: ClesAccueilPublic["tarifs"] }) {
 
         {/* Le pack sous les deux cartes plutôt qu'en troisième colonne :
             il n'ajoute rien à la liste, il dit seulement que les deux
-            ensemble coûtent moins cher. Une carte de plus donnerait à
-            croire à une offre de plus. */}
-        <p
+            ensemble coûtent moins cher, et une carte de plus donnerait à
+            croire à une offre de plus.
+            
+            Mais un paragraphe gris en faisait une note de bas de page,
+            alors que c'est l'offre la plus avantageuse. D'où ce bandeau :
+            le poids visuel d'une offre, la forme d'un complément. */}
+        <div
+          className="flex-col sm:flex-row"
           style={{
-            marginTop: 20,
-            fontSize: 15,
-            lineHeight: 1.6,
-            color: "var(--ink-soft)",
+            display: "flex",
+            alignItems: "baseline",
+            gap: 20,
+            padding: "26px 30px",
+            borderRadius: 16,
+            border: "1px solid var(--accent)",
+            background: "var(--brand-cream, var(--paper))",
           }}
         >
-          <Phrase texte={t.pack} />
-        </p>
+          <div
+            style={{
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              gap: 6,
+            }}
+          >
+            <span
+              style={{
+                fontSize: 13,
+                fontWeight: 700,
+                letterSpacing: "0.06em",
+                textTransform: "uppercase",
+                color: "var(--accent-dark)",
+              }}
+            >
+              {t.pack.etiquette}
+            </span>
+            <span style={{ fontSize: 16, color: "var(--ink)" }}>
+              {t.pack.resume}
+            </span>
+            {/* L'économie en toutes lettres : « onze pour cent » ne parle
+                à personne, « 90 € sur l'année » se décide. */}
+            <span
+              style={{
+                fontSize: 15,
+                fontWeight: 600,
+                color: "var(--accent-dark)",
+              }}
+            >
+              {t.pack.economie}
+            </span>
+          </div>
+
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 2,
+              alignItems: "flex-start",
+            }}
+          >
+            <span style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+              <span
+                style={{
+                  fontFamily: "var(--font-instrument-serif), Georgia, serif",
+                  fontSize: 44,
+                  lineHeight: 1,
+                  color: "var(--ink)",
+                }}
+              >
+                {t.pack.prix}
+              </span>
+              <span style={{ fontSize: 15, color: "var(--ink-soft)" }}>
+                {t.parMois}
+              </span>
+            </span>
+            <span style={{ fontSize: 13, color: "var(--ink-soft)" }}>
+              {t.pack.ttc}
+            </span>
+          </div>
+        </div>
       </div>
     </div>
   );
