@@ -29,6 +29,10 @@ const PAGES_FIXES = [
   // qui paie déjà une commission et se demande ce qu'elle lui coûte —
   // mais il répond avec ses chiffres à lui.
   { chemin: "/calculateur-commissions-restaurant", priorite: 0.9 },
+  // Le diagnostic vise plus tôt : quelqu'un qui n'a pas encore de
+  // restaurant, donc pas encore de besoin. Priorité moindre, mais c'est
+  // une requête qu'on tape une fois et à laquelle il faut répondre.
+  { chemin: "/diagnostic-local-restaurant", priorite: 0.8 },
 ];
 
 /**
