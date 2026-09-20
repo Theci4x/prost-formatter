@@ -3,10 +3,16 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createServiceClient } from "@/lib/supabase/service";
-import { carteOrganisee, carteVisible, formatPrix } from "@/lib/menu/carte";
+import { carteOrganisee, carteVisible } from "@/lib/menu/carte";
 import { langueDisponible, lireLangue, platAffiche } from "@/lib/menu/traduction";
 import { SignatureKlarr } from "@/components/brand/SignatureKlarr";
 import { cartePubliee } from "@/lib/menu/publication";
+import { PlatCarte } from "@/components/menu/PlatCarte";
+import { FiltreAllergenes } from "@/components/menu/FiltreAllergenes";
+import {
+  allergiesDemandees,
+  filtrerCarte,
+} from "@/lib/menu/filtre-allergenes";
 import { listeAllergenes } from "@/types/allergenes";
 import {
   MENTION_ALLERGENES,
@@ -19,7 +25,7 @@ import { filAriane, menuSchema } from "@/lib/seo/donnees-structurees";
 import { siteUrl } from "@/lib/site-url";
 
 type Params = { slug: string };
-type Query = { lang?: string };
+type Query = { lang?: string; sans?: string | string[] };
 
 async function chargerCarte(slug: string) {
   const supabase = createServiceClient();
@@ -101,8 +107,14 @@ export default async function CartePage({
   const { restaurant, items } = charge;
   const anglaisPossible = langueDisponible(items, "en");
   const langue = anglaisPossible ? lireLangue(query.lang) : "fr";
-  const blocs = carteOrganisee(carteVisible(items));
   const anglais = langue === "en";
+  const allergies = allergiesDemandees(query.sans);
+  const filtre = allergies.length > 0;
+  const { compatibles, ecartes, indetermines } = filtrerCarte(
+    carteVisible(items),
+    allergies,
+  );
+  const blocs = carteOrganisee(compatibles);
   // Un seul plat déclaré suffit à ouvrir le tableau : il vaut mieux un
   // document partiel, qui dit ce qu'on sait, qu'un lien absent.
   const quelquesAllergenes = carteVisible(items).some(
@@ -133,7 +145,7 @@ export default async function CartePage({
           {anglaisPossible && (
             <nav aria-label="Langue" className="flex items-center gap-1">
               <Link
-                href={`/carte/${slug}`}
+                href={`/carte/${slug}${filtre ? `?sans=${allergies.join(",")}` : ""}`}
                 aria-current={anglais ? undefined : "true"}
                 className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
                   anglais
@@ -144,7 +156,7 @@ export default async function CartePage({
                 Français
               </Link>
               <Link
-                href={`/carte/${slug}?lang=en`}
+                href={`/carte/${slug}?lang=en${filtre ? `&sans=${allergies.join(",")}` : ""}`}
                 aria-current={anglais ? "true" : undefined}
                 className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
                   anglais
@@ -188,11 +200,32 @@ export default async function CartePage({
           )}
         </div>
 
+        <FiltreAllergenes slug={slug} anglais={anglais} choisis={allergies} />
+
+        {filtre && (
+          <p className="rounded-2xl border border-zinc-200/70 bg-white p-4 text-sm text-zinc-600 shadow-sm">
+            {anglais
+              ? `${compatibles.length} dish${compatibles.length > 1 ? "es" : ""} without ${listeAllergenes(allergies, true)}`
+              : `${compatibles.length} plat${compatibles.length > 1 ? "s" : ""} sans ${listeAllergenes(allergies, false)}`}
+            {ecartes.length > 0 && (
+              <span className="text-zinc-400">
+                {anglais
+                  ? ` · ${ecartes.length} set aside`
+                  : ` · ${ecartes.length} écarté${ecartes.length > 1 ? "s" : ""}`}
+              </span>
+            )}
+          </p>
+        )}
+
         {blocs.length === 0 ? (
           <p className="rounded-2xl border border-zinc-200/70 bg-white p-5 text-sm text-zinc-500 shadow-sm">
-            {anglais
-              ? "The menu is being updated."
-              : "La carte est en cours de mise à jour."}
+            {filtre
+              ? anglais
+                ? "No dish on the menu is declared free of what you avoid. Please ask us."
+                : "Aucun plat de la carte n'est déclaré sans ce que vous évitez. Demandez-nous."
+              : anglais
+                ? "The menu is being updated."
+                : "La carte est en cours de mise à jour."}
           </p>
         ) : (
           blocs.map((bloc) => {
@@ -206,55 +239,39 @@ export default async function CartePage({
                   {titre}
                 </h2>
                 <ul className="flex flex-col gap-4">
-                  {bloc.plats.map((plat) => {
-                    const affiche = platAffiche(plat, langue);
-                    return (
-                      <li
-                        key={plat.id}
-                        className="flex items-start gap-4 rounded-2xl border border-zinc-200/70 bg-white p-4 shadow-sm"
-                      >
-                        {plat.photo_url && (
-                          <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-zinc-100 sm:h-24 sm:w-24">
-                            <Image
-                              src={plat.photo_url}
-                              alt={affiche.nom}
-                              fill
-                              sizes="96px"
-                              className="object-cover"
-                            />
-                          </div>
-                        )}
-                        <span className="flex min-w-0 flex-1 flex-col gap-1">
-                          <span className="flex items-baseline justify-between gap-3">
-                            <span className="text-sm font-medium text-zinc-900">
-                              {affiche.nom}
-                            </span>
-                            {plat.prix_centimes !== null && (
-                              <span className="shrink-0 text-sm font-medium tabular-nums text-zinc-700">
-                                {formatPrix(plat.prix_centimes)}
-                              </span>
-                            )}
-                          </span>
-                          {affiche.description && (
-                            <span className="text-sm text-zinc-500">
-                              {affiche.description}
-                            </span>
-                          )}
-                          {plat.allergenes !== null &&
-                            plat.allergenes.length > 0 && (
-                              <span className="text-xs text-zinc-400">
-                                {anglais ? "Allergens" : "Allergènes"} :{" "}
-                                {listeAllergenes(plat.allergenes, anglais)}
-                              </span>
-                          )}
-                        </span>
-                      </li>
-                    );
-                  })}
+                  {bloc.plats.map((plat) => (
+                    <PlatCarte key={plat.id} plat={plat} langue={langue} />
+                  ))}
                 </ul>
               </section>
             );
           })
+        )}
+
+        {/* Les plats que le restaurant n'a pas encore déclarés. Ils ne
+            peuvent aller ni avec les compatibles — rien ne dit qu'ils le
+            sont — ni avec les écartés, qui accuserait à tort. Les faire
+            disparaître serait pire : le client croirait avoir vu toute la
+            carte. Ils sortent donc à part, avec la seule réponse honnête
+            dont on dispose, qui est d'aller demander. */}
+        {indetermines.length > 0 && (
+          <section className="flex flex-col gap-4">
+            <div className="flex flex-col gap-1">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-amber-700">
+                {anglais ? "To ask us about" : "À nous demander"}
+              </h2>
+              <p className="text-sm text-zinc-500">
+                {anglais
+                  ? "We have not declared the allergens of these dishes yet. They are neither included nor ruled out — ask us and we will tell you."
+                  : "Nous n'avons pas encore déclaré les allergènes de ces plats. Ils ne sont ni retenus ni écartés : demandez-nous, nous vous répondrons."}
+              </p>
+            </div>
+            <ul className="flex flex-col gap-4">
+              {indetermines.map((plat) => (
+                <PlatCarte key={plat.id} plat={plat} langue={langue} />
+              ))}
+            </ul>
+          </section>
         )}
 
         {/* Les mentions obligatoires, ensemble et lisibles. Le prix d'abord
