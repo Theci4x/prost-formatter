@@ -349,4 +349,20 @@ body {
   .devis-lignes > div {
     break-inside: avoid;
   }
+
+  /*
+   * Le rapport d'audit, imprimé ou enregistré en PDF.
+   *
+   * Même règle que pour le devis : on n'essaie pas de tenir le document
+   * sur une page, on empêche les coupures qui font douter — une barre de
+   * score séparée de son intitulé, un encadré scindé en deux, un titre
+   * seul en bas de page.
+   */
+  .audit-rapport > * {
+    break-inside: avoid;
+  }
+  .audit-rapport h2,
+  .audit-rapport h3 {
+    break-after: avoid;
+  }
 }

@@ -15,7 +15,17 @@
  * PDF ».
  */
 
-export function BoutonImprimer({ className }: { className?: string }) {
+export function BoutonImprimer({
+  className,
+  libelle = "Imprimer / Enregistrer en PDF",
+}: {
+  className?: string;
+  /**
+   * Par défaut en français, comme le devis qui l'a vu naître. Le rapport
+   * d'audit, lui, se lit en trois langues et passe le sien.
+   */
+  libelle?: string;
+}) {
   return (
     <button
       type="button"
@@ -40,7 +50,7 @@ export function BoutonImprimer({ className }: { className?: string }) {
         <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
         <path d="M6 14h12v8H6z" />
       </svg>
-      Imprimer / Enregistrer en PDF
+      {libelle}
     </button>
   );
 }

@@ -2,6 +2,7 @@ import type { AuditResult } from "@/app/test-presence-google/actions";
 import type { translations } from "@/lib/i18n/testPresence";
 import { formater, type Impact, type Pilier } from "@/lib/audit/actions";
 import { lienWhatsApp, numeroWhatsApp } from "@/lib/contact/whatsapp";
+import { BoutonImprimer } from "@/components/devis/BoutonImprimer";
 import { POIDS_PILIERS } from "@/lib/audit/scoring";
 
 const LABEL_COLORS: Record<AuditResult["label"], string> = {
@@ -82,7 +83,7 @@ export function AuditResultCard({
       : null;
 
   return (
-    <div className="flex flex-col gap-6 rounded-xl border border-line bg-white p-6 shadow-sm">
+    <div className="audit-rapport flex flex-col gap-6 rounded-xl border border-line bg-white p-6 shadow-sm print:gap-5 print:rounded-none print:border-0 print:p-0 print:shadow-none">
       {/* Le prospect doit reconnaître son établissement avant de lire un
           seul chiffre : sa note, ses avis, son adresse. Sans ça, le
           rapport a l'air d'un document type, et tout ce qui suit perd sa
@@ -291,7 +292,7 @@ export function AuditResultCard({
           promettre un rappel sous 48 heures, c'est le laisser refroidir :
           l'essai doit pouvoir commencer ici, tout de suite, et le rappel
           devient un complément au lieu d'être la seule suite. */}
-      <div className="flex flex-col gap-3 rounded-xl border border-brand-orange/30 bg-brand-orange-soft px-5 py-5">
+      <div className="flex flex-col gap-3 rounded-xl border border-brand-orange/30 bg-brand-orange-soft px-5 py-5 print:hidden">
         <span className="font-serif text-xl text-ink">{t.essai.titre}</span>
         <p className="text-sm leading-relaxed text-ink-soft">{t.essai.corps}</p>
         <a
@@ -305,19 +306,36 @@ export function AuditResultCard({
       {/* Après le bouton d'essai, et pas avant : celui qui est prêt à
           commencer seul n'a pas à passer par nous. Celui qui a une
           question, lui, n'avait jusqu'ici qu'un rappel à attendre. */}
-      {lien && (
-        <a
-          href={lien}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex w-fit items-center gap-2 rounded-md border border-line px-4 py-2.5 text-sm font-medium text-ink transition-colors hover:border-brand-orange"
-        >
-          <LogoWhatsApp />
-          {t.whatsapp.libelle}
-        </a>
-      )}
+      <div className="flex flex-wrap gap-3 print:hidden">
+        {lien && (
+          <a
+            href={lien}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex w-fit items-center gap-2 rounded-md border border-line px-4 py-2.5 text-sm font-medium text-ink transition-colors hover:border-brand-orange"
+          >
+            <LogoWhatsApp />
+            {t.whatsapp.libelle}
+          </a>
+        )}
+        {/* Le même bouton que sur le devis, et pour la même raison : le
+            document existe déjà en HTML, le dialogue du navigateur sait
+            l'enregistrer en PDF, et il en sort exactement ce qui est à
+            l'écran. Un rapport qu'on peut transmettre à son associé vaut
+            mieux qu'un rapport qu'il faut savoir retrouver. */}
+        <BoutonImprimer
+          libelle={t.imprimer}
+          className="flex w-fit items-center gap-2 rounded-md border border-line px-4 py-2.5 text-sm font-medium text-ink transition-colors hover:border-ink"
+        />
+      </div>
 
-      <p className="text-sm text-ink-soft">{t.recontacted}</p>
+      <p className="text-sm text-ink-soft print:hidden">{t.recontacted}</p>
+
+      {/* Seulement sur le papier : une feuille qui circule sans rien qui
+          dise d'où elle vient ne ramène personne. */}
+      <p className="hidden text-xs text-ink-soft print:block">
+        klarr.net — {t.title}
+      </p>
     </div>
   );
 }

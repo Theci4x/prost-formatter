@@ -164,6 +164,7 @@ export const translations = {
           "Les trente premiers jours sont offerts, sans carte bancaire. Vous repartez avec votre page de réservation en ligne, vos horaires et votre carte publiés, et le suivi de ce que l'IA dit de vous.",
         bouton: "Commencer mon essai gratuit",
       },
+      imprimer: "Imprimer / Enregistrer en PDF",
       whatsapp: {
         libelle: "En discuter sur WhatsApp",
         // « [[nom]] » et « [[note]] » sont remplacés avant l'envoi. Le
@@ -345,6 +346,7 @@ export const translations = {
           "The first thirty days are free, no card required. You leave with your booking page online, your hours and menu published, and a running check on what AI says about you.",
         bouton: "Start my free trial",
       },
+      imprimer: "Print / Save as PDF",
       whatsapp: {
         libelle: "Discuss it on WhatsApp",
         message:
@@ -517,6 +519,7 @@ export const translations = {
           "前三十天免费，无需绑定银行卡。您将获得在线预订页面、已发布的营业时间和菜单，以及人工智能对您评价的持续跟踪。",
         bouton: "开始免费试用",
       },
+      imprimer: "打印 / 保存为 PDF",
       whatsapp: {
         libelle: "用 WhatsApp 聊聊",
         message:

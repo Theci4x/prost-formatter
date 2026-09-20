@@ -23,8 +23,8 @@ export function TestPresencePage({ initiale = "fr" }: { initiale?: Lang }) {
   };
 
   return (
-    <div className="flex flex-1 flex-col items-center bg-brand-cream px-6 py-16 sm:py-20">
-      <div className="flex w-full max-w-lg flex-col gap-8">
+    <div className="flex flex-1 flex-col items-center bg-brand-cream px-6 py-16 sm:py-20 print:bg-white print:px-0 print:py-0">
+      <div className="flex w-full max-w-lg flex-col gap-8 print:max-w-none print:gap-6">
         <Link
           href="/"
           className="flex items-center justify-center gap-2 text-ink"
@@ -33,7 +33,7 @@ export function TestPresencePage({ initiale = "fr" }: { initiale?: Lang }) {
           <KlarrWordmark className="text-xl" />
         </Link>
 
-        <div className="flex justify-center gap-1">
+        <div className="flex justify-center gap-1 print:hidden">
           {languages.map((l) => (
             <button
               key={l.code}
@@ -50,7 +50,7 @@ export function TestPresencePage({ initiale = "fr" }: { initiale?: Lang }) {
           ))}
         </div>
 
-        <div className="flex flex-col gap-3 text-center">
+        <div className="flex flex-col gap-3 text-center print:hidden">
           <span className="text-xs font-bold uppercase tracking-[0.08em] text-brand-orange-dark">
             {t.badge}
           </span>
@@ -64,7 +64,7 @@ export function TestPresencePage({ initiale = "fr" }: { initiale?: Lang }) {
 
         <ProspectForm t={t.form} auditT={t.audit} langue={lang} />
 
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3 print:hidden">
           <h2 className="text-center font-serif text-2xl text-ink">
             {t.faqTitle}
           </h2>
