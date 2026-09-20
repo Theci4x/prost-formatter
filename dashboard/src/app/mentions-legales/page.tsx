@@ -7,16 +7,15 @@ export const metadata: Metadata = {
   // concurrence dans l'index pour la même page.
   alternates: { canonical: "/mentions-legales" },
   title: "Mentions légales",
-  description:
-    "Éditeur, hébergeur et coordonnées du service Klarr.",
+  description: "Éditeur, hébergeur et coordonnées du service Klarr.",
 };
 
 export default function MentionsLegalesPage() {
   return (
     <LegalLayout
       title="Mentions légales"
-      version="1.0"
-      date="10 septembre 2026"
+      version="1.1"
+      date="20 septembre 2026"
       current="mentions-legales"
     >
       <LegalSection n="01" title="Éditeur du site">
@@ -25,8 +24,7 @@ export default function MentionsLegalesPage() {
             <strong>Dénomination sociale</strong> — EDIREF
           </li>
           <li>
-            <strong>Forme juridique</strong> — société à responsabilité
-            limitée
+            <strong>Forme juridique</strong> — société à responsabilité limitée
           </li>
           <li>
             <strong>Capital social</strong> — 1 000 euros
@@ -39,7 +37,12 @@ export default function MentionsLegalesPage() {
             <strong>Immatriculation</strong> — RCS Paris 503 428 369
           </li>
           <li>
-            <strong>Numéro de TVA intracommunautaire</strong> — FR 66 503 428 369
+            <strong>Numéro de TVA intracommunautaire</strong> — FR 66 503 428
+            369
+          </li>
+          <li>
+            <strong>Téléphone</strong> —{" "}
+            <a href="tel:+33622651264">+33 6 22 65 12 64</a>
           </li>
           <li>
             <strong>Contact</strong> —{" "}
@@ -54,8 +57,8 @@ export default function MentionsLegalesPage() {
 
       <LegalSection n="03" title="Hébergement">
         <p>
-          Le site est hébergé par <strong>Vercel Inc.</strong>, 340 S Lemon
-          Ave #4133, Walnut, CA 91789, États-Unis —{" "}
+          Le site est hébergé par <strong>Vercel Inc.</strong>, 340 S Lemon Ave
+          #4133, Walnut, CA 91789, États-Unis —{" "}
           <a href="https://vercel.com" target="_blank" rel="noopener">
             vercel.com
           </a>
@@ -71,10 +74,17 @@ export default function MentionsLegalesPage() {
 
       <LegalSection n="04" title="Propriété intellectuelle">
         <p>
-          Le nom Klarr, son logo, son interface et les textes de ce site sont
-          la propriété d&apos;EDIREF. Toute reproduction ou représentation,
-          totale ou partielle, sans autorisation écrite préalable est
-          interdite.
+          Le logo de Klarr, l&apos;interface du service et les textes publiés
+          sur ce site — y compris les articles du journal — sont des œuvres
+          protégées par le droit d&apos;auteur et appartiennent à EDIREF. Toute
+          reproduction ou représentation, totale ou partielle, sans autorisation
+          écrite préalable est interdite et constitue une contrefaçon au sens
+          des articles L. 335-2 et suivants du code de la propriété
+          intellectuelle.
+        </p>
+        <p>
+          Le nom « Klarr » est exploité par EDIREF comme dénomination de son
+          service.
         </p>
         <p>
           Les marques Google, Facebook, Instagram, TikTok, Yelp et Tripadvisor
@@ -85,16 +95,28 @@ export default function MentionsLegalesPage() {
         </p>
       </LegalSection>
 
-      <LegalSection n="05" title="Données personnelles et cookies">
+      <LegalSection n="05" title="Liens hypertextes">
+        <p>
+          Ce site peut renvoyer vers des sites tiers, sur le contenu desquels
+          EDIREF n&apos;exerce aucun contrôle et dont elle ne répond pas.
+        </p>
+        <p>
+          Créer un lien vers klarr.net est libre, à condition que ce lien ne
+          porte pas atteinte à l&apos;image du service et n&apos;induise aucune
+          confusion sur son origine.
+        </p>
+      </LegalSection>
+
+      <LegalSection n="06" title="Données personnelles et cookies">
         <p>
           Le traitement des données personnelles est décrit dans la{" "}
-          <Link href="/confidentialite">politique de confidentialité</Link>, et les
-          modalités d&apos;effacement dans la page{" "}
+          <Link href="/confidentialite">politique de confidentialité</Link>, et
+          les modalités d&apos;effacement dans la page{" "}
           <Link href="/suppression-donnees">suppression des données</Link>.
         </p>
         <p>
-          Ce site ne dépose aucun cookie publicitaire ni aucun traceur de
-          mesure d&apos;audience. Seuls des cookies strictement nécessaires au
+          Ce site ne dépose aucun cookie publicitaire ni aucun traceur de mesure
+          d&apos;audience. Seuls des cookies strictement nécessaires au
           fonctionnement du service sont utilisés — c&apos;est pourquoi aucun
           bandeau de consentement ne vous est présenté.
         </p>
