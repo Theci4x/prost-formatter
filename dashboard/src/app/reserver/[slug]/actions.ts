@@ -69,7 +69,10 @@ export async function demanderReservation(
   const couverts = Number(texte(formData.get("couverts")));
   const type = texte(formData.get("type"));
   const nom = texte(formData.get("client_nom"));
-  const email = texte(formData.get("client_email"));
+  // En minuscules, comme partout ailleurs : c'est l'adresse qui regroupe
+  // une personne dans le fichier client, et « Jean@… » n'est pas une autre
+  // personne que « jean@… ».
+  const email = texte(formData.get("client_email")).toLowerCase();
   // Rangé sous sa forme internationale dès la saisie : c'est la seule
   // occasion où l'on a le texte tapé par celui qui connaît son numéro.
   const telephone = telephoneAEnregistrer(
@@ -82,7 +85,11 @@ export async function demanderReservation(
   if (!nom || !email) {
     return { error: "Indique ton nom et ton adresse e-mail." };
   }
-  if (!email.includes("@")) {
+  // La même expression que la saisie téléphonique, le fichier client et la
+  // règle du rappel. Un « a@b » passait ici et nulle part ailleurs : la
+  // réservation s'enregistrait, puis ne recevait rien et n'entrait dans
+  // aucun fichier, sans que personne ne soit prévenu.
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return { error: "Cette adresse e-mail ne semble pas valide." };
   }
   if (type !== "table" && type !== "privatisation") {

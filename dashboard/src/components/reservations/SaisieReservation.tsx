@@ -49,7 +49,7 @@ function Champs({
     <>
       <input type="hidden" name="restaurant_id" value={restaurantId} />
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <label className={label} htmlFor="saisie-nom">
           Nom du client
           <input
@@ -60,9 +60,29 @@ function Champs({
             className={champ}
           />
         </label>
+        {/* Demandée au téléphone, au même titre que le nom. C'est elle qui
+            porte la confirmation, le rappel de la veille et le lien pour
+            rendre la table : sans elle, la réservation est muette. */}
+        <label className={label} htmlFor="saisie-email">
+          E-mail
+          <input
+            id="saisie-email"
+            name="client_email"
+            type="email"
+            required
+            defaultValue={valeurs.email}
+            placeholder="client@exemple.fr"
+            className={champ}
+          />
+        </label>
         <label className={label} htmlFor="saisie-tel">
-          Téléphone{" "}
-          <span className="font-normal text-zinc-400">(facultatif)</span>
+          {/* Un seul élément de colonne : `label` est un flex-col, et deux
+              nœuds frères y passeraient l'un sous l'autre — le champ se
+              retrouverait décalé d'une ligne par rapport à ses voisins. */}
+          <span>
+            Téléphone{" "}
+            <span className="font-normal text-zinc-400">(facultatif)</span>
+          </span>
           <input
             id="saisie-tel"
             name="client_telephone"
@@ -176,8 +196,10 @@ function Champs({
       </div>
 
       <label className={label} htmlFor="saisie-note">
-        Note interne{" "}
-        <span className="font-normal text-zinc-400">(facultatif)</span>
+        <span>
+          Note interne{" "}
+          <span className="font-normal text-zinc-400">(facultatif)</span>
+        </span>
         <input
           id="saisie-note"
           name="note_interne"

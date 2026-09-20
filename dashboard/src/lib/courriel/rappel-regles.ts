@@ -51,8 +51,10 @@ export function aRappeler(
     return { rappeler: false, motif: `statut « ${reservation.statut} »` };
   }
 
-  // Les réservations prises au téléphone portent « — » faute d'adresse :
-  // leur fabriquer une trace d'envoi en échec ne renseignerait personne.
+  // L'adresse est désormais exigée partout, saisie téléphonique comprise.
+  // Restent les réservations enregistrées avant cette règle, qui portent
+  // « — » faute d'adresse : leur fabriquer une trace d'envoi en échec ne
+  // renseignerait personne.
   const email = (reservation.client_email ?? "").trim();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return { rappeler: false, motif: "pas d'adresse e-mail" };

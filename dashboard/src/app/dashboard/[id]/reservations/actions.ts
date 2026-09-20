@@ -45,6 +45,7 @@ import {
   SAISIE_VIDE,
 } from "@/types/reservation";
 import { telephoneAEnregistrer } from "@/lib/contact/telephone";
+import { enregistrerContact } from "@/lib/contacts/fichier";
 
 // « rendu » s'incrémente à chaque tentative : le formulaire s'en sert comme
 // clé React pour se remonter et reprendre les valeurs ci-dessous, qu'il
@@ -950,6 +951,7 @@ export async function ajouterReservation(
   const type: "table" | "privatisation" =
     texte(formData.get("type")) === "privatisation" ? "privatisation" : "table";
   const nom = texte(formData.get("client_nom"));
+  const email = texte(formData.get("client_email")).toLowerCase();
   // Deux variables, et c'est voulu : `telephone` part en base sous sa
   // forme internationale, `telephoneSaisi` revient dans le champ si le
   // formulaire échoue pour une autre raison. Réécrire le numéro sous les
@@ -965,6 +967,7 @@ export async function ajouterReservation(
   // lui rend la saisie pour qu'une erreur ne coûte pas tout à retaper.
   const valeurs: SaisieValeurs = {
     nom,
+    email,
     telephone: telephoneSaisi,
     date,
     couverts: texte(formData.get("couverts")),
@@ -977,7 +980,16 @@ export async function ajouterReservation(
   };
   const echec = (error: string): SaisieState => ({ error, rendu, valeurs });
 
-  if (!nom) return echec("Indique au moins le nom du client.");
+  if (!nom) return echec("Indique le nom du client.");
+  // La même exigence que sur le formulaire public, et la même expression
+  // que la contrainte en base. Une table prise au téléphone sans adresse
+  // ne reçoit rien — ni confirmation, ni rappel, ni lien pour la rendre —
+  // et c'est justement celle que personne ne relance.
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return echec(
+      "Demande son e-mail au client : c'est lui qui portera la confirmation et le rappel.",
+    );
+  }
   if (!serviceId) return echec("Choisis un service.");
   // Une privatisation désigne sa salle ; une réservation ordinaire non, et
   // c'est à Klarr de la placer plus bas.
@@ -1073,32 +1085,65 @@ export async function ajouterReservation(
     );
   }
 
-  const { error } = await supabase.from("restaurant_reservations").insert({
-    restaurant_id: restaurantId,
-    espace_id: espace.id,
-    service_id: serviceId,
-    date_reservation: date,
-    heure_arrivee: heure,
-    couverts,
-    type,
-    statut: "confirmee",
-    origine: "restaurateur",
-    client_nom: nom,
-    // Une réservation téléphonique n'a pas toujours d'e-mail ; la colonne
-    // ne peut pas être vide, on y met une marque explicite plutôt qu'une
-    // adresse inventée.
-    client_email: texte(formData.get("client_email")) || "—",
-    client_telephone: telephone,
-    note_interne: note || null,
-    // Même une réservation prise au téléphone reçoit son jeton : si le
-    // client a laissé une adresse, le rappel de la veille pourra lui
-    // proposer de rendre sa table comme aux autres.
-    annulation_token: jetonAnnulation(),
-  });
+  const { data: creee, error } = await supabase
+    .from("restaurant_reservations")
+    .insert({
+      restaurant_id: restaurantId,
+      espace_id: espace.id,
+      service_id: serviceId,
+      date_reservation: date,
+      heure_arrivee: heure,
+      couverts,
+      type,
+      statut: "confirmee",
+      origine: "restaurateur",
+      client_nom: nom,
+      client_email: email,
+      client_telephone: telephone,
+      note_interne: note || null,
+      // Le jeton part avec la réservation : c'est lui qui donnera au
+      // client le lien pour rendre sa table, dans la confirmation comme
+      // dans le rappel de la veille.
+      annulation_token: jetonAnnulation(),
+    })
+    .select("*")
+    .single();
 
   if (error) {
     console.error("[ajouterReservation]", error);
     return echec("L'enregistrement a échoué. Réessaie dans un instant.");
+  }
+
+  // Ce qui suit ne défait rien : la table est prise, même si le
+  // fournisseur d'e-mails est en panne. On ne prévient que le client —
+  // le restaurateur, lui, vient de saisir la réservation lui-même.
+  const reservation = creee as ReservationComplete | null;
+  if (reservation) {
+    const envoi = await contexteCourriel(reservation);
+    await Promise.all([
+      // La fiche client se range comme pour une réservation en ligne.
+      // `accepte: false` : personne n'a coché de case au téléphone, et le
+      // consentement ne se déduit pas d'une table réservée.
+      enregistrerContact({
+        supabase: createServiceClient(),
+        restaurantId,
+        nom,
+        email,
+        telephone,
+        accepte: false,
+        source: "reservation",
+      }),
+      envoi
+        ? prevenirClient({
+            supabase: envoi.service,
+            reservationId: reservation.id,
+            contexte: envoi.contexte,
+            destinataire: envoi.destinataire,
+            repondreA: envoi.repondreA,
+            confirmee: true,
+          })
+        : Promise.resolve(),
+    ]);
   }
 
   revalidatePath(`/dashboard/${restaurantId}/reservations`);

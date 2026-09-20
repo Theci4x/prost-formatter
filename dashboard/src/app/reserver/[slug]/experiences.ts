@@ -28,13 +28,21 @@ export async function inscrire(
   const date = (formData.get("date") as string) ?? "";
   const places = Number(formData.get("places"));
   const nom = ((formData.get("client_nom") as string) ?? "").trim();
-  const email = ((formData.get("client_email") as string) ?? "").trim();
+  const email = ((formData.get("client_email") as string) ?? "")
+    .trim()
+    .toLowerCase();
   const telephone = telephoneAEnregistrer(
     formData.get("client_telephone") as string | null,
   );
   const communications = formData.get("accepte_communications") === "on";
 
   if (!nom || !email) return { error: "Indiquez votre nom et votre e-mail." };
+  // La même expression qu'ailleurs. Sans elle, une adresse illisible
+  // s'inscrivait quand même : la place était prise, et la personne ne
+  // recevait ni confirmation ni rappel.
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return { error: "Cette adresse e-mail ne semble pas valide." };
+  }
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return { error: "Date invalide." };
   if (!Number.isInteger(places) || places <= 0) {
     return { error: "Indiquez un nombre de places." };

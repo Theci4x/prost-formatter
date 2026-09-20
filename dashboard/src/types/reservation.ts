@@ -161,6 +161,13 @@ export const SERVICE_VIDE: ServiceValeurs = {
 
 export type SaisieValeurs = {
   nom: string;
+  /**
+   * Obligatoire, comme sur le formulaire public. Une réservation sans
+   * adresse ne reçoit ni confirmation, ni rappel de la veille, ni lien
+   * pour rendre sa table : elle est muette, et personne ne s'en aperçoit
+   * avant le jour dit.
+   */
+  email: string;
   telephone: string;
   /** L'heure d'arrivée retenue, « 19:30 ». */
   heure: string;
@@ -176,6 +183,7 @@ export type SaisieValeurs = {
 
 export const SAISIE_VIDE: SaisieValeurs = {
   nom: "",
+  email: "",
   telephone: "",
   heure: "",
   date: "",
