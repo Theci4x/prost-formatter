@@ -516,13 +516,8 @@ const fr: ClesAccueilPublic = {
     surtitre: "Bientôt sur Klarr",
     titre: "Et la suite est déjà en préparation.",
     texte:
-      "Le fichier client, les campagnes e-mail et les réponses aux avis sont arrivés. Voilà ce qui manque encore — et on le dit aussi franchement.",
-    puces: [
-      "Statistiques du carnet",
-      "Statistiques de la fiche Google",
-      "Publications Google programmées",
-      "Liste d'attente",
-    ],
+      "Les statistiques du carnet, celles de votre fiche Google et les publications programmées sont arrivées depuis. Voilà ce qui manque encore — et on le dit aussi franchement.",
+    puces: ["Liste d'attente sur les créneaux complets"],
   },
   cta: {
     titre: "Votre fiche Google, sans filtre marketing.",
@@ -859,13 +854,8 @@ const en: ClesAccueilPublic = {
     surtitre: "Coming to Klarr",
     titre: "And what comes next is already under way.",
     texte:
-      "Customer records, email campaigns and review replies have landed. Here is what is still missing — and we say so just as plainly.",
-    puces: [
-      "Booking statistics",
-      "Google listing statistics",
-      "Scheduled Google posts",
-      "Waiting list",
-    ],
+      "Booking statistics, Google listing statistics and scheduled posts have landed since. Here is what is still missing — and we say so just as plainly.",
+    puces: ["A waiting list for fully booked slots"],
   },
   cta: {
     titre: "Your Google listing, with no marketing filter.",
@@ -1181,8 +1171,8 @@ const zh: ClesAccueilPublic = {
     surtitre: "即将上线",
     titre: "后续功能已经在做了。",
     texte:
-      "顾客档案、邮件推送和评价回复已经上线。以下是目前还缺的部分——我们同样照实说。",
-    puces: ["订位统计", "Google 商家资料统计", "Google 定时发布", "候补名单"],
+      "订位统计、Google 商家资料统计和定时发布都已上线。以下是目前还缺的部分——我们同样照实说。",
+    puces: ["订满时段的候补名单"],
   },
   cta: {
     titre: "您的 Google 商家资料，没有营销滤镜。",
