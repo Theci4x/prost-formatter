@@ -804,7 +804,7 @@ export default async function Home() {
       </Reveal>
 
       <Reveal>
-        <Journal t={t.journal} />
+        <Journal t={t.journal} langue={langue} />
       </Reveal>
 
       {/* FOOTER */}

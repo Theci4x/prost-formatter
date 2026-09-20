@@ -1,8 +1,14 @@
 import Link from "next/link";
 import { tousLesBillets, dateLisible } from "@/lib/blog/billets";
-import { tempsDeLecture } from "@/types/blog";
+import { billetsPour } from "@/lib/blog/traductions";
+import {
+  cheminJournal,
+  tempsDeLecture,
+  titreCategorieBillet,
+} from "@/types/blog";
+import type { LangueJournal } from "@/types/blog";
+import { JOURNAL } from "@/lib/i18n/journal";
 import { Couverture } from "@/components/blog/Couverture";
-import { titreCategorieBillet } from "@/types/blog";
 import type { ClesAccueilPublic } from "@/lib/i18n/accueilPublic";
 
 /**
@@ -21,12 +27,31 @@ import type { ClesAccueilPublic } from "@/lib/i18n/accueilPublic";
  * Il s'affichait un temps en français seulement, au motif que trois
  * cartes françaises au milieu d'une page chinoise font désordre. C'était
  * une erreur de jugement : le bloc disparaissait entièrement, et le site
- * donnait l'impression de ne pas avoir de journal du tout. Il reste donc
- * partout — l'habillage suit la langue, les articles restent en français,
- * et une ligne le dit plutôt que de le laisser découvrir au clic.
+ * donnait l'impression de ne pas avoir de journal du tout. Il est donc
+ * resté partout, en français, avec une ligne qui le disait.
+ *
+ * Depuis, le journal est traduit : les cartes suivent la langue comme le
+ * reste, titres, résumés, rubriques et dates compris. Il restait sinon un
+ * mélange que personne n'assume — « 19 septembre 2026 · 7 分钟阅读 » sous
+ * un titre français, au milieu d'une page chinoise.
+ *
+ * Le repli français demeure, et la ligne qui l'annonce avec lui : le jour
+ * où l'on ajoutera un article sans le traduire tout de suite, ou une
+ * quatrième langue, le bloc ne doit pas disparaître pour autant.
  */
-export function Journal({ t }: { t: ClesAccueilPublic["journal"] }) {
-  const billets = tousLesBillets().slice(0, 3);
+export function Journal({
+  t,
+  langue,
+}: {
+  t: ClesAccueilPublic["journal"];
+  langue: LangueJournal;
+}) {
+  const traduits = billetsPour(langue).slice(0, 3);
+  // Rien de traduit dans cette langue : on montre le français plutôt que
+  // de faire disparaître le journal, et on le dit.
+  const enFrancais = traduits.length === 0;
+  const billets = enFrancais ? tousLesBillets().slice(0, 3) : traduits;
+  const rubriques = JOURNAL[langue].rubriques;
   if (billets.length === 0) return null;
 
   return (
@@ -85,7 +110,7 @@ export function Journal({ t }: { t: ClesAccueilPublic["journal"] }) {
               }}
             >
               {t.chapo}
-              {t.enFrancais && (
+              {enFrancais && t.enFrancais && (
                 <>
                   {" "}
                   <span style={{ opacity: 0.75 }}>{t.enFrancais}</span>
@@ -119,7 +144,11 @@ export function Journal({ t }: { t: ClesAccueilPublic["journal"] }) {
           {billets.map((billet) => (
             <li key={billet.slug} style={{ display: "flex" }}>
               <Link
-                href={`/blog/${billet.slug}`}
+                // `billetsPour` rend déjà le slug traduit : c'est la
+                // racine de la langue qu'il faut lui mettre devant, pas
+                // `adressePour`, qui part du slug français et rendrait ici
+                // une adresse française coiffant un slug chinois.
+                href={`${cheminJournal(enFrancais ? "fr" : langue)}/${billet.slug}`}
                 style={{
                   display: "flex",
                   flexDirection: "column",
@@ -133,7 +162,11 @@ export function Journal({ t }: { t: ClesAccueilPublic["journal"] }) {
               >
                 <Couverture
                   slug={billet.slug}
-                  rubrique={titreCategorieBillet(billet.categorie)}
+                  rubrique={
+                    enFrancais
+                      ? titreCategorieBillet(billet.categorie)
+                      : rubriques[billet.categorie]
+                  }
                   image={billet.image}
                 />
                 <div
@@ -167,8 +200,8 @@ export function Journal({ t }: { t: ClesAccueilPublic["journal"] }) {
                       color: "var(--ink-soft)",
                     }}
                   >
-                    {dateLisible(billet.misAJourLe)} ·{" "}
-                    {tempsDeLecture(billet.markdown)} {t.lecture}
+                    {dateLisible(billet.misAJourLe, enFrancais ? "fr" : langue)}{" "}
+                    · {tempsDeLecture(billet.markdown)} {t.lecture}
                   </span>
                 </div>
               </Link>
