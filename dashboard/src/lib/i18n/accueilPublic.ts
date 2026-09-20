@@ -297,6 +297,7 @@ const fr: ClesAccueilPublic = {
       "Des mots-clés choisis à partir d'une analyse, pas au hasard",
       "Les avis Google, Yelp et Tripadvisor centralisés",
       "Photos et carte mises à jour en quelques clics",
+      "Les allergènes déclarés une fois, affichés sous chaque plat et tenus à jour tout seuls",
       "Les questions qu'on vous pose au téléphone, répondues une fois et reprises par Google et les IA",
       "Vous restez autonome, sans dépendre de personne",
     ],
@@ -305,6 +306,7 @@ const fr: ClesAccueilPublic = {
       "Des mots-clés au doigt mouillé, quand il y en a",
       "Des avis dispersés, et des réponses qui passent à la trappe",
       "Des informations périmées sur la moitié des sites",
+      "Un classeur allergènes à refaire à la main à chaque changement de carte",
       "Les mêmes questions, posées une par une au téléphone en plein service",
       "Une agence à payer, ou des heures perdues chaque semaine",
     ],
@@ -372,6 +374,11 @@ const fr: ClesAccueilPublic = {
         titre: "Les campagnes",
         texte:
           "Un message écrit à l'avance, parti le jour dit. Désinscription en un clic dans chaque envoi.",
+      },
+      {
+        titre: "Les allergènes",
+        texte:
+          "Cochés une fois par plat. Affichés sous chacun, réunis dans un document qui se fabrique seul, et filtrables par le client.",
       },
     ],
   },
@@ -636,6 +643,7 @@ const en: ClesAccueilPublic = {
       "Keywords chosen from an analysis, not at random",
       "Google, Yelp and Tripadvisor reviews in a single inbox",
       "Photos and menu updated in a few clicks",
+      "Allergens declared once, shown under every dish and kept current on their own",
       "The questions you get by phone, answered once and picked up by Google and AI assistants",
       "You stay independent, with nobody to depend on",
     ],
@@ -644,6 +652,7 @@ const en: ClesAccueilPublic = {
       "Keywords picked by guesswork, when there are any",
       "Reviews scattered around, and replies that slip through",
       "Out-of-date information on half the sites you're listed on",
+      "An allergen binder to redo by hand every time the menu changes",
       "The same questions, asked one at a time by phone in the middle of service",
       "An agency to pay, or hours lost every week",
     ],
@@ -711,6 +720,11 @@ const en: ClesAccueilPublic = {
         titre: "Campaigns",
         texte:
           "A message written ahead, sent on the day. One-click unsubscribe in every send.",
+      },
+      {
+        titre: "Allergens",
+        texte:
+          "Ticked once per dish. Shown under each one, gathered into a document that builds itself, and filterable by the guest.",
       },
     ],
   },
@@ -961,6 +975,7 @@ const zh: ClesAccueilPublic = {
       "关键词来自分析，而不是凭感觉",
       "Google、Yelp、Tripadvisor 的评价统一汇总",
       "照片和菜单几次点击即可更新",
+      "过敏原只需申报一次，自动显示在每道菜下方，并始终保持最新",
       "客人常问的问题，回答一次，之后由 Google 和 AI 直接引用",
       "您保持自主，不依赖任何人",
     ],
@@ -969,6 +984,7 @@ const zh: ClesAccueilPublic = {
       "关键词全凭猜测，甚至根本没有",
       "评价分散各处，回复常常漏掉",
       "一半的网站上挂着过期信息",
+      "换一次菜单，过敏原清单就得手工重做一遍",
       "同样的问题，在出餐高峰一通一通打电话来问",
       "要么花钱请代运营，要么每周搭进大量时间",
     ],
@@ -1030,6 +1046,10 @@ const zh: ClesAccueilPublic = {
       {
         titre: "邮件推送",
         texte: "提前写好，到日子自动发出。每一封都带一键退订。",
+      },
+      {
+        titre: "过敏原",
+        texte: "每道菜勾选一次。显示在菜名下方，清单自动生成，客人可自行筛选。",
       },
     ],
   },
