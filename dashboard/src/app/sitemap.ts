@@ -115,11 +115,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         (restaurant) =>
           restaurant.carte_publique && avecVisibilite.has(restaurant.id),
       )
-      .map((restaurant) => ({
-        url: `${site}/carte/${restaurant.slug_reservation}`,
-        lastModified: quand(restaurant),
-        priority: 0.7,
-      }));
+      .flatMap((restaurant) => [
+        {
+          url: `${site}/carte/${restaurant.slug_reservation}`,
+          lastModified: quand(restaurant),
+          priority: 0.7,
+        },
+        // Le tableau des allergènes vit aux mêmes conditions que la carte
+        // dont il est tiré. « Allergènes + nom du restaurant » est une
+        // recherche que fait quelqu'un qui a une vraie raison de la
+        // faire ; autant qu'il tombe sur le document et non sur un avis.
+        {
+          url: `${site}/carte/${restaurant.slug_reservation}/allergenes`,
+          lastModified: quand(restaurant),
+          priority: 0.4,
+        },
+      ]);
 
     // La vitrine est la page que Klarr vend comme « votre site » : c'est
     // elle qui doit être trouvée sur « restaurant + quartier », donc elle

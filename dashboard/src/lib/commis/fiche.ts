@@ -8,6 +8,7 @@ import { heureLisible } from "@/lib/site/horaires";
 import { carteOrganisee, formatPrix } from "@/lib/menu/carte";
 import { traductionAJour, traductionDe } from "@/lib/menu/traduction";
 import { cartePubliee } from "@/lib/menu/publication";
+import { listeAllergenes } from "@/types/allergenes";
 
 /**
  * Tout ce qu'un établissement dit publiquement de lui-même, en un texte.
@@ -157,7 +158,18 @@ function carteLisible(items: MenuItem[]): string[] {
         const versionEn = anglais
           ? ` [en : ${anglais.nom}${anglais.description ? ` — ${anglais.description}` : ""}]`
           : "";
-        return `${plat.nom}${prix}${detail}${versionEn}`;
+        // Déclaré par le restaurateur, ou rien. Les trois états de la
+        // colonne se rendent en trois phrases distinctes, parce que le
+        // modèle les confondrait : « aucun » et « pas encore examiné »
+        // s'écrivent tous deux comme une liste vide, et la consigne ne
+        // peut pas rattraper une source ambiguë.
+        const allergenes =
+          plat.allergenes === null
+            ? " (allergènes non déclarés)"
+            : plat.allergenes.length === 0
+              ? " (aucun des quatorze allergènes déclarés)"
+              : ` (allergènes déclarés : ${listeAllergenes(plat.allergenes, false)})`;
+        return `${plat.nom}${prix}${detail}${versionEn}${allergenes}`;
       })
       .join(" ; ");
     return `${bloc.categorie} : ${plats}`;

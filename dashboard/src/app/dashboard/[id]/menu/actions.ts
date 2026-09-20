@@ -13,6 +13,7 @@ import {
   type Sens,
 } from "@/lib/menu/carte";
 import { aTraduire } from "@/lib/menu/traduction";
+import { allergenesValides } from "@/types/allergenes";
 import { traduirePlats } from "@/lib/menu/traduire";
 import {
   MENU_VIDE,
@@ -171,6 +172,35 @@ export async function basculerPlat(formData: FormData) {
     .eq("restaurant_id", restaurantId);
 
   if (error) console.error("[basculerPlat]", error);
+  revalidatePath(`/dashboard/${restaurantId}/menu`);
+}
+
+/**
+ * Déclarer les allergènes d'un plat.
+ *
+ * Le formulaire poste une case par allergène coché, plus un témoin caché
+ * qui part toujours. Sans ce témoin, « aucun allergène » et « le
+ * formulaire n'a rien envoyé » arriveraient ici sous la même forme — un
+ * tableau vide — et on écrirait « le chef a vérifié, il n'y a rien »
+ * chaque fois qu'un navigateur a hoqueté. C'est le genre de silence qui
+ * finit aux urgences.
+ */
+export async function enregistrerAllergenes(formData: FormData) {
+  const restaurantId = texte(formData.get("restaurant_id"));
+  const id = texte(formData.get("id"));
+  if (texte(formData.get("declare")) !== "1") return;
+  if (!peutGerer(await roleSur(restaurantId))) return;
+
+  const allergenes = allergenesValides(formData.getAll("allergenes"));
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("restaurant_menu_items")
+    .update({ allergenes, updated_at: new Date().toISOString() })
+    .eq("id", id)
+    .eq("restaurant_id", restaurantId);
+
+  if (error) console.error("[enregistrerAllergenes]", error);
   revalidatePath(`/dashboard/${restaurantId}/menu`);
 }
 

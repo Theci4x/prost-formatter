@@ -23,6 +23,10 @@ export type MenuItem = {
   photo_storage_path: string | null;
   // Traductions par code de langue. Voir la migration 0029 pour la forme.
   traductions: Traductions;
+  // Les allergènes déclarés, parmi les quatorze de l'annexe II. NULL tant
+  // que le restaurateur n'a rien dit — à distinguer du tableau vide, qui
+  // veut dire « j'ai regardé, il n'y en a aucun ». Voir la migration 0068.
+  allergenes: string[] | null;
   created_at: string;
 };
 

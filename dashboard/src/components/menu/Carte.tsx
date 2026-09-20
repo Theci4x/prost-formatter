@@ -2,6 +2,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { carteOrganisee, carteVisible, formatPrix } from "@/lib/menu/carte";
 import type { MenuItem } from "@/types/menu";
+import { listeAllergenes } from "@/types/allergenes";
+import {
+  MENTION_ALLERGENES,
+  MENTION_ALLERGENES_ABSENTS,
+  MENTION_PRIX,
+} from "@/lib/menu/mentions";
 
 /**
  * La carte telle que la lit un client : les plats décrochés n'y sont pas,
@@ -10,8 +16,10 @@ import type { MenuItem } from "@/types/menu";
  * ce qu'on relit soit exactement ce qui est publié.
  */
 export function Carte({ items, slug }: { items: MenuItem[]; slug?: string }) {
-  const blocs = carteOrganisee(carteVisible(items));
+  const visibles = carteVisible(items);
+  const blocs = carteOrganisee(visibles);
   if (blocs.length === 0) return null;
+  const quelquesAllergenes = visibles.some((plat) => plat.allergenes !== null);
 
   return (
     <section className="flex flex-col gap-6">
@@ -53,6 +61,11 @@ export function Carte({ items, slug }: { items: MenuItem[]; slug?: string }) {
                         {plat.description}
                       </span>
                     )}
+                    {plat.allergenes !== null && plat.allergenes.length > 0 && (
+                      <span className="text-xs text-zinc-400">
+                        Allergènes : {listeAllergenes(plat.allergenes, false)}
+                      </span>
+                    )}
                   </span>
                 </li>
               ))}
@@ -61,11 +74,19 @@ export function Carte({ items, slug }: { items: MenuItem[]; slug?: string }) {
         ))}
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-xs text-zinc-400">
-          Carte donnée à titre indicatif : elle peut changer selon
-          l&apos;arrivage et la saison.
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex max-w-lg flex-col gap-1.5 text-xs text-zinc-400">
+          <p>
+            Carte donnée à titre indicatif : elle peut changer selon
+            l&apos;arrivage et la saison.
+          </p>
+          <p>{MENTION_PRIX.fr}</p>
+          <p>
+            {quelquesAllergenes
+              ? MENTION_ALLERGENES.fr
+              : MENTION_ALLERGENES_ABSENTS.fr}
+          </p>
+        </div>
         {slug && (
           <Link
             href={`/carte/${slug}`}

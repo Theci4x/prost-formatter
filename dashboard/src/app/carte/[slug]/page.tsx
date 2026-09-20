@@ -7,6 +7,12 @@ import { carteOrganisee, carteVisible, formatPrix } from "@/lib/menu/carte";
 import { langueDisponible, lireLangue, platAffiche } from "@/lib/menu/traduction";
 import { SignatureKlarr } from "@/components/brand/SignatureKlarr";
 import { cartePubliee } from "@/lib/menu/publication";
+import { listeAllergenes } from "@/types/allergenes";
+import {
+  MENTION_ALLERGENES,
+  MENTION_ALLERGENES_ABSENTS,
+  MENTION_PRIX,
+} from "@/lib/menu/mentions";
 import { chargerAcces } from "@/lib/abonnement/acces";
 import { DonneesStructurees } from "@/components/seo/DonneesStructurees";
 import { filAriane, menuSchema } from "@/lib/seo/donnees-structurees";
@@ -97,6 +103,11 @@ export default async function CartePage({
   const langue = anglaisPossible ? lireLangue(query.lang) : "fr";
   const blocs = carteOrganisee(carteVisible(items));
   const anglais = langue === "en";
+  // Un seul plat déclaré suffit à ouvrir le tableau : il vaut mieux un
+  // document partiel, qui dit ce qu'on sait, qu'un lien absent.
+  const quelquesAllergenes = carteVisible(items).some(
+    (plat) => plat.allergenes !== null,
+  );
 
   return (
     <div className="flex min-h-screen flex-col bg-brand-cream">
@@ -229,6 +240,13 @@ export default async function CartePage({
                               {affiche.description}
                             </span>
                           )}
+                          {plat.allergenes !== null &&
+                            plat.allergenes.length > 0 && (
+                              <span className="text-xs text-zinc-400">
+                                {anglais ? "Allergens" : "Allergènes"} :{" "}
+                                {listeAllergenes(plat.allergenes, anglais)}
+                              </span>
+                          )}
                         </span>
                       </li>
                     );
@@ -239,11 +257,38 @@ export default async function CartePage({
           })
         )}
 
-        <p className="text-xs text-zinc-400">
-          {anglais
-            ? "Menu given for information only: it may change with the season and daily deliveries."
-            : "Carte donnée à titre indicatif : elle peut changer selon l'arrivage et la saison."}
-        </p>
+        {/* Les mentions obligatoires, ensemble et lisibles. Le prix d'abord
+            parce qu'il répond à une question qu'on se pose en lisant la
+            carte ; les allergènes ensuite, avec la réserve sur les traces
+            — une cuisine de restaurant n'est pas cloisonnée, et laisser
+            croire le contraire serait pire que se taire. */}
+        <div className="flex flex-col gap-2 border-t border-zinc-200/70 pt-5 text-xs text-zinc-400">
+          <p>
+            {anglais
+              ? "Menu given for information only: it may change with the season and daily deliveries."
+              : "Carte donnée à titre indicatif : elle peut changer selon l'arrivage et la saison."}
+          </p>
+          <p>{anglais ? MENTION_PRIX.en : MENTION_PRIX.fr}</p>
+          <p>
+            {quelquesAllergenes
+              ? anglais
+                ? MENTION_ALLERGENES.en
+                : MENTION_ALLERGENES.fr
+              : anglais
+                ? MENTION_ALLERGENES_ABSENTS.en
+                : MENTION_ALLERGENES_ABSENTS.fr}
+          </p>
+          {quelquesAllergenes && (
+            <Link
+              href={`/carte/${slug}/allergenes${anglais ? "?lang=en" : ""}`}
+              className="w-fit text-brand-navy underline-offset-2 hover:underline"
+            >
+              {anglais
+                ? "See the full allergen table →"
+                : "Voir le tableau des allergènes →"}
+            </Link>
+          )}
+        </div>
 
         <Link
           href={`/reserver/${restaurant.slug_reservation}`}

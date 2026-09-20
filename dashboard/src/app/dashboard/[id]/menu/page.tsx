@@ -11,6 +11,7 @@ import {
 import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
 import { PlatForm } from "@/components/menu/PlatForm";
 import { PhotoPlat } from "@/components/menu/PhotoPlat";
+import { AllergenesPlat } from "@/components/menu/AllergenesPlat";
 import { TraduireCarte } from "@/components/menu/TraduireCarte";
 import { carteOrganisee, formatPrix } from "@/lib/menu/carte";
 import { aTraduire, traductionCaduque } from "@/lib/menu/traduction";
@@ -82,6 +83,11 @@ export default async function MenuPage({
   const visibles = items.filter((plat) => plat.actif).length;
   const slug = restaurant.slug_reservation;
   const restantATraduire = aTraduire(items, "en").length;
+  // Un plat à la carte dont personne n'a examiné la composition. Les plats
+  // décrochés ne comptent pas : ils ne sont servis à personne.
+  const sansAllergenes = items.filter(
+    (plat) => plat.actif && plat.allergenes === null,
+  ).length;
   // Le QR n'est calculé que s'il mène quelque part — et il ne mène nulle
   // part sans la visibilité, puisque la page qu'il ouvre exige le module.
   const qr = visibilite && publique && slug ? await qrSvg(slug) : null;
@@ -101,6 +107,26 @@ export default async function MenuPage({
         chaque plat ajoute sa photo : un carpaccio photographié se commande
         plus qu&apos;un carpaccio décrit.
       </p>
+
+      {/* La déclaration des allergènes n'est pas un confort : pour un plat
+          non préemballé, l'information doit être écrite et lisible sans que
+          le client ait à la demander. On le dit là où se corrige le
+          manque, avec le compte exact — « c'est obligatoire » fait hausser
+          les épaules, « il t'en reste sept » fait ouvrir la carte. */}
+      {sansAllergenes > 0 && (
+        <div className="flex flex-col gap-1 rounded-2xl border border-amber-200 bg-amber-50 p-5">
+          <span className="text-sm font-medium text-amber-900">
+            {sansAllergenes} plat{sansAllergenes > 1 ? "s" : ""} sans
+            allergènes déclarés
+          </span>
+          <span className="text-sm text-amber-800">
+            La loi demande que la liste des allergènes soit écrite et
+            consultable sans que le client ait à la demander. Coche-les sous
+            chaque plat : ta carte les affiche, et ton document allergènes
+            se fabrique tout seul à partir de là.
+          </span>
+        </div>
+      )}
 
       {/* Publier est un choix explicite : une carte saisie pour essayer n'a
           rien à faire sur une adresse publique. */}
@@ -309,6 +335,7 @@ export default async function MenuPage({
                           {plat.description}
                         </span>
                       )}
+                      <AllergenesPlat restaurantId={id} plat={plat} />
                     </span>
 
                     <span className="flex items-center gap-3">
