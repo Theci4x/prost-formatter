@@ -34,6 +34,9 @@ const PAGES_FIXES = [
   // une requête qu'on tape une fois et à laquelle il faut répondre.
   { chemin: "/diagnostic-local-restaurant", priorite: 0.8 },
   { chemin: "/calendrier-ouverture-restaurant", priorite: 0.8 },
+  // La porte de l'audit. Le formulaire lui-même reste hors de l'index :
+  // il ne répond à aucune recherche, celle-ci si.
+  { chemin: "/audit-fiche-google-restaurant", priorite: 0.9 },
 ];
 
 /**
