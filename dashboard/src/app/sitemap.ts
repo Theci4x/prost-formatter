@@ -25,6 +25,10 @@ const PAGES_FIXES = [
   // Une page d'intention d'achat : quelqu'un qui compare est à deux
   // doigts de choisir.
   { chemin: "/comparatif-logiciels-reservation-restaurant", priorite: 0.9 },
+  // Le calculateur vise la même intention que le comparatif — quelqu'un
+  // qui paie déjà une commission et se demande ce qu'elle lui coûte —
+  // mais il répond avec ses chiffres à lui.
+  { chemin: "/calculateur-commissions-restaurant", priorite: 0.9 },
 ];
 
 /**

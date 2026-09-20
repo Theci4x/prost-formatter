@@ -78,6 +78,7 @@ export type ClesAccueilPublic = {
     chapo: string;
     points: { titre: string; texte: string }[];
     zeroLegende: string;
+    zeroLien: string;
     zeroTexte: string;
     zeroExemple: string;
     ensuite: { titre: string; texte: string }[];
@@ -344,6 +345,7 @@ const fr: ClesAccueilPublic = {
     zeroTexte: `Ni sur les couverts, ni sur les privatisations. Le module Réservations coûte ${euros(HT.reservations, "fr")} HT par mois — ${euros(TTC.reservations, "fr")} TTC — et rien d'autre.`,
     zeroExemple:
       "Sur 400 couverts par mois, une plateforme à 2 € le couvert prend 800 €.",
+    zeroLien: "Calculer ce que la vôtre vous coûte",
     ensuite: [
       {
         titre: "Le carnet",
@@ -690,6 +692,7 @@ const en: ClesAccueilPublic = {
     zeroTexte: `Not on covers, not on private hire. The Bookings module costs ${ht(HT.reservations, "en")} per month — ${ttc(TTC.reservations, "en")} — and nothing else.`,
     zeroExemple:
       "On 400 covers a month, a platform charging €2 per cover takes €800.",
+    zeroLien: "Work out what yours costs you",
     ensuite: [
       {
         titre: "The book",
@@ -1021,6 +1024,7 @@ const zh: ClesAccueilPublic = {
     zeroLegende: "订位抽成",
     zeroTexte: `无论是散客还是包场，都不抽成。订位模块每月 ${ht(HT.reservations, "zh")}——即 ${ttc(TTC.reservations, "zh")}——没有其他费用。`,
     zeroExemple: "每月 400 位客人，按每位 2 欧元抽成的平台要收走 800 欧元。",
+    zeroLien: "算一算您自己的抽成成本",
     ensuite: [
       {
         titre: "预订簿",

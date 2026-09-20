@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { ClesAccueilPublic } from "@/lib/i18n/accueilPublic";
 
 // Formulations volontairement limitées à ce qui existe : page publique,
@@ -224,6 +225,20 @@ export function Reservation({ t }: { t: ClesAccueilPublic["reservations"] }) {
               >
                 {t.zeroExemple}
               </span>
+              {/* L'exemple donne un chiffre ; le calculateur donne le
+                  leur. C'est exactement là que la question se pose. */}
+              <Link
+                href="/calculateur-commissions-restaurant"
+                style={{
+                  marginTop: 10,
+                  fontSize: 13,
+                  color: "var(--ink-soft)",
+                  textDecoration: "underline",
+                  textUnderlineOffset: 3,
+                }}
+              >
+                {t.zeroLien}
+              </Link>
             </div>
           </div>
         </div>
