@@ -11,6 +11,7 @@ export const article: Article = {
     "Comment demander un acompte ?",
     "Comment faire payer une avance sur une privatisation ?",
     "Où voir les acomptes à encaisser ?",
+    "Est-ce que Klarr envoie le lien de paiement au client ?",
   ],
   markdown: `
 Un acompte est une somme **réellement encaissée** avant le service. Il ne se réclame que sur les **privatisations** : une table de deux ne bloque pas une salle, lui demander une avance ferait fuir sans rien protéger.
@@ -30,12 +31,11 @@ Une salle demande un acompte **ou** une caution, jamais les deux.
 
 1. Un groupe demande la privatisation.
 2. Tu acceptes la demande.
-3. La réservation apparaît dans **« Acomptes à encaisser »**, sur la page Réservations.
-4. Tu y récupères un **lien de paiement** à envoyer au client.
-5. Il paie par carte, sur une page Stripe sécurisée. L'argent arrive sur ton compte.
-6. La réservation passe en acompte payé.
+3. Klarr envoie au client, par e-mail, le **lien de paiement**. Tu n'as rien à recopier : accepter et réclamer l'acompte sont le même geste.
+4. Il paie par carte, sur une page Stripe sécurisée. L'argent arrive sur ton compte.
+5. La réservation passe en acompte payé.
 
-Pour l'instant, **l'envoi du lien est à ta charge** : Klarr ne l'expédie pas encore automatiquement par e-mail. Tu le copies et tu l'envoies par le canal que tu veux — mail, SMS, WhatsApp. C'est en cours.
+Tant qu'elle n'est pas payée, elle reste dans **« Acomptes à encaisser »**, sur la page Réservations. Tu y retrouves le lien, et un bouton **« Relancer par e-mail »** si le client laisse traîner — pas plus d'une fois par demi-heure : relancé trois fois en dix minutes, il ne paie pas plus vite, il te met en indésirable.
 
 ## Suivre
 

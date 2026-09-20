@@ -11,6 +11,7 @@ export const article: Article = {
     "Comment je confirme une réservation ?",
     "Pourquoi une demande bloque mon créneau ?",
     "C'est quoi une option qui expire ?",
+    "Est-ce que le client reçoit un e-mail de confirmation ?",
   ],
   markdown: `
 Quand un client remplit ton formulaire, il envoie une **demande**. Elle n'est pas confirmée tant que tu ne l'as pas tranchée : c'est toi qui décides, pas Klarr.
@@ -31,9 +32,11 @@ C'est ce qui évite que trois curieux gèlent tes trois salles d'un vendredi soi
 
 ## Ce que voit le client
 
-Pour l'instant, rien d'automatique : **Klarr n'envoie pas encore d'e-mail de confirmation**. Tant que l'envoi d'e-mails n'est pas branché, c'est à toi de rappeler ou d'écrire au client. Son adresse et son téléphone sont sur la demande, cliquables.
+Il est prévenu par e-mail, tout seul. Quand tu acceptes, Klarr lui écrit que sa réservation est confirmée — et si la salle demande un acompte ou une empreinte bancaire, c'est le **lien de paiement** qui part à la place : accepter et réclamer l'argent sont le même geste.
 
-C'est la limite la plus visible du produit aujourd'hui, et elle est en cours.
+La veille, un **rappel** part également, avec un lien pour annuler en un clic. C'est le deuxième levier contre les tables vides : celui qui ne peut plus venir le dit pendant qu'il te reste une soirée pour la revendre.
+
+Son adresse et son téléphone restent sur la demande, cliquables, si tu préfères l'appeler.
 
 ## Annuler après coup
 
