@@ -33,6 +33,7 @@ const PAGES_FIXES = [
   // restaurant, donc pas encore de besoin. Priorité moindre, mais c'est
   // une requête qu'on tape une fois et à laquelle il faut répondre.
   { chemin: "/diagnostic-local-restaurant", priorite: 0.8 },
+  { chemin: "/calendrier-ouverture-restaurant", priorite: 0.8 },
 ];
 
 /**
