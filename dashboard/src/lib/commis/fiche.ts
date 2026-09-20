@@ -6,6 +6,7 @@ import type { Horaires, JourSemaine } from "@/types/restaurant";
 import { JOURS_SEMAINE } from "@/types/restaurant";
 import { heureLisible } from "@/lib/site/horaires";
 import { carteOrganisee, formatPrix } from "@/lib/menu/carte";
+import { traductionAJour, traductionDe } from "@/lib/menu/traduction";
 import { cartePubliee } from "@/lib/menu/publication";
 
 /**
@@ -127,7 +128,21 @@ function espacesLisibles(espaces: Espace[]): string[] {
   });
 }
 
-/** La carte, catégorie par catégorie. Seulement si elle est publiée. */
+/**
+ * La carte, catégorie par catégorie. Seulement si elle est publiée.
+ *
+ * **La version anglaise voyage avec la française, quand elle existe.** Un
+ * client qui écrit en anglais recevra une réponse en anglais, et sans
+ * cela le modèle traduirait les plats lui-même : or « suprême de volaille
+ * aux morilles » mal rendu n'est pas une maladresse de style, c'est une
+ * assiette qui n'est pas celle qu'on croyait commander. La traduction du
+ * restaurateur a été relue par lui ; celle du modèle, par personne.
+ *
+ * Seules les traductions à jour sont reprises. `traductionAJour` écarte
+ * celles qu'un plat corrigé en français a rendues caduques — mieux vaut
+ * laisser le modèle traduire au vol que citer un ancien texte avec
+ * l'autorité d'une carte officielle.
+ */
 function carteLisible(items: MenuItem[]): string[] {
   return carteOrganisee(items).map((bloc) => {
     const plats = bloc.plats
@@ -136,7 +151,13 @@ function carteLisible(items: MenuItem[]): string[] {
           ? ` (${formatPrix(plat.prix_centimes)})`
           : "";
         const detail = plat.description ? ` — ${plat.description}` : "";
-        return `${plat.nom}${prix}${detail}`;
+        const anglais = traductionAJour(plat, "en")
+          ? traductionDe(plat, "en")
+          : null;
+        const versionEn = anglais
+          ? ` [en : ${anglais.nom}${anglais.description ? ` — ${anglais.description}` : ""}]`
+          : "";
+        return `${plat.nom}${prix}${detail}${versionEn}`;
       })
       .join(" ; ");
     return `${bloc.categorie} : ${plats}`;
