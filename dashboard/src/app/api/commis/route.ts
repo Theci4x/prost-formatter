@@ -16,15 +16,12 @@ import {
   facturer,
   reserver,
 } from "@/lib/commis/quota";
+import { modeleDuCommis } from "@/lib/commis/modeles";
 
 // La réponse arrive au fil de l'eau : attendre huit secondes devant un
 // curseur qui ne bouge pas donne l'impression que c'est cassé.
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
-
-// Tarifs publics de Claude Opus 5, par million de jetons.
-const DOLLARS_ENTREE = 5;
-const DOLLARS_SORTIE = 25;
 
 function texte(message: string, statut = 200): Response {
   return new Response(message, {
@@ -73,13 +70,17 @@ export async function POST(request: Request) {
   if (!verdict.autorise) return texte(MESSAGES[verdict.motif], 429);
 
   const client = new Anthropic();
+  // Le nom et le tarif ensemble : c'est ce tarif qui alimente le compteur
+  // plus bas, et un compteur nourri du prix d'un autre modèle ferait
+  // s'arrêter le Commis au mauvais moment.
+  const { nom: modele, tarif } = modeleDuCommis();
 
   const flux = new ReadableStream<Uint8Array>({
     async start(controle) {
       const encodeur = new TextEncoder();
       try {
         const reponse = client.messages.stream({
-          model: process.env.ANTHROPIC_MODEL ?? "claude-opus-5",
+          model: modele,
           // Une réponse d'aide tient en quelques phrases ; ce plafond borne
           // aussi ce qu'une question tordue peut coûter.
           max_tokens: 1024,
@@ -94,7 +95,11 @@ export async function POST(request: Request) {
           ],
           // Répondre à partir d'un texte fourni ne demande pas de longues
           // délibérations : l'effort le plus bas suffit et réduit l'attente.
-          output_config: { effort: "low" },
+          // Les modèles qui ne connaissent pas ce réglage refusent la
+          // requête entière, alors on ne le leur envoie pas.
+          ...(tarif.effort
+            ? { output_config: { effort: "low" as const } }
+            : {}),
           messages: [...historique, { role: "user", content: question }],
         });
 
@@ -113,8 +118,8 @@ export async function POST(request: Request) {
           sortie: finale.usage.output_tokens,
           cacheEcriture: finale.usage.cache_creation_input_tokens ?? 0,
           cacheLecture: finale.usage.cache_read_input_tokens ?? 0,
-          dollarsEntreeParMillion: DOLLARS_ENTREE,
-          dollarsSortieParMillion: DOLLARS_SORTIE,
+          dollarsEntreeParMillion: tarif.entree,
+          dollarsSortieParMillion: tarif.sortie,
         });
         await facturer(service, cle, centimes);
       } catch (erreur) {
