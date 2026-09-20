@@ -7,6 +7,10 @@
     {
       "path": "/api/cron/options-expirees",
       "schedule": "0 4 * * *"
+    },
+    {
+      "path": "/api/cron/rappels-ouverture",
+      "schedule": "0 7 * * 1"
     }
   ]
 }

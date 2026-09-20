@@ -37,6 +37,9 @@ const PAGES_FIXES = [
   // La porte de l'audit. Le formulaire lui-même reste hors de l'index :
   // il ne répond à aucune recherche, celle-ci si.
   { chemin: "/audit-fiche-google-restaurant", priorite: 0.9 },
+  // Le fil qui relie les quatre outils. C'est lui qui répond à « ouvrir
+  // un restaurant », la requête la plus large du lot.
+  { chemin: "/ouvrir-un-restaurant", priorite: 0.9 },
 ];
 
 /**

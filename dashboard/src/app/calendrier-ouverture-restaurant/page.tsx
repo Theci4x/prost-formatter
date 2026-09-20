@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Commis } from "@/components/commis/Commis";
+import { RappelOuverture } from "@/components/ouverture/RappelOuverture";
 import { DonneesStructurees } from "@/components/seo/DonneesStructurees";
 import { filAriane } from "@/lib/seo/donnees-structurees";
 import { siteUrl } from "@/lib/site-url";
@@ -205,6 +206,8 @@ export default async function CalendrierPage({
             </p>
           </section>
         )}
+
+        {planifie && <RappelOuverture source="calendrier" />}
 
         <div className="flex flex-col gap-3 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm">
           <p className="text-sm font-semibold text-zinc-900">
