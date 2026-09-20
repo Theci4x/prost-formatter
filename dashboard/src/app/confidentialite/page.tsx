@@ -379,7 +379,7 @@ export default function ConfidentialitePage() {
               </tr>
               <tr>
                 <td>Coordonnées laissées sur le test de présence</td>
-                <td>Trois ans à compter du dernier contact</td>
+                <td>Trois ans après la demande</td>
               </tr>
               <tr>
                 <td>Jetons de connexion à un service tiers</td>
@@ -390,22 +390,31 @@ export default function ConfidentialitePage() {
                 <td>Dix ans (obligation légale)</td>
               </tr>
               <tr>
-                <td>Journaux techniques et de connexion</td>
+                <td>Compteurs techniques (plafonds anti-abus)</td>
                 <td>Douze mois</td>
               </tr>
               <tr>
+                <td>Journaux de connexion</td>
+                <td>Douze mois, chez notre hébergeur de base de données</td>
+              </tr>
+              <tr>
                 <td>Échanges avec l&apos;assistance</td>
-                <td>Trois ans après la clôture de la demande</td>
+                <td>
+                  Trois ans après la clôture, dans notre messagerie — ils ne
+                  sont pas enregistrés dans le service
+                </td>
               </tr>
             </tbody>
           </table>
         </div>
         <p>
-          L&apos;effacement intervient à votre demande, ou à la fermeture du
-          compte selon les modalités décrites dans la page{" "}
+          Une tâche quotidienne efface ce qui a dépassé ces durées, sans que
+          personne ait à le demander. L&apos;effacement intervient aussi à votre
+          demande, ou à la fermeture du compte selon les modalités décrites dans
+          la page{" "}
           <Link href="/suppression-donnees">suppression des données</Link>. Une
-          demande d&apos;effacement portant sur un convive est exécutée quel que
-          soit le délai écoulé.
+          demande portant sur un convive est exécutée quel que soit le délai
+          écoulé.
         </p>
       </LegalSection>
 

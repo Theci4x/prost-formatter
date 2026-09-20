@@ -6,6 +6,7 @@ import { rappelerLesReservations } from "@/lib/courriel/rappel";
 import { relancerLesPaiements } from "@/lib/courriel/relances";
 import { publierLesPosts } from "@/lib/posts/publication";
 import { prevenirDesEssaisQuiFinissent } from "@/lib/notifications/essais";
+import { purgerLesDonneesExpirees } from "@/lib/donnees/purge";
 
 // Les options échues ne bloquent déjà plus la jauge — le moteur de
 // disponibilité les ignore. Cette tâche ne fait que le dire : sans elle, une
@@ -103,6 +104,20 @@ export async function GET(request: Request) {
       `sur ${essais.examines} établissement(s)`,
   );
 
+  // La purge en dernier, et c'est délibéré. Elle n'a aucune urgence —
+  // une journée de plus ne change rien à une donnée de trois ans — là où
+  // tout ce qui précède se compte en heures pour quelqu'un qui attend une
+  // confirmation. Et si elle échoue, elle échoue seule.
+  const purge = await purgerLesDonneesExpirees({
+    supabase,
+    maintenant: new Date(),
+  });
+  console.log(
+    `[cron/options-expirees] purge : ${purge.prospects} prospect(s), ` +
+      `${purge.audits} audit(s), ${purge.suivis} note(s) de suivi, ` +
+      `${purge.compteurs} compteur(s)`,
+  );
+
   return NextResponse.json({
     expirees,
     courriels,
@@ -110,5 +125,6 @@ export async function GET(request: Request) {
     relances,
     posts,
     essais,
+    purge,
   });
 }
