@@ -10,7 +10,7 @@ export const billet: Billet = {
   misAJourLe: "2026-09-19",
   image: {
     fichier: "/blog/classement-local-maps.jpg",
-    alt: "Une restauratrice tient un tableau comparant sa fiche Google à celle du restaurant voisin, critère par critère, dans sa salle en plein service.",
+    alt: "Trois clients attablés près de la baie vitrée d'une brasserie parisienne, l'ardoise du jour accrochée au mur.",
   },
   sources: [
     {

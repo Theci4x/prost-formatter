@@ -11,7 +11,7 @@ export const billet: Billet = {
   misAJourLe: "2026-09-19",
   image: {
     fichier: "/blog/reservations-sans-commission.jpg",
-    alt: "Une restauratrice compare, sur une feuille posée entre ses relevés, deux colonnes de gains : avec commission par couvert, et sans.",
+    alt: "Une restauratrice assise à une table de sa salle, la main sur la tempe, pendant qu'un serveur dresse les tables derrière elle.",
   },
   sources: [
     {

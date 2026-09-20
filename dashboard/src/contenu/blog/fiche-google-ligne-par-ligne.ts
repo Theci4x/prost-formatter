@@ -10,7 +10,7 @@ export const billet: Billet = {
   misAJourLe: "2026-09-19",
   image: {
     fichier: "/blog/fiche-google-ligne-par-ligne.jpg",
-    alt: "Une restauratrice présente deux feuilles côte à côte : le formulaire de sa fiche Google d'un côté, l'affichage de son établissement dans Maps de l'autre.",
+    alt: "Un serveur en tablier derrière le comptoir d'une brasserie, devant la porte vitrée qui donne sur la rue.",
   },
   sources: [
     {

@@ -10,7 +10,7 @@ export const billet: Billet = {
   misAJourLe: "2026-09-19",
   image: {
     fichier: "/blog/visibilite-ia-chatgpt.jpg",
-    alt: "Une restauratrice consulte un écran où les logos de ChatGPT, Claude et Perplexity surmontent une requête sur son restaurant restée sans réponse.",
+    alt: "Une restauratrice en tablier, pensive, dans sa salle où trois clients déjeunent près de la fenêtre.",
   },
   sources: [
     {
