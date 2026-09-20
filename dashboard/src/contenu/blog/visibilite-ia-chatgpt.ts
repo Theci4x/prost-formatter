@@ -8,6 +8,10 @@ export const billet: Billet = {
   categorie: "remplir",
   publieLe: "2026-09-19",
   misAJourLe: "2026-09-19",
+  image: {
+    fichier: "/blog/visibilite-ia-chatgpt.jpg",
+    alt: "Une restauratrice consulte un écran où les logos de ChatGPT, Claude et Perplexity surmontent une requête sur son restaurant restée sans réponse.",
+  },
   sources: [
     {
       intitule: "schema.org — type Restaurant",

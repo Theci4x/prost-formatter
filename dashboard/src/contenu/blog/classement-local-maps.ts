@@ -8,6 +8,10 @@ export const billet: Billet = {
   categorie: "remplir",
   publieLe: "2026-09-19",
   misAJourLe: "2026-09-19",
+  image: {
+    fichier: "/blog/classement-local-maps.jpg",
+    alt: "Une restauratrice tient un tableau comparant sa fiche Google à celle du restaurant voisin, critère par critère, dans sa salle en plein service.",
+  },
   sources: [
     {
       intitule: "Google — Améliorer le classement local de son établissement",

@@ -8,6 +8,10 @@ export const billet: Billet = {
   categorie: "remplir",
   publieLe: "2026-09-19",
   misAJourLe: "2026-09-19",
+  image: {
+    fichier: "/blog/fiche-google-ligne-par-ligne.jpg",
+    alt: "Une restauratrice présente deux feuilles côte à côte : le formulaire de sa fiche Google d'un côté, l'affichage de son établissement dans Maps de l'autre.",
+  },
   sources: [
     {
       intitule: "Google — aide sur la fiche d'établissement",
