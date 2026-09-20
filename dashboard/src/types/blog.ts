@@ -76,6 +76,21 @@ export type Billet = {
    */
   sources: Source[];
   /**
+   * Écrit, mais pas encore publié.
+   *
+   * Un billet en brouillon reste importé et visible dans la liste des
+   * billets du code — c'est tout l'intérêt par rapport à un fichier
+   * qu'on oublierait de brancher. Il ne sort simplement ni dans le
+   * journal, ni dans le plan du site, ni dans le corpus du Commis.
+   *
+   * Sert à une seule chose ici : un article dont le texte est prêt mais
+   * dont les sources n'ont pas encore été ouvertes une par une. La règle
+   * du champ `sources` ci-dessus ne vaut que si quelqu'un a cliqué les
+   * liens — publier un lien mort sous une affirmation juridique est pire
+   * que de ne pas citer du tout.
+   */
+  brouillon?: boolean;
+  /**
    * Trois ou quatre phrases en tête d'article : ce qu'on retient si on ne
    * lit que ça. La moitié des gens ne liront que ça — autant que ce soit
    * écrit pour eux plutôt que subi.

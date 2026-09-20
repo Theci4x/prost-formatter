@@ -24,6 +24,9 @@ import { billet as sansCommission } from "@/contenu/blog/reservations-sans-commi
 import { billet as visibiliteIa } from "@/contenu/blog/visibilite-ia-chatgpt";
 import { billet as ficheGoogle } from "@/contenu/blog/fiche-google-ligne-par-ligne";
 import { billet as classementLocal } from "@/contenu/blog/classement-local-maps";
+import { billet as extraction } from "@/contenu/blog/extraction-conduit-toiture";
+import { billet as destinationBail } from "@/contenu/blog/destination-bail-restauration";
+import { billet as copropriete } from "@/contenu/blog/copropriete-restaurant";
 
 /**
  * Les billets, importés un par un plutôt que lus sur le disque.
@@ -53,11 +56,28 @@ const TOUS: Billet[] = [
   visibiliteIa,
   ficheGoogle,
   classementLocal,
+  extraction,
+  destinationBail,
+  copropriete,
 ];
 
-/** Du plus récent au plus ancien : c'est l'ordre d'un blog. */
+/**
+ * Du plus récent au plus ancien : c'est l'ordre d'un blog.
+ *
+ * Les brouillons n'y sont pas. Comme `billetsPour`, le plan du site et
+ * les pages d'index dérivent tous de cette fonction, un billet non
+ * publié disparaît donc partout d'un seul filtre — et reste visible
+ * dans `TOUS` juste au-dessus, où on le voit en relisant le code.
+ */
 export function tousLesBillets(): Billet[] {
-  return [...TOUS].sort((a, b) => b.publieLe.localeCompare(a.publieLe));
+  return [...TOUS]
+    .filter((billet) => !billet.brouillon)
+    .sort((a, b) => b.publieLe.localeCompare(a.publieLe));
+}
+
+/** Ce qui est écrit mais pas encore sorti. Pour s'en souvenir. */
+export function brouillons(): Billet[] {
+  return TOUS.filter((billet) => billet.brouillon);
 }
 
 export function billetParSlug(slug: string): Billet | null {
