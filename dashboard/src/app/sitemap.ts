@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { createServiceClient } from "@/lib/supabase/service";
+import { visibiliteOuvertePour } from "@/lib/abonnement/acces";
 import { siteUrl } from "@/lib/site-url";
 import { tousLesArticles } from "@/lib/aide/articles";
 import { tousLesBillets } from "@/lib/blog/billets";
@@ -77,11 +78,25 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .not("slug_reservation", "is", null);
 
     const restaurants = (data ?? []) as {
+      id: string;
       slug_reservation: string;
       created_at: string | null;
+      acces_offert_jusqu_au?: string | null;
       carte_publique: boolean | null;
       site_publie: boolean | null;
     }[];
+
+    // La page « la carte de X » exige le module de visibilité, comme la
+    // vitrine. L'annoncer ici sans le vérifier remplirait le plan du site
+    // d'adresses qui répondent 404 — ce qu'un moteur nous fait payer.
+    const avecVisibilite = await visibiliteOuvertePour(
+      restaurants.map((restaurant) => ({
+        id: restaurant.id,
+        created_at: restaurant.created_at ?? new Date().toISOString(),
+        acces_offert_jusqu_au: restaurant.acces_offert_jusqu_au ?? null,
+      })),
+      supabase,
+    );
 
     const quand = (restaurant: { created_at: string | null }) =>
       restaurant.created_at ? new Date(restaurant.created_at) : new Date();
@@ -96,7 +111,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // page que Klarr sait servir. Seules les cartes publiées y entrent :
     // les autres renvoient une 404.
     const cartes = restaurants
-      .filter((restaurant) => restaurant.carte_publique)
+      .filter(
+        (restaurant) =>
+          restaurant.carte_publique && avecVisibilite.has(restaurant.id),
+      )
       .map((restaurant) => ({
         url: `${site}/carte/${restaurant.slug_reservation}`,
         lastModified: quand(restaurant),

@@ -16,7 +16,8 @@ import { carteOrganisee, formatPrix } from "@/lib/menu/carte";
 import { aTraduire, traductionCaduque } from "@/lib/menu/traduction";
 import { qrSvg, urlCarte } from "@/lib/menu/qr";
 import { exiger } from "@/lib/equipe/roles";
-import { exigerModule } from "@/lib/abonnement/acces";
+import { exigerSection } from "@/lib/abonnement/acces";
+import { LIBELLE_MODULE, PRIX_MODULE } from "@/lib/abonnement/modules";
 import type { MenuItem } from "@/types/menu";
 import type { Restaurant } from "@/types/restaurant";
 
@@ -56,7 +57,11 @@ export default async function MenuPage({
 }) {
   const { id } = await params;
   await exiger(id, "gerant");
-  await exigerModule(id, "visibilite");
+  // La section, pas le module : la carte s'affiche sur la page de
+  // réservation, donc elle se saisit avec le carnet seul. Ce qui en fait
+  // un produit de visibilité est réservé plus bas.
+  const acces = await exigerSection(id, "menu");
+  const visibilite = acces.ouvert.visibilite;
 
   const supabase = await createClient();
   const [restaurantResult, itemsResult] = await Promise.all([
@@ -77,8 +82,9 @@ export default async function MenuPage({
   const visibles = items.filter((plat) => plat.actif).length;
   const slug = restaurant.slug_reservation;
   const restantATraduire = aTraduire(items, "en").length;
-  // Le QR n'est calculé que s'il mène quelque part.
-  const qr = publique && slug ? await qrSvg(slug) : null;
+  // Le QR n'est calculé que s'il mène quelque part — et il ne mène nulle
+  // part sans la visibilité, puisque la page qu'il ouvre exige le module.
+  const qr = visibilite && publique && slug ? await qrSvg(slug) : null;
 
   return (
     <div className="flex flex-1 flex-col gap-6 px-6 py-8">
@@ -138,7 +144,7 @@ export default async function MenuPage({
         </Action>
       </div>
 
-      {items.length > 0 && (
+      {visibilite && items.length > 0 && (
         <div className="flex flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm sm:flex-row sm:items-start sm:justify-between">
           <div className="flex flex-col gap-2">
             <span className="text-sm font-medium text-zinc-900">
@@ -156,7 +162,20 @@ export default async function MenuPage({
       )}
 
       {/* Le QR : ce qu'on pose sur les tables et au comptoir. */}
-      {qr && slug ? (
+      {/* Le QR et la traduction sont les produits de visibilité de la
+          carte : ils mènent à la page « la carte de X », qui est référencée
+          et qui exige le module. La saisie, elle, sert la page de
+          réservation et reste ouverte au carnet seul. */}
+      {!visibilite ? (
+        items.length > 0 && (
+          <p className="rounded-2xl border border-dashed border-zinc-200 bg-brand-cream p-5 text-sm text-zinc-600 shadow-sm">
+            Ta carte s&apos;affiche déjà sur ta page de réservation. Le QR code
+            à poser sur les tables et la traduction en anglais font partie de{" "}
+            <strong>{LIBELLE_MODULE.visibilite}</strong> —{" "}
+            {PRIX_MODULE.visibilite}.
+          </p>
+        )
+      ) : qr && slug ? (
         <div className="flex flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm sm:flex-row sm:items-center">
           <div
             className="h-36 w-36 shrink-0 [&>svg]:h-full [&>svg]:w-full"

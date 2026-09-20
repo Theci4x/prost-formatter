@@ -55,6 +55,61 @@ export async function chargerAcces(
 }
 
 /**
+ * Parmi ces établissements, ceux dont la visibilité est ouverte.
+ *
+ * En une requête plutôt qu'une par ligne : le plan du site les traite
+ * tous, et cent appels à `chargerAcces` y coûteraient cent allers-retours
+ * à chaque passage d'un robot.
+ *
+ * Tolérant comme le reste du fichier : si la lecture des abonnements
+ * échoue, on considère tout ouvert. Le plan du site annoncera au pire une
+ * page de trop, ce qui vaut mieux qu'un plan amputé.
+ */
+export async function visibiliteOuvertePour(
+  restaurants: {
+    id: string;
+    created_at: string;
+    acces_offert_jusqu_au?: string | null;
+  }[],
+  supabase: SupabaseClient,
+): Promise<Set<string>> {
+  const tous = new Set(restaurants.map((restaurant) => restaurant.id));
+  if (tous.size === 0) return tous;
+
+  const { data, error } = await supabase
+    .from("restaurant_subscriptions")
+    .select("restaurant_id, module, status")
+    .in("restaurant_id", [...tous]);
+
+  if (error) {
+    console.error("[acces] abonnements en lot", error.message);
+    return tous;
+  }
+
+  const parRestaurant = new Map<string, EtatAbonnement[]>();
+  for (const ligne of (data ?? []) as (EtatAbonnement & {
+    restaurant_id: string;
+  })[]) {
+    const liste = parRestaurant.get(ligne.restaurant_id) ?? [];
+    liste.push(ligne);
+    parRestaurant.set(ligne.restaurant_id, liste);
+  }
+
+  const maintenant = new Date();
+  const ouverts = new Set<string>();
+  for (const restaurant of restaurants) {
+    const acces = calculerAcces({
+      abonnements: parRestaurant.get(restaurant.id) ?? [],
+      creeLe: restaurant.created_at,
+      accesOffertJusquAu: restaurant.acces_offert_jusqu_au ?? null,
+      maintenant,
+    });
+    if (acces.ouvert.visibilite) ouverts.add(restaurant.id);
+  }
+  return ouverts;
+}
+
+/**
  * Garde de page : renvoie vers l'abonnement si le module n'est pas ouvert.
  *
  * Griser une case dans le menu n'est pas une sécurité — l'adresse se tape

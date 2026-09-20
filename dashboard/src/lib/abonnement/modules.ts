@@ -235,7 +235,11 @@ export const ACCES_COMPLET: Acces = {
  */
 export const MODULE_DE_LA_SECTION: Record<string, Module | Module[]> = {
   vitrine: "visibilite",
-  menu: "visibilite",
+  // La carte se saisit des deux côtés : elle s'affiche sur la page de
+  // réservation, qui appartient au carnet. Ce qui en fait un produit de
+  // visibilité — le QR posé sur les tables, la page « la carte de X »
+  // référencée, la traduction — reste vérifié écran par écran.
+  menu: ["visibilite", "reservations"],
   photos: "visibilite",
   avis: "visibilite",
   retours: "visibilite",

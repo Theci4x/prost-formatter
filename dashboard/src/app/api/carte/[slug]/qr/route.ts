@@ -1,5 +1,6 @@
 import { createServiceClient } from "@/lib/supabase/service";
 import { qrPng, qrSvg } from "@/lib/menu/qr";
+import { chargerAcces } from "@/lib/abonnement/acces";
 
 /**
  * Le QR code de la carte, à télécharger pour l'imprimer. PNG par défaut —
@@ -20,12 +21,24 @@ export async function GET(
   const supabase = createServiceClient();
   const { data } = await supabase
     .from("restaurants")
-    .select("nom, carte_publique")
+    .select("id, nom, carte_publique")
     .eq("slug_reservation", slug)
     .maybeSingle();
 
-  const restaurant = data as { nom: string; carte_publique: boolean } | null;
+  const restaurant = data as {
+    id: string;
+    nom: string;
+    carte_publique: boolean;
+  } | null;
   if (!restaurant?.carte_publique) {
+    return new Response("Carte non publiée", { status: 404 });
+  }
+
+  // Le QR mène à « la carte de X », qui exige le module de visibilité.
+  // Masquer le bouton n'y suffirait pas : cette adresse se devine à partir
+  // du slug, et un QR imprimé qui ouvre une 404 vit sur trente tables.
+  const acces = await chargerAcces(restaurant.id, supabase);
+  if (!acces.ouvert.visibilite) {
     return new Response("Carte non publiée", { status: 404 });
   }
 

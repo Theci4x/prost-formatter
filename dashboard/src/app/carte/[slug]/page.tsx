@@ -7,6 +7,7 @@ import { carteOrganisee, carteVisible, formatPrix } from "@/lib/menu/carte";
 import { langueDisponible, lireLangue, platAffiche } from "@/lib/menu/traduction";
 import { SignatureKlarr } from "@/components/brand/SignatureKlarr";
 import { cartePubliee } from "@/lib/menu/publication";
+import { chargerAcces } from "@/lib/abonnement/acces";
 import { DonneesStructurees } from "@/components/seo/DonneesStructurees";
 import { filAriane, menuSchema } from "@/lib/seo/donnees-structurees";
 import { siteUrl } from "@/lib/site-url";
@@ -38,6 +39,14 @@ async function chargerCarte(slug: string) {
   // est le bon comportement pour celle-ci.
   const carte = await cartePubliee(supabase, restaurant.id);
   if (!carte.publiee) return null;
+
+  // Et le module, car la carte se saisit désormais avec le carnet seul.
+  // Publier sert alors la page de réservation ; cette page-ci est un
+  // produit de visibilité — référencée, autonome, faite pour être trouvée
+  // sur « la carte de X ». Le plan du site applique la même règle, sans
+  // quoi il annoncerait des adresses qui répondent 404.
+  const acces = await chargerAcces(restaurant.id, supabase);
+  if (!acces.ouvert.visibilite) return null;
 
   return { restaurant, items: carte.items };
 }
