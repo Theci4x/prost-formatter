@@ -16,7 +16,14 @@ export const metadata: Metadata = {
   title: "Le journal",
   description:
     "Ouvrir un restaurant, remplir sa salle, tenir la maison. Des articles écrits à partir de ce qu'on a vu marcher — et de ce qu'on a raté.",
-  alternates: { canonical: "/blog" },
+  alternates: {
+    canonical: "/blog",
+    // Les index anglais et chinois désignent déjà celui-ci. Un lien
+    // « hreflang » ne compte que s'il est rendu : Google écarte tout le
+    // groupe quand la page pointée ne renvoie pas vers celles qui la
+    // citent — les trois index se seraient concurrencés en silence.
+    languages: { fr: "/blog", en: "/blog/en", zh: "/blog/zh" },
+  },
 };
 
 export default function BlogPage() {
