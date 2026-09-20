@@ -270,6 +270,7 @@ const fr: ClesAccueilPublic = {
       "Des mots-clés choisis à partir d'une analyse, pas au hasard",
       "Les avis Google, Yelp et Tripadvisor centralisés",
       "Photos et carte mises à jour en quelques clics",
+      "Les questions qu'on vous pose au téléphone, répondues une fois et reprises par Google et les IA",
       "Vous restez autonome, sans dépendre de personne",
     ],
     non: [
@@ -277,6 +278,7 @@ const fr: ClesAccueilPublic = {
       "Des mots-clés au doigt mouillé, quand il y en a",
       "Des avis dispersés, et des réponses qui passent à la trappe",
       "Des informations périmées sur la moitié des sites",
+      "Les mêmes questions, posées une par une au téléphone en plein service",
       "Une agence à payer, ou des heures perdues chaque semaine",
     ],
     comparatif: "Voir le comparatif avec TheFork, Zenchef et Guestonline",
@@ -333,6 +335,11 @@ const fr: ClesAccueilPublic = {
         titre: "Rien à relancer",
         texte:
           "Le lien de paiement part seul, se relance avant l'échéance, et ce qui rate se rejoue.",
+      },
+      {
+        titre: "Le devis",
+        texte:
+          "Lignes, TVA par taux, vos mentions légales. Le client l'accepte en ligne, vous êtes prévenu.",
       },
       {
         titre: "Les campagnes",
@@ -417,7 +424,12 @@ const fr: ClesAccueilPublic = {
       {
         question: "Peut-on gérer les privatisations avec Klarr ?",
         reponse:
-          "Oui. Le module Réservations gère la table et la privatisation d'espaces. Le restaurateur fixe un minimum de couverts ou de consommation, pose des jauges par service pour qu'un curieux ne gèle pas une salle entière, et les conditions s'affichent avant la réservation.",
+          "Oui. Le module Réservations gère la table et la privatisation d'espaces. Le restaurateur fixe un minimum de couverts ou de consommation, pose des jauges par service pour qu'un curieux ne gèle pas une salle entière, et les conditions s'affichent avant la réservation. Le devis se rédige ensuite depuis le carnet — lignes, TVA par taux, mentions légales de l'établissement — et le client l'accepte en ligne.",
+      },
+      {
+        question: "Comment Klarr réduit-il les appels pendant le service ?",
+        reponse:
+          "Les questions qu'un client pose avant de réserver — la terrasse, l'accès en fauteuil roulant, les chiens, les plats végétariens — se répondent une fois dans Klarr, en choisissant une phrase toute faite. Elles s'affichent ensuite sur la page de réservation de l'établissement, et leur balisage FAQPage permet à Google et aux assistants IA de les reprendre.",
       },
       {
         question: "Peut-on écrire à ses clients avec Klarr ?",
@@ -596,6 +608,7 @@ const en: ClesAccueilPublic = {
       "Keywords chosen from an analysis, not at random",
       "Google, Yelp and Tripadvisor reviews in a single inbox",
       "Photos and menu updated in a few clicks",
+      "The questions you get by phone, answered once and picked up by Google and AI assistants",
       "You stay independent, with nobody to depend on",
     ],
     non: [
@@ -603,6 +616,7 @@ const en: ClesAccueilPublic = {
       "Keywords picked by guesswork, when there are any",
       "Reviews scattered around, and replies that slip through",
       "Out-of-date information on half the sites you're listed on",
+      "The same questions, asked one at a time by phone in the middle of service",
       "An agency to pay, or hours lost every week",
     ],
     comparatif: "See the comparison with TheFork, Zenchef and Guestonline",
@@ -659,6 +673,11 @@ const en: ClesAccueilPublic = {
         titre: "Nothing to chase",
         texte:
           "The payment link goes out on its own, follows up before the deadline, and retries what fails.",
+      },
+      {
+        titre: "The quote",
+        texte:
+          "Line items, VAT per rate, your own legal notices. The client accepts it online and you are told.",
       },
       {
         titre: "Campaigns",
@@ -742,7 +761,12 @@ const en: ClesAccueilPublic = {
       {
         question: "Can private hire be managed with Klarr?",
         reponse:
-          "Yes. The Bookings module handles both tables and the private hire of spaces. The restaurant sets a minimum party size or minimum spend, puts limits on each service so a browser can't freeze a whole room, and the terms are shown before anyone books.",
+          "Yes. The Bookings module handles both tables and the private hire of spaces. The restaurant sets a minimum party size or minimum spend, puts limits on each service so a browser can't freeze a whole room, and the terms are shown before anyone books. The quote is then written from the booking book — line items, VAT per rate, the restaurant's own legal notices — and the client accepts it online.",
+      },
+      {
+        question: "How does Klarr cut down on calls during service?",
+        reponse:
+          "The questions a guest asks before booking — the terrace, wheelchair access, dogs, vegetarian dishes — are answered once in Klarr, by picking a ready-made sentence. They then appear on the restaurant's booking page, and their FAQPage markup lets Google and AI assistants pick them up.",
       },
       {
         question: "Can you email your customers with Klarr?",
@@ -908,6 +932,7 @@ const zh: ClesAccueilPublic = {
       "关键词来自分析，而不是凭感觉",
       "Google、Yelp、Tripadvisor 的评价统一汇总",
       "照片和菜单几次点击即可更新",
+      "客人常问的问题，回答一次，之后由 Google 和 AI 直接引用",
       "您保持自主，不依赖任何人",
     ],
     non: [
@@ -915,6 +940,7 @@ const zh: ClesAccueilPublic = {
       "关键词全凭猜测，甚至根本没有",
       "评价分散各处，回复常常漏掉",
       "一半的网站上挂着过期信息",
+      "同样的问题，在出餐高峰一通一通打电话来问",
       "要么花钱请代运营，要么每周搭进大量时间",
     ],
     comparatif: "查看与 TheFork、Zenchef、Guestonline 的对比",
@@ -966,6 +992,11 @@ const zh: ClesAccueilPublic = {
       {
         titre: "无需催款",
         texte: "付款链接自动发出，到期前自动提醒，失败的会自动重试。",
+      },
+      {
+        titre: "报价单",
+        texte:
+          "分项列明、按税率计算增值税，并带上您的法律声明。客人在线确认，您立即收到通知。",
       },
       {
         titre: "邮件推送",
@@ -1047,7 +1078,12 @@ const zh: ClesAccueilPublic = {
       {
         question: "可以用 Klarr 管理包场吗？",
         reponse:
-          "可以。订位模块同时处理散客订位和空间包场。餐厅设定最低人数或最低消费，为每个餐市设上限，避免有人随口一问就冻结整个空间，相关条件在订位前就会显示。",
+          "可以。订位模块同时处理散客订位和空间包场。餐厅设定最低人数或最低消费，为每个餐市设上限，避免有人随口一问就冻结整个空间，相关条件在订位前就会显示。随后可以直接在预订簿里开报价单——分项列明、按税率计算增值税、带上餐厅的法律声明——客人在线确认即可。",
+      },
+      {
+        question: "Klarr 如何减少营业高峰时的来电？",
+        reponse:
+          "客人在订位前常问的问题——有没有露台、是否方便轮椅进出、能不能带狗、有没有素菜——在 Klarr 里回答一次即可，直接选用现成的句子。这些回答会显示在餐厅的订位页面上，并带有 FAQPage 结构化标记，让 Google 和 AI 助手可以直接引用。",
       },
       {
         question: "可以用 Klarr 给顾客发邮件吗？",
