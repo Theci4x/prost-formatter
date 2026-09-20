@@ -151,6 +151,11 @@ export default function ConfidentialitePage() {
             d&apos;abonnement et facturation. Vos données de carte sont
             saisies chez Stripe et ne transitent jamais par Klarr.
           </li>
+          <li>
+            <strong>Resend</strong> — acheminement des e-mails :
+            confirmations et rappels de réservation, devis, campagnes
+            envoyées par un restaurateur à ses clients.
+          </li>
         </ul>
         <p>
           Aucune donnée n&apos;est vendue, louée ou partagée à des fins
@@ -160,7 +165,8 @@ export default function ConfidentialitePage() {
 
       <LegalSection n="06" title="Transferts hors de l'Union européenne">
         <p>
-          Vercel, Anthropic et Stripe sont établis aux États-Unis&nbsp;:
+          Vercel, Anthropic, Stripe et Resend sont établis aux
+          États-Unis&nbsp;:
           l&apos;usage de Klarr implique donc un transfert de certaines
           données hors de l&apos;Union européenne. Ces transferts sont
           encadrés par les clauses contractuelles types de la Commission
