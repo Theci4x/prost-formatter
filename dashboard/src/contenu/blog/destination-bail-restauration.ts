@@ -17,9 +17,11 @@ export const billet: Billet = {
       url: "https://www.legifrance.gouv.fr/codes/id/LEGISCTA000006178918/",
     },
     {
+      // Lien relevé sur Legifrance, paramètres de recherche retirés : la
+      // forme « section_lc/<code>/<section> » est celle qui survit.
       intitule:
-        "Code de l'urbanisme, articles R151-27 et R151-28 — destinations et sous-destinations des constructions",
-      url: "https://www.legifrance.gouv.fr/codes/id/LEGISCTA000031720476/",
+        "Code de l'urbanisme — destinations et sous-destinations des constructions (art. R151-27 et suivants)",
+      url: "https://www.legifrance.gouv.fr/codes/section_lc/LEGITEXT000006074075/LEGISCTA000031720043",
     },
   ],
   essentiel: [
