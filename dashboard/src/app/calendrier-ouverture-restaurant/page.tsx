@@ -7,6 +7,7 @@ import { RappelOuverture } from "@/components/ouverture/RappelOuverture";
 import { DonneesStructurees } from "@/components/seo/DonneesStructurees";
 import { filAriane } from "@/lib/seo/donnees-structurees";
 import { siteUrl } from "@/lib/site-url";
+import { langueIndexable } from "@/lib/i18n/langue";
 import {
   PHASES,
   calendrier,
@@ -41,6 +42,7 @@ export default async function CalendrierPage({
 }: {
   searchParams: Promise<Query>;
 }) {
+  const langue = await langueIndexable();
   const query = await searchParams;
   const ouverture = lireDate(query.ouverture);
   const planifie = Boolean(query.planifie) && ouverture !== null;
@@ -49,7 +51,7 @@ export default async function CalendrierPage({
 
   return (
     <div className="flex min-h-screen flex-col bg-brand-cream">
-      <EnteteOutil />
+      <EnteteOutil langue={langue} />
 
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-5 py-12">
         <DonneesStructurees
@@ -229,7 +231,7 @@ export default async function CalendrierPage({
             Ce local peut-il accueillir votre restaurant ? →
           </Link>
         </div>
-        <SuiteOutils actuel="calendrier" />
+        <SuiteOutils actuel="calendrier" langue={langue} />
       </main>
 
       <Commis />

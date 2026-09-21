@@ -6,6 +6,7 @@ import { SuiteOutils } from "@/components/outils/SuiteOutils";
 import { DonneesStructurees } from "@/components/seo/DonneesStructurees";
 import { filAriane } from "@/lib/seo/donnees-structurees";
 import { siteUrl } from "@/lib/site-url";
+import { langueIndexable } from "@/lib/i18n/langue";
 import {
   ABONNEMENT,
   COMMISSION_MAX,
@@ -96,6 +97,7 @@ export default async function CalculateurPage({
 }: {
   searchParams: Promise<Query>;
 }) {
+  const langue = await langueIndexable();
   const query = await searchParams;
   const saisie = lireSaisie(query);
   const resultat = calculer(saisie);
@@ -107,7 +109,7 @@ export default async function CalculateurPage({
 
   return (
     <div className="flex min-h-screen flex-col bg-brand-cream">
-      <EnteteOutil />
+      <EnteteOutil langue={langue} />
 
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-5 py-12">
         <DonneesStructurees
@@ -309,7 +311,7 @@ export default async function CalculateurPage({
             Le comparatif avec TheFork, Zenchef et Guestonline →
           </Link>
         </div>
-        <SuiteOutils actuel="calculateur" />
+        <SuiteOutils actuel="calculateur" langue={langue} />
       </main>
 
       <Commis />

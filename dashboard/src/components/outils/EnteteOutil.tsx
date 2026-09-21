@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { KlarrMark, KlarrWordmark } from "@/components/brand/KlarrMark";
+import { ENTETE, t } from "@/lib/i18n/outils";
+import type { Langue } from "@/lib/i18n/langues";
 
 /**
  * L'en-tête des pages d'outils : le nom, et la sortie.
@@ -16,12 +18,8 @@ import { KlarrMark, KlarrWordmark } from "@/components/brand/KlarrMark";
  * tâche, et un menu complet inviterait à la quitter avant de l'avoir
  * finie.
  */
-export function EnteteOutil({
-  retour = "Retour à l'accueil",
-}: {
-  /** Le libellé du lien de sortie, si la page n'est pas en français. */
-  retour?: string;
-}) {
+export function EnteteOutil({ langue }: { langue: Langue }) {
+  const retour = t(ENTETE.retour, langue);
   return (
     <header className="border-b border-zinc-200/70 bg-white px-5 py-4">
       <div className="mx-auto flex w-full max-w-3xl flex-wrap items-center justify-between gap-3">

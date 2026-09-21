@@ -6,6 +6,7 @@ import { SuiteOutils } from "@/components/outils/SuiteOutils";
 import { DonneesStructurees } from "@/components/seo/DonneesStructurees";
 import { filAriane } from "@/lib/seo/donnees-structurees";
 import { siteUrl } from "@/lib/site-url";
+import { langueIndexable } from "@/lib/i18n/langue";
 import { LIBELLE_MODULE, PRIX_MODULE } from "@/lib/abonnement/modules";
 
 /**
@@ -97,10 +98,11 @@ const PILIERS: Pilier[] = [
   },
 ];
 
-export default function AuditPage() {
+export default async function AuditPage() {
+  const langue = await langueIndexable();
   return (
     <div className="flex min-h-screen flex-col bg-brand-cream">
-      <EnteteOutil />
+      <EnteteOutil langue={langue} />
 
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-5 py-12">
         <DonneesStructurees
@@ -213,7 +215,7 @@ export default function AuditPage() {
             Le calendrier, à rebours depuis votre date d&apos;ouverture →
           </Link>
         </div>
-        <SuiteOutils actuel="audit" />
+        <SuiteOutils actuel="audit" langue={langue} />
       </main>
 
       <Commis />
