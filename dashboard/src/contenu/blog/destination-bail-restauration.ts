@@ -8,6 +8,10 @@ export const billet: Billet = {
   categorie: "ouvrir",
   publieLe: "2026-09-20",
   misAJourLe: "2026-09-20",
+  image: {
+    fichier: "/blog/destination-bail-restauration.jpg",
+    alt: "Un local commercial vide, un bail et un trousseau de clés posés sur une table, face à une devanture « À louer » de l'autre côté de la rue.",
+  },
   sources: [
     {
       intitule:
