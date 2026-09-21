@@ -1,4 +1,7 @@
 import { notFound } from "next/navigation";
+import { langueUtilisateur } from "@/lib/i18n/langue";
+import { ABONNEMENT } from "@/lib/i18n/abonnement";
+import { dateBreve } from "@/lib/i18n/dates";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
 import type { Restaurant } from "@/types/restaurant";
@@ -21,16 +24,6 @@ import {
   type Module,
 } from "@/lib/abonnement/modules";
 
-const STATUS_LABELS: Record<string, string> = {
-  active: "Actif",
-  trialing: "Période d'essai",
-  past_due: "Paiement en retard",
-  canceled: "Résilié",
-  incomplete: "Paiement incomplet",
-  incomplete_expired: "Paiement expiré",
-  unpaid: "Impayé",
-};
-
 export default async function AbonnementPage({
   params,
   searchParams,
@@ -39,6 +32,8 @@ export default async function AbonnementPage({
   searchParams: Promise<{ stripe_error?: string; checkout?: string }>;
 }) {
   const { id } = await params;
+  const langue = await langueUtilisateur();
+  const a = ABONNEMENT[langue];
   const query = await searchParams;
   await exiger(id, "proprietaire");
 
@@ -102,7 +97,7 @@ export default async function AbonnementPage({
     <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 px-6 py-8">
       <PageHeader
         icon={dashboardIcons.abonnement}
-        title={`Abonnement — ${restaurant.nom}`}
+        title={a.titre(restaurant.nom)}
       />
 
       {/* Ce que Stripe a répondu quand la souscription n'a pas pu
@@ -114,14 +109,12 @@ export default async function AbonnementPage({
           className="rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-900"
           role="alert"
         >
-          <p className="font-medium">
-            La souscription n&apos;a pas pu s&apos;ouvrir.
-          </p>
+          <p className="font-medium">{a.erreurTitre}</p>
           <p className="mt-1 font-mono text-xs leading-relaxed">
             {query.stripe_error === "configuration"
-              ? "Aucun tarif n'est configuré pour ce module (STRIPE_PRICE_ID_…)."
+              ? a.erreurConfiguration
               : query.stripe_error === "deja_abonne"
-                ? "Ce module est déjà payé. Utilisez « Gérer » pour changer de carte ou résilier — souscrire une seconde fois vous ferait payer deux fois."
+                ? a.erreurDejaAbonne
                 : query.stripe_error}
           </p>
         </div>
@@ -135,13 +128,13 @@ export default async function AbonnementPage({
           <div className="flex min-w-0 flex-1 basis-64 flex-col gap-1">
             <span className="text-sm font-semibold text-amber-900">
               {facture.authentification
-                ? `Ta banque attend ta confirmation pour ${facture.montant}.`
-                : `Une facture de ${facture.montant} attend son règlement.`}
+                ? a.banqueAttend(facture.montant)
+                : a.factureAttend(facture.montant)}
             </span>
             <span className="text-sm leading-relaxed text-amber-800">
               {facture.authentification
-                ? "Ta carte est bonne — il manque seulement la validation de sécurité de ta banque. Sans elle, le paiement n'aboutit pas et ton abonnement finira par se fermer."
-                : "Ton abonnement reste ouvert le temps des relances, puis se fermera. Régler maintenant évite la coupure."}
+                ? a.authentificationTexte
+                : a.relancesTexte}
             </span>
           </div>
           <a
@@ -150,15 +143,13 @@ export default async function AbonnementPage({
             rel="noreferrer"
             className="w-fit rounded-md bg-amber-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-amber-800"
           >
-            {facture.authentification ? "Confirmer le paiement" : "Régler"}
+            {facture.authentification ? a.confirmerPaiement : a.regler}
           </a>
         </div>
       )}
 
       {query.checkout === "cancel" && (
-        <p className="text-sm text-ink-soft">
-          Souscription abandonnée. Rien n&apos;a été prélevé.
-        </p>
+        <p className="text-sm text-ink-soft">{a.souscriptionAbandonnee}</p>
       )}
 
       {/* La bascule ne passe pas par une page de paiement : sans ce mot,
@@ -166,9 +157,7 @@ export default async function AbonnementPage({
           se demande s'il a été débité. */}
       {query.checkout === "pack" && (
         <p className="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-900">
-          C&apos;est fait : ton abonnement couvre maintenant les deux modules.
-          Seule la différence au prorata t&apos;a été facturée, et ta date de
-          renouvellement n&apos;a pas changé.
+          {a.basculePack}
         </p>
       )}
 
@@ -178,13 +167,9 @@ export default async function AbonnementPage({
       {acces.enEssai && essaiLePlusLong(acces) && (
         <p className="rounded-2xl border border-brand-orange/30 bg-brand-orange-soft px-5 py-4 text-sm text-brand-navy">
           <span className="font-medium">
-            Essai gratuit — {essaiLePlusLong(acces)!.joursRestants} jour
-            {essaiLePlusLong(acces)!.joursRestants > 1 ? "s" : ""} restant
-            {essaiLePlusLong(acces)!.joursRestants > 1 ? "s" : ""}.
+            {a.essaiBandeau(essaiLePlusLong(acces)!.joursRestants)}
           </span>{" "}
-          Chaque module a sa propre période, indiquée ci-dessous. Ensuite ils se
-          paient séparément, et ta page de réservation comme ton site vitrine
-          restent en ligne tant que le module correspondant l&apos;est.
+          {a.essaiChapo}
         </p>
       )}
 
@@ -219,9 +204,7 @@ export default async function AbonnementPage({
                 </span>
                 {acces.essai[cle] && (
                   <span className="text-sm text-brand-navy">
-                    Essai en cours — {acces.essai[cle]!.joursRestants} jour
-                    {acces.essai[cle]!.joursRestants > 1 ? "s" : ""} restant
-                    {acces.essai[cle]!.joursRestants > 1 ? "s" : ""}.
+                    {a.essaiEnCours(acces.essai[cle]!.joursRestants)}
                   </span>
                 )}
                 <span className="text-sm leading-relaxed text-zinc-500">
@@ -232,40 +215,38 @@ export default async function AbonnementPage({
               {abonnement ? (
                 <div className="flex flex-col gap-1">
                   <p className="text-sm text-zinc-900">
-                    Statut :{" "}
+                    {a.statutLabel}{" "}
                     <span
                       className={paye ? "text-emerald-700" : "text-orange-600"}
                     >
-                      {STATUS_LABELS[abonnement.status] ?? abonnement.status}
+                      {a.statuts[abonnement.status as keyof typeof a.statuts] ??
+                        abonnement.status}
                     </span>
                     {/* Résilié à échéance : le statut reste « actif » chez
                         Stripe, et il l'est — mais ne pas le dire ferait
                         croire à une reconduction. */}
                     {abonnement.cancel_at_period_end && (
                       <span className="text-orange-600">
-                        {" "}
-                        — résiliation demandée
+                        {a.resiliationDemandee}
                       </span>
                     )}
                   </p>
                   {abonnement.current_period_end && (
                     <p className="text-sm text-zinc-500">
                       {abonnement.cancel_at_period_end
-                        ? "Prend fin le "
-                        : "Prochain renouvellement : "}
-                      {new Date(
-                        abonnement.current_period_end,
-                      ).toLocaleDateString("fr-FR")}
-                      {abonnement.cancel_at_period_end &&
-                        " — le module se fermera ce jour-là."}
+                        ? a.prendFinLe(
+                            dateBreve(abonnement.current_period_end, langue),
+                          )
+                        : a.prochainRenouvellement(
+                            dateBreve(abonnement.current_period_end, langue),
+                          )}
+                      {abonnement.cancel_at_period_end && a.fermeraCeJourLa}
                     </p>
                   )}
                 </div>
               ) : (
                 <p className="text-sm text-zinc-500">
-                  {ouvert
-                    ? "Ouvert pendant l'essai. Souscris pour le garder."
-                    : "Ce module est fermé."}
+                  {ouvert ? a.ouvertPendantEssai : a.moduleFerme}
                 </p>
               )}
 
@@ -281,7 +262,7 @@ export default async function AbonnementPage({
                     : "bg-brand-navy text-white hover:bg-brand-navy-hover"
                 }`}
               >
-                {abonnement ? "Gérer" : "S'abonner"}
+                {abonnement ? a.gerer : a.sabonner}
               </a>
             </div>
           );
@@ -313,7 +294,7 @@ export default async function AbonnementPage({
             href={`/api/stripe/checkout?restaurant_id=${id}&module=pack`}
             className="w-fit rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-brand-navy-hover"
           >
-            Prendre les deux
+            {a.prendreLesDeux}
           </a>
         </div>
       )}
@@ -326,7 +307,7 @@ export default async function AbonnementPage({
         <div className="flex flex-wrap items-center gap-x-6 gap-y-3 rounded-2xl border border-brand-navy/20 bg-brand-orange-soft p-6 shadow-sm">
           <div className="flex min-w-0 flex-1 basis-64 flex-col gap-1">
             <span className="text-base font-semibold text-zinc-900">
-              Ajouter {LIBELLE_MODULE[manquant]}
+              {a.ajouterModule(LIBELLE_MODULE[manquant])}
             </span>
             <span className="text-sm font-medium text-brand-navy">
               {PRIX_PACK}{" "}
@@ -335,28 +316,19 @@ export default async function AbonnementPage({
               </span>
             </span>
             <span className="text-sm leading-relaxed text-zinc-600">
-              Ton abonnement passe au pack, qui ouvre les deux modules pour
-              moins cher que les deux pris séparément. Tu ne paies
-              aujourd&apos;hui que la différence au prorata des jours restants,
-              et ta date de renouvellement ne change pas.
+              {a.packExplication}
             </span>
           </div>
           <a
             href={`/api/stripe/pack?restaurant_id=${id}`}
             className="w-fit rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-brand-navy-hover"
           >
-            Passer au pack
+            {a.passerAuPack}
           </a>
         </div>
       )}
 
-      <p className="text-sm text-zinc-500">
-        Les deux modules s&apos;achètent séparément : tu peux prendre la
-        visibilité sans les réservations, ou l&apos;inverse. Un abonnement vaut
-        pour cet établissement — un second restaurant a son propre carnet, sa
-        propre fiche Google et sa propre clientèle, donc ses propres
-        abonnements. Aucune commission par couvert, jamais.
-      </p>
+      <p className="text-sm text-zinc-500">{a.pied}</p>
     </div>
   );
 }
