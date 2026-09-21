@@ -89,7 +89,8 @@ export async function prevenirDesEssaisQuiFinissent({
       abonnements: etats
         .filter((etat) => etat.restaurant_id === ligne.id)
         .map((etat) => ({
-          module: etat.module === "reservations" ? "reservations" : "visibilite",
+          module:
+            etat.module === "reservations" ? "reservations" : "visibilite",
           status: etat.status,
         })),
       creeLe: ligne.created_at,

@@ -26,3 +26,23 @@ export function crochetDu(
 ): string | undefined {
   return env[VARIABLE[canal]];
 }
+
+/**
+ * Faut-il doubler l'alerte d'un e-mail ?
+ *
+ * « secours » est le cas des pannes : on les lit dans Slack, et un
+ * courriel de plus pour la même chose finit par ne plus se lire du tout.
+ * Mais si Slack n'a rien reçu — crochet absent, canal supprimé, Slack en
+ * panne —, le courriel repart. Une erreur qu'on perd est une erreur qu'on
+ * découvre par un client mécontent.
+ */
+export type ChoixCourriel = boolean | "secours";
+
+export function veutCourriel(
+  choix: ChoixCourriel | undefined,
+  slackEnvoye: boolean,
+): boolean {
+  if (choix === undefined) return true;
+  if (choix === "secours") return !slackEnvoye;
+  return choix;
+}

@@ -1,6 +1,11 @@
 import "server-only";
 import { envoyerCourriel } from "@/lib/courriel/envoyer";
-import { crochetDu, type Canal } from "@/lib/notifications/canaux";
+import {
+  crochetDu,
+  veutCourriel,
+  type Canal,
+  type ChoixCourriel,
+} from "@/lib/notifications/canaux";
 
 /**
  * Ce que Klarr se dit à soi-même.
@@ -27,7 +32,7 @@ import { crochetDu, type Canal } from "@/lib/notifications/canaux";
  * parce qu'on n'a pas su se prévenir.
  */
 
-export type { Canal };
+export type { Canal, ChoixCourriel };
 
 export type Notification = {
   /** Une ligne, lisible sur l'écran de veille d'un téléphone. */
@@ -44,6 +49,11 @@ export type Notification = {
   repondreA?: string;
   /** Le canal Slack. L'e-mail, lui, part toujours au même endroit. */
   canal?: Canal;
+  /**
+   * L'e-mail. Vrai par défaut ; « secours » ne l'envoie que si Slack n'a
+   * rien reçu.
+   */
+  courriel?: ChoixCourriel;
 };
 
 export type BilanNotification = {
@@ -124,19 +134,19 @@ async function posterSurSlack(notification: Notification): Promise<boolean> {
 export async function notifierInterne(
   notification: Notification,
 ): Promise<BilanNotification> {
-  const adresses = destinatairesInternes();
-  if (adresses.length === 0) {
-    console.warn(
-      `[notification] ADMIN_EMAILS absente : « ${notification.titre} » sans destinataire.`,
-    );
-  }
-
   const sujet = `Klarr — ${notification.titre}`;
   const texte = versTexte(notification);
   const html = versHtml(notification);
 
-  const [envois, slack] = await Promise.all([
-    Promise.all(
+  const partirent = async (): Promise<number> => {
+    const adresses = destinatairesInternes();
+    if (adresses.length === 0) {
+      console.warn(
+        `[notification] ADMIN_EMAILS absente : « ${notification.titre} » sans destinataire.`,
+      );
+      return 0;
+    }
+    const envois = await Promise.all(
       adresses.map((destinataire) =>
         envoyerCourriel({
           destinataire,
@@ -146,12 +156,27 @@ export async function notifierInterne(
           repondreA: notification.repondreA,
         }),
       ),
-    ),
+    );
+    return envois.filter((envoi) => envoi.envoye).length;
+  };
+
+  // Une notification de secours doit savoir si Slack a reçu avant de
+  // décider : elle attend donc son tour. Toutes les autres partent des
+  // deux côtés à la fois, comme avant.
+  if (notification.courriel === "secours") {
+    const slack = await posterSurSlack(notification);
+    return {
+      courriels: veutCourriel(notification.courriel, slack)
+        ? await partirent()
+        : 0,
+      slack,
+    };
+  }
+
+  const [courriels, slack] = await Promise.all([
+    veutCourriel(notification.courriel, false) ? partirent() : 0,
     posterSurSlack(notification),
   ]);
 
-  return {
-    courriels: envois.filter((envoi) => envoi.envoye).length,
-    slack,
-  };
+  return { courriels, slack };
 }

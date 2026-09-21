@@ -131,6 +131,10 @@ export function decrireErreur(
     // Une panne ne s'annonce pas dans le canal où l'on suit les
     // prospects : elle a le sien.
     canal: "bugs",
+    // Et elle ne se double pas d'un courriel : deux fois la même chose
+    // finit par ne plus se lire. Sauf si Slack n'a rien reçu, auquel cas
+    // le courriel reste le seul moyen de l'apprendre.
+    courriel: "secours",
   };
 }
 
