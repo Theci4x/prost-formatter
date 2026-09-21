@@ -73,6 +73,10 @@ export async function PageBillet({
       {langue !== "fr" && <LangueDocument langue={langue} />}
       <CadreJournal
         langue={langue}
+        // La largeur du journal, celle de l'en-tête et du pied : un
+        // article plus étroit que son propre fil d'Ariane se lisait comme
+        // une colonne posée de travers au milieu de l'écran.
+        large
         // Le sélecteur emmène vers ce même article dans la langue
         // choisie ; `langues` dit lesquelles existent, pour que le rappel
         // « c'est en français » ne s'affiche pas là où il y a mieux à
@@ -142,7 +146,14 @@ export async function PageBillet({
           >
             {billet.titre}
           </h1>
-          <p style={{ fontSize: 17, lineHeight: 1.6 }}>{billet.resume}</p>
+          <p
+            style={{
+              fontSize: "clamp(1.0625rem, 1rem + 0.35vw, 1.25rem)",
+              lineHeight: 1.6,
+            }}
+          >
+            {billet.resume}
+          </p>
           <p style={{ fontSize: 13.5 }}>
             {t.misAJour} {dateLisible(billet.misAJourLe, langue)} ·{" "}
             {tempsDeLecture(billet.markdown)} {t.lecture}
