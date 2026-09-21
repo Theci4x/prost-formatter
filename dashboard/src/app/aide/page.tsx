@@ -26,7 +26,7 @@ export default function AidePage() {
             <KlarrWordmark className="text-zinc-700" />
           </Link>
           <span className="text-zinc-300">/</span>
-          <span className="text-sm text-zinc-500">Aide</span>
+          <span className="text-base text-zinc-500">Aide</span>
         </div>
       </header>
 
@@ -49,7 +49,7 @@ export default function AidePage() {
 
         <div className="flex flex-col gap-2">
           <h1 className="font-serif text-4xl text-ink">Aide</h1>
-          <p className="max-w-xl text-sm text-zinc-500">
+          <p className="max-w-xl text-base text-zinc-500">
             Comment se servir de Klarr, en clair. Chaque article répond à une
             question qu&apos;on se pose vraiment, et dit aussi ce que Klarr ne
             fait pas encore.
@@ -59,10 +59,8 @@ export default function AidePage() {
         {sections.map((rubrique) => (
           <section key={rubrique.cle} className="flex flex-col gap-4">
             <div className="flex flex-col gap-1">
-              <h2 className="font-serif text-2xl text-ink">
-                {rubrique.titre}
-              </h2>
-              <p className="text-sm text-zinc-500">{rubrique.resume}</p>
+              <h2 className="font-serif text-2xl text-ink">{rubrique.titre}</h2>
+              <p className="text-base text-zinc-500">{rubrique.resume}</p>
             </div>
             <ul className="flex flex-col divide-y divide-zinc-100 overflow-hidden rounded-2xl border border-zinc-200/70 bg-white shadow-sm">
               {rubrique.articles.map((article) => (
@@ -71,10 +69,10 @@ export default function AidePage() {
                     href={`/aide/${article.slug}`}
                     className="flex flex-col gap-1 px-5 py-4 transition-colors hover:bg-zinc-50"
                   >
-                    <span className="text-sm font-medium text-zinc-900">
+                    <span className="text-base font-medium text-zinc-900">
                       {article.titre}
                     </span>
-                    <span className="text-sm text-zinc-500">
+                    <span className="text-base text-zinc-500">
                       {article.resume}
                     </span>
                   </Link>
@@ -90,13 +88,12 @@ export default function AidePage() {
           <h2 className="font-serif text-2xl text-ink">
             Vous ne trouvez pas ?
           </h2>
-          <p className="text-sm text-zinc-500">
-            Écrivez-nous : une vraie réponse, écrite à la main, dans la
-            journée.
+          <p className="text-base text-zinc-500">
+            Écrivez-nous : une vraie réponse, écrite à la main, dans la journée.
           </p>
           <Link
             href="/aide/contact"
-            className="self-start text-sm font-medium text-brand-orange hover:underline"
+            className="self-start text-base font-medium text-brand-orange hover:underline"
           >
             Écrire à Klarr
           </Link>
@@ -104,7 +101,7 @@ export default function AidePage() {
       </main>
 
       <footer className="border-t border-zinc-200/70 px-6 py-6">
-        <div className="mx-auto flex max-w-3xl flex-wrap items-center gap-x-4 gap-y-2 text-sm text-zinc-400">
+        <div className="mx-auto flex max-w-3xl flex-wrap items-center gap-x-4 gap-y-2 text-base text-zinc-400">
           <Link href="/" className="hover:text-zinc-700">
             Accueil
           </Link>
@@ -119,7 +116,7 @@ export default function AidePage() {
           </Link>
         </div>
       </footer>
-          <Commis />
+      <Commis />
     </div>
   );
 }

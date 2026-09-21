@@ -4,7 +4,11 @@ import { KlarrMark, KlarrWordmark } from "@/components/brand/KlarrMark";
 // Les trois documents se citent mutuellement : un lecteur (ou un
 // examinateur Meta) arrivé sur l'un doit pouvoir atteindre les autres.
 const LEGAL_PAGES = [
-  { slug: "mentions-legales", href: "/mentions-legales", label: "Mentions légales" },
+  {
+    slug: "mentions-legales",
+    href: "/mentions-legales",
+    label: "Mentions légales",
+  },
   { slug: "cgu", href: "/cgu", label: "Conditions d'utilisation" },
   {
     slug: "confidentialite",
@@ -49,9 +53,7 @@ export function LegalLayout({
           <p className="text-xs font-semibold uppercase tracking-widest text-brand-orange">
             Document légal
           </p>
-          <h1
-            className="mt-1 font-serif text-4xl text-ink sm:text-5xl"
-          >
+          <h1 className="mt-1 font-serif text-4xl text-ink sm:text-5xl">
             {title}
           </h1>
           <p className="mt-2 text-sm text-zinc-500">
@@ -97,7 +99,7 @@ export function LegalSection({
         <span className="tabular-nums text-brand-orange">{n}</span>
         {title}
       </h2>
-      <div className="flex flex-col gap-3 text-sm leading-relaxed text-zinc-700 [&_a]:text-brand-orange [&_a]:underline [&_li]:ml-4 [&_li]:list-disc [&_p]:max-w-prose [&_ul]:flex [&_ul]:flex-col [&_ul]:gap-1.5">
+      <div className="flex flex-col gap-3 text-base leading-relaxed text-zinc-700 [&_a]:text-brand-orange [&_a]:underline [&_li]:ml-4 [&_li]:list-disc [&_p]:max-w-prose [&_ul]:flex [&_ul]:flex-col [&_ul]:gap-1.5">
         {children}
       </div>
     </section>

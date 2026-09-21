@@ -225,7 +225,9 @@ body {
   gap: 0.7rem;
 }
 .billet .encadre-titre {
-  font-size: 0.72rem;
+  /* 0,72 rem tombait à 11,5 px : le seul endroit du journal sous les
+     13, et c'était un titre — donc la ligne qu'on lit en premier. */
+  font-size: 0.82rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;

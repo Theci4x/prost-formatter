@@ -55,9 +55,10 @@ export default async function ArticleAidePage({
   // hostile à filtrer ici, seulement notre propre texte.
   const html = await marked.parse(article.markdown);
 
-  const memeRubrique = rubriques()
-    .find((rubrique) => rubrique.cle === article.categorie)
-    ?.articles.filter((autre) => autre.slug !== article.slug) ?? [];
+  const memeRubrique =
+    rubriques()
+      .find((rubrique) => rubrique.cle === article.categorie)
+      ?.articles.filter((autre) => autre.slug !== article.slug) ?? [];
 
   return (
     <div className="flex min-h-screen flex-col bg-brand-cream">
@@ -68,17 +69,20 @@ export default async function ArticleAidePage({
             <KlarrWordmark className="text-zinc-700" />
           </Link>
           <span className="text-zinc-300">/</span>
-          <Link href="/aide" className="text-sm text-zinc-500 hover:text-zinc-900">
+          <Link
+            href="/aide"
+            className="text-base text-zinc-500 hover:text-zinc-900"
+          >
             Aide
           </Link>
           <span className="text-zinc-300">/</span>
-          <span className="text-sm text-zinc-500">
+          <span className="text-base text-zinc-500">
             {titreCategorie(article.categorie)}
           </span>
         </div>
       </header>
 
-      <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-6 py-10">
+      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-6 py-10">
         <DonneesStructurees
           donnees={filAriane([
             { nom: "Aide", url: `${siteUrl()}/aide` },
@@ -94,13 +98,13 @@ export default async function ArticleAidePage({
         </div>
 
         <article
-          className="flex flex-col gap-4 text-[15px] leading-relaxed text-zinc-700 [&_a]:text-brand-navy [&_a]:underline-offset-2 hover:[&_a]:underline [&_h2]:mt-4 [&_h2]:font-serif [&_h2]:text-2xl [&_h2]:text-ink [&_li]:ml-5 [&_li]:list-disc [&_ol_li]:list-decimal [&_strong]:font-semibold [&_strong]:text-zinc-900 [&_ul]:flex [&_ul]:flex-col [&_ul]:gap-2 [&_ol]:flex [&_ol]:flex-col [&_ol]:gap-2"
+          className="flex flex-col gap-4 text-[17px] leading-relaxed text-zinc-700 [&_a]:text-brand-navy [&_a]:underline-offset-2 hover:[&_a]:underline [&_h2]:mt-4 [&_h2]:font-serif [&_h2]:text-2xl [&_h2]:text-ink [&_li]:ml-5 [&_li]:list-disc [&_ol_li]:list-decimal [&_strong]:font-semibold [&_strong]:text-zinc-900 [&_ul]:flex [&_ul]:flex-col [&_ul]:gap-2 [&_ol]:flex [&_ol]:flex-col [&_ol]:gap-2"
           dangerouslySetInnerHTML={{ __html: html }}
         />
 
         {memeRubrique.length > 0 && (
           <section className="flex flex-col gap-3 border-t border-zinc-200 pt-6">
-            <h2 className="text-sm font-semibold text-zinc-900">
+            <h2 className="text-base font-semibold text-zinc-900">
               Dans la même rubrique
             </h2>
             <ul className="flex flex-col gap-2">
@@ -108,7 +112,7 @@ export default async function ArticleAidePage({
                 <li key={autre.slug}>
                   <Link
                     href={`/aide/${autre.slug}`}
-                    className="text-sm text-brand-navy underline-offset-2 hover:underline"
+                    className="text-base text-brand-navy underline-offset-2 hover:underline"
                   >
                     {autre.titre}
                   </Link>
@@ -120,14 +124,14 @@ export default async function ArticleAidePage({
 
         <Link
           href="/aide"
-          className="w-fit text-sm text-zinc-500 hover:text-zinc-900"
+          className="w-fit text-base text-zinc-500 hover:text-zinc-900"
         >
           ← Toute l&apos;aide
         </Link>
       </main>
 
       <footer className="border-t border-zinc-200/70 px-6 py-6">
-        <div className="mx-auto flex max-w-3xl items-center gap-2 text-sm text-zinc-400">
+        <div className="mx-auto flex max-w-3xl items-center gap-2 text-base text-zinc-400">
           <KlarrMark size={16} />
           <span>
             Aide de <KlarrWordmark className="text-zinc-500" />
