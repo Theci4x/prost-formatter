@@ -3,28 +3,29 @@ import Link from "next/link";
 import { CadreJournal } from "@/components/blog/CadreJournal";
 import { Commis } from "@/components/commis/Commis";
 import { siteUrl } from "@/lib/site-url";
-import {
-  LIGNES,
-  LIMITES,
-  QUESTIONS_COMPARATIF,
-  RELEVE,
-  SOLUTIONS,
-  TARIFS_KLARR,
-} from "@/lib/comparatif/donnees";
+import { COMPARATIF, SOLUTIONS } from "@/lib/comparatif/donnees";
+import { langueIndexable } from "@/lib/i18n/langue";
 
 const CHEMIN = "/comparatif-logiciels-reservation-restaurant";
-const TITRE =
-  "Klarr, TheFork, Zenchef, Guestonline : quel logiciel de réservation pour votre restaurant ?";
-const RESUME =
-  "Les quatre solutions de réservation pour restaurants indépendants en France, comparées sur leur modèle économique, leur tarif et ce qu'elles font vraiment — y compris ce que Klarr ne fait pas.";
 
-export const metadata: Metadata = {
-  title: TITRE,
-  description: RESUME,
-  alternates: { canonical: CHEMIN },
-};
+// La page porte le référencement de « logiciel réservation restaurant » :
+// elle lit `langueIndexable` et non l'en-tête du visiteur, sans quoi un
+// robot indexerait la version anglaise (voir `langueIndexable`).
+export async function generateMetadata(): Promise<Metadata> {
+  const c = COMPARATIF[await langueIndexable()];
+  return {
+    title: c.titre,
+    description: c.resume,
+    alternates: { canonical: CHEMIN },
+  };
+}
 
-export default function ComparatifPage() {
+export default async function ComparatifPage() {
+  const langue = await langueIndexable();
+  const c = COMPARATIF[langue];
+  const LIGNES = c.lignes;
+  const TITRE = c.titre;
+  const RESUME = c.resume;
   // Compté plutôt qu'écrit : la première version annonçait « deux lignes
   // sur cinq » quand une seule l'était — le défaut même qu'on reproche
   // aux comparatifs des autres.
@@ -47,7 +48,7 @@ export default function ComparatifPage() {
     {
       "@context": "https://schema.org",
       "@type": "FAQPage",
-      mainEntity: QUESTIONS_COMPARATIF.map(({ question, reponse }) => ({
+      mainEntity: c.questions.map(({ question, reponse }) => ({
         "@type": "Question",
         name: question,
         acceptedAnswer: { "@type": "Answer", text: reponse },
@@ -56,7 +57,7 @@ export default function ComparatifPage() {
     {
       "@context": "https://schema.org",
       "@type": "ItemList",
-      name: "Logiciels de réservation pour restaurants indépendants",
+      name: c.titre,
       numberOfItems: SOLUTIONS.length,
       itemListElement: SOLUTIONS.map((solution, rang) => ({
         "@type": "ListItem",
@@ -69,7 +70,7 @@ export default function ComparatifPage() {
 
   return (
     <>
-      <CadreJournal fil="Comparatif" large>
+      <CadreJournal fil={c.fil} large langue={langue}>
         {balisage.map((bloc, rang) => (
           <script
             key={rang}
@@ -93,9 +94,7 @@ export default function ComparatifPage() {
             {RESUME}
           </p>
           <p style={{ fontSize: 13.5, color: "var(--ink-soft)" }}>
-            Tarifs et caractéristiques des autres éditeurs relevés sur leurs
-            pages publiques en {RELEVE}. Ils changent : si vous constatez une
-            erreur, dites-le-nous et nous la corrigerons.
+            {c.relevePublic(c.releve)}
           </p>
         </header>
 
@@ -120,11 +119,7 @@ export default function ComparatifPage() {
                 textAlign: "left",
               }}
             >
-              {defavorables} ligne{defavorables > 1 ? "s" : ""} sur{" "}
-              {LIGNES.length} ne nous {defavorables > 1 ? "sont" : "est"} pas
-              favorable{defavorables > 1 ? "s" : ""}, et la section suivante dit
-              ce que Klarr ne fait pas. Un comparatif dont l&apos;auteur gagne
-              partout ne se lit pas.
+              {c.aveuTableau(defavorables, LIGNES.length)}
             </caption>
             <thead>
               <tr style={{ borderBottom: "1px solid var(--line)" }}>
@@ -135,7 +130,7 @@ export default function ComparatifPage() {
                     padding: "0.7rem 0.9rem 0.7rem 0",
                   }}
                 >
-                  Critère
+                  {c.critereEntete}
                 </th>
                 {SOLUTIONS.map((solution) => (
                   <th
@@ -262,18 +257,15 @@ export default function ComparatifPage() {
             </div>
           ))}
           <p style={{ fontSize: 13.5, color: "var(--ink-soft)" }}>
-            {defavorables} ligne{defavorables > 1 ? "s" : ""} sur{" "}
-            {LIGNES.length} ne nous {defavorables > 1 ? "sont" : "est"} pas
-            favorable{defavorables > 1 ? "s" : ""}. Un comparatif dont
-            l&apos;auteur gagne partout ne se lit pas.
+            {c.aveuCourt(defavorables, LIGNES.length)}
           </p>
         </div>
 
         <section className="flex flex-col gap-3">
           <h2 className="font-serif" style={{ fontSize: "1.7rem" }}>
-            Ce que Klarr ne fait pas
+            {c.ceQueKlarrNeFaitPas}
           </h2>
-          {LIMITES.map((limite) => (
+          {c.limites.map((limite) => (
             <div
               key={limite.titre}
               style={{
@@ -301,24 +293,24 @@ export default function ComparatifPage() {
 
         <section className="flex flex-col gap-3">
           <h2 className="font-serif" style={{ fontSize: "1.7rem" }}>
-            Les tarifs de Klarr
+            {c.lesTarifs}
           </h2>
           <ul className="flex flex-col gap-2" style={{ fontSize: 15.5 }}>
             <li>
-              <strong>Réservations</strong> — {TARIFS_KLARR.reservations}
+              <strong>{c.tarifReservations}</strong> — {c.tarifs.reservations}
             </li>
             <li>
-              <strong>Votre visibilité</strong> — {TARIFS_KLARR.visibilite}
+              <strong>{c.tarifVisibilite}</strong> — {c.tarifs.visibilite}
             </li>
             <li>
-              <strong>Les deux</strong> — {TARIFS_KLARR.pack}
+              <strong>{c.tarifLesDeux}</strong> — {c.tarifs.pack}
             </li>
           </ul>
         </section>
 
         <section className="flex flex-col gap-3">
           <h2 className="font-serif" style={{ fontSize: "1.7rem" }}>
-            Questions fréquentes
+            {c.questionsFrequentes}
           </h2>
           <div
             className="flex flex-col divide-y"
@@ -329,7 +321,7 @@ export default function ComparatifPage() {
               borderColor: "var(--line)",
             }}
           >
-            {QUESTIONS_COMPARATIF.map(({ question, reponse }) => (
+            {c.questions.map(({ question, reponse }) => (
               <details key={question} className="group px-5 py-4">
                 <summary
                   className="flex cursor-pointer list-none items-center justify-between gap-4"
@@ -372,12 +364,7 @@ export default function ComparatifPage() {
             lineHeight: 1.65,
           }}
         >
-          <p style={{ margin: 0 }}>
-            Avant de choisir, regardez où vous en êtes : ce que votre fiche
-            Google montre vraiment, ce que disent vos avis, et ce qu&apos;une IA
-            répond quand un client cherche où manger près de chez vous.
-            C&apos;est gratuit et sans carte bancaire.
-          </p>
+          <p style={{ margin: 0 }}>{c.avantDeChoisir}</p>
           <Link
             href="/test-presence-google"
             style={{
@@ -390,7 +377,7 @@ export default function ComparatifPage() {
               textDecoration: "none",
             }}
           >
-            Tester ma présence en ligne
+            {c.testerMaPresence}
           </Link>
         </aside>
       </CadreJournal>
