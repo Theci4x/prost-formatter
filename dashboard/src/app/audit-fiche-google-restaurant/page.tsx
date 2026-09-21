@@ -7,6 +7,9 @@ import { DonneesStructurees } from "@/components/seo/DonneesStructurees";
 import { filAriane } from "@/lib/seo/donnees-structurees";
 import { siteUrl } from "@/lib/site-url";
 import { langueIndexable } from "@/lib/i18n/langue";
+import { t } from "@/lib/i18n/outils";
+import { ECRAN, PILIERS } from "@/lib/audit/ecran";
+import { adressePour } from "@/lib/blog/traductions";
 import { LIBELLE_MODULE, PRIX_MODULE } from "@/lib/abonnement/modules";
 
 /**
@@ -40,64 +43,6 @@ export const metadata: Metadata = {
   alternates: { canonical: CHEMIN },
 };
 
-type Pilier = {
-  titre: string;
-  quoi: string;
-  signaux: string[];
-  article: { slug: string; titre: string };
-};
-
-/**
- * Les trois piliers, décrits d'après ce que le code mesure vraiment —
- * voir `lib/audit/scoring.ts`. Écrire ici une liste plus flatteuse que
- * l'algorithme serait le plus court chemin vers un prospect déçu à la
- * lecture de son rapport.
- */
-const PILIERS: Pilier[] = [
-  {
-    titre: "La fiche",
-    quoi: "Ce que Google affiche de vous à quelqu'un qui cherche un restaurant dans votre rue.",
-    signaux: [
-      "Le téléphone et le site sont-ils renseignés",
-      "Les horaires sont-ils publiés",
-      "Combien de photos — en dessous d'une quinzaine, une fiche paraît vide",
-      "La note, et le nombre d'avis qui la porte",
-    ],
-    article: {
-      slug: "pourquoi-je-sors-derriere-mon-voisin-google-maps",
-      titre: "Pourquoi vous sortez derrière le restaurant d'à côté",
-    },
-  },
-  {
-    titre: "Les avis",
-    quoi: "Pas seulement la note : le volume, et surtout la fraîcheur.",
-    signaux: [
-      "La note moyenne",
-      "Le nombre d'avis, jusqu'à deux cents",
-      "La part de vos avis qui datent de moins de six mois",
-      "Une bonne note vieille de trois ans pèse moins qu'une note correcte alimentée chaque mois",
-    ],
-    article: {
-      slug: "avis-google-restaurant-ce-qui-est-interdit",
-      titre: "Les avis Google : ce que vous n'avez pas le droit de faire",
-    },
-  },
-  {
-    titre: "Les IA",
-    quoi: "Ce qu'un assistant répond quand on lui demande où manger chez vous.",
-    signaux: [
-      "Votre site est-il joignable",
-      "Porte-t-il un balisage que les machines lisent",
-      "Ce balisage dit-il « restaurant », ou seulement « site web »",
-      "Vos réseaux sont-ils déclarés comme étant les vôtres",
-    ],
-    article: {
-      slug: "pourquoi-chatgpt-ne-parle-pas-de-votre-restaurant",
-      titre: "Pourquoi ChatGPT ne parle jamais de votre restaurant",
-    },
-  },
-];
-
 export default async function AuditPage() {
   const langue = await langueIndexable();
   return (
@@ -114,105 +59,102 @@ export default async function AuditPage() {
 
         <div className="flex flex-col gap-3">
           <span className="text-xs font-semibold uppercase tracking-wide text-brand-orange">
-            Gratuit
+            {t(ECRAN.surtitre, langue)}
           </span>
           <h1 className="font-serif text-4xl text-ink sm:text-5xl">
-            Ce que Google dit de votre restaurant aujourd&apos;hui
+            {t(ECRAN.titre, langue)}
           </h1>
-          <p className="text-base text-zinc-600">
-            Donnez le nom et l&apos;adresse. On regarde votre fiche réelle — pas
-            un modèle — et on vous rend la liste de ce qui manque, classée par
-            ce qui rapporte le plus. Sans compte à créer.
-          </p>
+          <p className="text-base text-zinc-600">{t(ECRAN.chapo, langue)}</p>
           <Link
             href="/test-presence-google"
             className="w-fit rounded-md bg-brand-navy px-5 py-3 text-base font-medium text-white transition-colors hover:bg-brand-navy-hover"
           >
-            Lancer l&apos;audit
+            {t(ECRAN.bouton, langue)}
           </Link>
         </div>
 
         <section className="flex flex-col gap-4">
           <h2 className="font-serif text-3xl text-ink">
-            Ce qu&apos;on regarde
+            {t(ECRAN.regardeTitre, langue)}
           </h2>
-          {PILIERS.map((pilier) => (
-            <article
-              key={pilier.titre}
-              className="flex flex-col gap-3 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm"
-            >
-              <div className="flex flex-col gap-1">
-                <h3 className="text-base font-semibold text-zinc-900">
-                  {pilier.titre}
-                </h3>
-                <p className="text-base text-zinc-600">{pilier.quoi}</p>
-              </div>
-              <ul className="flex flex-col gap-1.5">
-                {pilier.signaux.map((signal) => (
-                  <li
-                    key={signal}
-                    className="flex gap-2 text-base text-zinc-600"
-                  >
-                    <span aria-hidden="true" className="text-zinc-300">
-                      —
-                    </span>
-                    {signal}
-                  </li>
-                ))}
-              </ul>
-              <Link
-                href={`/blog/${pilier.article.slug}`}
-                className="w-fit text-base text-brand-navy underline-offset-2 hover:underline"
+          {PILIERS.map((pilier) => {
+            // Un article non traduit perd son lien et garde son texte :
+            // c'est la règle du journal, et renvoyer un lecteur chinois
+            // vers une page française serait une impasse annoncée comme
+            // une piste.
+            const adresse = adressePour(pilier.article.slug, langue);
+            return (
+              <article
+                key={pilier.id}
+                className="flex flex-col gap-3 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm"
               >
-                {pilier.article.titre} →
-              </Link>
-            </article>
-          ))}
+                <div className="flex flex-col gap-1">
+                  <h3 className="text-base font-semibold text-zinc-900">
+                    {t(pilier.titre, langue)}
+                  </h3>
+                  <p className="text-base text-zinc-600">
+                    {t(pilier.quoi, langue)}
+                  </p>
+                </div>
+                <ul className="flex flex-col gap-1.5">
+                  {pilier.signaux.map((signal) => (
+                    <li
+                      key={signal.fr}
+                      className="flex gap-2 text-base text-zinc-600"
+                    >
+                      <span aria-hidden="true" className="text-zinc-300">
+                        —
+                      </span>
+                      {t(signal, langue)}
+                    </li>
+                  ))}
+                </ul>
+                {adresse && (
+                  <Link
+                    href={adresse}
+                    className="w-fit text-base text-brand-navy underline-offset-2 hover:underline"
+                  >
+                    {t(pilier.article.titre, langue)} →
+                  </Link>
+                )}
+              </article>
+            );
+          })}
         </section>
 
         {/* La frontière, dite franchement. Un prospect qui comprend ce
             qu'il achète discute moins et reste plus longtemps. */}
         <section className="flex flex-col gap-3 rounded-2xl border border-zinc-300 bg-white p-6">
           <h2 className="text-base font-semibold text-zinc-900">
-            Ce qui est gratuit, et ce qui ne l&apos;est pas
+            {t(ECRAN.frontiereTitre, langue)}
           </h2>
           <p className="text-base text-zinc-600">
-            <strong>Le constat est gratuit</strong>, et il l&apos;est vraiment :
-            vous repartez avec la liste, vous la traitez vous-même si vous
-            voulez, et nous n&apos;avons rien à y redire. C&apos;est du travail
-            de fiche, pas de la magie — quelqu&apos;un de méthodique y arrive.
+            <strong>{t(ECRAN.gratuitFort, langue)}</strong>
+            {t(ECRAN.gratuitSuite, langue)}
           </p>
           <p className="text-base text-zinc-600">
-            <strong>
-              Ce qui se paie, c&apos;est de ne plus avoir à y penser.
-            </strong>{" "}
-            Le module « {LIBELLE_MODULE.visibilite} », à{" "}
-            {PRIX_MODULE.visibilite}, tient la fiche à jour, centralise les avis
-            et vous propose des réponses, suit vos mots-clés et regarde ce que
-            les IA racontent de vous. La différence entre les deux n&apos;est
-            pas le savoir : c&apos;est les heures du mardi après-midi.
+            <strong>{t(ECRAN.payantFort, langue)}</strong>{" "}
+            {t(ECRAN.payantTexte, langue)
+              .replace("{module}", LIBELLE_MODULE.visibilite)
+              .replace("{prix}", PRIX_MODULE.visibilite)}
           </p>
           <p className="text-base text-zinc-600">
-            Et le geste qui rapporte le plus ne dépend de personne : mettez
-            l&apos;adresse de votre page de réservation dans le champ prévu de
-            votre fiche Google. Cinq minutes, une fois, gratuit, et sans nous.
+            {t(ECRAN.gesteTexte, langue)}
           </p>
         </section>
 
         <div className="flex flex-col gap-3 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm">
           <p className="text-base font-semibold text-zinc-900">
-            Vous n&apos;avez pas encore ouvert ?
+            {t(ECRAN.ouvertureTitre, langue)}
           </p>
           <p className="text-base text-zinc-600">
-            La fiche Google se crée avant l&apos;ouverture : la vérification
-            passe souvent par un courrier postal, et l&apos;attendre le jour J
-            revient à ouvrir sans exister sur la carte.
+            {t(ECRAN.ouvertureTexte, langue)}
           </p>
           <Link
             href="/calendrier-ouverture-restaurant"
             className="w-fit text-base text-brand-navy underline-offset-2 hover:underline"
           >
-            Le calendrier, à rebours depuis votre date d&apos;ouverture →
+            {t(ECRAN.ouvertureLien, langue)}
           </Link>
         </div>
         <SuiteOutils actuel="audit" langue={langue} />

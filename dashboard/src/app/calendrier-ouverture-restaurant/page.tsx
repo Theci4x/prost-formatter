@@ -8,6 +8,7 @@ import { DonneesStructurees } from "@/components/seo/DonneesStructurees";
 import { filAriane } from "@/lib/seo/donnees-structurees";
 import { siteUrl } from "@/lib/site-url";
 import { langueIndexable } from "@/lib/i18n/langue";
+import { adressePour } from "@/lib/blog/traductions";
 import { t } from "@/lib/i18n/outils";
 import {
   ECRAN,
@@ -143,58 +144,66 @@ export default async function CalendrierPage({
                   </div>
 
                   <ul className="flex flex-col gap-3">
-                    {dePhase.map((jalon) => (
-                      <li
-                        key={jalon.id}
-                        className="flex flex-col gap-2 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm"
-                      >
-                        <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-                          <span className="text-base font-medium text-zinc-900">
-                            {t(jalon.titre, langue)}
-                          </span>
-                          {jalon.date ? (
-                            <span className="shrink-0 rounded-full bg-brand-navy px-2.5 py-0.5 text-xs font-medium text-white">
-                              {dateLisible(jalon.date, langue)}
+                    {dePhase.map((jalon) => {
+                      const article = jalon.article
+                        ? adressePour(jalon.article, langue)
+                        : null;
+                      return (
+                        <li
+                          key={jalon.id}
+                          className="flex flex-col gap-2 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm"
+                        >
+                          <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                            <span className="text-base font-medium text-zinc-900">
+                              {t(jalon.titre, langue)}
                             </span>
-                          ) : (
-                            <span className="shrink-0 rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600">
-                              {t(ECRAN.aDemander, langue)}
-                            </span>
+                            {jalon.date ? (
+                              <span className="shrink-0 rounded-full bg-brand-navy px-2.5 py-0.5 text-xs font-medium text-white">
+                                {dateLisible(jalon.date, langue)}
+                              </span>
+                            ) : (
+                              <span className="shrink-0 rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600">
+                                {t(ECRAN.aDemander, langue)}
+                              </span>
+                            )}
+                          </div>
+
+                          <p className="text-base text-zinc-600">
+                            {t(jalon.quoi, langue)}
+                          </p>
+
+                          {jalon.precedent && (
+                            <p className="text-base text-zinc-500">
+                              <span className="font-medium text-zinc-700">
+                                {t(ECRAN.apres, langue)}
+                              </span>{" "}
+                              {t(jalon.precedent.titre, langue)}.
+                            </p>
                           )}
-                        </div>
 
-                        <p className="text-base text-zinc-600">
-                          {t(jalon.quoi, langue)}
-                        </p>
+                          {jalon.aQuiDemander && (
+                            <p className="text-base text-zinc-500">
+                              <span className="font-medium text-zinc-700">
+                                {t(ECRAN.aQuiDemander, langue)}
+                              </span>{" "}
+                              {t(jalon.aQuiDemander, langue)}
+                            </p>
+                          )}
 
-                        {jalon.precedent && (
-                          <p className="text-base text-zinc-500">
-                            <span className="font-medium text-zinc-700">
-                              {t(ECRAN.apres, langue)}
-                            </span>{" "}
-                            {t(jalon.precedent.titre, langue)}.
-                          </p>
-                        )}
-
-                        {jalon.aQuiDemander && (
-                          <p className="text-base text-zinc-500">
-                            <span className="font-medium text-zinc-700">
-                              {t(ECRAN.aQuiDemander, langue)}
-                            </span>{" "}
-                            {t(jalon.aQuiDemander, langue)}
-                          </p>
-                        )}
-
-                        {jalon.article && (
-                          <Link
-                            href={`/blog/${jalon.article}`}
-                            className="w-fit text-base text-brand-navy underline-offset-2 hover:underline"
-                          >
-                            {t(ECRAN.enSavoirPlus, langue)}
-                          </Link>
-                        )}
-                      </li>
-                    ))}
+                          {/* Même règle que dans le journal : pas de lien
+                            vers un article qui n'existe pas encore dans
+                            la langue du lecteur. */}
+                          {article && (
+                            <Link
+                              href={article}
+                              className="w-fit text-base text-brand-navy underline-offset-2 hover:underline"
+                            >
+                              {t(ECRAN.enSavoirPlus, langue)}
+                            </Link>
+                          )}
+                        </li>
+                      );
+                    })}
                   </ul>
                 </div>
               );

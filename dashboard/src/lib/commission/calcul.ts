@@ -1,3 +1,4 @@
+import type { Langue } from "@/lib/i18n/langues";
 import {
   PRIX_MODULE,
   PRIX_MODULE_TTC,
@@ -163,8 +164,22 @@ export function verdict(resultat: Resultat): Verdict {
   return "abonnement";
 }
 
-export function euros(valeur: number): string {
-  return new Intl.NumberFormat("fr-FR", {
+/**
+ * Les montants dans la langue du lecteur — mais toujours en euros.
+ *
+ * On traduit la mise en forme, jamais la monnaie : « 1 800 € », « €1,800 »
+ * et « €1,800 » désignent la même somme, et c'est bien celle que le
+ * restaurateur paiera. Convertir en livres ou en yuans donnerait un
+ * chiffre faux le lendemain et une facture qui ne correspond à rien.
+ */
+const LOCALE: Record<Langue, string> = {
+  fr: "fr-FR",
+  en: "en-GB",
+  zh: "zh-CN",
+};
+
+export function euros(valeur: number, langue: Langue = "fr"): string {
+  return new Intl.NumberFormat(LOCALE[langue] ?? "fr-FR", {
     style: "currency",
     currency: "EUR",
     maximumFractionDigits: 0,

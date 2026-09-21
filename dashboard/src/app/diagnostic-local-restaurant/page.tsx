@@ -7,6 +7,7 @@ import { DonneesStructurees } from "@/components/seo/DonneesStructurees";
 import { filAriane } from "@/lib/seo/donnees-structurees";
 import { siteUrl } from "@/lib/site-url";
 import { langueIndexable } from "@/lib/i18n/langue";
+import { adressePour } from "@/lib/blog/traductions";
 import {
   POINTS,
   QUESTIONS,
@@ -203,14 +204,19 @@ export default async function DiagnosticPage({
                     </p>
                   </div>
 
-                  {bilan.point.article && (
-                    <Link
-                      href={`/blog/${bilan.point.article.slug}`}
-                      className="w-fit text-base text-brand-navy underline-offset-2 hover:underline"
-                    >
-                      {t(bilan.point.article.titre, langue)} →
-                    </Link>
-                  )}
+                  {/* Un article non traduit perd son lien et garde son
+                      texte : renvoyer un lecteur chinois vers une page
+                      française serait une impasse annoncée comme une
+                      piste. C'est déjà la règle du journal. */}
+                  {bilan.point.article &&
+                    adressePour(bilan.point.article.slug, langue) && (
+                      <Link
+                        href={adressePour(bilan.point.article.slug, langue)!}
+                        className="w-fit text-base text-brand-navy underline-offset-2 hover:underline"
+                      >
+                        {t(bilan.point.article.titre, langue)} →
+                      </Link>
+                    )}
                 </article>
               );
             })}

@@ -7,6 +7,9 @@ import { DonneesStructurees } from "@/components/seo/DonneesStructurees";
 import { filAriane } from "@/lib/seo/donnees-structurees";
 import { siteUrl } from "@/lib/site-url";
 import { langueIndexable } from "@/lib/i18n/langue";
+import { t } from "@/lib/i18n/outils";
+import { ECRAN, remplir } from "@/lib/commission/ecran";
+import { adressePour } from "@/lib/blog/traductions";
 import {
   ABONNEMENT,
   COMMISSION_MAX,
@@ -106,6 +109,10 @@ export default async function CalculateurPage({
   // pas de conclusion : afficher un verdict sur des chiffres que personne
   // n'a saisis, c'est le comparateur d'éditeur qu'on refuse d'être.
   const calcule = Boolean(query.calcule);
+  const raisonnement = adressePour(
+    "reservations-sans-commission-guide-restaurants-independants",
+    langue,
+  );
 
   return (
     <div className="flex min-h-screen flex-col bg-brand-cream">
@@ -121,16 +128,12 @@ export default async function CalculateurPage({
 
         <div className="flex flex-col gap-3">
           <span className="text-xs font-semibold uppercase tracking-wide text-brand-orange">
-            Calculateur
+            {t(ECRAN.surtitre, langue)}
           </span>
           <h1 className="font-serif text-4xl text-ink sm:text-5xl">
-            Combien vous coûtent vos commissions ?
+            {t(ECRAN.titre, langue)}
           </h1>
-          <p className="text-base text-zinc-600">
-            Trois chiffres, dont un que les comparateurs d&apos;éditeurs ne
-            posent jamais : la part de vos clients qui seraient venus sans la
-            plateforme. C&apos;est celui qui décide.
-          </p>
+          <p className="text-base text-zinc-600">{t(ECRAN.chapo, langue)}</p>
         </div>
 
         <form
@@ -140,7 +143,7 @@ export default async function CalculateurPage({
           <input type="hidden" name="calcule" value="1" />
 
           <label className={etiquette} htmlFor="couverts">
-            Couverts réservés via la plateforme, par mois
+            {t(ECRAN.champCouverts, langue)}
             <input
               id="couverts"
               name="couverts"
@@ -152,12 +155,12 @@ export default async function CalculateurPage({
               className={champ}
             />
             <span className="text-sm font-normal text-zinc-500">
-              Pas votre total de couverts : seulement ceux qui passent par elle.
+              {t(ECRAN.aideCouverts, langue)}
             </span>
           </label>
 
           <label className={etiquette} htmlFor="commission">
-            Commission par couvert, en euros
+            {t(ECRAN.champCommission, langue)}
             <input
               id="commission"
               name="commission"
@@ -169,13 +172,12 @@ export default async function CalculateurPage({
               className={champ}
             />
             <span className="text-sm font-normal text-zinc-500">
-              Entre 1 et 2 € chez la plupart des plateformes françaises. Prenez
-              le vôtre, il se négocie.
+              {t(ECRAN.aideCommission, langue)}
             </span>
           </label>
 
           <label className={etiquette} htmlFor="acquis">
-            Sur 100 de ces clients, combien seraient venus sans elle ?
+            {t(ECRAN.champAcquis, langue)}
             <input
               id="acquis"
               name="acquis"
@@ -187,8 +189,7 @@ export default async function CalculateurPage({
               className={champ}
             />
             <span className="text-sm font-normal text-zinc-500">
-              Personne ne le sait au couvert près. Vos habitués, ceux qui vous
-              cherchaient par votre nom, ceux qui passaient devant : estimez.
+              {t(ECRAN.aideAcquis, langue)}
             </span>
           </label>
 
@@ -196,51 +197,57 @@ export default async function CalculateurPage({
             type="submit"
             className="rounded-md bg-brand-navy px-5 py-3 text-base font-medium text-white transition-colors hover:bg-brand-navy-hover"
           >
-            Calculer
+            {t(ECRAN.bouton, langue)}
           </button>
         </form>
 
         {calcule && (
           <section className="flex flex-col gap-5 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm">
             <h2 className="text-base font-semibold text-zinc-900">
-              Sur une année
+              {t(ECRAN.surUneAnnee, langue)}
             </h2>
 
             <div className="flex flex-col">
               <Ligne
-                libelle="Ce que la commission vous coûte"
-                valeur={euros(resultat.commissionAn)}
+                libelle={t(ECRAN.ligneCout, langue)}
+                valeur={euros(resultat.commissionAn, langue)}
                 fort
-                aide={`${euros(resultat.commissionMois)} par mois`}
+                aide={remplir(t(ECRAN.aideCout, langue), {
+                  mois: euros(resultat.commissionMois, langue),
+                })}
               />
               <Ligne
-                libelle="Payé sur des clients qui seraient venus quand même"
-                valeur={euros(resultat.gaspillageAn)}
-                aide={`${saisie.partDejaAcquise} % de la commission`}
+                libelle={t(ECRAN.ligneGaspillage, langue)}
+                valeur={euros(resultat.gaspillageAn, langue)}
+                aide={remplir(t(ECRAN.aideGaspillage, langue), {
+                  part: saisie.partDejaAcquise,
+                })}
               />
               <Ligne
-                libelle="Payé pour une vraie découverte"
-                valeur={euros(resultat.acquisitionAn)}
-                aide="Là, la commission achète quelque chose"
+                libelle={t(ECRAN.ligneAcquisition, langue)}
+                valeur={euros(resultat.acquisitionAn, langue)}
+                aide={t(ECRAN.aideAcquisition, langue)}
               />
               <Ligne
-                libelle="L'abonnement Klarr, module Réservations"
-                valeur={`${euros(resultat.abonnementAn)} HT`}
-                aide={`${ABONNEMENT.reservationsHT} € HT par mois, sans commission`}
+                libelle={t(ECRAN.ligneAbonnement, langue)}
+                valeur={`${euros(resultat.abonnementAn, langue)} ${t(ECRAN.horsTaxes, langue)}`}
+                aide={remplir(t(ECRAN.aideAbonnement, langue), {
+                  prix: ABONNEMENT.reservationsHT,
+                })}
               />
             </div>
 
             {conclusion === "abonnement" && (
               <div className="flex flex-col gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-4">
                 <p className="text-sm font-semibold text-emerald-900">
-                  L&apos;abonnement vous coûterait {euros(resultat.ecartAn)} de
-                  moins par an.
+                  {remplir(t(ECRAN.abonnementTitre, langue), {
+                    ecart: euros(resultat.ecartAn, langue),
+                  })}
                 </p>
                 <p className="text-base text-emerald-800">
-                  Et surtout : les {euros(resultat.gaspillageAn)} payés sur des
-                  clients déjà acquis ne servent à rien. C&apos;est cette
-                  ligne-là qu&apos;un abonnement supprime — pas la découverte,
-                  que vous continuerez de payer autrement.
+                  {remplir(t(ECRAN.abonnementTexte, langue), {
+                    gaspillage: euros(resultat.gaspillageAn, langue),
+                  })}
                 </p>
               </div>
             )}
@@ -248,14 +255,12 @@ export default async function CalculateurPage({
             {conclusion === "limite" && (
               <div className="flex flex-col gap-2 rounded-xl border border-amber-200 bg-amber-50 p-4">
                 <p className="text-sm font-semibold text-amber-900">
-                  L&apos;écart est de {euros(resultat.ecartAn)} par an.
-                  C&apos;est peu.
+                  {remplir(t(ECRAN.limiteTitre, langue), {
+                    ecart: euros(resultat.ecartAn, langue),
+                  })}
                 </p>
                 <p className="text-base text-amber-800">
-                  À ce niveau, changer d&apos;outil ne se justifie pas par le
-                  prix seul. Regardez plutôt ce que vous perdez d&apos;autre :
-                  la relation au client, le fichier, la main sur vos
-                  disponibilités. Si ça vous est égal, restez.
+                  {t(ECRAN.limiteTexte, langue)}
                 </p>
               </div>
             )}
@@ -263,52 +268,46 @@ export default async function CalculateurPage({
             {conclusion === "commission" && (
               <div className="flex flex-col gap-2 rounded-xl border border-zinc-200 bg-zinc-50 p-4">
                 <p className="text-base font-semibold text-zinc-900">
-                  À votre volume, la commission vous coûte moins cher que notre
-                  abonnement.
+                  {t(ECRAN.commissionTitre, langue)}
                 </p>
                 <p className="text-base text-zinc-700">
-                  Nous vendons l&apos;abonnement, et nous vous disons de ne pas
-                  le prendre : en dessous d&apos;environ{" "}
-                  {Number.isFinite(resultat.seuilCouverts)
-                    ? `${resultat.seuilCouverts} couverts`
-                    : "ce volume"}{" "}
-                  réservés par mois à ce tarif, la plateforme est le bon calcul.
-                  Revenez quand vous les dépasserez.
+                  {remplir(t(ECRAN.commissionTexte, langue), {
+                    seuil: Number.isFinite(resultat.seuilCouverts)
+                      ? remplir(t(ECRAN.couverts, langue), {
+                          n: resultat.seuilCouverts,
+                        })
+                      : t(ECRAN.ceVolume, langue),
+                  })}
                 </p>
               </div>
             )}
 
-            <p className="text-sm text-zinc-500">
-              Ce calcul ne compte que les commissions. Il ignore ce qu&apos;une
-              plateforme apporte — de la demande que vous n&apos;auriez pas eue
-              — et ce qu&apos;elle coûte en plus : l&apos;adresse e-mail de
-              votre client, que vous ne récupérez pas.
-            </p>
+            <p className="text-sm text-zinc-500">{t(ECRAN.note, langue)}</p>
           </section>
         )}
 
         <div className="flex flex-col gap-3 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm">
           <p className="text-base font-semibold text-zinc-900">
-            Nous ne sommes pas neutres, et autant le dire.
+            {t(ECRAN.neutreTitre, langue)}
           </p>
           <p className="text-base text-zinc-600">
-            Klarr vend une page de réservation à l&apos;abonnement, sans
-            commission : nous avons un intérêt direct à ce que vous trouviez les
-            commissions trop chères. C&apos;est pourquoi ce calculateur vous
-            donne la méthode plutôt qu&apos;un résultat, et vous dit quand
-            rester où vous êtes.
+            {t(ECRAN.neutreTexte, langue)}
           </p>
-          <Link
-            href="/blog/reservations-sans-commission-guide-restaurants-independants"
-            className="w-fit text-base text-brand-navy underline-offset-2 hover:underline"
-          >
-            Le raisonnement en entier, dans le journal →
-          </Link>
+          {/* Même règle que dans le journal : pas de lien vers un article
+              qui n'existe pas encore dans la langue du lecteur. */}
+          {raisonnement && (
+            <Link
+              href={raisonnement}
+              className="w-fit text-base text-brand-navy underline-offset-2 hover:underline"
+            >
+              {t(ECRAN.lienJournal, langue)}
+            </Link>
+          )}
           <Link
             href="/comparatif-logiciels-reservation-restaurant"
             className="w-fit text-base text-brand-navy underline-offset-2 hover:underline"
           >
-            Le comparatif avec TheFork, Zenchef et Guestonline →
+            {t(ECRAN.lienComparatif, langue)}
           </Link>
         </div>
         <SuiteOutils actuel="calculateur" langue={langue} />
