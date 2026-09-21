@@ -1,4 +1,5 @@
 import { enregistrerAllergenes } from "@/app/dashboard/[id]/menu/actions";
+import type { ClesCarte } from "@/lib/i18n/carte";
 import { ALLERGENES, listeAllergenes } from "@/types/allergenes";
 
 /**
@@ -17,9 +18,11 @@ import { ALLERGENES, listeAllergenes } from "@/types/allergenes";
 export function AllergenesPlat({
   restaurantId,
   plat,
+  c,
 }: {
   restaurantId: string;
   plat: { id: string; nom: string; allergenes: string[] | null };
+  c: ClesCarte;
 }) {
   const declares = plat.allergenes;
   const coches = new Set(declares ?? []);
@@ -27,10 +30,10 @@ export function AllergenesPlat({
   const resume =
     declares === null ? (
       <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
-        allergènes à déclarer
+        {c.allergenesADeclarer}
       </span>
     ) : declares.length === 0 ? (
-      <span className="text-xs text-zinc-500">Aucun allergène déclaré</span>
+      <span className="text-xs text-zinc-500">{c.aucunAllergene}</span>
     ) : (
       <span className="text-xs text-zinc-500">
         {listeAllergenes(declares, "fr")}
@@ -54,7 +57,7 @@ export function AllergenesPlat({
         <input type="hidden" name="declare" value="1" />
 
         <fieldset className="flex flex-col gap-2">
-          <legend className="sr-only">Allergènes de {plat.nom}</legend>
+          <legend className="sr-only">{c.allergenesDe(plat.nom)}</legend>
           <div className="grid gap-x-4 gap-y-1.5 sm:grid-cols-2">
             {ALLERGENES.map((allergene) => (
               <label
@@ -87,12 +90,9 @@ export function AllergenesPlat({
             type="submit"
             className="rounded-md bg-brand-navy px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover"
           >
-            Enregistrer
+            {c.enregistrer}
           </button>
-          <p className="text-xs text-zinc-500">
-            Enregistrer sans rien cocher déclare que ce plat n&apos;en contient
-            aucun.
-          </p>
+          <p className="text-xs text-zinc-500">{c.allergenesRienCoche}</p>
         </div>
       </form>
     </details>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import type { ClesCarte } from "@/lib/i18n/carte";
 import { ajouterPlat, type MenuState } from "@/app/dashboard/[id]/menu/actions";
 import {
   CATEGORIES_SUGGEREES,
@@ -22,10 +23,12 @@ function Champs({
   restaurantId,
   categories,
   valeurs,
+  c,
 }: {
   restaurantId: string;
   categories: string[];
   valeurs: MenuValeurs;
+  c: ClesCarte;
 }) {
   // Les catégories déjà utilisées d'abord : on complète une carte plus
   // souvent qu'on n'en commence une.
@@ -52,17 +55,15 @@ function Champs({
             l'exemple disent maintenant ce que le champ sait faire : c'était
             la seule chose qui manquait. */}
         <label className={label} htmlFor="plat-categorie">
-          Catégorie{" "}
-          <span className="font-normal text-zinc-400">
-            (choisis ou écris la tienne)
-          </span>
+          {c.champCategorie}{" "}
+          <span className="font-normal text-zinc-400">{c.categorieLibre}</span>
           <input
             id="plat-categorie"
             name="categorie"
             list="categories-carte"
             required
             defaultValue={valeurs.categorie}
-            placeholder="Entrées, Tapas, Menu du midi…"
+            placeholder={c.placeholderCategorie}
             className={champ}
           />
           <datalist id="categories-carte">
@@ -71,18 +72,17 @@ function Champs({
             ))}
           </datalist>
           <span className="text-sm font-normal text-zinc-500">
-            Tape ce que tu veux : une catégorie qui n&apos;existe pas encore se
-            crée en validant, et se range ensuite avec les flèches.
+            {c.aideCategorie}
           </span>
         </label>
         <label className={label} htmlFor="plat-nom">
-          Plat
+          {c.champPlat}
           <input
             id="plat-nom"
             name="nom"
             required
             defaultValue={valeurs.nom}
-            placeholder="Œuf parfait, crème de champignons"
+            placeholder={c.placeholderPlat}
             className={champ}
           />
         </label>
@@ -90,27 +90,25 @@ function Champs({
 
       <div className="grid gap-4 sm:grid-cols-[2fr_1fr]">
         <label className={label} htmlFor="plat-description">
-          Description{" "}
-          <span className="font-normal text-zinc-400">(facultatif)</span>
+          {c.champDescription}{" "}
+          <span className="font-normal text-zinc-400">{c.facultatif}</span>
           <input
             id="plat-description"
             name="description"
             defaultValue={valeurs.description}
-            placeholder="Girolles, noisettes torréfiées"
+            placeholder={c.placeholderDescription}
             className={champ}
           />
         </label>
         <label className={label} htmlFor="plat-prix">
-          Prix{" "}
-          <span className="font-normal text-zinc-400">
-            (vide = non affiché)
-          </span>
+          {c.champPrix}{" "}
+          <span className="font-normal text-zinc-400">{c.prixVide}</span>
           <input
             id="plat-prix"
             name="prix"
             inputMode="decimal"
             defaultValue={valeurs.prix}
-            placeholder="14,50"
+            placeholder={c.placeholderPrix}
             className={champ}
           />
         </label>
@@ -122,9 +120,11 @@ function Champs({
 export function PlatForm({
   restaurantId,
   categories,
+  c,
 }: {
   restaurantId: string;
   categories: string[];
+  c: ClesCarte;
 }) {
   const [state, action, pending] = useActionState(ajouterPlat, initialState);
 
@@ -140,6 +140,7 @@ export function PlatForm({
         restaurantId={restaurantId}
         categories={categories}
         valeurs={state.valeurs}
+        c={c}
       />
 
       {state.error && <p className="text-sm text-red-600">{state.error}</p>}
@@ -149,7 +150,7 @@ export function PlatForm({
         disabled={pending}
         className="w-fit rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover disabled:opacity-50"
       >
-        {pending ? "Ajout…" : "Ajouter à la carte"}
+        {pending ? c.ajoutEnCours : c.ajouterALaCarte}
       </button>
     </form>
   );

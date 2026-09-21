@@ -1,6 +1,8 @@
 "use client";
 
 import Image from "next/image";
+import type { ClesCarte } from "@/lib/i18n/carte";
+import type { Langue } from "@/lib/i18n/langue";
 import { useRef, useState, useTransition } from "react";
 import {
   envoyerPhotoPlat,
@@ -29,11 +31,15 @@ export function PhotoPlat({
   platId,
   nom,
   photoUrl,
+  c,
+  langue,
 }: {
   restaurantId: string;
   platId: string;
   nom: string;
   photoUrl: string | null;
+  c: ClesCarte;
+  langue: Langue;
 }) {
   const [erreur, setErreur] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
@@ -55,15 +61,20 @@ export function PhotoPlat({
         // fait réessayer trois fois le même fichier.
         setErreur(
           prete.motif === "trop-petite"
-            ? messageTropPetite(prete.largeur, prete.hauteur, PLAT.minCote)
-            : "Ce fichier ne s'ouvre pas comme une image.",
+            ? messageTropPetite(
+                prete.largeur,
+                prete.hauteur,
+                PLAT.minCote,
+                langue,
+              )
+            : c.photoIllisible,
         );
         vider();
         return;
       }
 
       if (prete.fichier.size > TAILLE_MAX) {
-        setErreur("Photo trop lourde (4 Mo maximum).");
+        setErreur(c.photoTropLourde);
         vider();
         return;
       }
@@ -81,9 +92,18 @@ export function PhotoPlat({
         // molle est plus utile que savoir qu'elle pesait 3 Mo.
         setNote(
           prete.juste
-            ? messageJuste(prete.largeur, prete.hauteur, PLAT.conseilCote)
+            ? messageJuste(
+                prete.largeur,
+                prete.hauteur,
+                PLAT.conseilCote,
+                langue,
+              )
             : prete.retravaillee
-              ? `Réduite à ${prete.largeur} × ${prete.hauteur} px (${poidsLisible(prete.fichier.size)}).`
+              ? c.photoReduite(
+                  prete.largeur,
+                  prete.hauteur,
+                  poidsLisible(prete.fichier.size),
+                )
               : null,
         );
       }
@@ -109,19 +129,13 @@ export function PhotoPlat({
           demandé la fonctionnalité ne l'a pas trouvée à l'écran. Le « + » et
           le trait plus marqué disent qu'il y a quelque chose à faire ici. */}
       <label
-        title={
-          photoUrl
-            ? `Remplacer la photo de ${nom}`
-            : `Ajouter une photo à ${nom}`
-        }
+        title={photoUrl ? c.remplacerPhoto(nom) : c.ajouterPhoto(nom)}
         className={`relative flex h-16 w-16 cursor-pointer flex-col items-center justify-center gap-0.5 overflow-hidden rounded-xl border-2 border-dashed border-zinc-300 bg-zinc-50 text-center text-[10px] font-medium leading-tight text-zinc-500 transition-colors hover:border-brand-navy hover:bg-brand-orange-soft hover:text-brand-navy ${
           enCours ? "opacity-50" : ""
         }`}
       >
         <span className="sr-only">
-          {photoUrl
-            ? `Remplacer la photo de ${nom}`
-            : `Ajouter une photo à ${nom}`}
+          {photoUrl ? c.remplacerPhoto(nom) : c.ajouterPhoto(nom)}
         </span>
         {photoUrl ? (
           <Image
@@ -159,7 +173,7 @@ export function PhotoPlat({
           disabled={enCours}
           className="text-[10px] text-zinc-400 transition-colors hover:text-red-600 disabled:opacity-50"
         >
-          Retirer
+          {c.retirerPhoto}
         </button>
       )}
       {erreur && (

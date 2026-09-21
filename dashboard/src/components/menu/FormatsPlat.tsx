@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import type { ClesCarte } from "@/lib/i18n/carte";
 import { enregistrerFormats } from "@/app/dashboard/[id]/menu/actions";
 import { formatsDe, formatsLisibles } from "@/lib/menu/carte";
 import {
@@ -39,7 +40,7 @@ function enEuros(centimes: number): string {
   return (centimes / 100).toFixed(2).replace(".", ",");
 }
 
-function Lignes({ formats }: { formats: Format[] | null }) {
+function Lignes({ formats, c }: { formats: Format[] | null; c: ClesCarte }) {
   const remplies = formats ?? [];
   const vides = Math.max(1, FORMATS_MAX - remplies.length);
   const lignes: (Format | undefined)[] = [
@@ -56,7 +57,7 @@ function Lignes({ formats }: { formats: Format[] | null }) {
             defaultValue={format?.libelle ?? ""}
             maxLength={FORMAT_LIBELLE_MAX}
             placeholder={rang === 0 ? "6 pièces" : "12 pièces"}
-            aria-label={`Libellé du format ${rang + 1}`}
+            aria-label={c.libelleFormat(rang + 1)}
             className="min-w-0 flex-1 rounded-md border border-zinc-300 px-2 py-1.5 text-sm outline-none focus:border-brand-navy"
           />
           <input
@@ -64,7 +65,7 @@ function Lignes({ formats }: { formats: Format[] | null }) {
             inputMode="decimal"
             defaultValue={format ? enEuros(format.prix_centimes) : ""}
             placeholder="9,50"
-            aria-label={`Prix du format ${rang + 1}`}
+            aria-label={c.prixFormat(rang + 1)}
             className="w-24 shrink-0 rounded-md border border-zinc-300 px-2 py-1.5 text-sm tabular-nums outline-none focus:border-brand-navy"
           />
         </div>
@@ -76,9 +77,11 @@ function Lignes({ formats }: { formats: Format[] | null }) {
 export function FormatsPlat({
   restaurantId,
   plat,
+  c,
 }: {
   restaurantId: string;
   plat: { id: string; nom: string; formats: Format[] | null };
+  c: ClesCarte;
 }) {
   const [state, action, pending] = useActionState(
     enregistrerFormats,
@@ -95,9 +98,7 @@ export function FormatsPlat({
             {formatsLisibles(formats)}
           </span>
         ) : (
-          <span className="text-xs text-zinc-400">
-            Prix unique — vendu aussi par 6, par 12 ?
-          </span>
+          <span className="text-xs text-zinc-400">{c.formatsPrixUnique}</span>
         )}
       </summary>
 
@@ -110,11 +111,11 @@ export function FormatsPlat({
 
         <fieldset className="flex flex-col gap-2">
           <legend className="text-xs text-zinc-500">
-            Formats de {plat.nom}. Tout vider revient au prix unique.
+            {c.formatsDe(plat.nom)}
           </legend>
           {/* Voir PlatForm : React vide le formulaire après l'action, la
               clé le remonte avec ce qui vient d'être enregistré. */}
-          <Lignes key={state.rendu} formats={formats} />
+          <Lignes key={state.rendu} formats={formats} c={c} />
         </fieldset>
 
         {state.error && <p className="text-xs text-red-600">{state.error}</p>}
@@ -125,11 +126,10 @@ export function FormatsPlat({
             disabled={pending}
             className="w-fit rounded-md bg-brand-navy px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-brand-navy-hover disabled:opacity-50"
           >
-            {pending ? "Enregistrement…" : "Enregistrer les formats"}
+            {pending ? c.enregistrementEnCours : c.enregistrerFormats}
           </button>
           <span className="text-xs text-zinc-400">
-            Tant qu&apos;il y a des formats, ce sont eux qui s&apos;affichent
-            sur la carte, pas le prix du plat.
+            {c.formatsPrennentLaPlace}
           </span>
         </div>
       </form>

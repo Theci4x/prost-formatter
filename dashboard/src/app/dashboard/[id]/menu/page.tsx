@@ -25,6 +25,8 @@ import { qrSvg, urlCarte } from "@/lib/menu/qr";
 import { exiger } from "@/lib/equipe/roles";
 import { exigerSection } from "@/lib/abonnement/acces";
 import { LIBELLE_MODULE, PRIX_MODULE } from "@/lib/abonnement/modules";
+import { langueUtilisateur } from "@/lib/i18n/langue";
+import { CARTE } from "@/lib/i18n/carte";
 import { LANGUES_TRADUITES, type Langue, type MenuItem } from "@/types/menu";
 import type { Restaurant } from "@/types/restaurant";
 
@@ -68,6 +70,8 @@ export default async function MenuPage({
   // réservation, donc elle se saisit avec le carnet seul. Ce qui en fait
   // un produit de visibilité est réservé plus bas.
   const acces = await exigerSection(id, "menu");
+  const langue = await langueUtilisateur();
+  const c = CARTE[langue];
   const visibilite = acces.ouvert.visibilite;
 
   const supabase = await createClient();
@@ -104,19 +108,9 @@ export default async function MenuPage({
 
   return (
     <div className="flex flex-1 flex-col gap-6 px-6 py-8">
-      <PageHeader
-        icon={dashboardIcons.menu}
-        title={`Carte — ${restaurant.nom}`}
-      />
+      <PageHeader icon={dashboardIcons.menu} title={c.titre(restaurant.nom)} />
 
-      <p className="max-w-2xl text-sm text-zinc-500">
-        Ta carte s&apos;affiche sur ta page de réservation, sous les
-        disponibilités : le client sait ce qu&apos;il vient manger avant de
-        demander une table. Les catégories apparaissent dans l&apos;ordre où tu
-        les ranges ici, pas par ordre alphabétique. Le carré à gauche de chaque
-        plat ajoute sa photo : un carpaccio photographié se commande plus
-        qu&apos;un carpaccio décrit.
-      </p>
+      <p className="max-w-2xl text-sm text-zinc-500">{c.chapo}</p>
 
       {/* La déclaration des allergènes n'est pas un confort : pour un plat
           non préemballé, l'information doit être écrite et lisible sans que
@@ -126,15 +120,9 @@ export default async function MenuPage({
       {sansAllergenes > 0 && (
         <div className="flex flex-col gap-1 rounded-2xl border border-amber-200 bg-amber-50 p-5">
           <span className="text-sm font-medium text-amber-900">
-            {sansAllergenes} plat{sansAllergenes > 1 ? "s" : ""} sans allergènes
-            déclarés
+            {c.allergenesManquants(sansAllergenes)}
           </span>
-          <span className="text-sm text-amber-800">
-            La loi demande que la liste des allergènes soit écrite et
-            consultable sans que le client ait à la demander. Coche-les sous
-            chaque plat : ta carte les affiche, et ton document allergènes se
-            fabrique tout seul à partir de là.
-          </span>
+          <span className="text-sm text-amber-800">{c.allergenesRappel}</span>
         </div>
       )}
 
@@ -143,16 +131,11 @@ export default async function MenuPage({
       <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm">
         <div className="flex flex-col gap-1">
           <span className="text-sm font-medium text-zinc-900">
-            {publique
-              ? "Ta carte est visible par tes clients."
-              : "Ta carte n'est visible que par toi."}
+            {publique ? c.visible : c.privee}
           </span>
           <span className="text-sm text-zinc-500">
-            {visibles} plat{visibles > 1 ? "s" : ""} à la carte
-            {items.length > visibles &&
-              ` · ${items.length - visibles} décroché${
-                items.length - visibles > 1 ? "s" : ""
-              }`}
+            {c.platsALaCarte(visibles)}
+            {items.length > visibles && c.decroches(items.length - visibles)}
             {publique && restaurant.slug_reservation && (
               <>
                 {" · "}
@@ -160,7 +143,7 @@ export default async function MenuPage({
                   href={`/reserver/${restaurant.slug_reservation}`}
                   className="text-brand-navy underline-offset-2 hover:underline"
                 >
-                  voir ma page
+                  {c.voirMaPage}
                 </Link>
               </>
             )}
@@ -169,14 +152,14 @@ export default async function MenuPage({
         <Action
           action={basculerCartePublique}
           champs={{ restaurant_id: id, publique: publique ? "0" : "1" }}
-          libelle={publique ? "Retirer la carte" : "Publier la carte"}
+          libelle={publique ? c.retirerCarte : c.publierCarte}
           classe={
             publique
               ? "rounded-md border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
               : "rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover"
           }
         >
-          {publique ? "Retirer de ma page" : "Publier sur ma page"}
+          {publique ? c.retirerDeMaPage : c.publierSurMaPage}
         </Action>
       </div>
 
@@ -184,17 +167,13 @@ export default async function MenuPage({
         <div className="flex flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm sm:flex-row sm:items-start sm:justify-between">
           <div className="flex flex-col gap-2">
             <span className="text-sm font-medium text-zinc-900">
-              Ta carte en plusieurs langues
+              {c.traductionTitre}
             </span>
             <span className="max-w-md text-sm text-zinc-500">
-              Le client choisit sa langue en haut de ta carte. Une langue
-              n&apos;apparaît que si elle est vraiment traduite. Un plat que tu
-              corriges en français repasse en français tant qu&apos;il
-              n&apos;est pas retraduit — mieux vaut ça qu&apos;une carte
-              étrangère qui ment sur ce qu&apos;il y a dans l&apos;assiette.
+              {c.traductionChapo}
             </span>
           </div>
-          <TraduireCarte restaurantId={id} aTraduire={restantATraduire} />
+          <TraduireCarte restaurantId={id} aTraduire={restantATraduire} c={c} />
         </div>
       )}
 
@@ -206,10 +185,7 @@ export default async function MenuPage({
       {!visibilite ? (
         items.length > 0 && (
           <p className="rounded-2xl border border-dashed border-zinc-200 bg-brand-cream p-5 text-sm text-zinc-600 shadow-sm">
-            Ta carte s&apos;affiche déjà sur ta page de réservation. Le QR code
-            à poser sur les tables et la traduction en anglais font partie de{" "}
-            <strong>{LIBELLE_MODULE.visibilite}</strong> —{" "}
-            {PRIX_MODULE.visibilite}.
+            {c.qrReserve(LIBELLE_MODULE.visibilite, PRIX_MODULE.visibilite)}
           </p>
         )
       ) : qr && slug ? (
@@ -222,12 +198,9 @@ export default async function MenuPage({
           <div className="flex flex-col gap-3">
             <div className="flex flex-col gap-1">
               <span className="text-sm font-medium text-zinc-900">
-                Le QR code de ta carte
+                {c.qrTitre}
               </span>
-              <span className="text-sm text-zinc-500">
-                Imprime-le et pose-le sur tes tables : le client scanne et lit
-                ta carte sur son téléphone, sans rien installer.
-              </span>
+              <span className="text-sm text-zinc-500">{c.qrChapo}</span>
               <a
                 href={urlCarte(slug)}
                 target="_blank"
@@ -242,13 +215,13 @@ export default async function MenuPage({
                 href={`/api/carte/${slug}/qr`}
                 className="rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover"
               >
-                Télécharger (PNG)
+                {c.qrPng}
               </a>
               <a
                 href={`/api/carte/${slug}/qr?format=svg`}
                 className="rounded-md border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
               >
-                Version imprimeur (SVG)
+                {c.qrSvg}
               </a>
             </div>
           </div>
@@ -256,19 +229,16 @@ export default async function MenuPage({
       ) : (
         items.length > 0 && (
           <p className="rounded-2xl border border-zinc-200/70 bg-white p-5 text-sm text-zinc-500 shadow-sm">
-            {slug
-              ? "Publie ta carte pour obtenir son QR code : un QR posé sur trente tables qui mène à une page vide est pire que pas de QR du tout."
-              : "Ouvre d'abord ta page de réservation dans la configuration : c'est elle qui donne l'adresse que le QR code encodera."}
+            {slug ? c.qrPublieDabord : c.qrPasDeSlug}
           </p>
         )
       )}
 
-      <PlatForm restaurantId={id} categories={categories} />
+      <PlatForm restaurantId={id} categories={categories} c={c} />
 
       {blocs.length === 0 ? (
         <p className="rounded-2xl border border-zinc-200/70 bg-white p-5 text-sm text-zinc-500 shadow-sm">
-          Aucun plat pour l&apos;instant. Commence par tes entrées : les
-          catégories s&apos;afficheront dans l&apos;ordre où tu les ajoutes.
+          {c.aucunPlat}
         </p>
       ) : (
         <div className="flex flex-col gap-6">
@@ -289,7 +259,7 @@ export default async function MenuPage({
                 {blocs.length > 1 && (
                   <div className="flex items-center gap-1">
                     <span className="text-xs text-zinc-400">
-                      Déplacer la catégorie
+                      {c.deplacerCategorie}
                     </span>
                     {rang > 0 && (
                       <Action
@@ -299,7 +269,7 @@ export default async function MenuPage({
                           categorie: bloc.categorie,
                           sens: "haut",
                         }}
-                        libelle={`Monter ${bloc.categorie}`}
+                        libelle={c.monter(bloc.categorie)}
                       >
                         ↑
                       </Action>
@@ -312,7 +282,7 @@ export default async function MenuPage({
                           categorie: bloc.categorie,
                           sens: "bas",
                         }}
-                        libelle={`Descendre ${bloc.categorie}`}
+                        libelle={c.descendre(bloc.categorie)}
                       >
                         ↓
                       </Action>
@@ -332,6 +302,8 @@ export default async function MenuPage({
                       platId={plat.id}
                       nom={plat.nom}
                       photoUrl={plat.photo_url}
+                      c={c}
+                      langue={langue}
                     />
                     <span
                       className={`flex min-w-0 flex-1 flex-col ${
@@ -342,12 +314,12 @@ export default async function MenuPage({
                         {plat.nom}
                         {!plat.actif && (
                           <span className="ml-2 rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-500">
-                            décroché
+                            {c.decroche}
                           </span>
                         )}
                         {traductionCaduque(plat, "en") && (
                           <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
-                            anglais à refaire
+                            {c.anglaisARefaire}
                           </span>
                         )}
                       </span>
@@ -356,8 +328,8 @@ export default async function MenuPage({
                           {plat.description}
                         </span>
                       )}
-                      <AllergenesPlat restaurantId={id} plat={plat} />
-                      <FormatsPlat restaurantId={id} plat={plat} />
+                      <AllergenesPlat restaurantId={id} plat={plat} c={c} />
+                      <FormatsPlat restaurantId={id} plat={plat} c={c} />
                     </span>
 
                     <span className="flex items-center gap-3">
@@ -380,7 +352,7 @@ export default async function MenuPage({
                               id: plat.id,
                               sens: "haut",
                             }}
-                            libelle={`Monter ${plat.nom}`}
+                            libelle={c.monter(plat.nom)}
                           >
                             ↑
                           </Action>
@@ -393,7 +365,7 @@ export default async function MenuPage({
                               id: plat.id,
                               sens: "bas",
                             }}
-                            libelle={`Descendre ${plat.nom}`}
+                            libelle={c.descendre(plat.nom)}
                           >
                             ↓
                           </Action>
@@ -408,19 +380,19 @@ export default async function MenuPage({
                         }}
                         libelle={
                           plat.actif
-                            ? `Décrocher ${plat.nom}`
-                            : `Remettre ${plat.nom}`
+                            ? c.decrocherPlat(plat.nom)
+                            : c.remettrePlat(plat.nom)
                         }
                       >
-                        {plat.actif ? "Décrocher" : "Remettre"}
+                        {plat.actif ? c.decrocher : c.remettre}
                       </Action>
                       <Action
                         action={supprimerPlat}
                         champs={{ restaurant_id: id, id: plat.id }}
-                        libelle={`Supprimer ${plat.nom}`}
+                        libelle={c.supprimerPlat(plat.nom)}
                         classe="text-xs text-zinc-400 transition-colors hover:text-red-600"
                       >
-                        Supprimer
+                        {c.supprimer}
                       </Action>
                     </span>
                   </li>

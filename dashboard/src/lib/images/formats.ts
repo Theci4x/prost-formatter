@@ -1,4 +1,5 @@
 import type { Options } from "@/lib/images/preparer";
+import type { Langue } from "@/lib/i18n/langue";
 
 /**
  * Les seuils d'image, par usage — et chacun est déduit de la taille à
@@ -57,14 +58,53 @@ export const GALERIE: Options = {
   maxCote: 2000,
 };
 
+/**
+ * Le refus et l'avertissement, dans la langue du lecteur.
+ *
+ * Ils vivent ici plutôt que dans le dictionnaire d'un écran : les trois
+ * envois de photos — la carte, la galerie, les espaces — disent la même
+ * chose avec des seuils différents, et trois copies d'une même phrase
+ * finiraient par se contredire.
+ */
+// La mesure est construite par chaque langue, pas passée toute faite :
+// « : 275 × 183 px » au milieu d'une phrase chinoise garde une espace et
+// un deux-points français, ce qui se voit immédiatement.
+const REFUS: Record<
+  Langue,
+  (
+    largeur: number | undefined,
+    hauteur: number | undefined,
+    min: number,
+  ) => string
+> = {
+  fr: (l, h, min) =>
+    `Image vraiment trop petite${l && h ? ` : ${l} × ${h} px` : ""}. Il en faut au moins ${min} px sur le plus petit côté, sinon il n'y a pas d'image.`,
+  en: (l, h, min) =>
+    `That image is far too small${l && h ? ` (${l} × ${h} px)` : ""}. It needs at least ${min} px on its shorter side, otherwise there is no image.`,
+  zh: (l, h, min) =>
+    `图片实在太小${l && h ? `（${l} × ${h} 像素）` : ""}。短边至少要有 ${min} 像素，否则根本成不了图。`,
+};
+
+const JUSTE: Record<
+  Langue,
+  (largeur: number, hauteur: number, conseil: number) => string
+> = {
+  fr: (l, h, conseil) =>
+    `Enregistrée (${l} × ${h} px), mais un peu juste : à partir de ${conseil} px de côté elle sera nette sur tous les écrans.`,
+  en: (l, h, conseil) =>
+    `Saved (${l} × ${h} px), but a little tight: from ${conseil} px a side it will be sharp on every screen.`,
+  zh: (l, h, conseil) =>
+    `已保存（${l} × ${h} 像素），但略微偏小：短边达到 ${conseil} 像素后，在各种屏幕上都会很清晰。`,
+};
+
 /** Le refus, qui dit toujours les dimensions trouvées. */
 export function messageTropPetite(
   largeur: number | undefined,
   hauteur: number | undefined,
   minCote: number,
+  langue: Langue = "fr",
 ): string {
-  const mesure = largeur && hauteur ? ` : ${largeur} × ${hauteur} px` : "";
-  return `Image vraiment trop petite${mesure}. Il en faut au moins ${minCote} px sur le plus petit côté, sinon il n'y a pas d'image.`;
+  return (REFUS[langue] ?? REFUS.fr)(largeur, hauteur, minCote);
 }
 
 /**
@@ -78,6 +118,7 @@ export function messageJuste(
   largeur: number,
   hauteur: number,
   conseilCote: number,
+  langue: Langue = "fr",
 ): string {
-  return `Enregistrée (${largeur} × ${hauteur} px), mais un peu juste : à partir de ${conseilCote} px de côté elle sera nette sur tous les écrans.`;
+  return (JUSTE[langue] ?? JUSTE.fr)(largeur, hauteur, conseilCote);
 }

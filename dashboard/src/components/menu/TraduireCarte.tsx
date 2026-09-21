@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import type { ClesCarte } from "@/lib/i18n/carte";
 import { traduireCarte } from "@/app/dashboard/[id]/menu/actions";
 import { NOM_LANGUE } from "@/lib/i18n/langues";
 import { LANGUES_TRADUITES, type Langue } from "@/types/menu";
@@ -23,10 +24,12 @@ import { LANGUES_TRADUITES, type Langue } from "@/types/menu";
 export function TraduireCarte({
   restaurantId,
   aTraduire,
+  c,
 }: {
   restaurantId: string;
   /** Ce qu'il reste à traduire, par langue. */
   aTraduire: Record<Exclude<Langue, "fr">, number>;
+  c: ClesCarte;
 }) {
   const [message, setMessage] = useState<string | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
@@ -49,10 +52,8 @@ export function TraduireCarte({
       }
       setMessage(
         reponse.traduits === 0
-          ? `Tout était déjà traduit en ${NOM_LANGUE[langue]}.`
-          : `${reponse.traduits} plat${reponse.traduits > 1 ? "s" : ""} traduit${
-              reponse.traduits > 1 ? "s" : ""
-            } en ${NOM_LANGUE[langue]}.`,
+          ? c.dejaTraduit(NOM_LANGUE[langue])
+          : c.platsTraduits(reponse.traduits, NOM_LANGUE[langue]),
       );
     });
   }
@@ -71,10 +72,10 @@ export function TraduireCarte({
               className="rounded-md border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy disabled:opacity-50"
             >
               {enCours === langue
-                ? "Traduction…"
+                ? c.traductionEnCours
                 : reste === 0
-                  ? `${NOM_LANGUE[langue]} à jour`
-                  : `Traduire en ${NOM_LANGUE[langue]} (${reste})`}
+                  ? c.aJour(NOM_LANGUE[langue])
+                  : c.traduireReste(NOM_LANGUE[langue], reste)}
             </button>
           );
         })}
