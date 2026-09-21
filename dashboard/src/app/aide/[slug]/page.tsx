@@ -12,6 +12,7 @@ import { KlarrMark, KlarrWordmark } from "@/components/brand/KlarrMark";
 import { DonneesStructurees } from "@/components/seo/DonneesStructurees";
 import { filAriane } from "@/lib/seo/donnees-structurees";
 import { siteUrl } from "@/lib/site-url";
+import { TeteArticle } from "@/components/aide/TeteArticle";
 
 type Params = { slug: string };
 
@@ -90,12 +91,15 @@ export default async function ArticleAidePage({
           ])}
         />
 
-        <div className="flex flex-col gap-2">
-          <h1 className="font-serif text-4xl leading-[1.1] text-ink">
-            {article.titre}
-          </h1>
-          <p className="text-[15px] text-ink-soft">{article.resume}</p>
-        </div>
+        {/* La page est pré-générée : son titre sort du serveur en
+            français, et se corrige dans le navigateur pour qui lit
+            l'anglais ou le chinois. Le corps, lui, reste en français —
+            le composant le dit. */}
+        <TeteArticle
+          slug={article.slug}
+          titre={article.titre}
+          resume={article.resume}
+        />
 
         <article
           className="flex flex-col gap-4 text-[17px] leading-relaxed text-zinc-700 [&_a]:text-brand-navy [&_a]:underline-offset-2 hover:[&_a]:underline [&_h2]:mt-4 [&_h2]:font-serif [&_h2]:text-2xl [&_h2]:text-ink [&_li]:ml-5 [&_li]:list-disc [&_ol_li]:list-decimal [&_strong]:font-semibold [&_strong]:text-zinc-900 [&_ul]:flex [&_ul]:flex-col [&_ul]:gap-2 [&_ol]:flex [&_ol]:flex-col [&_ol]:gap-2"

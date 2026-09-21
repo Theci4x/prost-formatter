@@ -3,13 +3,18 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { DemandeAide } from "@/components/aide/DemandeAide";
 import { KlarrMark, KlarrWordmark } from "@/components/brand/KlarrMark";
+import { langueVisiteur } from "@/lib/i18n/langue";
+import { AIDE } from "@/lib/i18n/aide";
+import { ChoixLangueSite } from "@/components/landing/ChoixLangueSite";
 
-export const metadata: Metadata = {
-  title: "Écrire à Klarr",
-  description:
-    "Une question que l'aide ne couvre pas ? Écrivez-nous : nous répondons dans la journée.",
-  alternates: { canonical: "/aide/contact" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const a = AIDE[await langueVisiteur()];
+  return {
+    title: a.ecrireAKlarr,
+    description: a.contactMetaDescription,
+    alternates: { canonical: "/aide/contact" },
+  };
+}
 
 /**
  * La page qui reste quand le mode d'emploi et le Commis n'ont pas suffi.
@@ -19,6 +24,10 @@ export const metadata: Metadata = {
  * souvent et qui ne change jamais.
  */
 export default async function ContactAidePage() {
+  // Déjà dynamique — elle lit la session pour savoir qui écrit — donc rien
+  // à perdre à suivre la langue du navigateur.
+  const langue = await langueVisiteur();
+  const a = AIDE[langue];
   const supabase = await createClient();
   const {
     data: { user },
@@ -37,27 +46,28 @@ export default async function ContactAidePage() {
             href="/aide"
             className="text-sm text-zinc-500 hover:text-zinc-700"
           >
-            Aide
+            {a.aide}
           </Link>
           <span className="text-zinc-300">/</span>
-          <span className="text-sm text-zinc-500">Écrire</span>
+          <span className="text-sm text-zinc-500">{a.ecrire}</span>
+          <span className="ml-auto">
+            <ChoixLangueSite courante={langue} />
+          </span>
         </div>
       </header>
 
       <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-6 py-10">
         <div className="flex flex-col gap-2">
-          <h1 className="font-serif text-4xl text-ink">Écrire à Klarr</h1>
+          <h1 className="font-serif text-4xl text-ink">{a.ecrireAKlarr}</h1>
           <p className="text-sm text-zinc-500">
-            {user
-              ? "Votre établissement et l'écran d'où vous écrivez sont joints au message : vous n'avez rien à expliquer de tout ça."
-              : "Une question sur Klarr, avant ou après l'inscription. Nous répondons dans la journée, par une vraie réponse écrite à la main."}
+            {user ? a.contactConnecte : a.contactVisiteur}
           </p>
         </div>
 
-        <DemandeAide connecte={Boolean(user)} />
+        <DemandeAide connecte={Boolean(user)} langue={langue} />
 
         <p className="text-sm text-zinc-500">
-          Vous préférez votre messagerie ?{" "}
+          {a.preferezVotreMessagerie}{" "}
           <a
             href="mailto:contact@klarr.net"
             className="text-brand-orange hover:underline"
@@ -71,13 +81,13 @@ export default async function ContactAidePage() {
       <footer className="border-t border-zinc-200/70 px-6 py-6">
         <div className="mx-auto flex max-w-3xl flex-wrap items-center gap-x-4 gap-y-2 text-sm text-zinc-400">
           <Link href="/aide" className="hover:text-zinc-700">
-            Retour à l&apos;aide
+            {a.retourALAide}
           </Link>
           <Link href="/mentions-legales" className="hover:text-zinc-700">
-            Mentions légales
+            {a.mentionsLegales}
           </Link>
           <Link href="/confidentialite" className="hover:text-zinc-700">
-            Confidentialité
+            {a.confidentialite}
           </Link>
         </div>
       </footer>
