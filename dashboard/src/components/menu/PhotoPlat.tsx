@@ -7,24 +7,11 @@ import {
   retirerPhotoPlat,
 } from "@/app/dashboard/[id]/menu/actions";
 import { poidsLisible, preparerPhoto } from "@/lib/images/preparer";
+import { PLAT, messageTropPetite } from "@/lib/images/formats";
 
 // Même plafond que côté serveur : on refuse avant d'occuper la connexion.
 // Il ne sert plus qu'au cas où le navigateur n'a pas su réencoder.
 const TAILLE_MAX = 4 * 1024 * 1024;
-
-/**
- * Le plancher, tiré de l'affichage réel.
- *
- * La photo sort à 96 pixels CSS de côté sur la carte publique, donc
- * jusqu'à 288 pixels réels sur un téléphone à trois points par pixel, et
- * elle est recadrée carrée : c'est le **petit** côté qui compte. 400
- * laisse la marge nécessaire pour agrandir l'affichage un jour sans
- * redemander leurs photos à tout le monde.
- */
-const MIN_COTE = 400;
-
-/** Le plafond, qui n'a pas besoin d'être grand pour une vignette. */
-const MAX_COTE = 1200;
 
 /**
  * La photo d'un plat. Une seule, remplacée à chaque envoi : sur une carte on
@@ -61,17 +48,14 @@ export function PhotoPlat({
         if (champ.current) champ.current.value = "";
       };
 
-      const prete = await preparerPhoto(choisi, {
-        minCote: MIN_COTE,
-        maxCote: MAX_COTE,
-      });
+      const prete = await preparerPhoto(choisi, PLAT);
 
       if (!prete.ok) {
         // On donne les dimensions trouvées. « Trop petite » sans chiffre
         // fait réessayer trois fois le même fichier.
         setErreur(
           prete.motif === "trop-petite"
-            ? `Image trop petite : ${prete.largeur} × ${prete.hauteur} px. Il en faut au moins ${MIN_COTE} px sur le plus petit côté, sinon elle sort floue sur ta carte.`
+            ? messageTropPetite(prete.largeur, prete.hauteur, PLAT.minCote)
             : "Ce fichier ne s'ouvre pas comme une image.",
         );
         vider();

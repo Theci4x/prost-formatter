@@ -1,10 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import {
-  ajouterPlat,
-  type MenuState,
-} from "@/app/dashboard/[id]/menu/actions";
+import { ajouterPlat, type MenuState } from "@/app/dashboard/[id]/menu/actions";
 import {
   CATEGORIES_SUGGEREES,
   MENU_VIDE,
@@ -37,8 +34,7 @@ function Champs({
     ...CATEGORIES_SUGGEREES.filter(
       (suggestion) =>
         !categories.some(
-          (existante) =>
-            existante.toLowerCase() === suggestion.toLowerCase(),
+          (existante) => existante.toLowerCase() === suggestion.toLowerCase(),
         ),
     ),
   ];
@@ -48,15 +44,25 @@ function Champs({
       <input type="hidden" name="restaurant_id" value={restaurantId} />
 
       <div className="grid gap-4 sm:grid-cols-2">
+        {/* Le champ a toujours été libre — c'est un champ texte avec des
+            suggestions, pas une liste fermée. Mais le navigateur lui dessine
+            un chevron identique à celui d'un menu déroulant, et un
+            restaurateur qui voit six entrées et un chevron conclut, à juste
+            titre, qu'il n'a le choix qu'entre les six. L'étiquette, l'aide et
+            l'exemple disent maintenant ce que le champ sait faire : c'était
+            la seule chose qui manquait. */}
         <label className={label} htmlFor="plat-categorie">
-          Catégorie
+          Catégorie{" "}
+          <span className="font-normal text-zinc-400">
+            (choisis ou écris la tienne)
+          </span>
           <input
             id="plat-categorie"
             name="categorie"
             list="categories-carte"
             required
             defaultValue={valeurs.categorie}
-            placeholder="Entrées"
+            placeholder="Entrées, Tapas, Menu du midi…"
             className={champ}
           />
           <datalist id="categories-carte">
@@ -64,6 +70,10 @@ function Champs({
               <option key={categorie} value={categorie} />
             ))}
           </datalist>
+          <span className="text-sm font-normal text-zinc-500">
+            Tape ce que tu veux : une catégorie qui n&apos;existe pas encore se
+            crée en validant, et se range ensuite avec les flèches.
+          </span>
         </label>
         <label className={label} htmlFor="plat-nom">
           Plat

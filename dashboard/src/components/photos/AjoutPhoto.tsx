@@ -2,30 +2,69 @@
 
 import { useRef, useState, useTransition } from "react";
 import { uploadPhoto } from "@/app/dashboard/[id]/photos/actions";
+import { GALERIE, messageTropPetite } from "@/lib/images/formats";
+import { poidsLisible, preparerPhoto } from "@/lib/images/preparer";
 
 // Même plafond que côté serveur : on refuse avant d'occuper la connexion.
+// Il ne sert plus qu'au cas où le navigateur n'a pas su réencoder.
 const TAILLE_MAX = 4 * 1024 * 1024;
 
 /**
  * L'ajout d'une photo d'établissement. Le formulaire dit ce qui ne va pas :
  * un envoi qui échoue en silence se lit comme un bouton cassé.
+ *
+ * C'est la galerie qui exige le plus : la photo de tête occupe toute la
+ * largeur d'un téléphone et s'ouvre en plein écran au clic. Une image
+ * trop petite y est refusée avec ses dimensions plutôt qu'acceptée puis
+ * affichée floue ; une photo de téléphone est réduite avant l'envoi, ce
+ * qui supprime au passage le refus à 4 Mo qui obligeait le restaurateur
+ * à aller la redimensionner ailleurs.
  */
 export function AjoutPhoto({ restaurantId }: { restaurantId: string }) {
   const [erreur, setErreur] = useState<string | null>(null);
+  const [note, setNote] = useState<string | null>(null);
   const [enCours, startTransition] = useTransition();
   const champ = useRef<HTMLInputElement>(null);
 
   function envoyer(donnees: FormData) {
-    const fichier = donnees.get("photo") as File | null;
-    if (fichier && fichier.size > TAILLE_MAX) {
-      setErreur("Photo trop lourde (4 Mo maximum). Réduis-la avant de l'envoyer.");
-      return;
-    }
+    const choisi = donnees.get("photo") as File | null;
     setErreur(null);
+    setNote(null);
     startTransition(async () => {
+      if (!choisi || choisi.size === 0) {
+        setErreur("Choisis une photo.");
+        return;
+      }
+
+      const prete = await preparerPhoto(choisi, GALERIE);
+      if (!prete.ok) {
+        setErreur(
+          prete.motif === "trop-petite"
+            ? messageTropPetite(prete.largeur, prete.hauteur, GALERIE.minCote)
+            : "Ce fichier ne s'ouvre pas comme une image.",
+        );
+        return;
+      }
+      if (prete.fichier.size > TAILLE_MAX) {
+        setErreur(
+          "Photo trop lourde (4 Mo maximum). Réduis-la avant de l'envoyer.",
+        );
+        return;
+      }
+
+      // La légende saisie à côté voyage avec : on remplace la photo dans
+      // le formulaire plutôt que d'en refabriquer un.
+      donnees.set("photo", prete.fichier);
       const reponse = await uploadPhoto(donnees);
       setErreur(reponse.error);
-      if (!reponse.error && champ.current) champ.current.value = "";
+      if (!reponse.error) {
+        if (prete.retravaillee) {
+          setNote(
+            `Réduite à ${prete.largeur} × ${prete.hauteur} px (${poidsLisible(prete.fichier.size)}).`,
+          );
+        }
+        if (champ.current) champ.current.value = "";
+      }
     });
   }
 
@@ -67,6 +106,9 @@ export function AjoutPhoto({ restaurantId }: { restaurantId: string }) {
         <p className="w-full text-sm text-red-600" role="alert">
           {erreur}
         </p>
+      )}
+      {!erreur && note && (
+        <p className="w-full text-sm text-zinc-500">{note}</p>
       )}
     </form>
   );
