@@ -45,6 +45,24 @@ export const dashboardIcons = {
       <path d="M21 21l-4.3-4.3" />
     </svg>
   ),
+  roue: (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      {/* Un cercle partagé en six : c'est la roue, et rien d'autre ne se
+          reconnaît à vingt pixels. */}
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 3v18M3.8 7.5l16.4 9M3.8 16.5l16.4-9" />
+      <circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none" />
+    </svg>
+  ),
   avis: (
     <svg
       width="20"

@@ -72,6 +72,12 @@ function Icone({ children }: { children: React.ReactNode }) {
 // donnait l'étoile aux avis et aux retours, la fourchette à la carte et
 // aux expériences, le maillon aux connexions et à l'équipe.
 const ICONES = {
+  roue: (
+    <Icone>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 3v18M3.8 7.5l16.4 9M3.8 16.5l16.4-9" />
+    </Icone>
+  ),
   reservations: (
     <Icone>
       <rect x="3" y="4" width="18" height="17" rx="2" />
@@ -342,6 +348,13 @@ function groupes(t: ClesAccueil, d: DetailsAccueil, langue: Langue): Groupe[] {
           detail: (p) =>
             p.retoursALire > 0 ? d.aLire(p.retoursALire) : d.rienDeNouveau,
           attention: (p) => p.retoursALire > 0,
+        },
+        {
+          href: "roue",
+          label: t.entrees.roue.label,
+          resume: t.entrees.roue.resume,
+          icone: ICONES.roue,
+          minimum: "gerant",
         },
         {
           href: "seo",

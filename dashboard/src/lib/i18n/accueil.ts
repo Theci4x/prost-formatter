@@ -28,6 +28,7 @@ export type ClesAccueil = {
     | "experiences"
     | "avis"
     | "retours"
+    | "roue"
     | "seo"
     | "posts"
     | "visibiliteIa"
@@ -94,6 +95,10 @@ const fr: ClesAccueil = {
     retours: {
       label: "Retours clients",
       resume: "Ce qu'on préfère te dire en privé. Totem ou QR code.",
+    },
+    roue: {
+      label: "Roue de la fortune",
+      resume: "Un lot à gagner au totem, et une raison de revenir.",
     },
     seo: {
       label: "Référencement",
@@ -177,6 +182,10 @@ const en: ClesAccueil = {
       label: "Guest feedback",
       resume: "What people would rather tell you privately. Sign or QR code.",
     },
+    roue: {
+      label: "Prize wheel",
+      resume: "Something to win at the sign, and a reason to come back.",
+    },
     seo: {
       label: "Search",
       resume: "What Google knows about you, and what it is missing.",
@@ -252,6 +261,10 @@ const zh: ClesAccueil = {
     retours: {
       label: "客人反馈",
       resume: "客人更愿意私下告诉您的话。立牌或二维码。",
+    },
+    roue: {
+      label: "幸运转盘",
+      resume: "在立牌上转一次就有奖，也就有了再来一次的理由。",
     },
     seo: {
       label: "搜索排名",
