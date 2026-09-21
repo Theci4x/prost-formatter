@@ -47,7 +47,7 @@ export function Carte({ items, slug }: { items: MenuItem[]; slug?: string }) {
                   )}
                   <span className="flex min-w-0 flex-1 flex-col">
                     <span className="flex items-baseline justify-between gap-4">
-                      <span className="text-sm font-medium text-zinc-900">
+                      <span className="text-base font-medium text-zinc-900">
                         {plat.nom}
                       </span>
                       {plat.prix_centimes !== null && (
@@ -57,12 +57,12 @@ export function Carte({ items, slug }: { items: MenuItem[]; slug?: string }) {
                       )}
                     </span>
                     {plat.description && (
-                      <span className="text-sm text-zinc-500">
+                      <span className="text-base text-zinc-500">
                         {plat.description}
                       </span>
                     )}
                     {plat.allergenes !== null && plat.allergenes.length > 0 && (
-                      <span className="text-xs text-zinc-400">
+                      <span className="text-sm text-zinc-400">
                         Allergènes : {listeAllergenes(plat.allergenes, false)}
                       </span>
                     )}
@@ -75,7 +75,7 @@ export function Carte({ items, slug }: { items: MenuItem[]; slug?: string }) {
       </div>
 
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="flex max-w-lg flex-col gap-1.5 text-xs text-zinc-400">
+        <div className="flex max-w-lg flex-col gap-1.5 text-sm text-zinc-400">
           <p>
             Carte donnée à titre indicatif : elle peut changer selon
             l&apos;arrivage et la saison.
@@ -90,7 +90,7 @@ export function Carte({ items, slug }: { items: MenuItem[]; slug?: string }) {
         {slug && (
           <Link
             href={`/carte/${slug}`}
-            className="text-sm text-brand-navy underline-offset-2 hover:underline"
+            className="text-base text-brand-navy underline-offset-2 hover:underline"
           >
             Voir la carte en entier →
           </Link>

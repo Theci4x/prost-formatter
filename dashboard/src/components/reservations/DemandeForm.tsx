@@ -9,8 +9,8 @@ import {
 const initialState: DemandeState = { error: null };
 
 const champ =
-  "w-full rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-brand-navy";
-const label = "flex flex-col gap-1 text-sm font-medium text-zinc-700";
+  "w-full rounded-md border border-zinc-300 px-3 py-2 text-base outline-none focus:border-brand-navy";
+const label = "flex flex-col gap-1 text-base font-medium text-zinc-700";
 
 /**
  * Le formulaire de demande, pour un type déjà décidé.
@@ -68,7 +68,7 @@ export function DemandeForm({
         className={
           principal
             ? "mt-3 w-full rounded-md bg-brand-navy px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover sm:w-auto"
-            : "mt-3 rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
+            : "mt-3 rounded-md border border-zinc-300 px-4 py-2 text-base font-medium text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
         }
       >
         {libelle}
@@ -89,7 +89,12 @@ export function DemandeForm({
       <div className="grid gap-4 sm:grid-cols-2">
         <label className={label} htmlFor={`nom-${cle}`}>
           Ton nom
-          <input id={`nom-${cle}`} name="client_nom" required className={champ} />
+          <input
+            id={`nom-${cle}`}
+            name="client_nom"
+            required
+            className={champ}
+          />
         </label>
         <label className={label} htmlFor={`email-${cle}`}>
           E-mail
@@ -121,25 +126,30 @@ export function DemandeForm({
       <label className={label} htmlFor={`message-${cle}`}>
         Un mot pour l&apos;établissement{" "}
         <span className="font-normal text-zinc-400">(facultatif)</span>
-        <textarea id={`message-${cle}`} name="message" rows={3} className={champ} />
+        <textarea
+          id={`message-${cle}`}
+          name="message"
+          rows={3}
+          className={champ}
+        />
       </label>
 
       {/* Décochée par défaut : le RGPD interdit de déduire un consentement
           commercial d'une réservation, et une case pré-cochée ne vaut pas
           consentement. */}
-      <label className="flex items-start gap-2.5 text-sm text-zinc-600">
+      <label className="flex items-start gap-2.5 text-base text-zinc-600">
         <input
           type="checkbox"
           name="accepte_communications"
           className="mt-0.5"
         />
         <span>
-          J&apos;accepte de recevoir les actualités et offres de{" "}
-          {restaurantNom} par e-mail. Je peux me désinscrire à tout moment.
+          J&apos;accepte de recevoir les actualités et offres de {restaurantNom}{" "}
+          par e-mail. Je peux me désinscrire à tout moment.
         </span>
       </label>
 
-      {state.error && <p className="text-sm text-red-600">{state.error}</p>}
+      {state.error && <p className="text-base text-red-600">{state.error}</p>}
 
       <div className="flex flex-wrap items-center gap-3">
         <button
@@ -152,7 +162,7 @@ export function DemandeForm({
         <button
           type="button"
           onClick={() => setOuvert(false)}
-          className="text-sm text-zinc-500 hover:text-zinc-900"
+          className="text-base text-zinc-500 hover:text-zinc-900"
         >
           Annuler
         </button>
@@ -163,7 +173,7 @@ export function DemandeForm({
           connaît pas et ne doit pas les deviner. On annonce donc ce qui
           est vrai dans tous les cas — un e-mail part tout de suite —,
           sauf pour la privatisation, qui passe toujours par le patron. */}
-      <p className="text-xs text-zinc-400">
+      <p className="text-sm text-zinc-400">
         {type === "privatisation"
           ? "Une privatisation est validée par l'établissement : tu reçois un e-mail de suivi tout de suite, puis sa réponse. Aucun paiement n'est demandé à cette étape."
           : "Tu reçois un e-mail immédiatement : ta confirmation si la table est acquise, l'accusé de réception de ta demande sinon. Aucun paiement n'est demandé à cette étape."}

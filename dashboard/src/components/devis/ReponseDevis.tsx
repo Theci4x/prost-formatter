@@ -40,8 +40,8 @@ export function ReponseDevis({
   if (etatRefuse.fait) {
     return (
       <p className="rounded-2xl border border-line bg-brand-cream p-5 text-sm text-ink-soft print:hidden">
-        Votre réponse est transmise. Merci d&apos;avoir pris le temps de nous
-        le dire.
+        Votre réponse est transmise. Merci d&apos;avoir pris le temps de nous le
+        dire.
       </p>
     );
   }
@@ -85,7 +85,7 @@ export function ReponseDevis({
               name="motif"
               rows={3}
               placeholder="Le budget, la date, le nombre de convives…"
-              className="rounded-lg border border-line bg-paper px-3 py-2 text-sm font-normal outline-none focus:border-brand-orange"
+              className="rounded-lg border border-line bg-paper px-3 py-2 text-base font-normal outline-none focus:border-brand-orange"
             />
           </label>
           <div className="flex flex-wrap gap-2">

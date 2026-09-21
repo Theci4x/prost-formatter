@@ -29,7 +29,7 @@ export function DemanderRappel({
   const [erreur, setErreur] = useState<string | null>(null);
 
   const champ =
-    "w-full rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-brand-navy disabled:opacity-50";
+    "w-full rounded-md border border-zinc-300 px-3 py-2 text-base outline-none focus:border-brand-navy disabled:opacity-50";
 
   async function envoyer(event: React.FormEvent) {
     event.preventDefault();

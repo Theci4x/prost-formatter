@@ -390,7 +390,7 @@ export default async function VitrinePage({
             </>
           )}
           {reputation?.note && reputation.nombre_avis ? (
-            <p className="text-sm text-zinc-600">
+            <p className="text-base text-zinc-600">
               <span className="font-medium text-zinc-900">
                 {Number(reputation.note).toFixed(1)}
               </span>{" "}
@@ -439,13 +439,13 @@ export default async function VitrinePage({
                       {plat.nom}
                     </span>
                     {plat.description && (
-                      <span className="text-sm text-zinc-500">
+                      <span className="text-base text-zinc-500">
                         {plat.description}
                       </span>
                     )}
                   </span>
                   {plat.prix_centimes !== null && (
-                    <span className="shrink-0 text-sm text-zinc-600">
+                    <span className="shrink-0 text-base text-zinc-600">
                       {formatPrix(plat.prix_centimes)}
                     </span>
                   )}
@@ -468,12 +468,12 @@ export default async function VitrinePage({
         <Section titre="Infos pratiques">
           <div className="grid gap-5 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm sm:grid-cols-2">
             <div className="flex flex-col gap-2">
-              <span className="text-sm font-medium text-zinc-900">
+              <span className="text-base font-medium text-zinc-900">
                 Nous trouver
               </span>
               {restaurant.adresse ? (
                 <>
-                  <span className="text-sm text-zinc-600">
+                  <span className="text-base text-zinc-600">
                     {restaurant.adresse}
                   </span>
                   {/* Un lien vers Maps plutôt qu'une carte intégrée : une
@@ -490,7 +490,7 @@ export default async function VitrinePage({
                   </a>
                 </>
               ) : (
-                <span className="text-sm text-zinc-400">
+                <span className="text-base text-zinc-400">
                   Adresse non renseignée
                 </span>
               )}
@@ -505,7 +505,7 @@ export default async function VitrinePage({
             </div>
 
             <div className="flex flex-col gap-2">
-              <span className="text-sm font-medium text-zinc-900">
+              <span className="text-base font-medium text-zinc-900">
                 Horaires
               </span>
               {horairesRenseignes(restaurant.horaires ?? {}) ? (
@@ -529,7 +529,7 @@ export default async function VitrinePage({
                   ))}
                 </ul>
               ) : (
-                <span className="text-sm text-zinc-400">
+                <span className="text-base text-zinc-400">
                   Horaires non renseignés
                 </span>
               )}
@@ -539,7 +539,7 @@ export default async function VitrinePage({
 
         {privatisables.length > 0 && (
           <Section titre="Privatiser un espace">
-            <p className="text-sm text-zinc-600">
+            <p className="text-base text-zinc-600">
               Anniversaire, repas d&apos;équipe, séminaire : l&apos;espace est à
               vous seuls pendant tout le service.
             </p>
@@ -557,7 +557,7 @@ export default async function VitrinePage({
                     <span className="font-medium text-zinc-900">
                       {espace.nom}
                     </span>
-                    <span className="text-sm text-zinc-500">
+                    <span className="text-base text-zinc-500">
                       {espace.privatisation_minimum
                         ? `De ${espace.privatisation_minimum} à ${espace.capacite} couverts`
                         : `Jusqu'à ${espace.capacite} couverts`}
@@ -583,14 +583,14 @@ export default async function VitrinePage({
                       restaurateur ne perd plus son temps avec ceux que ça
                       rebute. */}
                   {garantieLisible(espace) && (
-                    <p className="mt-3 text-xs text-zinc-500">
+                    <p className="mt-3 text-sm text-zinc-500">
                       {garantieLisible(espace)}
                     </p>
                   )}
 
                   <Link
                     href={`/reserver/${slug}?espace=${espace.id}`}
-                    className="mt-3 inline-block rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
+                    className="mt-3 inline-block rounded-md border border-zinc-300 px-4 py-2 text-base font-medium text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
                   >
                     Demander {espace.nom}
                   </Link>

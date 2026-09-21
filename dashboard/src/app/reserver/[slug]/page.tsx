@@ -366,7 +366,9 @@ export default async function ReserverPage({
             </span>
           </span>
           {restaurant.adresse && (
-            <span className="text-sm text-zinc-500">{restaurant.adresse}</span>
+            <span className="text-base text-zinc-500">
+              {restaurant.adresse}
+            </span>
           )}
         </div>
       </header>
@@ -398,13 +400,11 @@ export default async function ReserverPage({
           })}
         />
         <div className="flex flex-col gap-2">
-          <h1 className="font-serif text-4xl text-ink">
-            {restaurant.nom}
-          </h1>
+          <h1 className="font-serif text-4xl text-ink">{restaurant.nom}</h1>
           {restaurant.adresse && (
-            <p className="text-sm text-zinc-500">{restaurant.adresse}</p>
+            <p className="text-base text-zinc-500">{restaurant.adresse}</p>
           )}
-          <p className="text-sm text-zinc-500">
+          <p className="text-base text-zinc-500">
             Choisis une date et un nombre de convives : nous n&apos;affichons
             que ce qui est réellement disponible. Ta demande est confirmée par
             l&apos;établissement.
@@ -426,263 +426,268 @@ export default async function ReserverPage({
           espaces={offre ? offre.espaces : null}
           dateMin={dateDuJour()}
         >
-        <section className="flex flex-col gap-4">
-          <h2 className="text-base font-semibold text-zinc-900 first-letter:capitalize">
-            {formatDateLongue(date)} — {couverts} convive
-            {couverts > 1 ? "s" : ""}
-          </h2>
+          <section className="flex flex-col gap-4">
+            <h2 className="text-base font-semibold text-zinc-900 first-letter:capitalize">
+              {formatDateLongue(date)} — {couverts} convive
+              {couverts > 1 ? "s" : ""}
+            </h2>
 
-          {creneaux.length === 0 ? (
-            <p className="rounded-2xl border border-zinc-200/70 bg-white p-5 text-sm text-zinc-500 shadow-sm">
-              L&apos;établissement ne prend pas de réservation ce jour-là.
-              Essaie une autre date.
-            </p>
-          ) : (
-            groupes.map((groupe) => {
-              const retenu = heureChoisie(groupe.heures);
-              const [proposition] = propositions([retenu]);
-              const { creneau, table, privatisations, placesMax, raison } =
-                proposition;
-              // Une salle demandée dans le menu : c'est elle qu'on montre,
-              // libre ou non. Lui répondre par le catalogue reviendrait à
-              // ignorer ce qu'il vient de choisir.
-              const demandee = espaceDemande
-                ? (creneau.espaces.find(
-                    (dispo) => dispo.espace.id === espaceDemande.id,
-                  ) ?? null)
-                : null;
+            {creneaux.length === 0 ? (
+              <p className="rounded-2xl border border-zinc-200/70 bg-white p-5 text-base text-zinc-500 shadow-sm">
+                L&apos;établissement ne prend pas de réservation ce jour-là.
+                Essaie une autre date.
+              </p>
+            ) : (
+              groupes.map((groupe) => {
+                const retenu = heureChoisie(groupe.heures);
+                const [proposition] = propositions([retenu]);
+                const { creneau, table, privatisations, placesMax, raison } =
+                  proposition;
+                // Une salle demandée dans le menu : c'est elle qu'on montre,
+                // libre ou non. Lui répondre par le catalogue reviendrait à
+                // ignorer ce qu'il vient de choisir.
+                const demandee = espaceDemande
+                  ? (creneau.espaces.find(
+                      (dispo) => dispo.espace.id === espaceDemande.id,
+                    ) ?? null)
+                  : null;
 
-              return (
-                <div
-                  key={creneau.service.id}
-                  className="flex flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm"
-                >
-                  <div className="flex flex-wrap items-baseline justify-between gap-2">
-                    <span className="font-medium text-zinc-900">
-                      {creneau.service.nom}{" "}
-                      <span className="font-normal text-zinc-500">
-                        {formatCreneau(
-                          creneau.service.heure_debut,
-                          creneau.service.heure_fin,
-                        )}
+                return (
+                  <div
+                    key={creneau.service.id}
+                    className="flex flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm"
+                  >
+                    <div className="flex flex-wrap items-baseline justify-between gap-2">
+                      <span className="font-medium text-zinc-900">
+                        {creneau.service.nom}{" "}
+                        <span className="font-normal text-zinc-500">
+                          {formatCreneau(
+                            creneau.service.heure_debut,
+                            creneau.service.heure_fin,
+                          )}
+                        </span>
                       </span>
-                    </span>
-                  </div>
+                    </div>
 
-                  {/* Les heures d'arrivée. Un service n'a plus une jauge
+                    {/* Les heures d'arrivée. Un service n'a plus une jauge
                       unique : chaque heure a la sienne, et celles qui sont
                       complètes restent visibles plutôt que de disparaître —
                       une liste qui se raccourcit sans explication donne
                       l'impression que le site a bugué. */}
-                  {groupe.heures.length > 1 && (
-                    <div className="flex flex-col gap-2">
-                      <span className="text-sm text-zinc-500">
-                        À quelle heure ?
-                      </span>
-                      <div className="flex flex-wrap gap-2">
-                        {groupe.heures.map((h) => {
-                          const actif = h.heure === retenu.heure;
-                          return h.ouvert ? (
-                            <LienCreneau
-                              key={h.heure}
-                              href={`?date=${date}&couverts=${couverts}&heure=${h.heure}${
-                                query.espace ? `&espace=${query.espace}` : ""
-                              }`}
-                              actif={actif}
-                            >
-                              {heureLisible(h.heure)}
-                            </LienCreneau>
-                          ) : (
-                            <span
-                              key={h.heure}
-                              title="Complet à cette heure"
-                              className="rounded-lg border border-zinc-100 px-3 py-1.5 text-sm text-zinc-300 line-through"
-                            >
-                              {heureLisible(h.heure)}
-                            </span>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-
-                  {espaceDemande ? (
-                    <div className="rounded-xl border border-zinc-200 bg-zinc-50/70 p-4">
-                      <p className="font-medium text-zinc-900">
-                        Privatiser {espaceDemande.nom}
-                      </p>
-                      <p className="mt-1 text-sm text-zinc-500">
-                        {espaceDemande.description ??
-                          "L'espace est à vous seuls pendant tout le service."}
-                      </p>
-                      <BandePhotos
-                        photos={photosParEspace.get(espaceDemande.id) ?? []}
-                        espaceNom={espaceDemande.nom}
-                        restaurantNom={restaurant.nom}
-                      />
-                      {/* Les conditions se lisent avant le bouton, pas
-                          après l'envoi. */}
-                      <Conditions espace={espaceDemande} couverts={couverts} />
-
-                      {demandee?.peutEtrePrivatise ? (
-                        <DemandeForm
-                          slug={slug}
-                          espaceId={espaceDemande.id}
-                          serviceId={creneau.service.id}
-                          heure={creneau.heure}
-                          date={date}
-                          couverts={couverts}
-                          type="privatisation"
-                          libelle={`Privatiser ${espaceDemande.nom}`}
-                          restaurantNom={restaurant.nom}
-                          principal
-                        />
-                      ) : (
-                        <div className="mt-3 flex flex-col gap-1">
-                          <p className="text-sm text-zinc-500">
-                            {demandee?.raison ??
-                              creneau.raison ??
-                              "Cet espace ne se privatise pas sur ce service."}
-                          </p>
-                          {/* Le client est venu pour deux et découvre un
-                              minimum : lui faire retaper le nombre serait
-                              le perdre à la dernière marche. */}
-                          {espaceDemande.privatisation_minimum !== null &&
-                            couverts < espaceDemande.privatisation_minimum && (
-                              <a
-                                href={`?date=${date}&couverts=${espaceDemande.privatisation_minimum}&espace=${espaceDemande.id}`}
-                                className="w-fit text-sm font-medium text-brand-orange hover:underline"
+                    {groupe.heures.length > 1 && (
+                      <div className="flex flex-col gap-2">
+                        <span className="text-base text-zinc-500">
+                          À quelle heure ?
+                        </span>
+                        <div className="flex flex-wrap gap-2">
+                          {groupe.heures.map((h) => {
+                            const actif = h.heure === retenu.heure;
+                            return h.ouvert ? (
+                              <LienCreneau
+                                key={h.heure}
+                                href={`?date=${date}&couverts=${couverts}&heure=${h.heure}${
+                                  query.espace ? `&espace=${query.espace}` : ""
+                                }`}
+                                actif={actif}
                               >
-                                Voir pour {espaceDemande.privatisation_minimum}{" "}
-                                convives
-                              </a>
-                            )}
+                                {heureLisible(h.heure)}
+                              </LienCreneau>
+                            ) : (
+                              <span
+                                key={h.heure}
+                                title="Complet à cette heure"
+                                className="rounded-lg border border-zinc-100 px-3 py-1.5 text-base text-zinc-300 line-through"
+                              >
+                                {heureLisible(h.heure)}
+                              </span>
+                            );
+                          })}
                         </div>
-                      )}
-                    </div>
-                  ) : (
-                    <>
-                      {/* Réserver une table : l'action ordinaire, celle que
-                      quatre-vingt-dix-neuf clients sur cent viennent
-                      faire. Aucune salle à choisir — le client n'a aucun
-                      moyen de savoir laquelle lui convient, c'est
-                      l'établissement qui place, comme au téléphone. */}
-                      {table ? (
-                        <div className="rounded-xl border border-zinc-200 bg-zinc-50/70 p-4">
-                          <p className="font-medium text-zinc-900">
-                            Une table pour {couverts} convive
-                            {couverts > 1 ? "s" : ""}
-                          </p>
-                          <p className="mt-1 text-sm text-zinc-500">
-                            Placée par l&apos;établissement, comme au téléphone.
-                            {placesMax > couverts &&
-                              ` Il reste de la place jusqu'à ${placesMax} convives.`}
-                          </p>
+                      </div>
+                    )}
+
+                    {espaceDemande ? (
+                      <div className="rounded-xl border border-zinc-200 bg-zinc-50/70 p-4">
+                        <p className="font-medium text-zinc-900">
+                          Privatiser {espaceDemande.nom}
+                        </p>
+                        <p className="mt-1 text-base text-zinc-500">
+                          {espaceDemande.description ??
+                            "L'espace est à vous seuls pendant tout le service."}
+                        </p>
+                        <BandePhotos
+                          photos={photosParEspace.get(espaceDemande.id) ?? []}
+                          espaceNom={espaceDemande.nom}
+                          restaurantNom={restaurant.nom}
+                        />
+                        {/* Les conditions se lisent avant le bouton, pas
+                          après l'envoi. */}
+                        <Conditions
+                          espace={espaceDemande}
+                          couverts={couverts}
+                        />
+
+                        {demandee?.peutEtrePrivatise ? (
                           <DemandeForm
                             slug={slug}
-                            espaceId={table.espace.id}
+                            espaceId={espaceDemande.id}
                             serviceId={creneau.service.id}
                             heure={creneau.heure}
                             date={date}
                             couverts={couverts}
-                            type="table"
-                            libelle="Réserver une table"
+                            type="privatisation"
+                            libelle={`Privatiser ${espaceDemande.nom}`}
                             restaurantNom={restaurant.nom}
                             principal
                           />
-                        </div>
-                      ) : (
-                        // Sans motif, rien : un cadre vide inquiète plus qu'il
-                        // n'informe, et la privatisation en dessous parle.
-                        raison && (
-                          <p className="rounded-xl border border-dashed border-zinc-200 p-4 text-sm text-zinc-500">
-                            {raison}
-                          </p>
-                        )
-                      )}
+                        ) : (
+                          <div className="mt-3 flex flex-col gap-1">
+                            <p className="text-base text-zinc-500">
+                              {demandee?.raison ??
+                                creneau.raison ??
+                                "Cet espace ne se privatise pas sur ce service."}
+                            </p>
+                            {/* Le client est venu pour deux et découvre un
+                              minimum : lui faire retaper le nombre serait
+                              le perdre à la dernière marche. */}
+                            {espaceDemande.privatisation_minimum !== null &&
+                              couverts <
+                                espaceDemande.privatisation_minimum && (
+                                <a
+                                  href={`?date=${date}&couverts=${espaceDemande.privatisation_minimum}&espace=${espaceDemande.id}`}
+                                  className="w-fit text-sm font-medium text-brand-orange hover:underline"
+                                >
+                                  Voir pour{" "}
+                                  {espaceDemande.privatisation_minimum} convives
+                                </a>
+                              )}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <>
+                        {/* Réserver une table : l'action ordinaire, celle que
+                      quatre-vingt-dix-neuf clients sur cent viennent
+                      faire. Aucune salle à choisir — le client n'a aucun
+                      moyen de savoir laquelle lui convient, c'est
+                      l'établissement qui place, comme au téléphone. */}
+                        {table ? (
+                          <div className="rounded-xl border border-zinc-200 bg-zinc-50/70 p-4">
+                            <p className="font-medium text-zinc-900">
+                              Une table pour {couverts} convive
+                              {couverts > 1 ? "s" : ""}
+                            </p>
+                            <p className="mt-1 text-base text-zinc-500">
+                              Placée par l&apos;établissement, comme au
+                              téléphone.
+                              {placesMax > couverts &&
+                                ` Il reste de la place jusqu'à ${placesMax} convives.`}
+                            </p>
+                            <DemandeForm
+                              slug={slug}
+                              espaceId={table.espace.id}
+                              serviceId={creneau.service.id}
+                              heure={creneau.heure}
+                              date={date}
+                              couverts={couverts}
+                              type="table"
+                              libelle="Réserver une table"
+                              restaurantNom={restaurant.nom}
+                              principal
+                            />
+                          </div>
+                        ) : (
+                          // Sans motif, rien : un cadre vide inquiète plus qu'il
+                          // n'informe, et la privatisation en dessous parle.
+                          raison && (
+                            <p className="rounded-xl border border-dashed border-zinc-200 p-4 text-base text-zinc-500">
+                              {raison}
+                            </p>
+                          )
+                        )}
 
-                      {/* Privatiser : un autre métier, donc une autre section.
+                        {/* Privatiser : un autre métier, donc une autre section.
                       Ici la salle EST le sujet : le client la choisit, et
                       il a besoin de la voir. */}
-                      {privatisations.length > 0 && (
-                        <div className="rounded-xl border border-zinc-200 bg-zinc-50/70 p-4">
-                          <p className="font-medium text-zinc-900">
-                            Privatiser un espace
-                          </p>
-                          <p className="mt-1 text-sm text-zinc-500">
-                            L&apos;espace est à vous seuls pendant tout le
-                            service.
-                          </p>
+                        {privatisations.length > 0 && (
+                          <div className="rounded-xl border border-zinc-200 bg-zinc-50/70 p-4">
+                            <p className="font-medium text-zinc-900">
+                              Privatiser un espace
+                            </p>
+                            <p className="mt-1 text-base text-zinc-500">
+                              L&apos;espace est à vous seuls pendant tout le
+                              service.
+                            </p>
 
-                          <ul className="mt-3 flex flex-col gap-3">
-                            {privatisations.map((dispo) => (
-                              <li
-                                key={dispo.espace.id}
-                                className="rounded-lg border border-zinc-200 bg-white p-4"
-                              >
-                                <div className="flex flex-wrap items-baseline justify-between gap-2">
-                                  <span className="font-medium text-zinc-900">
-                                    {dispo.espace.nom}
-                                  </span>
-                                  <span className="text-sm text-zinc-500">
-                                    Jusqu&apos;à {dispo.espace.capacite}{" "}
-                                    couverts
-                                  </span>
-                                </div>
-                                {dispo.espace.description && (
-                                  <p className="mt-1 text-sm text-zinc-500">
-                                    {dispo.espace.description}
-                                  </p>
-                                )}
+                            <ul className="mt-3 flex flex-col gap-3">
+                              {privatisations.map((dispo) => (
+                                <li
+                                  key={dispo.espace.id}
+                                  className="rounded-lg border border-zinc-200 bg-white p-4"
+                                >
+                                  <div className="flex flex-wrap items-baseline justify-between gap-2">
+                                    <span className="font-medium text-zinc-900">
+                                      {dispo.espace.nom}
+                                    </span>
+                                    <span className="text-base text-zinc-500">
+                                      Jusqu&apos;à {dispo.espace.capacite}{" "}
+                                      couverts
+                                    </span>
+                                  </div>
+                                  {dispo.espace.description && (
+                                    <p className="mt-1 text-base text-zinc-500">
+                                      {dispo.espace.description}
+                                    </p>
+                                  )}
 
-                                <BandePhotos
-                                  photos={
-                                    photosParEspace.get(dispo.espace.id) ?? []
-                                  }
-                                  espaceNom={dispo.espace.nom}
-                                  restaurantNom={restaurant.nom}
-                                />
+                                  <BandePhotos
+                                    photos={
+                                      photosParEspace.get(dispo.espace.id) ?? []
+                                    }
+                                    espaceNom={dispo.espace.nom}
+                                    restaurantNom={restaurant.nom}
+                                  />
 
-                                <Conditions
-                                  espace={dispo.espace}
-                                  couverts={couverts}
-                                />
+                                  <Conditions
+                                    espace={dispo.espace}
+                                    couverts={couverts}
+                                  />
 
-                                <DemandeForm
-                                  slug={slug}
-                                  espaceId={dispo.espace.id}
-                                  serviceId={creneau.service.id}
-                                  heure={creneau.heure}
-                                  date={date}
-                                  couverts={couverts}
-                                  type="privatisation"
-                                  libelle={`Privatiser ${dispo.espace.nom}`}
-                                  restaurantNom={restaurant.nom}
-                                />
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                    </>
-                  )}
-                </div>
-              );
-            })
-          )}
+                                  <DemandeForm
+                                    slug={slug}
+                                    espaceId={dispo.espace.id}
+                                    serviceId={creneau.service.id}
+                                    heure={creneau.heure}
+                                    date={date}
+                                    couverts={couverts}
+                                    type="privatisation"
+                                    libelle={`Privatiser ${dispo.espace.nom}`}
+                                    restaurantNom={restaurant.nom}
+                                  />
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                );
+              })
+            )}
 
-          {/* Le client qui a ouvert le menu peut vouloir en ressortir : sans
+            {/* Le client qui a ouvert le menu peut vouloir en ressortir : sans
               ce retour, il lui faudrait comprendre que c'est le menu qu'il
               doit remettre sur « Réserver une table ». */}
-          {espaceDemande && (
-            <a
-              href={`?date=${date}&couverts=${couverts}`}
-              className="w-fit text-sm font-medium text-brand-orange hover:underline"
-            >
-              Ou réserver simplement une table
-            </a>
-          )}
-        </section>
+            {espaceDemande && (
+              <a
+                href={`?date=${date}&couverts=${couverts}`}
+                className="w-fit text-sm font-medium text-brand-orange hover:underline"
+              >
+                Ou réserver simplement une table
+              </a>
+            )}
+          </section>
         </RechercheDisponibilite>
 
         {/* Les photos des salles ne s'affichent plus que sous les
@@ -707,7 +712,6 @@ export default async function ReserverPage({
           }
           nom={restaurant.nom}
         />
-
 
         <SectionExperiences
           slug={slug}
