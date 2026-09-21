@@ -453,7 +453,7 @@ function Chiffre({
   return (
     <Link
       href={href}
-      className="group flex min-w-0 flex-col gap-1 rounded-xl px-4 py-3 transition-colors hover:bg-brand-sand"
+      className="group flex min-w-0 flex-col gap-1 rounded-xl px-4 py-3 transition-colors hover:bg-brand-sand active:bg-brand-sand"
     >
       <span className="flex items-baseline gap-2">
         <span className="font-serif text-[2.1rem] leading-none text-ink">
@@ -559,8 +559,8 @@ export function CarteRestaurant({
                 href={`${base}/edit`}
                 className={`font-medium ${
                   pouls.couvertureUrl
-                    ? "text-white/85 hover:text-white"
-                    : "text-ink-soft hover:text-ink"
+                    ? "text-white/85 hover:text-white active:text-white"
+                    : "text-ink-soft hover:text-ink active:text-ink"
                 }`}
               >
                 Modifier
@@ -578,7 +578,7 @@ export function CarteRestaurant({
       {pouls.sansEmailContact && (
         <Link
           href={`${base}/reservations/configuration`}
-          className="flex items-start gap-3 border-b border-line bg-brand-orange-soft px-6 py-3 transition-colors hover:bg-brand-orange-soft/70 sm:px-8"
+          className="flex items-start gap-3 border-b border-line bg-brand-orange-soft px-6 py-3 transition-colors hover:bg-brand-orange-soft/70 active:bg-brand-orange-soft/70 sm:px-8"
         >
           <span
             aria-hidden="true"
@@ -702,7 +702,7 @@ export function CarteRestaurant({
                       <Link
                         key={entree.href}
                         href={`${base}/${entree.href}`}
-                        className="group flex items-center gap-2.5 rounded-full border border-line bg-paper py-1.5 pl-1.5 pr-4 text-sm transition-colors hover:border-ink"
+                        className="group flex items-center gap-2.5 rounded-full border border-line bg-paper py-1.5 pl-1.5 pr-4 text-sm transition-colors hover:border-ink active:border-ink active:bg-brand-sand"
                       >
                         <span className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-sand text-ink [&_svg]:h-4 [&_svg]:w-4">
                           {entree.icone}
@@ -729,7 +729,7 @@ export function CarteRestaurant({
                     <Link
                       key={entree.href}
                       href={`${base}/${entree.href}`}
-                      className="group relative flex items-start gap-3 rounded-2xl border border-line bg-paper p-4 transition-[border-color,transform,box-shadow] hover:-translate-y-px hover:border-ink hover:shadow-[0_14px_30px_-20px_oklch(20%_0.02_60/50%)]"
+                      className="group relative flex items-start gap-3 rounded-2xl border border-line bg-paper p-4 transition-[border-color,transform,box-shadow,background-color] hover:-translate-y-px hover:border-ink hover:shadow-[0_14px_30px_-20px_oklch(20%_0.02_60/50%)] active:border-ink active:bg-brand-sand"
                     >
                       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-orange-soft text-brand-navy transition-colors group-hover:bg-ink group-hover:text-white">
                         {entree.icone}

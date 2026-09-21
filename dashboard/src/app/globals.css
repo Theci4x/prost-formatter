@@ -368,3 +368,23 @@ body {
     break-after: avoid;
   }
 }
+
+/* Les blocs de l'écran d'attente. Ils respirent doucement plutôt que de
+   défiler : un écran entier qui glisse donne le mal de mer, et ce qu'on
+   veut dire est seulement « ça arrive », pas « regardez-moi ». */
+@keyframes klarr-respire {
+  50% {
+    opacity: 0.45;
+  }
+}
+.klarr-squelette {
+  animation: klarr-respire 1.8s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  /* Figés, les blocs passeraient pour une page à moitié chargée : on les
+     laisse en place, en retrait, sans les animer. */
+  .klarr-squelette {
+    animation: none;
+    opacity: 0.6;
+  }
+}
