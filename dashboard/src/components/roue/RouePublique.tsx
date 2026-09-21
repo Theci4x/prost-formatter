@@ -1,7 +1,8 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState } from "react";
-import { JEU_INITIAL, jouer } from "@/app/avis/[slug]/roue-actions";
+import { jouer } from "@/app/avis/[slug]/roue-actions";
+import { JEU_INITIAL } from "@/lib/roue/jeu";
 
 /**
  * La roue, côté client.
@@ -53,23 +54,47 @@ function Secteur({
   const y2 = 50 + 50 * Math.sin(rad(debut + angle));
   const milieu = debut + angle / 2;
 
+  // Le texte court le long du rayon, centré à mi-distance du bord.
+  const rayonTexte = 30;
+  const tx = 50 + rayonTexte * Math.cos(rad(milieu));
+  const ty = 50 + rayonTexte * Math.sin(rad(milieu));
+  // Au-delà d'un demi-tour, le rayon pointe vers la gauche et le texte se
+  // lirait à l'envers : on le retourne. La bascule est à 180°, pas à 90 —
+  // la première version coupait au mauvais endroit et retournait quatre
+  // cases sur huit.
+  const retourne = milieu > 180;
+
+  // Plus il y a de cases, plus les parts sont étroites : la taille suit.
+  const taille = total > 8 ? 2.6 : total > 5 ? 3 : 3.4;
+  // Ce qui dépasse la part déborde sur la voisine. Le libellé entier
+  // reste lisible dans l'annonce du résultat, juste en dessous.
+  const maxSignes = Math.max(8, Math.floor(34 / (taille * 0.55)));
+  const court =
+    libelle.length > maxSignes
+      ? `${libelle.slice(0, maxSignes - 1)}…`
+      : libelle;
+
   return (
     <g>
       <path
         d={`M50 50 L${x1} ${y1} A50 50 0 ${grand} 1 ${x2} ${y2} Z`}
         fill={COULEURS[index % COULEURS.length]}
       />
+      {/* Le texte est posé à sa place, puis pivoté autour de lui-même.
+          Un `rotate` enchaîné après un `translate` tourne autour de
+          l'origine du repère et non du texte : il l'expédie hors du
+          cadre, ce qui s'est vu. */}
       <text
-        x="50"
-        y="50"
+        x={tx}
+        y={ty}
         fill="#fff"
-        fontSize={total > 8 ? 3.4 : 4}
+        fontSize={taille}
         fontWeight="600"
-        textAnchor="end"
+        textAnchor="middle"
         dominantBaseline="middle"
-        transform={`rotate(${milieu} 50 50) translate(0 -30) rotate(90)`}
+        transform={`rotate(${retourne ? milieu + 90 : milieu - 90} ${tx} ${ty})`}
       >
-        {libelle.length > 22 ? `${libelle.slice(0, 21)}…` : libelle}
+        {court}
       </text>
     </g>
   );
@@ -223,7 +248,7 @@ export function RouePublique({
 
           <button
             type="submit"
-            disabled={pending || resultat !== null}
+            disabled={pending || Boolean(resultat)}
             className="rounded-md bg-brand-navy px-4 py-3 text-base font-medium text-white transition-colors hover:bg-brand-navy-hover active:bg-brand-navy-hover disabled:opacity-50"
           >
             {pending || resultat ? "La roue tourne…" : "Tourner la roue"}

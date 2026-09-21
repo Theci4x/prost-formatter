@@ -18,6 +18,7 @@ import {
 } from "@/lib/roue/tirage";
 import { courrielDuLot } from "@/lib/roue/courriel";
 import { siteUrl } from "@/lib/site-url";
+import { type JeuState } from "@/lib/roue/jeu";
 
 /**
  * Tourner la roue.
@@ -32,20 +33,6 @@ import { siteUrl } from "@/lib/site-url";
  * cinq — c'est la seule façon honnête de faire tourner une roue à côté
  * d'un lien vers une plateforme d'avis.
  */
-
-export type JeuState = {
-  error: string | null;
-  resultat: {
-    /** L'index de la case dans la liste affichée, pour l'animation. */
-    index: number;
-    libelle: string;
-    gagnant: boolean;
-    code: string | null;
-    expireLe: string | null;
-  } | null;
-};
-
-export const JEU_INITIAL: JeuState = { error: null, resultat: null };
 
 /** Deux parties par visiteur et par jour, tous établissements confondus. */
 const PARTIES_PAR_JOUR = 2;
