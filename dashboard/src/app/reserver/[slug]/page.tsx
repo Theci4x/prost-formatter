@@ -348,6 +348,7 @@ export default async function ReserverPage({
     reservations,
     fermetures,
     maintenant: new Date(),
+    langue,
   });
 
   // Le moteur raisonne par heure d'arrivée ; la page montre un bloc par
@@ -740,6 +741,7 @@ export default async function ReserverPage({
 
         <SectionExperiences
           langue={langue}
+          nomMaison={restaurant.nom}
           slug={slug}
           experiences={experiences}
           seancesParExperience={
@@ -754,6 +756,7 @@ export default async function ReserverPage({
                   reservations: placesPrises,
                   fermetures,
                   maintenant: new Date(),
+                  langue,
                 }).slice(0, 6),
               ]),
             )

@@ -91,6 +91,30 @@ export type ClesReserver = {
   acomptePrecision: string;
   carteEnGarantie(montant: string): string;
   cartePrecision: string;
+
+  /**
+   * Les ateliers, et ce qui empêche de s'y inscrire. Le motif est dit
+   * plutôt que la séance masquée — « complet » et « trop tard » ne se
+   * corrigent pas de la même façon, et un client qui ne comprend pas
+   * part.
+   */
+  parPersonne: string;
+  placesEnTout(places: number): string;
+  paiementSurPlace: string;
+  placesRestantes(places: number): string;
+  fermeCeJour: string;
+  fermePour(motif: string): string;
+  inscriptionsFerment(heures: number): string;
+  seanceCommencee: string;
+  complet: string;
+  neResteQue(places: number): string;
+
+  /** Le formulaire d'inscription à un atelier. */
+  reserverMaPlace: string;
+  nombreDePlaces: string;
+  payerSomme(somme: string): string;
+  confirmerInscription: string;
+  reglerSurPlace(somme: string): string;
 };
 
 const s = (n: number) => (n > 1 ? "s" : "");
@@ -182,6 +206,29 @@ const fr: ClesReserver = {
   carteEnGarantie: (montant) => `Carte en garantie : ${montant} €`,
   cartePrecision:
     "Rien n'est prélevé. La carte est enregistrée, et ne serait débitée qu'en cas de défection.",
+
+  parPersonne: "par personne",
+  placesEnTout: (places) => `${places} places`,
+  paiementSurPlace: "paiement sur place",
+  placesRestantes: (places) =>
+    `${places} place${s(places)} restante${s(places)}`,
+  fermeCeJour: "Fermé ce jour-là.",
+  fermePour: (motif) => `Fermé — ${motif}`,
+  inscriptionsFerment: (heures) =>
+    `Les inscriptions ferment ${heures} h avant.`,
+  seanceCommencee: "Cette séance a commencé.",
+  complet: "Complet.",
+  neResteQue: (places) =>
+    places === 1
+      ? "Il ne reste qu'une place."
+      : `Il ne reste que ${places} places.`,
+
+  reserverMaPlace: "Réserver ma place",
+  nombreDePlaces: "Nombre de places",
+  payerSomme: (somme) => `Payer ${somme}`,
+  confirmerInscription: "Confirmer mon inscription",
+  reglerSurPlace: (somme) =>
+    `Rien n'est encaissé maintenant : vous réglerez ${somme} sur place.`,
 };
 
 const en: ClesReserver = {
@@ -270,6 +317,27 @@ const en: ClesReserver = {
   carteEnGarantie: (montant) => `Card on file: €${montant}`,
   cartePrecision:
     "Nothing is taken. The card is stored, and would only be charged if you fail to show.",
+
+  parPersonne: "per person",
+  placesEnTout: (places) => `${places} places`,
+  paiementSurPlace: "pay on the day",
+  placesRestantes: (places) => `${places} place${s(places)} left`,
+  fermeCeJour: "Closed that day.",
+  fermePour: (motif) => `Closed — ${motif}`,
+  inscriptionsFerment: (heures) => `Sign-ups close ${heures} h beforehand.`,
+  seanceCommencee: "This session has already started.",
+  complet: "Fully booked.",
+  neResteQue: (places) =>
+    places === 1
+      ? "Only one place left."
+      : `Only ${places} places left.`,
+
+  reserverMaPlace: "Book my place",
+  nombreDePlaces: "Number of places",
+  payerSomme: (somme) => `Pay ${somme}`,
+  confirmerInscription: "Confirm my booking",
+  reglerSurPlace: (somme) =>
+    `Nothing is charged now: you will pay ${somme} on the day.`,
 };
 
 const zh: ClesReserver = {
@@ -351,6 +419,25 @@ const zh: ClesReserver = {
     "餐厅接受申请后，会通过安全支付链接向您收取。这笔钱会从账单里扣除。",
   carteEnGarantie: (montant) => `信用卡担保：${montant} 欧元`,
   cartePrecision: "不会扣款。只是记录信用卡，只有您没来才会扣。",
+
+  parPersonne: "每位",
+  placesEnTout: (places) => `共 ${places} 个名额`,
+  paiementSurPlace: "现场付款",
+  placesRestantes: (places) => `余 ${places} 个名额`,
+  fermeCeJour: "这一天休息。",
+  fermePour: (motif) => `休息 —— ${motif}`,
+  inscriptionsFerment: (heures) => `报名在开始前 ${heures} 小时截止。`,
+  seanceCommencee: "这一场已经开始了。",
+  complet: "已满。",
+  neResteQue: (places) =>
+    places === 1 ? "只剩一个名额了。" : `只剩 ${places} 个名额了。`,
+
+  reserverMaPlace: "预订名额",
+  nombreDePlaces: "名额数量",
+  payerSomme: (somme) => `支付 ${somme}`,
+  confirmerInscription: "确认报名",
+  reglerSurPlace: (somme) =>
+    `现在不收款：${somme} 到场支付。`,
 };
 
 export const RESERVER: Record<Langue, ClesReserver> = { fr, en, zh };

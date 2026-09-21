@@ -34,6 +34,9 @@ import {
 } from "@/lib/reservations/disponibilite";
 import type { Espace, Service } from "@/types/reservation";
 import { telephoneAEnregistrer } from "@/lib/contact/telephone";
+import { langueVisiteur } from "@/lib/i18n/langue";
+import { ERREURS } from "@/lib/i18n/erreurs";
+import { DISPO } from "@/lib/i18n/dispo";
 
 // Durée de vie de l'option posée par une demande. Trop court on perd les
 // hésitants, trop long on gèle les vendredis soir.
@@ -82,21 +85,28 @@ export async function demanderReservation(
   const message = texte(formData.get("message"), TEXTE_MAX);
   const accepteCommunications = formData.get("accepte_communications") === "on";
 
+  // Une action est une requête comme une autre : elle lit le témoin de
+  // langue, et répond donc dans celle de la page qui l'a appelée. Sans ça,
+  // le seul français d'un formulaire traduit était la phrase qui demande
+  // de corriger quelque chose.
+  const langue = await langueVisiteur();
+  const e = ERREURS[langue];
+
   if (!nom || !email) {
-    return { error: "Indique ton nom et ton adresse e-mail." };
+    return { error: e.nomEtEmail };
   }
   // La même expression que la saisie téléphonique, le fichier client et la
   // règle du rappel. Un « a@b » passait ici et nulle part ailleurs : la
   // réservation s'enregistrait, puis ne recevait rien et n'entrait dans
   // aucun fichier, sans que personne ne soit prévenu.
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return { error: "Cette adresse e-mail ne semble pas valide." };
+    return { error: e.emailInvalide };
   }
   if (type !== "table" && type !== "privatisation") {
-    return { error: "Type de réservation inconnu." };
+    return { error: e.typeInconnu };
   }
   if (!Number.isInteger(couverts) || couverts <= 0) {
-    return { error: "Nombre de convives invalide." };
+    return { error: e.nombreInvalide };
   }
 
   const supabase = createServiceClient();
@@ -135,18 +145,14 @@ export async function demanderReservation(
   const restaurant = (complet.data ??
     replis?.data ??
     null) as Etablissement | null;
-  if (!restaurant) return { error: "Établissement introuvable." };
+  if (!restaurant) return { error: e.etablissementIntrouvable };
 
   // Le formulaire a pu être chargé avant la fermeture du module, ou
   // rejoué depuis une console : l'action est une porte publique, elle se
   // vérifie elle-même.
   const acces = await chargerAcces(restaurant.id, supabase);
   if (!acces.ouvert.reservations) {
-    return {
-      error:
-        "Cet établissement ne prend plus de réservation en ligne. " +
-        "Appelle-le directement.",
-    };
+    return { error: e.plusDeReservationEnLigne };
   }
 
   // Une demande pose une option de 48 heures : elle bloque des couverts.
@@ -170,11 +176,7 @@ export async function demanderReservation(
     ),
   ]);
   if (!sousPlafondGlobal || !sousPlafondMaison) {
-    return {
-      error:
-        "Tu as déjà envoyé plusieurs demandes aujourd'hui. Appelle " +
-        "l'établissement directement, il te répondra plus vite.",
-    };
+    return { error: e.tropDeDemandes };
   }
 
   const [espaceResult, serviceResult, reservationsResult, fermetures] =
@@ -206,19 +208,19 @@ export async function demanderReservation(
   // L'espace et le service sont filtrés sur le restaurant : un identifiant
   // emprunté à un autre établissement ne passe pas.
   if (!espace || !service) {
-    return { error: "Cet espace n'est plus proposé à la réservation." };
+    return { error: e.espacePlusPropose };
   }
 
   const maintenant = new Date();
   if (!serviceOuvertCeJour(date, service)) {
-    return { error: "Ce service n'est pas assuré ce jour-là." };
+    return { error: e.servicePasCeJour };
   }
   if (servicePasseOuTropTard(date, service, maintenant)) {
     return {
       error:
         service.delai_heures > 0
-          ? `Les demandes ferment ${service.delai_heures} h avant le service.`
-          : "Ce service est passé.",
+          ? DISPO[langue].demandesFerment(service.delai_heures)
+          : DISPO[langue].servicePasse,
     };
   }
 
@@ -228,9 +230,7 @@ export async function demanderReservation(
   const heure = texte(formData.get("heure")).slice(0, 5);
   const proposees = heuresDArrivee(service);
   if (!proposees.includes(heure)) {
-    return {
-      error: "Choisis une heure d'arrivée dans la liste proposée.",
-    };
+    return { error: e.heureHorsListe };
   }
 
   const dispo = disponibiliteEspace({
@@ -242,6 +242,7 @@ export async function demanderReservation(
     reservations: (reservationsResult.data ?? []) as Reservation[],
     fermetures,
     maintenant,
+    langue,
   });
 
   const possible =
@@ -253,10 +254,7 @@ export async function demanderReservation(
         // qui l'a placé. Lui répondre « cet espace n'est plus libre » le
         // renverrait à une décision qu'il n'a pas prise. On lui dit ce
         // qu'il peut faire, pas ce qui s'est passé en coulisses.
-        type === "table"
-          ? "Ce créneau vient d'être pris pendant que tu remplissais le formulaire. Recharge la page : il reste peut-être de la place à une autre heure."
-          : (dispo.raison ??
-            "Ce créneau vient d'être pris. Choisis-en un autre, ou une autre date."),
+        type === "table" ? e.creneauPrisTable : (dispo.raison ?? e.creneauPris),
     };
   }
 
@@ -324,7 +322,7 @@ export async function demanderReservation(
 
   if (error) {
     console.error("[demanderReservation]", error);
-    return { error: "L'envoi a échoué. Réessaie dans un instant." };
+    return { error: e.envoiEchoue };
   }
 
   // Les e-mails viennent après l'enregistrement, et n'en défont rien : la

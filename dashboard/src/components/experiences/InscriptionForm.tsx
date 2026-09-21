@@ -5,7 +5,9 @@ import {
   inscrire,
   type InscriptionState,
 } from "@/app/reserver/[slug]/experiences";
-import { formatEuros } from "@/lib/reservations/acompte";
+import { sommeEuros } from "@/lib/i18n/nombres";
+import type { Langue } from "@/lib/i18n/langues";
+import { RESERVER } from "@/lib/i18n/reserver";
 
 const initialState: InscriptionState = { error: null };
 
@@ -20,6 +22,8 @@ export function InscriptionForm({
   prixCentimes,
   placesRestantes,
   prepaiement,
+  langue,
+  nomMaison,
 }: {
   slug: string;
   experienceId: string;
@@ -27,12 +31,17 @@ export function InscriptionForm({
   prixCentimes: number;
   placesRestantes: number;
   prepaiement: boolean;
+  langue: Langue;
+  /** Le nom de l'établissement : c'est lui qui écrira, pas Klarr. */
+  nomMaison: string;
 }) {
+  const r = RESERVER[langue];
   const [state, action, pending] = useActionState(inscrire, initialState);
   const [ouvert, setOuvert] = useState(false);
   // Le total se met à jour pendant la saisie : découvrir la somme à l'écran
   // suivant est la meilleure façon de perdre quelqu'un.
   const [places, setPlaces] = useState(1);
+  const total = sommeEuros(prixCentimes * Math.max(places, 1), langue);
 
   if (!ouvert) {
     return (
@@ -41,7 +50,7 @@ export function InscriptionForm({
         onClick={() => setOuvert(true)}
         className="mt-2 w-fit rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover"
       >
-        Réserver ma place
+        {r.reserverMaPlace}
       </button>
     );
   }
@@ -54,7 +63,7 @@ export function InscriptionForm({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <label className={label} htmlFor={`nom-${experienceId}-${date}`}>
-          Votre nom
+          {r.tonNom}
           <input
             id={`nom-${experienceId}-${date}`}
             name="client_nom"
@@ -63,7 +72,7 @@ export function InscriptionForm({
           />
         </label>
         <label className={label} htmlFor={`email-${experienceId}-${date}`}>
-          E-mail
+          {r.email}
           <input
             id={`email-${experienceId}-${date}`}
             name="client_email"
@@ -73,8 +82,8 @@ export function InscriptionForm({
           />
         </label>
         <label className={label} htmlFor={`tel-${experienceId}-${date}`}>
-          Téléphone{" "}
-          <span className="font-normal text-zinc-400">(facultatif)</span>
+          {r.telephone}{" "}
+          <span className="font-normal text-zinc-400">{r.facultatif}</span>
           <input
             id={`tel-${experienceId}-${date}`}
             name="client_telephone"
@@ -82,7 +91,7 @@ export function InscriptionForm({
           />
         </label>
         <label className={label} htmlFor={`places-${experienceId}-${date}`}>
-          Nombre de places
+          {r.nombreDePlaces}
           <input
             id={`places-${experienceId}-${date}`}
             name="places"
@@ -102,9 +111,7 @@ export function InscriptionForm({
           name="accepte_communications"
           className="mt-0.5"
         />
-        <span>
-          J&apos;accepte de recevoir les actualités de l&apos;établissement.
-        </span>
+        <span>{r.accepteActualites(nomMaison)}</span>
       </label>
 
       {state.error && <p className="text-sm text-red-600">{state.error}</p>}
@@ -116,25 +123,22 @@ export function InscriptionForm({
           className="rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover disabled:opacity-50"
         >
           {pending
-            ? "Enregistrement…"
+            ? r.envoi
             : prepaiement
-              ? `Payer ${formatEuros(prixCentimes * Math.max(places, 1))}`
-              : "Confirmer mon inscription"}
+              ? r.payerSomme(total)
+              : r.confirmerInscription}
         </button>
         <button
           type="button"
           onClick={() => setOuvert(false)}
           className="text-sm text-zinc-500 hover:text-zinc-900"
         >
-          Annuler
+          {r.annuler}
         </button>
       </div>
 
       {!prepaiement && (
-        <p className="text-xs text-zinc-500">
-          Rien n&apos;est encaissé maintenant : vous réglerez{" "}
-          {formatEuros(prixCentimes * Math.max(places, 1))} sur place.
-        </p>
+        <p className="text-xs text-zinc-500">{r.reglerSurPlace(total)}</p>
       )}
     </form>
   );

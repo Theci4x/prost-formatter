@@ -1,18 +1,11 @@
 import type { Langue } from "@/lib/i18n/langues";
 import { RESERVER } from "@/lib/i18n/reserver";
 import { InscriptionForm } from "./InscriptionForm";
-import { formatEuros } from "@/lib/reservations/acompte";
-import { formatHeure } from "@/types/reservation";
+import { sommeEuros } from "@/lib/i18n/nombres";
+import { heure as heureTraduite } from "@/lib/i18n/jours";
+import { dateJour } from "@/lib/i18n/dates";
 import type { Seance } from "@/lib/experiences/seances";
 import type { Experience } from "@/types/experience";
-
-function formatJour(date: string): string {
-  return new Date(`${date}T12:00:00`).toLocaleDateString("fr-FR", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  });
-}
 
 /**
  * Les ateliers et cours proposés par l'établissement. Séparés des créneaux
@@ -24,11 +17,13 @@ export function SectionExperiences({
   experiences,
   seancesParExperience,
   langue,
+  nomMaison,
 }: {
   slug: string;
   experiences: Experience[];
   seancesParExperience: Map<string, Seance[]>;
   langue: Langue;
+  nomMaison: string;
 }) {
   const r = RESERVER[langue];
   const avecSeances = experiences.filter(
@@ -57,15 +52,15 @@ export function SectionExperiences({
                 {experience.nom}
               </span>
               <span className="text-sm text-zinc-600">
-                {formatEuros(experience.prix_centimes)} par personne
+                {sommeEuros(experience.prix_centimes, langue)} {r.parPersonne}
               </span>
             </div>
 
             <span className="text-sm text-zinc-500">
-              {formatHeure(experience.heure)}
+              {heureTraduite(experience.heure, langue)}
               {experience.duree_minutes && ` · ${experience.duree_minutes} min`}
-              {` · ${experience.places} places`}
-              {!experience.prepaiement && " · paiement sur place"}
+              {` · ${r.placesEnTout(experience.places)}`}
+              {!experience.prepaiement && ` · ${r.paiementSurPlace}`}
             </span>
 
             {experience.description && (
@@ -77,14 +72,14 @@ export function SectionExperiences({
                 <li key={seance.date} className="flex flex-col py-3 first:pt-0">
                   <div className="flex flex-wrap items-baseline justify-between gap-2">
                     <span className="text-sm font-medium text-zinc-900 first-letter:capitalize">
-                      {formatJour(seance.date)}
+                      {dateJour(seance.date, langue)}
                     </span>
                     <span className="text-sm text-zinc-500">
                       {/* Le motif est dit plutôt que la séance masquée :
                           « complet » et « trop tard » ne se corrigent pas de
                           la même façon. */}
                       {seance.raison ??
-                        `${seance.placesRestantes} place${seance.placesRestantes > 1 ? "s" : ""} restante${seance.placesRestantes > 1 ? "s" : ""}`}
+                        r.placesRestantes(seance.placesRestantes)}
                     </span>
                   </div>
 
@@ -96,6 +91,8 @@ export function SectionExperiences({
                       prixCentimes={experience.prix_centimes}
                       placesRestantes={seance.placesRestantes}
                       prepaiement={experience.prepaiement}
+                      langue={langue}
+                      nomMaison={nomMaison}
                     />
                   )}
                 </li>

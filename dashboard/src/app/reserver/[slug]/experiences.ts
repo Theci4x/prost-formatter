@@ -9,6 +9,8 @@ import { OCTETS_JETON } from "@/lib/reservations/acompte";
 import { enregistrerContact } from "@/lib/contacts/fichier";
 import type { Experience, PlaceReservee } from "@/types/experience";
 import { telephoneAEnregistrer } from "@/lib/contact/telephone";
+import { langueVisiteur } from "@/lib/i18n/langue";
+import { ERREURS } from "@/lib/i18n/erreurs";
 
 export type InscriptionState = { error: string | null };
 
@@ -36,16 +38,21 @@ export async function inscrire(
   );
   const communications = formData.get("accepte_communications") === "on";
 
-  if (!nom || !email) return { error: "Indiquez votre nom et votre e-mail." };
+  // Comme pour une demande de table : l'action lit le témoin, et refuse
+  // dans la langue du formulaire qu'on vient de remplir.
+  const langue = await langueVisiteur();
+  const e = ERREURS[langue];
+
+  if (!nom || !email) return { error: e.nomEtEmail };
   // La même expression qu'ailleurs. Sans elle, une adresse illisible
   // s'inscrivait quand même : la place était prise, et la personne ne
   // recevait ni confirmation ni rappel.
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return { error: "Cette adresse e-mail ne semble pas valide." };
+    return { error: e.emailInvalide };
   }
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return { error: "Date invalide." };
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return { error: e.dateInvalide };
   if (!Number.isInteger(places) || places <= 0) {
-    return { error: "Indiquez un nombre de places." };
+    return { error: e.nombreDePlaces };
   }
 
   const supabase = createServiceClient();
@@ -55,7 +62,7 @@ export async function inscrire(
     .eq("slug_reservation", slug)
     .maybeSingle();
   const restaurant = restaurantData as { id: string } | null;
-  if (!restaurant) return { error: "Établissement introuvable." };
+  if (!restaurant) return { error: e.etablissementIntrouvable };
 
   const [experienceResult, placesResult, fermetures] = await Promise.all([
     // Filtrée sur le restaurant : un identifiant emprunté à un autre
@@ -75,7 +82,7 @@ export async function inscrire(
   ]);
 
   const experience = experienceResult.data as Experience | null;
-  if (!experience) return { error: "Cette expérience n'est plus proposée." };
+  if (!experience) return { error: e.experiencePlusProposee };
 
   const etat = etatSeance({
     experience,
@@ -84,8 +91,9 @@ export async function inscrire(
     reservations: (placesResult.data ?? []) as PlaceReservee[],
     fermetures,
     maintenant: new Date(),
+    langue,
   });
-  if (!etat) return { error: "Aucune séance n'a lieu ce jour-là." };
+  if (!etat) return { error: e.pasDeSeanceCeJour };
   if (etat.raison) return { error: etat.raison };
 
   const montant = montantSeance(experience, places);
@@ -111,7 +119,7 @@ export async function inscrire(
 
   if (error) {
     console.error("[inscrire]", error);
-    return { error: "L'inscription a échoué. Réessayez dans un instant." };
+    return { error: e.inscriptionEchouee };
   }
 
   await enregistrerContact({

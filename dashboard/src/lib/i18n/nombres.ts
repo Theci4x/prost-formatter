@@ -45,3 +45,21 @@ export function montantLisible(centimes: number, langue: Langue): string {
     maximumFractionDigits: 2,
   });
 }
+
+/**
+ * Une somme en euros, symbole compris.
+ *
+ * Contrairement à `montantLisible`, c'est `Intl` qui place le symbole :
+ * le français l'écrit après (« 12,00 € »), l'anglais et le chinois avant
+ * (« €12.00 »). Poser le « € » à la main donnait des prix qui se lisent
+ * comme une traduction ratée.
+ *
+ * `formatEuros` reste pour les devis, qui sont des pièces françaises et
+ * n'ont donc rien à traduire.
+ */
+export function sommeEuros(centimes: number, langue: Langue): string {
+  return new Intl.NumberFormat(LOCALE[langue] ?? LOCALE.fr, {
+    style: "currency",
+    currency: "EUR",
+  }).format(centimes / 100);
+}

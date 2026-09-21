@@ -59,3 +59,19 @@ export function dateComplete(jour: string, langue: Langue): string {
     year: "numeric",
   });
 }
+
+/**
+ * « mardi 1 juin 2026 » — la date d'un paiement ou d'une confirmation.
+ *
+ * Le jour de la semaine *et* l'année : quelqu'un qui reçoit un reçu par
+ * courriel le relit parfois des mois plus tard, et « mardi 1 juin » ne
+ * dit alors plus de quelle année on parle.
+ */
+export function dateLongue(jour: string, langue: Langue): string {
+  return new Date(`${jour}T12:00:00`).toLocaleDateString(locale(langue), {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}

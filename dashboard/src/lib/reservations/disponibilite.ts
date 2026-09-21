@@ -1,5 +1,7 @@
 import type { Espace, Fermeture, Service } from "@/types/reservation";
-import { heureLisible } from "@/lib/site/horaires";
+import { heure as heureTraduite } from "@/lib/i18n/jours";
+import type { Langue } from "@/lib/i18n/langues";
+import { DISPO } from "@/lib/i18n/dispo";
 
 export type Reservation = {
   id: string;
@@ -230,6 +232,7 @@ export function disponibiliteEspace({
   reservations,
   fermetures = [],
   maintenant,
+  langue = "fr",
 }: {
   espace: Espace;
   service: Service;
@@ -240,7 +243,13 @@ export function disponibiliteEspace({
   reservations: Reservation[];
   fermetures?: Fermeture[];
   maintenant: Date;
+  /**
+   * La langue des motifs de refus. Le tableau de bord ne passe rien et
+   * reste en français ; la page publique passe celle du visiteur.
+   */
+  langue?: Langue;
 }): Disponibilite {
+  const d = DISPO[langue] ?? DISPO.fr;
   const heureVisee = heure ?? service.heure_debut;
 
   const duService = reservations.filter(
@@ -278,7 +287,7 @@ export function disponibiliteEspace({
       ferme: true,
       peutRecevoirTable: false,
       peutEtrePrivatise: false,
-      raison: motifFermeture(fermeture),
+      raison: motifFermeture(fermeture, d),
     };
   }
 
@@ -287,7 +296,7 @@ export function disponibiliteEspace({
       ...base,
       peutRecevoirTable: false,
       peutEtrePrivatise: false,
-      raison: "Cet espace est déjà privatisé sur ce créneau.",
+      raison: d.dejaPrivatise,
     };
   }
 
@@ -303,16 +312,16 @@ export function disponibiliteEspace({
   let raison: string | null = null;
   if (!peutRecevoirTable && !peutEtrePrivatise) {
     if (couverts > espace.capacite) {
-      raison = `Cet espace accueille au maximum ${espace.capacite} couverts.`;
+      raison = d.auMaximum(espace.capacite);
     } else if (restants < couverts) {
-      raison = `Il ne reste que ${restants} couverts à ${heureLisible(heureVisee)}.`;
+      raison = d.neResteQue(restants, heureTraduite(heureVisee, langue));
     } else if (
       espace.privatisation_minimum !== null &&
       couverts < espace.privatisation_minimum
     ) {
-      raison = `La privatisation démarre à ${espace.privatisation_minimum} couverts.`;
+      raison = d.privatisationDemarre(espace.privatisation_minimum);
     } else {
-      raison = "Cet espace n'est pas disponible pour cette demande.";
+      raison = d.pasDisponible;
     }
   }
 
@@ -342,6 +351,7 @@ export function creneauxDuJour({
   reservations,
   fermetures = [],
   maintenant,
+  langue = "fr",
 }: {
   date: string;
   couverts: number;
@@ -350,7 +360,9 @@ export function creneauxDuJour({
   reservations: Reservation[];
   fermetures?: Fermeture[];
   maintenant: Date;
+  langue?: Langue;
 }): Creneau[] {
+  const d = DISPO[langue] ?? DISPO.fr;
   // Établissement fermé : on ne détaille pas espace par espace. Lister les
   // services d'un jour de vacances, chacun barré de son motif, donne
   // l'impression qu'on pourrait insister quelque part.
@@ -363,7 +375,7 @@ export function creneauxDuJour({
         heure: service.heure_debut,
         espaces: [],
         ouvert: false,
-        raison: motifFermeture(fermeture),
+        raison: motifFermeture(fermeture, d),
       }));
   }
 
@@ -379,8 +391,8 @@ export function creneauxDuJour({
             ouvert: false,
             raison:
               service.delai_heures > 0
-                ? `Les demandes ferment ${service.delai_heures} h avant le service.`
-                : "Ce service est passé.",
+                ? d.demandesFerment(service.delai_heures)
+                : d.servicePasse,
           },
         ];
       }
@@ -396,6 +408,7 @@ export function creneauxDuJour({
             reservations,
             fermetures,
             maintenant,
+            langue,
           }),
         );
 
@@ -408,7 +421,7 @@ export function creneauxDuJour({
           heure,
           espaces: disponibilites,
           ouvert: auMoinsUn,
-          raison: auMoinsUn ? null : "Complet pour ce nombre de convives.",
+          raison: auMoinsUn ? null : d.completPourCeNombre,
         };
       });
     });

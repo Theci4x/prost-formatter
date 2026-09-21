@@ -294,6 +294,7 @@ export default async function ServicePage({
                     reservations: lignes,
                     fermetures,
                     maintenant,
+                    langue,
                   });
                   const duService = confirmees.filter(
                     (l) =>

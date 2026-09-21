@@ -2,6 +2,9 @@ import type { Experience, PlaceReservee } from "@/types/experience";
 import type { Fermeture } from "@/types/reservation";
 import { fermetureApplicable } from "@/lib/reservations/disponibilite";
 
+import type { Langue } from "@/lib/i18n/langues";
+import { RESERVER } from "@/lib/i18n/reserver";
+
 export type Seance = {
   date: string;
   placesRestantes: number;
@@ -63,6 +66,7 @@ export function etatSeance({
   reservations,
   fermetures,
   maintenant,
+  langue = "fr",
 }: {
   experience: Experience;
   date: string;
@@ -70,7 +74,14 @@ export function etatSeance({
   reservations: PlaceReservee[];
   fermetures: Fermeture[];
   maintenant: Date;
+  /**
+   * Le motif est montré tel quel au client : il doit donc être écrit dans
+   * sa langue. Le tableau de bord, lui, ne passe rien et reste en
+   * français.
+   */
+  langue?: Langue;
 }): Seance | null {
+  const r = RESERVER[langue] ?? RESERVER.fr;
   if (!seanceCeJour(date, experience)) return null;
 
   const restantes = placesRestantes(experience, date, reservations);
@@ -82,7 +93,7 @@ export function etatSeance({
   if (fermeture) {
     return {
       ...base,
-      raison: fermeture.motif ? `Fermé — ${fermeture.motif}` : "Fermé ce jour-là.",
+      raison: fermeture.motif ? r.fermePour(fermeture.motif) : r.fermeCeJour,
     };
   }
 
@@ -95,19 +106,16 @@ export function etatSeance({
       ...base,
       raison:
         experience.delai_heures > 0
-          ? `Les inscriptions ferment ${experience.delai_heures} h avant.`
-          : "Cette séance a commencé.",
+          ? r.inscriptionsFerment(experience.delai_heures)
+          : r.seanceCommencee,
     };
   }
 
-  if (restantes === 0) return { ...base, raison: "Complet." };
+  if (restantes === 0) return { ...base, raison: r.complet };
   if (places > restantes) {
     return {
       ...base,
-      raison:
-        restantes === 1
-          ? "Il ne reste qu'une place."
-          : `Il ne reste que ${restantes} places.`,
+      raison: r.neResteQue(restantes),
     };
   }
 
@@ -127,6 +135,7 @@ export function prochainesSeances({
   reservations,
   fermetures,
   maintenant,
+  langue = "fr",
 }: {
   experience: Experience;
   depuis: string;
@@ -135,6 +144,7 @@ export function prochainesSeances({
   reservations: PlaceReservee[];
   fermetures: Fermeture[];
   maintenant: Date;
+  langue?: Langue;
 }): Seance[] {
   const seances: Seance[] = [];
   const curseur = new Date(`${depuis}T12:00:00`);
@@ -148,6 +158,7 @@ export function prochainesSeances({
       reservations,
       fermetures,
       maintenant,
+      langue,
     });
     if (etat) seances.push(etat);
     curseur.setDate(curseur.getDate() + 1);
