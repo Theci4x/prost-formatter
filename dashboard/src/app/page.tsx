@@ -14,6 +14,7 @@ import { balisageAccueil } from "@/lib/seo/klarr";
 import { ACCUEIL_PUBLIC } from "@/lib/i18n/accueilPublic";
 import { langueIndexable } from "@/lib/i18n/langue";
 import { ChoixLangueSite } from "@/components/landing/ChoixLangueSite";
+import { MenuMobile } from "@/components/accueil/MenuMobile";
 import { HeroBackdrop } from "@/components/landing/HeroBackdrop";
 import { HeroProduit } from "@/components/landing/HeroProduit";
 import { Reveal } from "@/components/landing/Reveal";
@@ -232,18 +233,32 @@ export default async function Home() {
             {t.nav.connexion}
           </Link>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+        <div
+          style={{ display: "flex", alignItems: "center", gap: 14 }}
+          className="relative"
+        >
           {/* Avant le bouton d'essai et visible dès le téléphone : quelqu'un
               qui ne lit pas le français doit pouvoir en sortir sans avoir
               à faire défiler toute la page. */}
           <ChoixLangueSite courante={langue} />
-          <Link
-            href="/login"
-            className="sm:hidden"
-            style={{ fontSize: 14, fontWeight: 500, color: "var(--ink-soft)" }}
-          >
-            {t.nav.connexion}
-          </Link>
+          {/* La même navigation que sur écran large, repliée. Elle
+              remplace le « Connexion » isolé qui tenait lieu de menu :
+              une entrée sur six ne fait pas une navigation. */}
+          <MenuMobile
+            libelle={t.nav.menu}
+            entrees={[
+              {
+                libelle: t.nav.outils,
+                href: "/ouvrir-un-restaurant",
+                accent: true,
+              },
+              { libelle: t.nav.fonctionnement, href: "#benefices" },
+              { libelle: t.nav.test, href: "#test-presence" },
+              { libelle: t.nav.tarifs, href: "#tarifs" },
+              { libelle: t.nav.journal, href: "/blog" },
+              { libelle: t.nav.connexion, href: "/login" },
+            ]}
+          />
           <Link
             href="/login"
             className="whitespace-nowrap px-4 py-2.5 sm:px-5"

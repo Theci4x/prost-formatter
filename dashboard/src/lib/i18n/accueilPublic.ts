@@ -35,6 +35,8 @@ export type ClesAccueilPublic = {
     tarifs: string;
     journal: string;
     connexion: string;
+    /** Le bouton qui ouvre la navigation sur un téléphone. */
+    menu: string;
     essayerCourt: string;
     essayer: string;
     langue: string;
@@ -247,6 +249,7 @@ const fr: ClesAccueilPublic = {
     tarifs: "Tarifs",
     journal: "Le journal",
     connexion: "Connexion",
+    menu: "Menu",
     essayerCourt: "Essayer",
     essayer: "Essayer gratuitement",
     langue: "Langue",
@@ -605,6 +608,7 @@ const en: ClesAccueilPublic = {
     tarifs: "Pricing",
     journal: "Journal",
     connexion: "Sign in",
+    menu: "Menu",
     essayerCourt: "Try it",
     essayer: "Try it free",
     langue: "Language",
@@ -946,6 +950,7 @@ const zh: ClesAccueilPublic = {
     tarifs: "价格",
     journal: "专栏",
     connexion: "登录",
+    menu: "菜单",
     essayerCourt: "试用",
     essayer: "免费试用",
     langue: "语言",
