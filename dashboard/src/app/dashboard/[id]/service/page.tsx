@@ -84,6 +84,7 @@ export default async function ServicePage({
     tablesResult,
     reperesResult,
     fermetures,
+    roueResult,
   ] = await Promise.all([
     supabase.from("restaurants").select("*").eq("id", id).maybeSingle(),
     supabase
@@ -104,6 +105,11 @@ export default async function ServicePage({
     supabase.from("restaurant_tables").select("*").eq("restaurant_id", id),
     supabase.from("restaurant_reperes").select("*").eq("restaurant_id", id),
     chargerFermetures(supabase, id, jour),
+    supabase
+      .from("restaurant_roue")
+      .select("active")
+      .eq("restaurant_id", id)
+      .maybeSingle(),
   ]);
 
   const restaurant = restaurantResult.data as Restaurant | null;
@@ -114,6 +120,10 @@ export default async function ServicePage({
   const lignes = (reservationsResult.data ?? []) as Ligne[];
   const tables = (tablesResult.data ?? []) as TableSalle[];
   const reperes = (reperesResult.data ?? []) as Repere[];
+  // Le lien de retrait n'apparaît que si la roue tourne : un bouton qui
+  // ne sert à rien en plein service est un bouton de trop.
+  const roueActive =
+    (roueResult.data as { active: boolean } | null)?.active ?? false;
 
   const maintenant = new Date();
   const confirmees = lignes.filter((l) => l.statut === "confirmee");
@@ -130,12 +140,24 @@ export default async function ServicePage({
     <div className="flex flex-1 flex-col gap-8 px-6 py-8">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex flex-col gap-1">
-          <Link
-            href={`/dashboard/${id}/reservations`}
-            className="text-sm text-zinc-500 hover:text-zinc-900"
-          >
-            {sv.retourCarnet}
-          </Link>
+          <span className="flex flex-wrap items-center gap-x-4 gap-y-1">
+            <Link
+              href={`/dashboard/${id}/reservations`}
+              className="text-sm text-zinc-500 hover:text-zinc-900"
+            >
+              {sv.retourCarnet}
+            </Link>
+            {/* Le retrait d'un lot se fait ici, pas dans les réglages : le
+                serveur est sur cet écran quand le client montre son code. */}
+            {roueActive && (
+              <Link
+                href={`/dashboard/${id}/roue/retirer`}
+                className="text-sm font-medium text-brand-orange hover:underline"
+              >
+                {sv.retirerLot}
+              </Link>
+            )}
+          </span>
           <h1 className="text-2xl font-semibold text-zinc-900 first-letter:capitalize">
             {dateJour(jour, langue)}
           </h1>

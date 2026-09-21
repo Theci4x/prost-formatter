@@ -15,6 +15,7 @@ import type { Langue } from "@/lib/i18n/langue";
 
 export type ClesService = {
   retourCarnet: string;
+  retirerLot: string;
   veille: string;
   aujourdhui: string;
   lendemain: string;
@@ -57,6 +58,7 @@ export type ClesService = {
 
 const fr: ClesService = {
   retourCarnet: "← Réservations",
+  retirerLot: "Retirer un lot",
   veille: "← Veille",
   aujourdhui: "Aujourd'hui",
   lendemain: "Lendemain →",
@@ -95,6 +97,7 @@ const fr: ClesService = {
 
 const en: ClesService = {
   retourCarnet: "← Bookings",
+  retirerLot: "Redeem a prize",
   veille: "← Previous day",
   aujourdhui: "Today",
   lendemain: "Next day →",
@@ -132,6 +135,7 @@ const en: ClesService = {
 
 const zh: ClesService = {
   retourCarnet: "← 订位",
+  retirerLot: "核销奖品",
   veille: "← 前一天",
   aujourdhui: "今天",
   lendemain: "后一天 →",

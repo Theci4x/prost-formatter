@@ -288,10 +288,10 @@ export default async function RouePage({
               {parties.length > 1 ? "s" : ""}, {retires} lot
               {retires > 1 ? "s" : ""} retiré{retires > 1 ? "s" : ""} en salle.{" "}
               <Link
-                href={`/dashboard/${id}/retours`}
+                href={`/dashboard/${id}/roue/retirer`}
                 className="font-medium text-brand-orange hover:underline"
               >
-                Voir le totem
+                Retirer un lot
               </Link>
             </p>
           )}
