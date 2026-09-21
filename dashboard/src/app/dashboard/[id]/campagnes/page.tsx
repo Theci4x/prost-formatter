@@ -67,7 +67,7 @@ export default async function CampagnesPage({
       <PageHeader
         icon={dashboardIcons.avis}
         title={`Campagnes e-mail — ${restaurant.nom}`}
-        backHref={`/dashboard/${id}`}
+        backHref="/dashboard"
       />
 
       <p className="max-w-2xl text-sm text-zinc-600">

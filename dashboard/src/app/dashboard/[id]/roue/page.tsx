@@ -102,7 +102,7 @@ export default async function RouePage({
       <PageHeader
         icon={dashboardIcons.roue}
         title={`Roue de la fortune — ${restaurant.nom}`}
-        backHref={`/dashboard/${id}`}
+        backHref="/dashboard"
       />
 
       <p className="max-w-2xl text-sm text-zinc-500">

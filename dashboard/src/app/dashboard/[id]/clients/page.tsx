@@ -72,7 +72,7 @@ export default async function ClientsPage({
       <PageHeader
         icon={dashboardIcons.reservations}
         title={`Fichier client — ${restaurant.nom}`}
-        backHref={`/dashboard/${id}`}
+        backHref="/dashboard"
       />
 
       <p className="max-w-2xl text-sm text-zinc-600">
