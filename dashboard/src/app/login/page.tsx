@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { LoginForm } from "@/components/auth/LoginForm";
-import { ChoixLangue } from "@/components/dashboard/ChoixLangue";
+import { ChoixLangueSite } from "@/components/landing/ChoixLangueSite";
 import { AUTH } from "@/lib/i18n/authentification";
 import { langueVisiteur } from "@/lib/i18n/langue";
 import { choisirLangueVisiteur } from "@/app/langue-actions";
@@ -39,11 +39,7 @@ export default async function LoginPage({
 
       <div className="flex flex-1 flex-col items-center justify-center gap-8 bg-brand-cream px-5 py-16">
         <div className="flex w-full max-w-sm justify-end">
-          <ChoixLangue
-            courante={langue}
-            libelle={t.langue}
-            action={choisirLangueVisiteur}
-          />
+          <ChoixLangueSite courante={langue} action={choisirLangueVisiteur} />
         </div>
         <div className="flex flex-col items-center gap-3 text-center">
           {/* Un seul h1, dont le contenu s'adapte : deux titres dans la

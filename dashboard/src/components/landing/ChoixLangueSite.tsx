@@ -51,6 +51,7 @@ import {
 export function ChoixLangueSite({
   courante,
   journal,
+  action,
 }: {
   courante?: Langue;
   /**
@@ -58,6 +59,12 @@ export function ChoixLangueSite({
    * un index. Sa seule présence fait changer d'adresse.
    */
   journal?: { article?: string };
+  /**
+   * L'action à appeler à la place du témoin seul. Le tableau de bord
+   * s'en sert pour écrire aussi sur le compte, afin que le choix suive
+   * la personne d'un appareil à l'autre.
+   */
+  action?: (langue: string) => Promise<void>;
 }) {
   const menu = useRef<HTMLDetailsElement>(null);
   const autonome = courante === undefined;
@@ -102,6 +109,7 @@ export function ChoixLangueSite({
           courante={affichee}
           fermer={fermer}
           journal={journal}
+          action={action}
           // Sur une page pré-générée, rien ne revient du serveur : c'est
           // au composant de refléter le choix, sans quoi on croit que le
           // clic n'a rien fait et on reclique.
@@ -141,11 +149,13 @@ function Options({
   fermer,
   surChoix,
   journal,
+  action,
 }: {
   courante: Langue;
   fermer: () => void;
   surChoix?: (langue: Langue) => void;
   journal?: { article?: string };
+  action?: (langue: string) => Promise<void>;
 }) {
   const { pending } = useFormStatus();
   const [demandee, setDemandee] = useState<Langue | null>(null);
@@ -177,9 +187,15 @@ function Options({
           // La langue par `bind` : le `name` d'un bouton qui porte une
           // action sert à React, pas à nous (voir `langue-actions.ts`).
           formAction={
-            journal
-              ? choisirLangueJournal.bind(null, journal.article ?? null, langue)
-              : choisirLangueVisiteur.bind(null, langue)
+            action
+              ? action.bind(null, langue)
+              : journal
+                ? choisirLangueJournal.bind(
+                    null,
+                    journal.article ?? null,
+                    langue,
+                  )
+                : choisirLangueVisiteur.bind(null, langue)
           }
           onClick={() => {
             setDemandee(langue);
