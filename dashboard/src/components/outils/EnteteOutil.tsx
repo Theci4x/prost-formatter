@@ -24,14 +24,14 @@ export function EnteteOutil({
 }) {
   return (
     <header className="border-b border-zinc-200/70 bg-white px-5 py-4">
-      <div className="mx-auto flex w-full max-w-2xl flex-wrap items-center justify-between gap-3">
+      <div className="mx-auto flex w-full max-w-3xl flex-wrap items-center justify-between gap-3">
         <Link href="/" className="flex items-center gap-2.5">
           <KlarrMark size={26} />
           <KlarrWordmark className="text-lg text-zinc-900" />
         </Link>
         <Link
           href="/"
-          className="text-sm text-brand-navy underline-offset-2 hover:underline"
+          className="text-base text-brand-navy underline-offset-2 hover:underline"
         >
           {retour} →
         </Link>

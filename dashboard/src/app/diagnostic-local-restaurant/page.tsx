@@ -75,7 +75,7 @@ export default async function DiagnosticPage({
     <div className="flex min-h-screen flex-col bg-brand-cream">
       <EnteteOutil />
 
-      <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-5 py-12">
+      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-5 py-12">
         <DonneesStructurees
           donnees={filAriane([
             { nom: "Klarr", url: siteUrl() },
@@ -101,10 +101,10 @@ export default async function DiagnosticPage({
         {/* L'avertissement est ici, pas en bas : quelqu'un qui lit un
             résultat a déjà cessé de lire le reste de la page. */}
         <div className="rounded-2xl border border-zinc-300 bg-white p-5">
-          <p className="text-sm font-semibold text-zinc-900">
+          <p className="text-base font-semibold text-zinc-900">
             Ce questionnaire ne vous dira jamais que le local convient.
           </p>
-          <p className="mt-1.5 text-sm text-zinc-600">
+          <p className="mt-1.5 text-base text-zinc-600">
             Nous n&apos;avons vu ni les lieux, ni le bail, ni le règlement de
             copropriété : nous ne pouvons rien conclure, et personne ne le
             pourrait à notre place. Ce qu&apos;il fait, c&apos;est transformer
@@ -127,17 +127,17 @@ export default async function DiagnosticPage({
               </legend>
               {QUESTIONS.filter((q) => q.point === point.id).map((question) => (
                 <div key={question.id} className="flex flex-col gap-2">
-                  <p className="text-sm font-medium text-zinc-800">
+                  <p className="text-base font-medium text-zinc-800">
                     {question.texte}
                   </p>
                   {question.aide && (
-                    <p className="text-xs text-zinc-500">{question.aide}</p>
+                    <p className="text-sm text-zinc-500">{question.aide}</p>
                   )}
                   <div className="flex flex-wrap gap-4">
                     {REPONSES.map((valeur) => (
                       <label
                         key={valeur}
-                        className="flex items-center gap-1.5 text-sm text-zinc-700"
+                        className="flex items-center gap-1.5 text-base text-zinc-700"
                       >
                         <input
                           type="radio"
@@ -169,7 +169,7 @@ export default async function DiagnosticPage({
               <h2 className="font-serif text-3xl text-ink">
                 Ce qu&apos;il vous reste à vérifier
               </h2>
-              <p className="text-sm text-zinc-600">
+              <p className="text-base text-zinc-600">
                 {totaux.bloquant > 0
                   ? `${totaux.bloquant} point${totaux.bloquant > 1 ? "s" : ""} à régler avant de signer, ${totaux.verifier} à vérifier.`
                   : totaux.verifier > 0
@@ -198,7 +198,7 @@ export default async function DiagnosticPage({
 
                   <ul className="flex flex-col gap-2">
                     {bilan.constats.map((constat, rang) => (
-                      <li key={rang} className="text-sm text-zinc-700">
+                      <li key={rang} className="text-base text-zinc-700">
                         {constat.texte}
                       </li>
                     ))}
@@ -210,7 +210,7 @@ export default async function DiagnosticPage({
                     <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
                       À qui demander
                     </p>
-                    <p className="mt-1 text-sm text-zinc-700">
+                    <p className="mt-1 text-base text-zinc-700">
                       {bilan.point.aQuiDemander}
                     </p>
                   </div>
@@ -218,7 +218,7 @@ export default async function DiagnosticPage({
                   {bilan.point.article && (
                     <Link
                       href={`/blog/${bilan.point.article.slug}`}
-                      className="w-fit text-sm text-brand-navy underline-offset-2 hover:underline"
+                      className="w-fit text-base text-brand-navy underline-offset-2 hover:underline"
                     >
                       {bilan.point.article.titre} →
                     </Link>
@@ -227,7 +227,7 @@ export default async function DiagnosticPage({
               );
             })}
 
-            <p className="text-xs text-zinc-500">
+            <p className="text-sm text-zinc-500">
               Cette page vit dans son adresse : copiez-la pour la retrouver, ou
               envoyez-la à votre associé, à votre courtier ou à votre avocat.
             </p>
@@ -235,17 +235,17 @@ export default async function DiagnosticPage({
         )}
 
         <div className="flex flex-col gap-3 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm">
-          <p className="text-sm font-semibold text-zinc-900">
+          <p className="text-base font-semibold text-zinc-900">
             Et après la signature ?
           </p>
-          <p className="text-sm text-zinc-600">
+          <p className="text-base text-zinc-600">
             Licence, déclaration sanitaire, HACCP, SACEM, diagnostics avant
             travaux : tout cela se règle ensuite, et se rattrape. Les cinq
             points ci-dessus, non.
           </p>
           <Link
             href="/blog/ouvrir-un-restaurant-demarches"
-            className="w-fit text-sm text-brand-navy underline-offset-2 hover:underline"
+            className="w-fit text-base text-brand-navy underline-offset-2 hover:underline"
           >
             Ouvrir un restaurant : tout ce qu&apos;on découvre trop tard →
           </Link>

@@ -50,7 +50,7 @@ export default async function CalendrierPage({
     <div className="flex min-h-screen flex-col bg-brand-cream">
       <EnteteOutil />
 
-      <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-5 py-12">
+      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-5 py-12">
         <DonneesStructurees
           donnees={filAriane([
             { nom: "Klarr", url: siteUrl() },
@@ -75,10 +75,10 @@ export default async function CalendrierPage({
         </div>
 
         <div className="rounded-2xl border border-zinc-300 bg-white p-5">
-          <p className="text-sm font-semibold text-zinc-900">
+          <p className="text-base font-semibold text-zinc-900">
             Pourquoi on ne vous donne pas toutes les dates.
           </p>
-          <p className="mt-1.5 text-sm text-zinc-600">
+          <p className="mt-1.5 text-base text-zinc-600">
             Un délai d&apos;instruction en mairie va de trois semaines à
             plusieurs mois selon la commune, la saison et le dossier. Un outil
             qui annoncerait « deux mois » se tromperait une fois sur deux, et
@@ -95,7 +95,7 @@ export default async function CalendrierPage({
         >
           <input type="hidden" name="planifie" value="1" />
           <label
-            className="flex flex-1 flex-col gap-1.5 text-sm font-medium text-zinc-700"
+            className="flex flex-1 flex-col gap-1.5 text-base font-medium text-zinc-700"
             htmlFor="ouverture"
           >
             Votre date d&apos;ouverture, même approximative
@@ -125,7 +125,7 @@ export default async function CalendrierPage({
               <h2 className="font-serif text-3xl text-ink">
                 Ouverture le {dateLisible(ouverture)}
               </h2>
-              <p className="text-sm text-zinc-600">
+              <p className="text-base text-zinc-600">
                 {calcules} démarches sur {jalons.length} ont un délai fixé par
                 un texte : elles portent une date. Les autres dépendent de gens
                 qu&apos;il faut appeler.
@@ -141,7 +141,7 @@ export default async function CalendrierPage({
                     <h3 className="text-sm font-semibold uppercase tracking-wide text-brand-navy">
                       {phase.titre}
                     </h3>
-                    <p className="text-sm text-zinc-500">{phase.chapo}</p>
+                    <p className="text-base text-zinc-500">{phase.chapo}</p>
                   </div>
 
                   <ul className="flex flex-col gap-3">
@@ -165,10 +165,10 @@ export default async function CalendrierPage({
                           )}
                         </div>
 
-                        <p className="text-sm text-zinc-600">{jalon.quoi}</p>
+                        <p className="text-base text-zinc-600">{jalon.quoi}</p>
 
                         {jalon.precedent && (
-                          <p className="text-sm text-zinc-500">
+                          <p className="text-base text-zinc-500">
                             <span className="font-medium text-zinc-700">
                               Après :
                             </span>{" "}
@@ -177,7 +177,7 @@ export default async function CalendrierPage({
                         )}
 
                         {jalon.aQuiDemander && (
-                          <p className="text-sm text-zinc-500">
+                          <p className="text-base text-zinc-500">
                             <span className="font-medium text-zinc-700">
                               À qui demander :
                             </span>{" "}
@@ -188,7 +188,7 @@ export default async function CalendrierPage({
                         {jalon.article && (
                           <Link
                             href={`/blog/${jalon.article}`}
-                            className="w-fit text-sm text-brand-navy underline-offset-2 hover:underline"
+                            className="w-fit text-base text-brand-navy underline-offset-2 hover:underline"
                           >
                             En savoir plus →
                           </Link>
@@ -200,7 +200,7 @@ export default async function CalendrierPage({
               );
             })}
 
-            <p className="text-xs text-zinc-500">
+            <p className="text-sm text-zinc-500">
               Les dates calculées sont des dates <em>limites</em>, pas des dates
               conseillées : s&apos;y prendre la veille de l&apos;échéance,
               c&apos;est n&apos;avoir aucune marge si un dossier est incomplet.
@@ -213,17 +213,17 @@ export default async function CalendrierPage({
         {planifie && <RappelOuverture source="calendrier" />}
 
         <div className="flex flex-col gap-3 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm">
-          <p className="text-sm font-semibold text-zinc-900">
+          <p className="text-base font-semibold text-zinc-900">
             Avant tout ça, il y a le local.
           </p>
-          <p className="text-sm text-zinc-600">
+          <p className="text-base text-zinc-600">
             Aucune de ces démarches ne sert si l&apos;extraction, la destination
             du bail ou la copropriété rendent le projet impossible. Ces cinq
             points-là se vérifient avant de signer.
           </p>
           <Link
             href="/diagnostic-local-restaurant"
-            className="w-fit text-sm text-brand-navy underline-offset-2 hover:underline"
+            className="w-fit text-base text-brand-navy underline-offset-2 hover:underline"
           >
             Ce local peut-il accueillir votre restaurant ? →
           </Link>

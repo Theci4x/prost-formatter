@@ -50,7 +50,7 @@ type Query = {
 
 const champ =
   "w-full rounded-md border border-zinc-300 px-3 py-2 text-base outline-none focus:border-brand-navy";
-const etiquette = "flex flex-col gap-1.5 text-sm font-medium text-zinc-700";
+const etiquette = "flex flex-col gap-1.5 text-base font-medium text-zinc-700";
 
 function Ligne({
   libelle,
@@ -69,13 +69,13 @@ function Ligne({
         <span
           className={
             fort
-              ? "text-sm font-semibold text-zinc-900"
-              : "text-sm text-zinc-600"
+              ? "text-base font-semibold text-zinc-900"
+              : "text-base text-zinc-600"
           }
         >
           {libelle}
         </span>
-        {aide && <span className="text-xs text-zinc-400">{aide}</span>}
+        {aide && <span className="text-sm text-zinc-400">{aide}</span>}
       </span>
       <span
         className={`shrink-0 tabular-nums ${
@@ -108,7 +108,7 @@ export default async function CalculateurPage({
     <div className="flex min-h-screen flex-col bg-brand-cream">
       <EnteteOutil />
 
-      <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-5 py-12">
+      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-5 py-12">
         <DonneesStructurees
           donnees={filAriane([
             { nom: "Klarr", url: siteUrl() },
@@ -148,7 +148,7 @@ export default async function CalculateurPage({
               defaultValue={saisie.couvertsPlateforme}
               className={champ}
             />
-            <span className="text-xs font-normal text-zinc-500">
+            <span className="text-sm font-normal text-zinc-500">
               Pas votre total de couverts : seulement ceux qui passent par elle.
             </span>
           </label>
@@ -165,7 +165,7 @@ export default async function CalculateurPage({
               defaultValue={saisie.commissionParCouvert}
               className={champ}
             />
-            <span className="text-xs font-normal text-zinc-500">
+            <span className="text-sm font-normal text-zinc-500">
               Entre 1 et 2 € chez la plupart des plateformes françaises. Prenez
               le vôtre, il se négocie.
             </span>
@@ -183,7 +183,7 @@ export default async function CalculateurPage({
               defaultValue={saisie.partDejaAcquise}
               className={champ}
             />
-            <span className="text-xs font-normal text-zinc-500">
+            <span className="text-sm font-normal text-zinc-500">
               Personne ne le sait au couvert près. Vos habitués, ceux qui vous
               cherchaient par votre nom, ceux qui passaient devant : estimez.
             </span>
@@ -233,7 +233,7 @@ export default async function CalculateurPage({
                   L&apos;abonnement vous coûterait {euros(resultat.ecartAn)} de
                   moins par an.
                 </p>
-                <p className="text-sm text-emerald-800">
+                <p className="text-base text-emerald-800">
                   Et surtout : les {euros(resultat.gaspillageAn)} payés sur des
                   clients déjà acquis ne servent à rien. C&apos;est cette
                   ligne-là qu&apos;un abonnement supprime — pas la découverte,
@@ -248,7 +248,7 @@ export default async function CalculateurPage({
                   L&apos;écart est de {euros(resultat.ecartAn)} par an.
                   C&apos;est peu.
                 </p>
-                <p className="text-sm text-amber-800">
+                <p className="text-base text-amber-800">
                   À ce niveau, changer d&apos;outil ne se justifie pas par le
                   prix seul. Regardez plutôt ce que vous perdez d&apos;autre :
                   la relation au client, le fichier, la main sur vos
@@ -259,11 +259,11 @@ export default async function CalculateurPage({
 
             {conclusion === "commission" && (
               <div className="flex flex-col gap-2 rounded-xl border border-zinc-200 bg-zinc-50 p-4">
-                <p className="text-sm font-semibold text-zinc-900">
+                <p className="text-base font-semibold text-zinc-900">
                   À votre volume, la commission vous coûte moins cher que notre
                   abonnement.
                 </p>
-                <p className="text-sm text-zinc-700">
+                <p className="text-base text-zinc-700">
                   Nous vendons l&apos;abonnement, et nous vous disons de ne pas
                   le prendre : en dessous d&apos;environ{" "}
                   {Number.isFinite(resultat.seuilCouverts)
@@ -275,7 +275,7 @@ export default async function CalculateurPage({
               </div>
             )}
 
-            <p className="text-xs text-zinc-500">
+            <p className="text-sm text-zinc-500">
               Ce calcul ne compte que les commissions. Il ignore ce qu&apos;une
               plateforme apporte — de la demande que vous n&apos;auriez pas eue
               — et ce qu&apos;elle coûte en plus : l&apos;adresse e-mail de
@@ -285,10 +285,10 @@ export default async function CalculateurPage({
         )}
 
         <div className="flex flex-col gap-3 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm">
-          <p className="text-sm font-semibold text-zinc-900">
+          <p className="text-base font-semibold text-zinc-900">
             Nous ne sommes pas neutres, et autant le dire.
           </p>
-          <p className="text-sm text-zinc-600">
+          <p className="text-base text-zinc-600">
             Klarr vend une page de réservation à l&apos;abonnement, sans
             commission : nous avons un intérêt direct à ce que vous trouviez les
             commissions trop chères. C&apos;est pourquoi ce calculateur vous
@@ -297,13 +297,13 @@ export default async function CalculateurPage({
           </p>
           <Link
             href="/blog/reservations-sans-commission-guide-restaurants-independants"
-            className="w-fit text-sm text-brand-navy underline-offset-2 hover:underline"
+            className="w-fit text-base text-brand-navy underline-offset-2 hover:underline"
           >
             Le raisonnement en entier, dans le journal →
           </Link>
           <Link
             href="/comparatif-logiciels-reservation-restaurant"
-            className="w-fit text-sm text-brand-navy underline-offset-2 hover:underline"
+            className="w-fit text-base text-brand-navy underline-offset-2 hover:underline"
           >
             Le comparatif avec TheFork, Zenchef et Guestonline →
           </Link>

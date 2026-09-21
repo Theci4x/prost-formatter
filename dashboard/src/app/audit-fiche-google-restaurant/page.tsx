@@ -101,7 +101,7 @@ export default function AuditPage() {
     <div className="flex min-h-screen flex-col bg-brand-cream">
       <EnteteOutil />
 
-      <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-5 py-12">
+      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-5 py-12">
         <DonneesStructurees
           donnees={filAriane([
             { nom: "Klarr", url: siteUrl() },
@@ -142,11 +142,14 @@ export default function AuditPage() {
                 <h3 className="text-base font-semibold text-zinc-900">
                   {pilier.titre}
                 </h3>
-                <p className="text-sm text-zinc-600">{pilier.quoi}</p>
+                <p className="text-base text-zinc-600">{pilier.quoi}</p>
               </div>
               <ul className="flex flex-col gap-1.5">
                 {pilier.signaux.map((signal) => (
-                  <li key={signal} className="flex gap-2 text-sm text-zinc-600">
+                  <li
+                    key={signal}
+                    className="flex gap-2 text-base text-zinc-600"
+                  >
                     <span aria-hidden="true" className="text-zinc-300">
                       —
                     </span>
@@ -156,7 +159,7 @@ export default function AuditPage() {
               </ul>
               <Link
                 href={`/blog/${pilier.article.slug}`}
-                className="w-fit text-sm text-brand-navy underline-offset-2 hover:underline"
+                className="w-fit text-base text-brand-navy underline-offset-2 hover:underline"
               >
                 {pilier.article.titre} →
               </Link>
@@ -170,13 +173,13 @@ export default function AuditPage() {
           <h2 className="text-base font-semibold text-zinc-900">
             Ce qui est gratuit, et ce qui ne l&apos;est pas
           </h2>
-          <p className="text-sm text-zinc-600">
+          <p className="text-base text-zinc-600">
             <strong>Le constat est gratuit</strong>, et il l&apos;est vraiment :
             vous repartez avec la liste, vous la traitez vous-même si vous
             voulez, et nous n&apos;avons rien à y redire. C&apos;est du travail
             de fiche, pas de la magie — quelqu&apos;un de méthodique y arrive.
           </p>
-          <p className="text-sm text-zinc-600">
+          <p className="text-base text-zinc-600">
             <strong>
               Ce qui se paie, c&apos;est de ne plus avoir à y penser.
             </strong>{" "}
@@ -186,7 +189,7 @@ export default function AuditPage() {
             les IA racontent de vous. La différence entre les deux n&apos;est
             pas le savoir : c&apos;est les heures du mardi après-midi.
           </p>
-          <p className="text-sm text-zinc-600">
+          <p className="text-base text-zinc-600">
             Et le geste qui rapporte le plus ne dépend de personne : mettez
             l&apos;adresse de votre page de réservation dans le champ prévu de
             votre fiche Google. Cinq minutes, une fois, gratuit, et sans nous.
@@ -194,17 +197,17 @@ export default function AuditPage() {
         </section>
 
         <div className="flex flex-col gap-3 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm">
-          <p className="text-sm font-semibold text-zinc-900">
+          <p className="text-base font-semibold text-zinc-900">
             Vous n&apos;avez pas encore ouvert ?
           </p>
-          <p className="text-sm text-zinc-600">
+          <p className="text-base text-zinc-600">
             La fiche Google se crée avant l&apos;ouverture : la vérification
             passe souvent par un courrier postal, et l&apos;attendre le jour J
             revient à ouvrir sans exister sur la carte.
           </p>
           <Link
             href="/calendrier-ouverture-restaurant"
-            className="w-fit text-sm text-brand-navy underline-offset-2 hover:underline"
+            className="w-fit text-base text-brand-navy underline-offset-2 hover:underline"
           >
             Le calendrier, à rebours depuis votre date d&apos;ouverture →
           </Link>

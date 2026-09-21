@@ -69,7 +69,7 @@ export function RappelOuverture({ source }: { source: string }) {
         <p className="text-sm font-semibold text-emerald-900">
           C&apos;est noté. On vous rappelle le mois venu.
         </p>
-        <p className="mt-1.5 text-sm text-emerald-800">
+        <p className="mt-1.5 text-base text-emerald-800">
           D&apos;ici là, vous n&apos;entendrez pas parler de nous. Si votre date
           bouge, revenez remplir le même formulaire : elle se corrige.
         </p>
@@ -86,7 +86,7 @@ export function RappelOuverture({ source }: { source: string }) {
         <p className="text-base font-semibold text-zinc-900">
           On vous rappelle le mois de votre ouverture ?
         </p>
-        <p className="text-sm text-zinc-600">
+        <p className="text-base text-zinc-600">
           Votre carnet de réservation, votre fiche Google et vos premiers
           couverts se décident dans les semaines qui précèdent l&apos;ouverture.
           C&apos;est là qu&apos;on vous est utile, pas aujourd&apos;hui.
@@ -94,7 +94,7 @@ export function RappelOuverture({ source }: { source: string }) {
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
-        <label className="flex flex-col gap-1 text-sm font-medium text-zinc-700">
+        <label className="flex flex-col gap-1 text-base font-medium text-zinc-700">
           Votre e-mail
           <input
             type="email"
@@ -106,7 +106,7 @@ export function RappelOuverture({ source }: { source: string }) {
             className={champ}
           />
         </label>
-        <label className="flex flex-col gap-1 text-sm font-medium text-zinc-700">
+        <label className="flex flex-col gap-1 text-base font-medium text-zinc-700">
           Votre date d&apos;ouverture
           <input
             type="date"
@@ -117,7 +117,7 @@ export function RappelOuverture({ source }: { source: string }) {
             className={champ}
           />
         </label>
-        <label className="flex flex-col gap-1 text-sm font-medium text-zinc-700">
+        <label className="flex flex-col gap-1 text-base font-medium text-zinc-700">
           Votre nom{" "}
           <span className="font-normal text-zinc-400">(facultatif)</span>
           <input
@@ -127,7 +127,7 @@ export function RappelOuverture({ source }: { source: string }) {
             className={champ}
           />
         </label>
-        <label className="flex flex-col gap-1 text-sm font-medium text-zinc-700">
+        <label className="flex flex-col gap-1 text-base font-medium text-zinc-700">
           Le restaurant{" "}
           <span className="font-normal text-zinc-400">(facultatif)</span>
           <input
@@ -138,7 +138,7 @@ export function RappelOuverture({ source }: { source: string }) {
             className={champ}
           />
         </label>
-        <label className="flex flex-col gap-1 text-sm font-medium text-zinc-700 sm:col-span-2">
+        <label className="flex flex-col gap-1 text-base font-medium text-zinc-700 sm:col-span-2">
           La ville{" "}
           <span className="font-normal text-zinc-400">(facultatif)</span>
           <input
@@ -151,7 +151,7 @@ export function RappelOuverture({ source }: { source: string }) {
       </div>
 
       {erreur && (
-        <p className="text-sm text-red-600" role="alert">
+        <p className="text-base text-red-600" role="alert">
           {erreur}
         </p>
       )}
@@ -164,7 +164,7 @@ export function RappelOuverture({ source }: { source: string }) {
         {envoi ? "Enregistrement…" : "Me rappeler le moment venu"}
       </button>
 
-      <p className="text-xs text-zinc-500">
+      <p className="text-sm text-zinc-500">
         Votre adresse ne sert qu&apos;à ça : un appel ou un message, une fois,
         le mois de votre ouverture. Pas de lettre d&apos;information, pas de
         revente, rien entre-temps. Pour être retiré de la liste avant ou après,

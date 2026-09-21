@@ -81,7 +81,7 @@ export default function OuvrirPage() {
     <div className="flex min-h-screen flex-col bg-brand-cream">
       <EnteteOutil />
 
-      <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-5 py-12">
+      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-5 py-12">
         <DonneesStructurees
           donnees={filAriane([
             { nom: "Klarr", url: siteUrl() },
@@ -117,7 +117,7 @@ export default function OuvrirPage() {
                   {etape.titre}
                 </h2>
               </div>
-              <p className="text-sm text-zinc-600">{etape.texte}</p>
+              <p className="text-base text-zinc-600">{etape.texte}</p>
               <Link
                 href={etape.lien}
                 className="w-fit rounded-md border border-zinc-200 px-4 py-2 text-sm font-medium text-brand-navy transition-colors hover:border-brand-navy"
@@ -129,17 +129,17 @@ export default function OuvrirPage() {
         </ol>
 
         <div className="flex flex-col gap-3 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm">
-          <p className="text-sm font-semibold text-zinc-900">
+          <p className="text-base font-semibold text-zinc-900">
             Et le reste du parcours
           </p>
-          <p className="text-sm text-zinc-600">
+          <p className="text-base text-zinc-600">
             Licence, déclaration sanitaire, hygiène, musique, TVA, bruit : le
             journal les traite un par un, avec les textes en bas de page pour
             que vous puissiez vérifier.
           </p>
           <Link
             href="/blog"
-            className="w-fit text-sm text-brand-navy underline-offset-2 hover:underline"
+            className="w-fit text-base text-brand-navy underline-offset-2 hover:underline"
           >
             Le journal →
           </Link>
