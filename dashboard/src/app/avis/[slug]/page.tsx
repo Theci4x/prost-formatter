@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { createServiceClient } from "@/lib/supabase/service";
 import { ChoixAvis } from "@/components/avis/ChoixAvis";
+import { RouePublique } from "@/components/roue/RouePublique";
 import { SignatureKlarr } from "@/components/brand/SignatureKlarr";
 import { lienAvisGoogle } from "@/lib/avis/liens";
 import { searchPlace } from "@/lib/google/places";
@@ -14,6 +15,57 @@ type Maison = {
   adresse: string | null;
   google_place_id: string | null;
 };
+
+type JeuOuvert = {
+  titre: string;
+  sousTitre: string | null;
+  /** Les libellés dans l'ordre exact que le serveur indexe au tirage. */
+  cases: string[];
+};
+
+/**
+ * La roue de cette maison, si elle tourne.
+ *
+ * Les cases sont chargées ici, dans le même ordre que le tirage les
+ * parcourt — c'est cet ordre qui permet à l'animation de se poser sur la
+ * bonne case. Une roue sans case gagnante ne s'affiche pas : mieux vaut
+ * pas de jeu du tout qu'un jeu qui ne donne rien.
+ */
+async function chargerJeu(maisonId: string): Promise<JeuOuvert | null> {
+  const supabase = createServiceClient();
+  const { data: roue } = await supabase
+    .from("restaurant_roue")
+    .select("active, titre, sous_titre")
+    .eq("restaurant_id", maisonId)
+    .maybeSingle();
+  const reglage = roue as {
+    active: boolean;
+    titre: string;
+    sous_titre: string | null;
+  } | null;
+  if (!reglage?.active) return null;
+
+  const { data } = await supabase
+    .from("restaurant_roue_lots")
+    .select("libelle, gagnant, poids")
+    .eq("restaurant_id", maisonId)
+    .order("ordre")
+    .order("created_at");
+  const lots = (data ?? []) as {
+    libelle: string;
+    gagnant: boolean;
+    poids: number;
+  }[];
+  if (lots.length < 2 || !lots.some((lot) => lot.gagnant && lot.poids > 0)) {
+    return null;
+  }
+
+  return {
+    titre: reglage.titre,
+    sousTitre: reglage.sous_titre,
+    cases: lots.map((lot) => lot.libelle),
+  };
+}
 
 async function chargerMaison(slug: string): Promise<Maison | null> {
   const supabase = createServiceClient();
@@ -86,7 +138,10 @@ export default async function AvisPage({
   const maison = await chargerMaison(slug);
   if (!maison) notFound();
 
-  const lienGoogle = lienAvisGoogle(await ficheGoogle(maison));
+  const [lienGoogle, jeu] = await Promise.all([
+    ficheGoogle(maison).then(lienAvisGoogle),
+    chargerJeu(maison.id),
+  ]);
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center gap-8 px-6 py-12">
@@ -97,6 +152,19 @@ export default async function AvisPage({
           c&apos;était ?
         </p>
       </div>
+
+      {/* La roue d'abord quand elle tourne : c'est ce que le totem
+          promet. Les deux chemins restent en dessous, à égalité comme
+          toujours, et le lot ne dépend d'aucun des deux. */}
+      {jeu && (
+        <RouePublique
+          slug={slug}
+          titre={jeu.titre}
+          sousTitre={jeu.sousTitre}
+          cases={jeu.cases}
+          lienGoogle={lienGoogle}
+        />
+      )}
 
       <ChoixAvis slug={slug} nom={maison.nom} lienGoogle={lienGoogle} />
 
