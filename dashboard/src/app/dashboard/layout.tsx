@@ -5,6 +5,9 @@ import { LogoutButton } from "@/components/auth/LogoutButton";
 import { Commis } from "@/components/commis/Commis";
 import { KlarrMark, KlarrWordmark } from "@/components/brand/KlarrMark";
 import { BandeauInstallation } from "@/components/dashboard/BandeauInstallation";
+import { LiaisonCoupee } from "@/components/dashboard/LiaisonCoupee";
+import { lireSession } from "@/lib/supabase/session";
+import { langueUtilisateur } from "@/lib/i18n/langue";
 
 export default async function DashboardLayout({
   children,
@@ -12,15 +15,37 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const verdict = await lireSession(supabase);
 
-  // Le middleware protege deja /dashboard ; cette verification serveur est
-  // une deuxieme ligne de defense (defense en profondeur).
-  if (!user) {
+  // Le proxy protège déjà /dashboard ; cette vérification serveur est une
+  // deuxième ligne de défense (défense en profondeur).
+  if (verdict.etat === "deconnecte") {
     redirect("/login");
   }
+
+  // Injoignable : on le dit, et on ne rend surtout pas les écrans en
+  // dessous — sans utilisateur, ils n'auraient rien à montrer et
+  // tomberaient en panne un par un.
+  if (verdict.etat === "indecidable") {
+    return (
+      <div className="flex min-h-screen flex-1 flex-col bg-brand-cream">
+        <header className="sticky top-0 z-10 flex items-center justify-between border-b border-zinc-200/70 bg-white/90 px-6 py-4 shadow-sm backdrop-blur">
+          <span className="flex items-center gap-2">
+            <KlarrMark size={22} />
+            <KlarrWordmark className="text-lg text-zinc-900" />
+          </span>
+        </header>
+        <main className="flex flex-1 flex-col">
+          <LiaisonCoupee
+            langue={await langueUtilisateur()}
+            chemin="/dashboard"
+          />
+        </main>
+      </div>
+    );
+  }
+
+  const user = verdict.user;
 
   return (
     <div className="flex min-h-screen flex-1 flex-col bg-brand-cream">
