@@ -26,6 +26,9 @@ import { traduction as noShowEn } from "@/contenu/blog/traductions/en/no-show";
 import { traduction as tvaMenuVinEn } from "@/contenu/blog/traductions/en/tva-menu-vin";
 import { traduction as livraisonEn } from "@/contenu/blog/traductions/en/livraison-plateformes";
 import { traduction as organisationSalleEn } from "@/contenu/blog/traductions/en/organisation-salle";
+import { traduction as extractionEn } from "@/contenu/blog/traductions/en/extraction-conduit-toiture";
+import { traduction as destinationBailEn } from "@/contenu/blog/traductions/en/destination-bail-restauration";
+import { traduction as coproprieteEn } from "@/contenu/blog/traductions/en/copropriete-restaurant";
 import { traduction as ouvrirChecklistZh } from "@/contenu/blog/traductions/zh/ouvrir-un-restaurant-checklist";
 import { traduction as permisLicenceZh } from "@/contenu/blog/traductions/zh/permis-exploitation-licence";
 import { traduction as declarationSanitaireZh } from "@/contenu/blog/traductions/zh/declaration-sanitaire-ddpp";
@@ -46,6 +49,9 @@ import { traduction as noShowZh } from "@/contenu/blog/traductions/zh/no-show";
 import { traduction as tvaMenuVinZh } from "@/contenu/blog/traductions/zh/tva-menu-vin";
 import { traduction as livraisonZh } from "@/contenu/blog/traductions/zh/livraison-plateformes";
 import { traduction as organisationSalleZh } from "@/contenu/blog/traductions/zh/organisation-salle";
+import { traduction as extractionZh } from "@/contenu/blog/traductions/zh/extraction-conduit-toiture";
+import { traduction as destinationBailZh } from "@/contenu/blog/traductions/zh/destination-bail-restauration";
+import { traduction as coproprieteZh } from "@/contenu/blog/traductions/zh/copropriete-restaurant";
 
 /**
  * Le journal dans les autres langues.
@@ -90,6 +96,9 @@ const TRADUCTIONS: Record<
     "tva-restaurant-menu-avec-vin-ventilation": tvaMenuVinEn,
     "livraison-uber-eats-deliveroo-calcul-marge": livraisonEn,
     "organisation-service-salle-fonctions": organisationSalleEn,
+    "extraction-restaurant-conduit-toiture": extractionEn,
+    "destination-bail-commercial-restauration": destinationBailEn,
+    "reglement-copropriete-restaurant": coproprieteEn,
   },
   zh: {
     "ouvrir-un-restaurant-demarches": ouvrirChecklistZh,
@@ -113,6 +122,9 @@ const TRADUCTIONS: Record<
     "tva-restaurant-menu-avec-vin-ventilation": tvaMenuVinZh,
     "livraison-uber-eats-deliveroo-calcul-marge": livraisonZh,
     "organisation-service-salle-fonctions": organisationSalleZh,
+    "extraction-restaurant-conduit-toiture": extractionZh,
+    "destination-bail-commercial-restauration": destinationBailZh,
+    "reglement-copropriete-restaurant": coproprieteZh,
   },
 };
 
