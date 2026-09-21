@@ -14,8 +14,11 @@ import {
   compter,
   etablirBilan,
   lireReponses,
+  ECRAN,
+  resumeBilan,
   type Niveau,
 } from "@/lib/diagnostic/local";
+import { t } from "@/lib/i18n/outils";
 
 /**
  * Le diagnostic d'un local, avant la signature du bail.
@@ -41,24 +44,18 @@ export const metadata: Metadata = {
 
 type Query = Record<string, string | string[] | undefined>;
 
-const COULEUR: Record<
-  Niveau,
-  { cadre: string; pastille: string; mot: string }
-> = {
+const COULEUR: Record<Niveau, { cadre: string; pastille: string }> = {
   bloquant: {
     cadre: "border-red-200 bg-red-50",
     pastille: "bg-red-100 text-red-900",
-    mot: "À régler avant de signer",
   },
   verifier: {
     cadre: "border-amber-200 bg-amber-50",
     pastille: "bg-amber-100 text-amber-900",
-    mot: "À vérifier",
   },
   leve: {
     cadre: "border-zinc-200 bg-white",
     pastille: "bg-zinc-100 text-zinc-700",
-    mot: "Rien à demander ici",
   },
 };
 
@@ -88,32 +85,22 @@ export default async function DiagnosticPage({
 
         <div className="flex flex-col gap-3">
           <span className="text-xs font-semibold uppercase tracking-wide text-brand-orange">
-            Avant de signer
+            {t(ECRAN.surtitre, langue)}
           </span>
           <h1 className="font-serif text-4xl text-ink sm:text-5xl">
-            Ce local peut-il accueillir votre restaurant ?
+            {t(ECRAN.titre, langue)}
           </h1>
-          <p className="text-base text-zinc-600">
-            Cinq points empêchent d&apos;ouvrir : l&apos;extraction, la
-            destination du bail, la copropriété, l&apos;ERP et la terrasse. Ce
-            ne sont pas les plus longs à régler, ce sont ceux qui se règlent{" "}
-            <strong>avant la signature</strong> — ou ne se règlent pas.
-          </p>
+          <p className="text-base text-zinc-600">{t(ECRAN.chapo, langue)}</p>
         </div>
 
         {/* L'avertissement est ici, pas en bas : quelqu'un qui lit un
             résultat a déjà cessé de lire le reste de la page. */}
         <div className="rounded-2xl border border-zinc-300 bg-white p-5">
           <p className="text-base font-semibold text-zinc-900">
-            Ce questionnaire ne vous dira jamais que le local convient.
+            {t(ECRAN.avertissementTitre, langue)}
           </p>
           <p className="mt-1.5 text-base text-zinc-600">
-            Nous n&apos;avons vu ni les lieux, ni le bail, ni le règlement de
-            copropriété : nous ne pouvons rien conclure, et personne ne le
-            pourrait à notre place. Ce qu&apos;il fait, c&apos;est transformer
-            vos « je ne sais pas » en questions précises, adressées à des gens
-            précis. Il ne remplace ni un architecte, ni un avocat, ni un bureau
-            de contrôle — il vous dit lesquels appeler.
+            {t(ECRAN.avertissementTexte, langue)}
           </p>
         </div>
 
@@ -126,15 +113,17 @@ export default async function DiagnosticPage({
           {POINTS.map((point) => (
             <fieldset key={point.id} className="flex flex-col gap-4">
               <legend className="text-sm font-semibold uppercase tracking-wide text-brand-navy">
-                {point.titre}
+                {t(point.titre, langue)}
               </legend>
               {QUESTIONS.filter((q) => q.point === point.id).map((question) => (
                 <div key={question.id} className="flex flex-col gap-2">
                   <p className="text-base font-medium text-zinc-800">
-                    {question.texte}
+                    {t(question.texte, langue)}
                   </p>
                   {question.aide && (
-                    <p className="text-sm text-zinc-500">{question.aide}</p>
+                    <p className="text-sm text-zinc-500">
+                      {t(question.aide, langue)}
+                    </p>
                   )}
                   <div className="flex flex-wrap gap-4">
                     {REPONSES.map((valeur) => (
@@ -149,7 +138,7 @@ export default async function DiagnosticPage({
                           defaultChecked={reponses.get(question.id) === valeur}
                           className="accent-brand-navy"
                         />
-                        {valeur === "inconnu" ? "Je ne sais pas" : valeur}
+                        {t(ECRAN.reponses[valeur], langue)}
                       </label>
                     ))}
                   </div>
@@ -162,7 +151,7 @@ export default async function DiagnosticPage({
             type="submit"
             className="rounded-md bg-brand-navy px-5 py-3 text-base font-medium text-white transition-colors hover:bg-brand-navy-hover"
           >
-            Voir ce qu&apos;il me reste à vérifier
+            {t(ECRAN.bouton, langue)}
           </button>
         </form>
 
@@ -170,14 +159,10 @@ export default async function DiagnosticPage({
           <section className="flex flex-col gap-4">
             <div className="flex flex-col gap-1">
               <h2 className="font-serif text-3xl text-ink">
-                Ce qu&apos;il vous reste à vérifier
+                {t(ECRAN.resultatTitre, langue)}
               </h2>
               <p className="text-base text-zinc-600">
-                {totaux.bloquant > 0
-                  ? `${totaux.bloquant} point${totaux.bloquant > 1 ? "s" : ""} à régler avant de signer, ${totaux.verifier} à vérifier.`
-                  : totaux.verifier > 0
-                    ? `Aucun point bloquant d'après vos réponses, ${totaux.verifier} à vérifier quand même.`
-                    : "Vos réponses ne laissent aucune question ouverte sur ces cinq points — ce qui ne veut pas dire que le local convient, seulement que ces cinq-là sont traités."}
+                {resumeBilan(totaux, langue)}
               </p>
             </div>
 
@@ -190,19 +175,19 @@ export default async function DiagnosticPage({
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <h3 className="text-base font-semibold text-zinc-900">
-                      {bilan.point.titre}
+                      {t(bilan.point.titre, langue)}
                     </h3>
                     <span
                       className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${style.pastille}`}
                     >
-                      {style.mot}
+                      {t(ECRAN.niveaux[bilan.niveau], langue)}
                     </span>
                   </div>
 
                   <ul className="flex flex-col gap-2">
                     {bilan.constats.map((constat, rang) => (
                       <li key={rang} className="text-base text-zinc-700">
-                        {constat.texte}
+                        {t(constat.texte, langue)}
                       </li>
                     ))}
                   </ul>
@@ -211,10 +196,10 @@ export default async function DiagnosticPage({
                       seule chose que cette page apporte vraiment. */}
                   <div className="rounded-xl bg-white/70 p-3">
                     <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">
-                      À qui demander
+                      {t(ECRAN.aQuiDemander, langue)}
                     </p>
                     <p className="mt-1 text-base text-zinc-700">
-                      {bilan.point.aQuiDemander}
+                      {t(bilan.point.aQuiDemander, langue)}
                     </p>
                   </div>
 
@@ -223,34 +208,29 @@ export default async function DiagnosticPage({
                       href={`/blog/${bilan.point.article.slug}`}
                       className="w-fit text-base text-brand-navy underline-offset-2 hover:underline"
                     >
-                      {bilan.point.article.titre} →
+                      {t(bilan.point.article.titre, langue)} →
                     </Link>
                   )}
                 </article>
               );
             })}
 
-            <p className="text-sm text-zinc-500">
-              Cette page vit dans son adresse : copiez-la pour la retrouver, ou
-              envoyez-la à votre associé, à votre courtier ou à votre avocat.
-            </p>
+            <p className="text-sm text-zinc-500">{t(ECRAN.partage, langue)}</p>
           </section>
         )}
 
         <div className="flex flex-col gap-3 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm">
           <p className="text-base font-semibold text-zinc-900">
-            Et après la signature ?
+            {t(ECRAN.apresTitre, langue)}
           </p>
           <p className="text-base text-zinc-600">
-            Licence, déclaration sanitaire, HACCP, SACEM, diagnostics avant
-            travaux : tout cela se règle ensuite, et se rattrape. Les cinq
-            points ci-dessus, non.
+            {t(ECRAN.apresTexte, langue)}
           </p>
           <Link
             href="/blog/ouvrir-un-restaurant-demarches"
             className="w-fit text-base text-brand-navy underline-offset-2 hover:underline"
           >
-            Ouvrir un restaurant : tout ce qu&apos;on découvre trop tard →
+            {t(ECRAN.apresLien, langue)}
           </Link>
         </div>
         <SuiteOutils actuel="diagnostic" langue={langue} />
