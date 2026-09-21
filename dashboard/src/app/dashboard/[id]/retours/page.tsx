@@ -6,6 +6,7 @@ import { siteUrl } from "@/lib/site-url";
 import type { Restaurant } from "@/types/restaurant";
 import { exiger } from "@/lib/equipe/roles";
 import { exigerModule } from "@/lib/abonnement/acces";
+import { qrSvgDe } from "@/lib/menu/qr";
 
 type Retour = {
   id: string;
@@ -52,6 +53,9 @@ export default async function RetoursPage({
   const adresse = restaurant.slug_reservation
     ? `${siteUrl()}/avis/${restaurant.slug_reservation}`
     : null;
+  // L'adresse en toutes lettres ne sert qu'à celui qui la recopie dans un
+  // outil de mise en page. Ce qu'on colle sur un totem, c'est le carré.
+  const qr = adresse ? await qrSvgDe(adresse) : null;
 
   return (
     <div className="flex flex-1 flex-col gap-6 px-6 py-8">
@@ -68,11 +72,21 @@ export default async function RetoursPage({
         </p>
 
         {adresse ? (
-          <div className="flex flex-col gap-1 rounded-xl border border-zinc-200 bg-white px-4 py-3">
-            <p className="text-xs font-medium text-zinc-500">
-              L&apos;adresse à mettre sur votre totem ou QR code
-            </p>
-            <code className="break-all text-sm text-zinc-900">{adresse}</code>
+          <div className="flex flex-wrap items-center gap-5 rounded-xl border border-zinc-200 bg-white px-4 py-4">
+            <div className="flex min-w-0 flex-1 flex-col gap-1">
+              <p className="text-xs font-medium text-zinc-500">
+                L&apos;adresse à mettre sur votre totem ou QR code
+              </p>
+              <code className="break-all text-sm text-zinc-900">{adresse}</code>
+            </div>
+            {/* Le QR en vectoriel : un totem s'imprime, et un QR en pixels
+                grossis ne se scanne plus. */}
+            {qr && (
+              <div
+                className="w-32 shrink-0 [&>svg]:h-auto [&>svg]:w-full"
+                dangerouslySetInnerHTML={{ __html: qr }}
+              />
+            )}
           </div>
         ) : (
           <p className="text-sm text-amber-800">
