@@ -5,11 +5,10 @@ import {
   addService,
   type ServiceState,
 } from "@/app/dashboard/[id]/reservations/actions";
-import {
-  JOURS_ISO,
-  SERVICE_VIDE,
-  type ServiceValeurs,
-} from "@/types/reservation";
+import { SERVICE_VIDE, type ServiceValeurs } from "@/types/reservation";
+import type { ClesConfiguration } from "@/lib/i18n/configuration";
+import type { Langue } from "@/lib/i18n/langues";
+import { joursSemaine } from "@/lib/i18n/jours";
 
 const initialState: ServiceState = {
   error: null,
@@ -24,9 +23,14 @@ const label = "flex flex-col gap-1 text-sm font-medium text-zinc-700";
 function Champs({
   restaurantId,
   valeurs,
+  cfg,
+  langue,
 }: {
   restaurantId: string;
   valeurs: ServiceValeurs;
+  cfg: ClesConfiguration;
+  /** Les jours de la semaine viennent d'`Intl`, pas du dictionnaire. */
+  langue: Langue;
 }) {
   return (
     <>
@@ -34,18 +38,18 @@ function Champs({
 
       <div className="grid gap-4 sm:grid-cols-3">
         <label className={label} htmlFor="service-nom">
-          Nom du service
+          {cfg.nomDuService}
           <input
             id="service-nom"
             name="nom"
             required
             defaultValue={valeurs.nom}
-            placeholder="Dîner"
+            placeholder={cfg.nomServicePlaceholder}
             className={champ}
           />
         </label>
         <label className={label} htmlFor="service-debut">
-          Début
+          {cfg.debut}
           <input
             id="service-debut"
             name="heure_debut"
@@ -56,7 +60,7 @@ function Champs({
           />
         </label>
         <label className={label} htmlFor="service-fin">
-          Fin
+          {cfg.fin}
           <input
             id="service-fin"
             name="heure_fin"
@@ -68,16 +72,13 @@ function Champs({
         </label>
       </div>
 
-      <p className="-mt-2 text-xs text-zinc-500">
-        Un service peut finir après minuit : saisis simplement 17h30 – 2h. Il
-        restera rattaché au jour où il commence.
-      </p>
+      <p className="-mt-2 text-xs text-zinc-500">{cfg.apresMinuit}</p>
 
       {/* Sans cette durée, une salle de 92 places ne vendrait que 92
           couverts pour toute la soirée. C'est elle qui fait tourner les
           tables. */}
       <label className={label} htmlFor="service-duree">
-        Durée moyenne d&apos;une table (minutes)
+        {cfg.dureeMoyenne}
         <input
           id="service-duree"
           name="duree_minutes"
@@ -90,18 +91,16 @@ function Champs({
           className={champ}
         />
         <span className="text-xs font-normal text-zinc-500">
-          Elle fixe les heures d&apos;arrivée proposées et libère la table
-          pour les suivants. Deux heures le soir, une heure et demie le
-          midi, en général.
+          {cfg.dureeAide}
         </span>
       </label>
 
       <fieldset className="flex flex-col gap-2">
         <legend className="text-sm font-medium text-zinc-700">
-          Jours concernés
+          {cfg.joursConcernes}
         </legend>
         <div className="flex flex-wrap gap-2">
-          {JOURS_ISO.map((jour) => (
+          {joursSemaine(langue).map((jour) => (
             <label
               key={jour.valeur}
               className="flex cursor-pointer items-center gap-2 rounded-md border border-zinc-200 px-3 py-1.5 text-sm text-zinc-700 has-checked:border-brand-navy has-checked:bg-brand-orange-soft"
@@ -119,7 +118,7 @@ function Champs({
       </fieldset>
 
       <label className={label} htmlFor="service-delai">
-        Délai de prévenance (heures)
+        {cfg.delaiPrevenance}
         <input
           id="service-delai"
           name="delai_heures"
@@ -129,15 +128,22 @@ function Champs({
           className={`${champ} max-w-32`}
         />
         <span className="text-xs font-normal text-zinc-500">
-          Aucune demande ne sera acceptée en deçà de ce délai. Mets 0 pour
-          accepter les demandes de dernière minute.
+          {cfg.delaiAide}
         </span>
       </label>
     </>
   );
 }
 
-export function ServiceForm({ restaurantId }: { restaurantId: string }) {
+export function ServiceForm({
+  restaurantId,
+  cfg,
+  langue,
+}: {
+  restaurantId: string;
+  cfg: ClesConfiguration;
+  langue: Langue;
+}) {
   const [state, action, pending] = useActionState(addService, initialState);
   // Quand le navigateur refuse d'envoyer le formulaire — un champ horaire
   // incomplet, par exemple —, il n'affiche qu'une infobulle fugace. Sans ce
@@ -150,9 +156,7 @@ export function ServiceForm({ restaurantId }: { restaurantId: string }) {
       onInvalidCapture={(event) => {
         const champ = event.target as HTMLInputElement;
         setBloque(
-          champ.type === "time"
-            ? "Renseigne les heures de début et de fin, au format 19:00."
-            : "Il manque quelque chose : le champ surligné n'est pas rempli.",
+          champ.type === "time" ? cfg.heuresIncompletes : cfg.champManquant,
         );
       }}
       onSubmit={() => setBloque(null)}
@@ -164,6 +168,8 @@ export function ServiceForm({ restaurantId }: { restaurantId: string }) {
         key={state.rendu}
         restaurantId={restaurantId}
         valeurs={state.valeurs}
+        cfg={cfg}
+        langue={langue}
       />
 
       {(state.error || bloque) && (
@@ -177,7 +183,7 @@ export function ServiceForm({ restaurantId }: { restaurantId: string }) {
         disabled={pending}
         className="w-fit rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover disabled:opacity-50"
       >
-        {pending ? "Enregistrement…" : "Ajouter ce service"}
+        {pending ? cfg.enregistrement : cfg.ajouterCeService}
       </button>
     </form>
   );

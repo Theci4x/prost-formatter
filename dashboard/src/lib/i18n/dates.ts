@@ -50,3 +50,12 @@ export function dateBreve(iso: string, langue: Langue): string {
     month: "short",
   });
 }
+
+/** « 14 juillet 2026 » — une fermeture se lit avec son année. */
+export function dateComplete(jour: string, langue: Langue): string {
+  return new Date(`${jour}T12:00:00`).toLocaleDateString(locale(langue), {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}

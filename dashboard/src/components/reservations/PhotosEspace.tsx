@@ -7,6 +7,8 @@ import type { RestaurantPhoto } from "@/types/photo";
 import { LegendePhoto } from "@/components/photos/LegendePhoto";
 import { ESPACE, messageTropPetite } from "@/lib/images/formats";
 import { preparerPhoto } from "@/lib/images/preparer";
+import type { ClesConfiguration } from "@/lib/i18n/configuration";
+import type { Langue } from "@/lib/i18n/langues";
 
 // Même plafond que côté serveur : on refuse avant d'occuper la connexion.
 // Il ne sert plus qu'au cas où le navigateur n'a pas su réencoder.
@@ -26,10 +28,15 @@ export function PhotosEspace({
   restaurantId,
   espaceId,
   photos,
+  cfg,
+  langue,
 }: {
   restaurantId: string;
   espaceId: string;
   photos: RestaurantPhoto[];
+  cfg: ClesConfiguration;
+  /** Le refus d'une photo trop petite porte sa mesure : il se traduit à part. */
+  langue: Langue;
 }) {
   const [erreur, setErreur] = useState<string | null>(null);
   const [enCours, startTransition] = useTransition();
@@ -40,7 +47,7 @@ export function PhotosEspace({
     setErreur(null);
     startTransition(async () => {
       if (!choisi || choisi.size === 0) {
-        setErreur("Choisis une photo.");
+        setErreur(cfg.choisisUnePhoto);
         return;
       }
 
@@ -48,15 +55,18 @@ export function PhotosEspace({
       if (!prete.ok) {
         setErreur(
           prete.motif === "trop-petite"
-            ? messageTropPetite(prete.largeur, prete.hauteur, ESPACE.minCote)
-            : "Ce fichier ne s'ouvre pas comme une image.",
+            ? messageTropPetite(
+                prete.largeur,
+                prete.hauteur,
+                ESPACE.minCote,
+                langue,
+              )
+            : cfg.pasUneImage,
         );
         return;
       }
       if (prete.fichier.size > TAILLE_MAX) {
-        setErreur(
-          "Photo trop lourde (4 Mo maximum). Réduis-la avant de l'envoyer.",
-        );
+        setErreur(cfg.photoTropLourde);
         return;
       }
 
@@ -106,7 +116,7 @@ export function PhotosEspace({
                   type="submit"
                   className="text-xs font-medium text-red-600 hover:text-red-800"
                 >
-                  Supprimer
+                  {cfg.supprimer}
                 </button>
               </form>
             </li>
@@ -118,7 +128,7 @@ export function PhotosEspace({
         <input type="hidden" name="restaurant_id" value={restaurantId} />
         <input type="hidden" name="espace_id" value={espaceId} />
         <label className="text-sm text-zinc-600" htmlFor={`photo-${espaceId}`}>
-          <span className="sr-only">Photo de cet espace</span>
+          <span className="sr-only">{cfg.photoDeCetEspace}</span>
           <input
             ref={champ}
             id={`photo-${espaceId}`}
@@ -136,12 +146,12 @@ export function PhotosEspace({
           className="text-sm text-zinc-600"
           htmlFor={`legende-ajout-${espaceId}`}
         >
-          <span className="sr-only">Légende de la photo</span>
+          <span className="sr-only">{cfg.legendePhoto}</span>
           <input
             id={`legende-ajout-${espaceId}`}
             name="legende"
             maxLength={80}
-            placeholder="Légende (facultatif)"
+            placeholder={cfg.legendePlaceholder}
             className="w-56 rounded-md border border-zinc-300 px-3 py-1.5 text-sm outline-none focus:border-brand-navy"
           />
         </label>
@@ -150,7 +160,7 @@ export function PhotosEspace({
           disabled={enCours}
           className="rounded-md border border-zinc-200 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy disabled:opacity-50"
         >
-          {enCours ? "Envoi…" : "Ajouter la photo"}
+          {enCours ? cfg.envoi : cfg.ajouterLaPhoto}
         </button>
 
         {erreur && (

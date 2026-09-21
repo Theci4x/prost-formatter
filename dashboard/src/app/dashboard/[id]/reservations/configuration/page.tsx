@@ -18,25 +18,30 @@ import {
   removeService,
   supprimerFermeture,
 } from "../actions";
-import {
-  type Espace,
-  type Fermeture,
-  type Service,
-} from "@/types/reservation";
+import { type Espace, type Fermeture, type Service } from "@/types/reservation";
 import type { Restaurant } from "@/types/restaurant";
 import type { RestaurantPhoto } from "@/types/photo";
 import { siteUrl } from "@/lib/site-url";
 import { exiger } from "@/lib/equipe/roles";
 import { exigerModule } from "@/lib/abonnement/acces";
+import { langueUtilisateur } from "@/lib/i18n/langue";
+import {
+  CONFIGURATION,
+  type ClesConfiguration,
+} from "@/lib/i18n/configuration";
+import { dateComplete } from "@/lib/i18n/dates";
+import type { Langue } from "@/lib/i18n/langues";
 
 function Supprimer({
   id,
   restaurantId,
   action,
+  libelle,
 }: {
   id: string;
   restaurantId: string;
   action: (formData: FormData) => Promise<void>;
+  libelle: string;
 }) {
   return (
     <form action={action}>
@@ -46,7 +51,7 @@ function Supprimer({
         type="submit"
         className="text-sm font-medium text-red-600 hover:text-red-800"
       >
-        Supprimer
+        {libelle}
       </button>
     </form>
   );
@@ -64,43 +69,50 @@ function Puce({ children }: { children: React.ReactNode }) {
  * La garantie d'un espace, en une phrase. Le restaurateur doit relire son
  * réglage sans rouvrir le formulaire : c'est ce qui sera réclamé à son
  * client, il ne doit pas avoir à le deviner.
+ *
+ * Le montant est formaté dans sa langue — « 1 500 » en français, « 1,500 »
+ * en anglais —, et c'est le dictionnaire qui place le symbole, parce que
+ * le chinois ne le met pas où nous le mettons.
  */
-function garantieLisible(espace: Espace): string | null {
+function garantieLisible(
+  espace: Espace,
+  cfg: ClesConfiguration,
+  langue: Langue,
+): string | null {
   const euros = (centimes: number) =>
-    (centimes / 100).toLocaleString("fr-FR", {
+    (centimes / 100).toLocaleString(langue === "fr" ? "fr-FR" : "en-GB", {
       minimumFractionDigits: centimes % 100 === 0 ? 0 : 2,
       maximumFractionDigits: 2,
     });
-  const seuil = espace.garantie_seuil_couverts
-    ? ` dès ${espace.garantie_seuil_couverts} convives`
-    : "";
+  const seuil = espace.garantie_seuil_couverts ?? null;
 
   if (espace.acompte_centimes) {
-    const par =
-      espace.acompte_mode === "par_couvert" ? " par personne" : "";
-    return `Acompte ${euros(espace.acompte_centimes)} €${par}${seuil}`;
+    return cfg.acompteLisible(
+      euros(espace.acompte_centimes),
+      espace.acompte_mode === "par_couvert",
+      seuil,
+    );
   }
   if (espace.caution_centimes) {
-    const par =
-      espace.caution_mode === "par_couvert" ? " par personne" : "";
-    return `Caution ${euros(espace.caution_centimes)} €${par}${seuil}`;
+    return cfg.cautionLisible(
+      euros(espace.caution_centimes),
+      espace.caution_mode === "par_couvert",
+      seuil,
+    );
   }
   return null;
 }
 
-function jourLisible(date: string): string {
-  return new Date(`${date}T12:00:00`).toLocaleDateString("fr-FR", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-}
-
 /** Un seul jour se dit « le 14 juillet », pas « du 14 au 14 ». */
-function formatPeriode(debut: string, fin: string): string {
+function formatPeriode(
+  debut: string,
+  fin: string,
+  cfg: ClesConfiguration,
+  langue: Langue,
+): string {
   return debut === fin
-    ? `Le ${jourLisible(debut)}`
-    : `Du ${jourLisible(debut)} au ${jourLisible(fin)}`;
+    ? cfg.unSeulJour(dateComplete(debut, langue))
+    : cfg.duAu(dateComplete(debut, langue), dateComplete(fin, langue));
 }
 
 export default async function ConfigurationReservationsPage({
@@ -111,6 +123,8 @@ export default async function ConfigurationReservationsPage({
   const { id } = await params;
   await exiger(id, "gerant");
   await exigerModule(id, "reservations");
+  const langue = await langueUtilisateur();
+  const cfg = CONFIGURATION[langue];
   const supabase = await createClient();
 
   const [
@@ -184,96 +198,90 @@ export default async function ConfigurationReservationsPage({
     <div className="flex flex-1 flex-col gap-10 px-6 py-8">
       <PageHeader
         icon={dashboardIcons.reservations}
-        title={`Réglages des réservations — ${restaurant.nom}`}
+        title={cfg.titre(restaurant.nom)}
         backHref={`/dashboard/${id}/reservations`}
       />
 
-      <p className="max-w-2xl text-sm text-zinc-500">
-        Décris tes espaces et tes services : Klarr s&apos;en sert pour calculer
-        ce qui reste disponible et pour empêcher qu&apos;une salle soit promise
-        deux fois. Un espace peut accueillir des tables classiques, se
-        privatiser en entier, ou les deux.
-      </p>
+      <p className="max-w-2xl text-sm text-zinc-500">{cfg.chapo}</p>
 
       <section className="flex flex-col gap-4">
         <div className="flex flex-col gap-1">
-          <h2 className="text-base font-semibold text-zinc-900">Tes espaces</h2>
-          <p className="text-sm text-zinc-500">
-            La salle principale, la terrasse, la cave — tout ce qui peut
-            accueillir un groupe.
-          </p>
+          <h2 className="text-base font-semibold text-zinc-900">
+            {cfg.espacesTitre}
+          </h2>
+          <p className="text-sm text-zinc-500">{cfg.espacesChapo}</p>
         </div>
 
         {espaces.length > 0 && (
           <ul className="flex flex-col gap-3">
-            {espaces.map((espace) => (
-              <li
-                key={espace.id}
-                className="flex flex-wrap items-start justify-between gap-4 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm"
-              >
-                <EspaceModifiable restaurantId={id} espace={espace}>
-                  <div className="flex min-w-0 flex-col gap-2">
-                    <span className="font-medium text-zinc-900">
-                      {espace.nom}
-                    </span>
-                    {espace.description && (
-                      <span className="text-sm text-zinc-500">
-                        {espace.description}
+            {espaces.map((espace) => {
+              const garantie = garantieLisible(espace, cfg, langue);
+              return (
+                <li
+                  key={espace.id}
+                  className="flex flex-wrap items-start justify-between gap-4 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm"
+                >
+                  <EspaceModifiable restaurantId={id} espace={espace} cfg={cfg}>
+                    <div className="flex min-w-0 flex-col gap-2">
+                      <span className="font-medium text-zinc-900">
+                        {espace.nom}
                       </span>
-                    )}
-                    <div className="flex flex-wrap gap-2">
-                      <Puce>{espace.capacite} couverts</Puce>
-                      {espace.accepte_table && (
-                        <Puce>Réservations individuelles</Puce>
+                      {espace.description && (
+                        <span className="text-sm text-zinc-500">
+                          {espace.description}
+                        </span>
                       )}
-                      {espace.privatisation_minimum !== null && (
-                        <Puce>
-                          Privatisation dès {espace.privatisation_minimum}
-                        </Puce>
-                      )}
-                      {garantieLisible(espace) && (
-                        <Puce>{garantieLisible(espace)}</Puce>
-                      )}
+                      <div className="flex flex-wrap gap-2">
+                        <Puce>{cfg.couverts(espace.capacite)}</Puce>
+                        {espace.accepte_table && (
+                          <Puce>{cfg.reservationsIndividuelles}</Puce>
+                        )}
+                        {espace.privatisation_minimum !== null && (
+                          <Puce>
+                            {cfg.privatisationDes(espace.privatisation_minimum)}
+                          </Puce>
+                        )}
+                        {garantie && <Puce>{garantie}</Puce>}
+                      </div>
                     </div>
-                  </div>
-                </EspaceModifiable>
-                <Supprimer
-                  id={espace.id}
-                  restaurantId={id}
-                  action={removeEspace}
-                />
-
-                <div className="w-full border-t border-zinc-100 pt-4">
-                  <p className="mb-3 text-sm font-medium text-zinc-700">
-                    Photos de cet espace{" "}
-                    <span className="font-normal text-zinc-400">
-                      — ce que verra le client avant de réserver
-                    </span>
-                  </p>
-                  <PhotosEspace
+                  </EspaceModifiable>
+                  <Supprimer
+                    id={espace.id}
                     restaurantId={id}
-                    espaceId={espace.id}
-                    photos={photosParEspace.get(espace.id) ?? []}
+                    action={removeEspace}
+                    libelle={cfg.supprimer}
                   />
-                </div>
-              </li>
-            ))}
+
+                  <div className="w-full border-t border-zinc-100 pt-4">
+                    <p className="mb-3 text-sm font-medium text-zinc-700">
+                      {cfg.photosDeCetEspace}{" "}
+                      <span className="font-normal text-zinc-400">
+                        {cfg.photosChapo}
+                      </span>
+                    </p>
+                    <PhotosEspace
+                      restaurantId={id}
+                      espaceId={espace.id}
+                      photos={photosParEspace.get(espace.id) ?? []}
+                      cfg={cfg}
+                      langue={langue}
+                    />
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         )}
 
-        <EspaceForm restaurantId={id} />
+        <EspaceForm restaurantId={id} cfg={cfg} />
       </section>
 
       <section className="flex flex-col gap-4">
         <div className="flex flex-col gap-1">
           <h2 className="text-base font-semibold text-zinc-900">
-            Tes services
+            {cfg.servicesTitre}
           </h2>
-          <p className="text-sm text-zinc-500">
-            Les créneaux pendant lesquels tu prends des réservations. Un
-            déjeuner et un dîner comptent séparément : une salle privatisée à
-            midi reste libre le soir.
-          </p>
+          <p className="text-sm text-zinc-500">{cfg.servicesChapo}</p>
         </div>
 
         {services.length > 0 && (
@@ -283,30 +291,32 @@ export default async function ConfigurationReservationsPage({
                 key={service.id}
                 className="flex flex-wrap items-start justify-between gap-4 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm"
               >
-                <ServiceModifiable restaurantId={id} service={service} />
+                <ServiceModifiable
+                  restaurantId={id}
+                  service={service}
+                  cfg={cfg}
+                  langue={langue}
+                />
                 <Supprimer
                   id={service.id}
                   restaurantId={id}
                   action={removeService}
+                  libelle={cfg.supprimer}
                 />
               </li>
             ))}
           </ul>
         )}
 
-        <ServiceForm restaurantId={id} />
+        <ServiceForm restaurantId={id} cfg={cfg} langue={langue} />
       </section>
 
       <section className="flex flex-col gap-4">
         <div className="flex flex-col gap-1">
           <h2 className="text-base font-semibold text-zinc-900">
-            Confirmations et e-mails
+            {cfg.confirmationsTitre}
           </h2>
-          <p className="text-sm text-zinc-500">
-            Qui valide les réservations, et où elles arrivent. Le client est
-            prévenu par e-mail dans tous les cas : confirmation immédiate si
-            Klarr confirme, accusé de réception sinon.
-          </p>
+          <p className="text-sm text-zinc-500">{cfg.confirmationsChapo}</p>
         </div>
 
         <ReglesConfirmation
@@ -314,19 +324,16 @@ export default async function ConfigurationReservationsPage({
           auto={publique.confirmation_auto ?? true}
           delaiHeures={publique.confirmation_auto_delai_heures ?? 24}
           emailContact={publique.email_contact ?? null}
+          cfg={cfg}
         />
       </section>
 
       <section className="flex flex-col gap-4">
         <div className="flex flex-col gap-1">
           <h2 className="text-base font-semibold text-zinc-900">
-            Fermetures
+            {cfg.fermeturesTitre}
           </h2>
-          <p className="text-sm text-zinc-500">
-            Congés, jour férié, salle déjà prise : ferme la période et plus
-            rien ne s&apos;y réserve, ni en ligne ni au téléphone. Tes services
-            restent configurés, tu n&apos;as rien à défaire.
-          </p>
+          <p className="text-sm text-zinc-500">{cfg.fermeturesChapo}</p>
         </div>
 
         {fermetures.length > 0 && (
@@ -338,12 +345,20 @@ export default async function ConfigurationReservationsPage({
               >
                 <span className="flex flex-col">
                   <span className="font-medium text-zinc-900">
-                    {formatPeriode(fermeture.date_debut, fermeture.date_fin)}
+                    {formatPeriode(
+                      fermeture.date_debut,
+                      fermeture.date_fin,
+                      cfg,
+                      langue,
+                    )}
                   </span>
                   <span className="text-sm text-zinc-500">
                     {fermeture.espace_id
-                      ? `${nomEspace.get(fermeture.espace_id) ?? "Espace supprimé"} seulement`
-                      : "Tout l'établissement"}
+                      ? cfg.espaceSeulement(
+                          nomEspace.get(fermeture.espace_id) ??
+                            cfg.espaceSupprime,
+                        )
+                      : cfg.toutEtablissement}
                     {fermeture.motif && ` · ${fermeture.motif}`}
                   </span>
                 </span>
@@ -354,7 +369,7 @@ export default async function ConfigurationReservationsPage({
                     type="submit"
                     className="text-sm font-medium text-zinc-500 hover:text-red-600"
                   >
-                    Rouvrir
+                    {cfg.rouvrir}
                   </button>
                 </form>
               </li>
@@ -362,25 +377,22 @@ export default async function ConfigurationReservationsPage({
           </ul>
         )}
 
-        <FermetureForm restaurantId={id} espaces={espaces} />
+        <FermetureForm restaurantId={id} espaces={espaces} cfg={cfg} />
       </section>
 
       <section className="flex flex-col gap-4">
         <div className="flex flex-col gap-1">
           <h2 className="text-base font-semibold text-zinc-900">
-            Ta page de réservation
+            {cfg.pageTitre}
           </h2>
-          <p className="text-sm text-zinc-500">
-            L&apos;adresse à partager sur ta fiche Google, ton Instagram et ta
-            page Facebook. Tes clients y voient uniquement ce qui est
-            réellement disponible.
-          </p>
+          <p className="text-sm text-zinc-500">{cfg.pageChapo}</p>
         </div>
 
         <IdentitePublique
           restaurantId={id}
           logoUrl={publique.logo_url ?? null}
           mentions={publique.mentions_legales ?? null}
+          cfg={cfg}
         />
 
         <div className="flex flex-col gap-3 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm">
@@ -399,20 +411,16 @@ export default async function ConfigurationReservationsPage({
               </a>
               {espaces.length === 0 || services.length === 0 ? (
                 <p className="text-sm text-amber-700">
-                  Ton adresse est en ligne, mais la page ne propose rien
-                  encore : il te manque{" "}
-                  {espaces.length === 0 && services.length === 0
-                    ? "une salle et un service"
-                    : espaces.length === 0
-                      ? "une salle"
-                      : "un service"}
-                  . Ajoute-le plus haut sur cette page.
+                  {cfg.adresseEnLigneMais(
+                    espaces.length === 0 && services.length === 0
+                      ? cfg.manqueSalleEtService
+                      : espaces.length === 0
+                        ? cfg.manqueSalle
+                        : cfg.manqueService,
+                  )}
                 </p>
               ) : (
-                <p className="text-sm text-zinc-500">
-                  Elle est en ligne. Ouvre-la pour vérifier ce que voient tes
-                  clients.
-                </p>
+                <p className="text-sm text-zinc-500">{cfg.elleEstEnLigne}</p>
               )}
 
               {/* La vitrine se règle sur la fiche de l'établissement, une
@@ -423,7 +431,7 @@ export default async function ConfigurationReservationsPage({
                 {publique.site_publie ? (
                   <>
                     <p className="mb-1 text-sm font-medium text-zinc-900">
-                      Ton site vitrine
+                      {cfg.siteVitrine}
                     </p>
                     <a
                       href={`/restaurant/${slug}`}
@@ -436,14 +444,12 @@ export default async function ConfigurationReservationsPage({
                   </>
                 ) : (
                   <p className="text-sm text-zinc-500">
-                    Tu peux aussi ouvrir un site vitrine — une page qui
-                    rassemble tes photos, ta carte, tes horaires et cette
-                    adresse de réservation. Ça se publie depuis{" "}
+                    {cfg.vitrineProposition}{" "}
                     <Link
                       href={`/dashboard/${id}/vitrine`}
                       className="font-medium text-brand-orange hover:underline"
                     >
-                      la page Site vitrine
+                      {cfg.laPageSiteVitrine}
                     </Link>
                     .
                   </p>
@@ -451,22 +457,19 @@ export default async function ConfigurationReservationsPage({
               </div>
             </>
           ) : espaces.length === 0 || services.length === 0 ? (
-            <p className="text-sm text-zinc-500">
-              Ajoute au moins un espace et un service : sans eux, la page
-              n&apos;aurait rien à proposer.
-            </p>
+            <p className="text-sm text-zinc-500">{cfg.ajouteEspaceEtService}</p>
           ) : (
-            <form action={activerPageReservation} className="flex flex-col gap-3">
+            <form
+              action={activerPageReservation}
+              className="flex flex-col gap-3"
+            >
               <input type="hidden" name="restaurant_id" value={id} />
-              <p className="text-sm text-zinc-500">
-                Ta page n&apos;est pas encore ouverte. Elle recevra une adresse
-                dérivée du nom de ton établissement.
-              </p>
+              <p className="text-sm text-zinc-500">{cfg.pasEncoreOuverte}</p>
               <button
                 type="submit"
                 className="w-fit rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover"
               >
-                Ouvrir ma page de réservation
+                {cfg.ouvrirMaPage}
               </button>
             </form>
           )}

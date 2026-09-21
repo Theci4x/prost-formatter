@@ -11,6 +11,7 @@ import {
   type Espace,
   type EspaceValeurs,
 } from "@/types/reservation";
+import type { ClesConfiguration } from "@/lib/i18n/configuration";
 
 const initialState: EspaceState = {
   error: null,
@@ -18,23 +19,26 @@ const initialState: EspaceState = {
   valeurs: ESPACE_VIDE,
 };
 
-const GARANTIES = [
-  {
-    valeur: "aucune" as const,
-    titre: "Aucune",
-    aide: "Le client réserve sans rien avancer.",
-  },
-  {
-    valeur: "acompte" as const,
-    titre: "Acompte",
-    aide: "Il paie une somme d'avance, encaissée sur ton compte Stripe.",
-  },
-  {
-    valeur: "caution" as const,
-    titre: "Carte en garantie",
-    aide: "Rien n'est prélevé : tu ne débites qu'en cas de défection.",
-  },
-];
+/** Les trois garanties, dans la langue du restaurateur. */
+function garantiesDe(cfg: ClesConfiguration) {
+  return [
+    {
+      valeur: "aucune" as const,
+      titre: cfg.garantieAucune,
+      aide: cfg.garantieAucuneAide,
+    },
+    {
+      valeur: "acompte" as const,
+      titre: cfg.garantieAcompte,
+      aide: cfg.garantieAcompteAide,
+    },
+    {
+      valeur: "caution" as const,
+      titre: cfg.garantieCaution,
+      aide: cfg.garantieCautionAide,
+    },
+  ];
+}
 
 const champ =
   "w-full rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-brand-navy";
@@ -43,6 +47,7 @@ const label = "flex flex-col gap-1 text-sm font-medium text-zinc-700";
 function Champs({
   restaurantId,
   valeurs,
+  cfg,
   // Les deux formulaires — ajout et modification — cohabitent sur la même
   // page : sans préfixe, un « label for » désignerait le champ de l'autre.
   prefixe = "espace",
@@ -50,6 +55,7 @@ function Champs({
 }: {
   restaurantId: string;
   valeurs: EspaceValeurs;
+  cfg: ClesConfiguration;
   prefixe?: string;
   espaceId?: string;
 }) {
@@ -57,28 +63,27 @@ function Champs({
   // afficher le champ en permanence ferait croire qu'il est obligatoire.
   const [privatisable, setPrivatisable] = useState(valeurs.privatisable);
   const [garantie, setGarantie] = useState(valeurs.garantie);
+  const garanties = garantiesDe(cfg);
 
   return (
     <>
       <input type="hidden" name="restaurant_id" value={restaurantId} />
-      {espaceId && (
-        <input type="hidden" name="espace_id" value={espaceId} />
-      )}
+      {espaceId && <input type="hidden" name="espace_id" value={espaceId} />}
 
       <div className="grid gap-4 sm:grid-cols-2">
         <label className={label} htmlFor={`${prefixe}-nom`}>
-          Nom de l&apos;espace
+          {cfg.nomEspace}
           <input
             id={`${prefixe}-nom`}
             name="nom"
             required
             defaultValue={valeurs.nom}
-            placeholder="Salle du bas"
+            placeholder={cfg.nomEspacePlaceholder}
             className={champ}
           />
         </label>
         <label className={label} htmlFor={`${prefixe}-capacite`}>
-          Capacité (couverts)
+          {cfg.capaciteCouverts}
           <input
             id={`${prefixe}-capacite`}
             name="capacite"
@@ -86,20 +91,20 @@ function Champs({
             min="1"
             required
             defaultValue={valeurs.capacite}
-            placeholder="40"
+            placeholder={cfg.capacitePlaceholder}
             className={champ}
           />
         </label>
       </div>
 
       <label className={label} htmlFor={`${prefixe}-description`}>
-        Description{" "}
-        <span className="font-normal text-zinc-400">(facultatif)</span>
+        {cfg.description}{" "}
+        <span className="font-normal text-zinc-400">{cfg.facultatif}</span>
         <input
           id={`${prefixe}-description`}
           name="description"
           defaultValue={valeurs.description}
-          placeholder="Salle voûtée en sous-sol, accès indépendant"
+          placeholder={cfg.descriptionPlaceholder}
           className={champ}
         />
       </label>
@@ -113,9 +118,8 @@ function Champs({
             className="mt-0.5"
           />
           <span>
-            <span className="font-medium">Réservations individuelles</span> —
-            plusieurs groupes partagent l&apos;espace en même temps, dans la
-            limite de la capacité.
+            <span className="font-medium">{cfg.individuellesLabel}</span> —{" "}
+            {cfg.individuellesAide}
           </span>
         </label>
 
@@ -128,15 +132,15 @@ function Champs({
             className="mt-0.5"
           />
           <span>
-            <span className="font-medium">Privatisation</span> — un seul groupe
-            occupe l&apos;espace entier sur le créneau.
+            <span className="font-medium">{cfg.privatisationLabel}</span> —{" "}
+            {cfg.privatisationAide}
           </span>
         </label>
 
         {privatisable && (
           <>
             <label className={`${label} pl-7`} htmlFor={`${prefixe}-minimum`}>
-              À partir de combien de couverts ?
+              {cfg.aPartirDeCombien}
               <input
                 id={`${prefixe}-minimum`}
                 name="privatisation_minimum"
@@ -146,20 +150,19 @@ function Champs({
                 className={`${champ} max-w-32`}
               />
               <span className="text-xs font-normal text-zinc-500">
-                Une demande en dessous de ce nombre sera refusée
-                automatiquement.
+                {cfg.sousCeNombre}
               </span>
             </label>
 
             <fieldset className="flex flex-col gap-2 pl-7">
               <legend className="mb-1 text-sm font-medium text-zinc-700">
-                Garantie demandée au client
+                {cfg.garantieDemandee}
               </legend>
 
               {/* Un seul choix : réclamer un acompte ET une caution au même
                   client serait une maladresse commerciale, pas une sécurité
                   de plus. */}
-              {GARANTIES.map((choix) => (
+              {garanties.map((choix) => (
                 <label
                   key={choix.valeur}
                   className="flex items-start gap-2.5 text-sm text-zinc-700"
@@ -189,18 +192,18 @@ function Champs({
                     inputMode="decimal"
                     defaultValue={valeurs.acompte}
                     placeholder="500"
-                    aria-label="Montant de l'acompte en euros"
+                    aria-label={cfg.montantAcompteAria}
                     className={`${champ} max-w-32`}
                   />
                   <span className="text-sm text-zinc-500">€</span>
                   <select
                     name="acompte_mode"
                     defaultValue={valeurs.acompteMode}
-                    aria-label="Mode de calcul de l'acompte"
+                    aria-label={cfg.modeAcompteAria}
                     className={`${champ} max-w-56`}
                   >
-                    <option value="forfait">au total</option>
-                    <option value="par_couvert">par couvert</option>
+                    <option value="forfait">{cfg.auTotal}</option>
+                    <option value="par_couvert">{cfg.parCouvert}</option>
                   </select>
                 </div>
               )}
@@ -214,7 +217,7 @@ function Champs({
                       inputMode="decimal"
                       defaultValue={valeurs.caution}
                       placeholder="1000"
-                      aria-label="Plafond de la caution en euros"
+                      aria-label={cfg.plafondCautionAria}
                       className={`${champ} max-w-32`}
                     />
                     <span className="text-sm text-zinc-500">€</span>
@@ -223,16 +226,15 @@ function Champs({
                     <select
                       name="caution_mode"
                       defaultValue={valeurs.cautionMode}
-                      aria-label="Mode de calcul de la caution"
+                      aria-label={cfg.modeCautionAria}
                       className={`${champ} max-w-56`}
                     >
-                      <option value="forfait">au total</option>
-                      <option value="par_couvert">par personne</option>
+                      <option value="forfait">{cfg.auTotal}</option>
+                      <option value="par_couvert">{cfg.parPersonne}</option>
                     </select>
                   </div>
                   <span className="text-xs text-zinc-500">
-                    Débitables seulement si le groupe ne vient pas. Rien
-                    n&apos;est prélevé à la réservation.
+                    {cfg.cautionNote}
                   </span>
                 </div>
               )}
@@ -243,7 +245,7 @@ function Champs({
                     className="text-sm text-zinc-700"
                     htmlFor={`${prefixe}-seuil`}
                   >
-                    À partir de
+                    {cfg.aPartirDe}
                   </label>
                   <input
                     id={`${prefixe}-seuil`}
@@ -251,11 +253,11 @@ function Champs({
                     inputMode="numeric"
                     defaultValue={valeurs.seuil}
                     placeholder="20"
-                    aria-label="Nombre de convives à partir duquel la garantie s'applique"
+                    aria-label={cfg.seuilAria}
                     className={`${champ} max-w-24`}
                   />
                   <span className="text-sm text-zinc-500">
-                    convives. En dessous, rien n&apos;est demandé.
+                    {cfg.convivesEnDessous}
                   </span>
                 </div>
               )}
@@ -266,8 +268,10 @@ function Champs({
                 s'honore à table — et qui doit donc se lire avant de
                 réserver, pas se découvrir à l'addition. */}
             <label className={label} htmlFor={`${prefixe}-minimum-conso`}>
-              Minimum de consommation{" "}
-              <span className="font-normal text-zinc-400">(facultatif)</span>
+              {cfg.minimumConso}{" "}
+              <span className="font-normal text-zinc-400">
+                {cfg.facultatif}
+              </span>
               <span className="flex flex-wrap items-center gap-2">
                 <input
                   id={`${prefixe}-minimum-conso`}
@@ -288,11 +292,7 @@ function Champs({
                 </select>
               </span>
               <span className="text-xs font-normal text-zinc-500">
-                Le client s&apos;engage à consommer au moins ce montant. Rien
-                n&apos;est encaissé : c&apos;est annoncé avant la
-                réservation, et ça se règle à l&apos;addition. Une
-                privatisation d&apos;entreprise se négocie en HT, un
-                anniversaire en TTC.
+                {cfg.minimumConsoAide}
               </span>
             </label>
           </>
@@ -302,7 +302,13 @@ function Champs({
   );
 }
 
-export function EspaceForm({ restaurantId }: { restaurantId: string }) {
+export function EspaceForm({
+  restaurantId,
+  cfg,
+}: {
+  restaurantId: string;
+  cfg: ClesConfiguration;
+}) {
   const [state, action, pending] = useActionState(addEspace, initialState);
 
   return (
@@ -317,6 +323,7 @@ export function EspaceForm({ restaurantId }: { restaurantId: string }) {
         key={state.rendu}
         restaurantId={restaurantId}
         valeurs={state.valeurs}
+        cfg={cfg}
       />
 
       {state.error && <p className="text-sm text-red-600">{state.error}</p>}
@@ -326,12 +333,11 @@ export function EspaceForm({ restaurantId }: { restaurantId: string }) {
         disabled={pending}
         className="w-fit rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover disabled:opacity-50"
       >
-        {pending ? "Enregistrement…" : "Ajouter cet espace"}
+        {pending ? cfg.enregistrement : cfg.ajouterCetEspace}
       </button>
     </form>
   );
 }
-
 
 /** Les valeurs du formulaire, telles qu'elles se lisent d'un espace en base. */
 function valeursDe(espace: Espace): EspaceValeurs {
@@ -374,10 +380,12 @@ function valeursDe(espace: Espace): EspaceValeurs {
 export function EspaceModifiable({
   restaurantId,
   espace,
+  cfg,
   children,
 }: {
   restaurantId: string;
   espace: Espace;
+  cfg: ClesConfiguration;
   /** Ce qu'on affiche tant que le formulaire est fermé. */
   children: React.ReactNode;
 }) {
@@ -403,7 +411,7 @@ export function EspaceModifiable({
           onClick={() => setOuvertDepuis(state.rendu)}
           className="rounded-md border border-zinc-200 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
         >
-          Modifier
+          {cfg.modifier}
         </button>
       </div>
     );
@@ -417,6 +425,7 @@ export function EspaceModifiable({
         espaceId={espace.id}
         prefixe={`mod-${espace.id}`}
         valeurs={state.valeurs}
+        cfg={cfg}
       />
 
       {state.error && <p className="text-sm text-red-600">{state.error}</p>}
@@ -427,14 +436,14 @@ export function EspaceModifiable({
           disabled={pending}
           className="rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover disabled:opacity-50"
         >
-          {pending ? "Enregistrement…" : "Enregistrer"}
+          {pending ? cfg.enregistrement : cfg.enregistrer}
         </button>
         <button
           type="button"
           onClick={() => setOuvertDepuis(null)}
           className="text-sm text-zinc-500 hover:text-zinc-900"
         >
-          Fermer
+          {cfg.fermer}
         </button>
       </div>
     </form>

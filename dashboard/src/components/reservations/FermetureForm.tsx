@@ -10,6 +10,7 @@ import {
   type Espace,
   type FermetureValeurs,
 } from "@/types/reservation";
+import type { ClesConfiguration } from "@/lib/i18n/configuration";
 
 const initialState: FermetureState = {
   error: null,
@@ -25,10 +26,12 @@ function Champs({
   restaurantId,
   espaces,
   valeurs,
+  cfg,
 }: {
   restaurantId: string;
   espaces: Espace[];
   valeurs: FermetureValeurs;
+  cfg: ClesConfiguration;
 }) {
   return (
     <>
@@ -36,7 +39,7 @@ function Champs({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <label className={label} htmlFor="fermeture-debut">
-          Du
+          {cfg.du}
           <input
             id="fermeture-debut"
             name="date_debut"
@@ -47,9 +50,9 @@ function Champs({
           />
         </label>
         <label className={label} htmlFor="fermeture-fin">
-          Au{" "}
+          {cfg.au}{" "}
           <span className="font-normal text-zinc-400">
-            (vide = un seul jour)
+            {cfg.videUnSeulJour}
           </span>
           <input
             id="fermeture-fin"
@@ -63,31 +66,29 @@ function Champs({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <label className={label} htmlFor="fermeture-espace">
-          Ce qui ferme
+          {cfg.ceQuiFerme}
           <select
             id="fermeture-espace"
             name="espace_id"
             defaultValue={valeurs.espaceId}
             className={champ}
           >
-            <option value="">Tout l&apos;établissement</option>
+            <option value="">{cfg.toutEtablissement}</option>
             {espaces.map((espace) => (
               <option key={espace.id} value={espace.id}>
-                {espace.nom} seulement
+                {cfg.espaceSeulement(espace.nom)}
               </option>
             ))}
           </select>
         </label>
         <label className={label} htmlFor="fermeture-motif">
-          Motif{" "}
-          <span className="font-normal text-zinc-400">
-            (affiché au client)
-          </span>
+          {cfg.motif}{" "}
+          <span className="font-normal text-zinc-400">{cfg.motifAide}</span>
           <input
             id="fermeture-motif"
             name="motif"
             defaultValue={valeurs.motif}
-            placeholder="Congés d'été"
+            placeholder={cfg.motifPlaceholder}
             className={champ}
           />
         </label>
@@ -99,9 +100,11 @@ function Champs({
 export function FermetureForm({
   restaurantId,
   espaces,
+  cfg,
 }: {
   restaurantId: string;
   espaces: Espace[];
+  cfg: ClesConfiguration;
 }) {
   const [state, action, pending] = useActionState(
     ajouterFermeture,
@@ -120,6 +123,7 @@ export function FermetureForm({
         restaurantId={restaurantId}
         espaces={espaces}
         valeurs={state.valeurs}
+        cfg={cfg}
       />
 
       {state.error && <p className="text-sm text-red-600">{state.error}</p>}
@@ -129,7 +133,7 @@ export function FermetureForm({
         disabled={pending}
         className="w-fit rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover disabled:opacity-50"
       >
-        {pending ? "Enregistrement…" : "Fermer cette période"}
+        {pending ? cfg.enregistrement : cfg.fermerCettePeriode}
       </button>
     </form>
   );

@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { enregistrerConfirmation } from "@/app/dashboard/[id]/reservations/actions";
+import type { ClesConfiguration } from "@/lib/i18n/configuration";
 
 const champ =
   "w-full rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-brand-navy";
@@ -19,11 +20,13 @@ export function ReglesConfirmation({
   auto,
   delaiHeures,
   emailContact,
+  cfg,
 }: {
   restaurantId: string;
   auto: boolean;
   delaiHeures: number;
   emailContact: string | null;
+  cfg: ClesConfiguration;
 }) {
   const [state, action, pending] = useActionState(enregistrerConfirmation, {
     error: null as string | null,
@@ -45,19 +48,15 @@ export function ReglesConfirmation({
           className="mt-1"
         />
         <span>
-          <span className="font-medium text-zinc-900">
-            Confirmer les réservations automatiquement
-          </span>
+          <span className="font-medium text-zinc-900">{cfg.confirmerAuto}</span>
           <span className="mt-1 block text-zinc-500">
-            Les tables sont confirmées dès leur arrivée, et le client reçoit
-            sa confirmation tout de suite. Les privatisations, elles,
-            attendent toujours ton accord.
+            {cfg.confirmerAutoAide}
           </span>
         </span>
       </label>
 
       <label className={label} htmlFor="conf-delai">
-        Sauf à moins de (heures avant le service)
+        {cfg.saufAMoinsDe}
         <input
           id="conf-delai"
           name="confirmation_auto_delai_heures"
@@ -68,26 +67,22 @@ export function ReglesConfirmation({
           className={`${champ} max-w-32`}
         />
         <span className="text-xs font-normal text-zinc-500">
-          En deçà, c&apos;est toi qui valides : une table pour ce soir mérite
-          un coup d&apos;œil, une table pour samedi prochain non. Mets 0 pour
-          tout confirmer, y compris la dernière minute.
+          {cfg.saufAide}
         </span>
       </label>
 
       <label className={label} htmlFor="conf-email">
-        Adresse qui reçoit les réservations
+        {cfg.adresseQuiRecoit}
         <input
           id="conf-email"
           name="email_contact"
           type="email"
           defaultValue={emailContact ?? ""}
-          placeholder="reservations@ton-restaurant.fr"
+          placeholder={cfg.adressePlaceholder}
           className={`${champ} max-w-md`}
         />
         <span className="text-xs font-normal text-zinc-500">
-          Chaque réservation t&apos;y est signalée, et c&apos;est à cette
-          adresse que le client répond s&apos;il a un empêchement. Laisse
-          vide pour ne rien recevoir.
+          {cfg.adresseAide}
         </span>
       </label>
 
@@ -97,7 +92,7 @@ export function ReglesConfirmation({
         </p>
       )}
       {state.ok && !state.error && (
-        <p className="text-sm text-emerald-700">Enregistré.</p>
+        <p className="text-sm text-emerald-700">{cfg.enregistre}</p>
       )}
 
       <button
@@ -105,7 +100,7 @@ export function ReglesConfirmation({
         disabled={pending}
         className="w-fit rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover disabled:opacity-50"
       >
-        {pending ? "Enregistrement…" : "Enregistrer"}
+        {pending ? cfg.enregistrement : cfg.enregistrer}
       </button>
     </form>
   );
