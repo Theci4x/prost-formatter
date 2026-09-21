@@ -45,6 +45,7 @@ import { exigerModule } from "@/lib/abonnement/acces";
 import { langueUtilisateur, type Langue } from "@/lib/i18n/langue";
 import { RESERVATIONS, type ClesReservations } from "@/lib/i18n/reservations";
 import { dateHeure, dateJour } from "@/lib/i18n/dates";
+import { montantLisible } from "@/lib/i18n/nombres";
 
 type Demande = {
   id: string;
@@ -253,9 +254,7 @@ function Ligne({
       {demande.minimum_consommation_centimes && (
         <p className="rounded-xl bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
           {r.minimumConsommation(
-            (demande.minimum_consommation_centimes / 100).toLocaleString(
-              "fr-FR",
-            ),
+            montantLisible(demande.minimum_consommation_centimes, langue),
             demande.minimum_consommation_ht === false ? r.ttc : r.ht,
           )}
         </p>
@@ -822,6 +821,8 @@ export default async function ReservationsPage({
             jourSelectionne={jour}
             charges={[...charges.values()]}
             lienBase={`/dashboard/${id}/reservations`}
+            r={r}
+            langue={langue}
           />
         </div>
 

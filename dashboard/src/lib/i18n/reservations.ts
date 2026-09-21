@@ -75,6 +75,8 @@ export type ClesReservations = {
   garanties: string;
   garantiesChapo: string;
   calendrier: string;
+  moisPrecedent: string;
+  moisSuivant: string;
   choisirJour: string;
   cliquerDate: string;
   rienPrevu: string;
@@ -216,6 +218,8 @@ const fr: ClesReservations = {
   garantiesChapo:
     "Les réservations à venir qui engagent de l'argent, et où elles en sont. Elles quittent cette liste une fois le service passé.",
   calendrier: "Calendrier",
+  moisPrecedent: "Mois précédent",
+  moisSuivant: "Mois suivant",
   choisirJour: "Choisis un jour",
   cliquerDate:
     "Clique sur une date du calendrier pour voir ce qui est prévu ce jour-là.",
@@ -288,7 +292,7 @@ const fr: ClesReservations = {
   tapage: "Ta page en ligne",
   telephone: "Téléphone",
   uniteCouverts: "couverts",
-  detailBarre: (r, c) => `${r} réservation(s), ${c} couverts`,
+  detailBarre: (r, c) => `${r} réservation${s(r)}, ${c} couvert${s(c)}`,
 };
 
 const en: ClesReservations = {
@@ -352,6 +356,8 @@ const en: ClesReservations = {
   garantiesChapo:
     "Upcoming bookings with money committed, and where each one stands. They leave this list once the service is over.",
   calendrier: "Calendar",
+  moisPrecedent: "Previous month",
+  moisSuivant: "Next month",
   choisirJour: "Pick a day",
   cliquerDate: "Click a date in the calendar to see what is booked that day.",
   rienPrevu: "Nothing booked that day.",
@@ -423,7 +429,7 @@ const en: ClesReservations = {
   tapage: "Your online page",
   telephone: "Phone",
   uniteCouverts: "covers",
-  detailBarre: (r, c) => `${r} booking(s), ${c} covers`,
+  detailBarre: (r, c) => `${r} booking${s(r)}, ${c} cover${s(c)}`,
 };
 
 const zh: ClesReservations = {
@@ -486,6 +492,8 @@ const zh: ClesReservations = {
   garantiesChapo:
     "即将到来、且涉及金钱的订位，以及各自的进度。服务结束后它们会自动离开这个列表。",
   calendrier: "日历",
+  moisPrecedent: "上个月",
+  moisSuivant: "下个月",
   choisirJour: "选择一天",
   cliquerDate: "点击日历上的日期，查看当天的安排。",
   rienPrevu: "当天没有安排。",

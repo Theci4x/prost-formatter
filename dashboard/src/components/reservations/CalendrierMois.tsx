@@ -1,12 +1,13 @@
 import Link from "next/link";
+import type { ClesReservations } from "@/lib/i18n/reservations";
+import type { Langue } from "@/lib/i18n/langues";
+import { initialeJour } from "@/lib/i18n/jours";
 
 export type JourCharge = {
   date: string;
   demandes: number;
   confirmees: number;
 };
-
-const JOURS_ENTETE = ["L", "M", "M", "J", "V", "S", "D"];
 
 function moisPrecedent(mois: string): string {
   const [annee, m] = mois.split("-").map(Number);
@@ -20,11 +21,18 @@ function moisSuivant(mois: string): string {
   return d.toISOString().slice(0, 7);
 }
 
-function libelleMois(mois: string): string {
-  return new Date(`${mois}-01T12:00:00`).toLocaleDateString("fr-FR", {
-    month: "long",
-    year: "numeric",
-  });
+const LOCALE: Record<Langue, string> = {
+  fr: "fr-FR",
+  en: "en-GB",
+  zh: "zh-CN",
+};
+
+/** « juin 2026 », « June 2026 », « 2026年6月 » — l'ordre change aussi. */
+function libelleMois(mois: string, langue: Langue): string {
+  return new Date(`${mois}-01T12:00:00`).toLocaleDateString(
+    LOCALE[langue] ?? LOCALE.fr,
+    { month: "long", year: "numeric" },
+  );
 }
 
 /**
@@ -37,11 +45,16 @@ export function CalendrierMois({
   jourSelectionne,
   charges,
   lienBase,
+  r,
+  langue,
 }: {
   mois: string;
   jourSelectionne: string | null;
   charges: JourCharge[];
   lienBase: string;
+  r: ClesReservations;
+  /** Le nom du mois et les initiales des jours viennent d'`Intl`. */
+  langue: Langue;
 }) {
   const [annee, m] = mois.split("-").map(Number);
   const premier = new Date(Date.UTC(annee, m - 1, 1));
@@ -57,17 +70,17 @@ export function CalendrierMois({
       <div className="flex items-center justify-between gap-4">
         <Link
           href={`${lienBase}?mois=${moisPrecedent(mois)}`}
-          aria-label="Mois précédent"
+          aria-label={r.moisPrecedent}
           className="rounded-md px-2 py-1 text-sm text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900"
         >
           ←
         </Link>
         <span className="text-sm font-semibold text-zinc-900 first-letter:capitalize">
-          {libelleMois(mois)}
+          {libelleMois(mois, langue)}
         </span>
         <Link
           href={`${lienBase}?mois=${moisSuivant(mois)}`}
-          aria-label="Mois suivant"
+          aria-label={r.moisSuivant}
           className="rounded-md px-2 py-1 text-sm text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900"
         >
           →
@@ -75,8 +88,8 @@ export function CalendrierMois({
       </div>
 
       <div className="grid grid-cols-7 gap-1 text-center text-xs text-zinc-400">
-        {JOURS_ENTETE.map((jour, index) => (
-          <span key={`${jour}-${index}`}>{jour}</span>
+        {[1, 2, 3, 4, 5, 6, 7].map((iso) => (
+          <span key={iso}>{initialeJour(iso, langue)}</span>
         ))}
       </div>
 

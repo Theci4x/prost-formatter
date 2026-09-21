@@ -30,6 +30,7 @@ import {
   type ClesConfiguration,
 } from "@/lib/i18n/configuration";
 import { dateComplete } from "@/lib/i18n/dates";
+import { montantLisible } from "@/lib/i18n/nombres";
 import type { Langue } from "@/lib/i18n/langues";
 
 function Supprimer({
@@ -79,11 +80,7 @@ function garantieLisible(
   cfg: ClesConfiguration,
   langue: Langue,
 ): string | null {
-  const euros = (centimes: number) =>
-    (centimes / 100).toLocaleString(langue === "fr" ? "fr-FR" : "en-GB", {
-      minimumFractionDigits: centimes % 100 === 0 ? 0 : 2,
-      maximumFractionDigits: 2,
-    });
+  const euros = (centimes: number) => montantLisible(centimes, langue);
   const seuil = espace.garantie_seuil_couverts ?? null;
 
   if (espace.acompte_centimes) {

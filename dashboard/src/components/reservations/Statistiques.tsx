@@ -257,12 +257,12 @@ export function Statistiques({
         />
         <Barres
           titre={r.parEspace}
-          unite="couverts"
+          unite={r.uniteCouverts}
           lignes={stats.parEspace.map((ligne) => ({
             cle: ligne.espaceId,
             libelle: nomEspace.get(ligne.espaceId) ?? r.espaceSupprime,
             valeur: ligne.couverts,
-            detail: `${ligne.reservations} réservation(s), ${ligne.couverts} couverts`,
+            detail: r.detailBarre(ligne.reservations, ligne.couverts),
           }))}
         />
         <Repartition
