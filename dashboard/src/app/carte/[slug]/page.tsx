@@ -4,15 +4,18 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createServiceClient } from "@/lib/supabase/service";
 import { carteOrganisee, carteVisible } from "@/lib/menu/carte";
-import { langueDisponible, lireLangue, platAffiche } from "@/lib/menu/traduction";
+import {
+  langueDisponible,
+  lireLangue,
+  platAffiche,
+} from "@/lib/menu/traduction";
 import { SignatureKlarr } from "@/components/brand/SignatureKlarr";
 import { cartePubliee } from "@/lib/menu/publication";
 import { PlatCarte } from "@/components/menu/PlatCarte";
+import { OngletsCategories } from "@/components/menu/OngletsCategories";
+import { ancre } from "@/lib/texte/ancre";
 import { FiltreAllergenes } from "@/components/menu/FiltreAllergenes";
-import {
-  allergiesDemandees,
-  filtrerCarte,
-} from "@/lib/menu/filtre-allergenes";
+import { allergiesDemandees, filtrerCarte } from "@/lib/menu/filtre-allergenes";
 import { listeAllergenes } from "@/types/allergenes";
 import {
   MENTION_ALLERGENES,
@@ -115,6 +118,13 @@ export default async function CartePage({
     allergies,
   );
   const blocs = carteOrganisee(compatibles);
+  // Les onglets et les titres tirent leur ancre du même endroit : deux
+  // calculs séparés finiraient par diverger sur un accent.
+  const sections = blocs.map((bloc) => ({
+    bloc,
+    titre: platAffiche(bloc.plats[0], langue).categorie ?? bloc.categorie,
+    ancre: ancre(bloc.categorie),
+  }));
   // Un seul plat déclaré suffit à ouvrir le tableau : il vaut mieux un
   // document partiel, qui dit ce qu'on sait, qu'un lien absent.
   const quelquesAllergenes = carteVisible(items).some(
@@ -124,7 +134,7 @@ export default async function CartePage({
   return (
     <div className="flex min-h-screen flex-col bg-brand-cream">
       <header className="border-b border-zinc-200/70 bg-white px-5 py-4">
-        <div className="mx-auto flex w-full max-w-2xl flex-wrap items-center justify-between gap-3">
+        <div className="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             {restaurant.logo_url ? (
               <Image
@@ -171,7 +181,7 @@ export default async function CartePage({
         </div>
       </header>
 
-      <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-5 py-8">
+      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-8 px-5 py-8">
         {/* La carte en schema.org : sections, plats, prix. C'est ce qui
             permet à Google de répondre « la carte du restaurant X » avec le
             contenu, et pas seulement avec un lien. */}
@@ -202,6 +212,10 @@ export default async function CartePage({
 
         <FiltreAllergenes slug={slug} anglais={anglais} choisis={allergies} />
 
+        <OngletsCategories
+          sections={sections.map(({ ancre, titre }) => ({ ancre, titre }))}
+        />
+
         {filtre && (
           <p className="rounded-2xl border border-zinc-200/70 bg-white p-4 text-sm text-zinc-600 shadow-sm">
             {anglais
@@ -228,24 +242,28 @@ export default async function CartePage({
                 : "La carte est en cours de mise à jour."}
           </p>
         ) : (
-          blocs.map((bloc) => {
-            // Le titre du bloc suit la langue du premier plat traduit ; si
-            // aucun ne l'est, il reste en français, comme les plats.
-            const titre =
-              platAffiche(bloc.plats[0], langue).categorie ?? bloc.categorie;
-            return (
-              <section key={bloc.categorie} className="flex flex-col gap-4">
-                <h2 className="text-sm font-semibold uppercase tracking-wide text-brand-navy">
-                  {titre}
-                </h2>
-                <ul className="flex flex-col gap-4">
-                  {bloc.plats.map((plat) => (
-                    <PlatCarte key={plat.id} plat={plat} langue={langue} />
-                  ))}
-                </ul>
-              </section>
-            );
-          })
+          sections.map(({ bloc, titre, ancre: id }) => (
+            /* `scroll-mt` tient compte des onglets collants : sans lui,
+               le saut d'ancre met le titre exactement dessous, et on
+               croit avoir atterri sur la mauvaise section. */
+            <section
+              key={bloc.categorie}
+              id={id}
+              className="flex scroll-mt-20 flex-col gap-4"
+            >
+              {/* Le titre du bloc suit la langue du premier plat traduit ;
+                  si aucun ne l'est, il reste en français, comme les
+                  plats. */}
+              <h2 className="border-l-4 border-brand-orange pl-3 font-serif text-2xl text-ink">
+                {titre}
+              </h2>
+              <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {bloc.plats.map((plat) => (
+                  <PlatCarte key={plat.id} plat={plat} langue={langue} />
+                ))}
+              </ul>
+            </section>
+          ))
         )}
 
         {/* Les plats que le restaurant n'a pas encore déclarés. Ils ne
@@ -266,7 +284,7 @@ export default async function CartePage({
                   : "Nous n'avons pas encore déclaré les allergènes de ces plats. Ils ne sont ni retenus ni écartés : demandez-nous, nous vous répondrons."}
               </p>
             </div>
-            <ul className="flex flex-col gap-4">
+            <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {indetermines.map((plat) => (
                 <PlatCarte key={plat.id} plat={plat} langue={langue} />
               ))}
@@ -318,7 +336,7 @@ export default async function CartePage({
       <footer className="border-t border-zinc-200/70 px-5 py-6">
         <SignatureKlarr
           texte={anglais ? "Menu powered by" : "Carte propulsée par"}
-          className="mx-auto max-w-2xl"
+          className="mx-auto max-w-5xl"
         />
       </footer>
     </div>

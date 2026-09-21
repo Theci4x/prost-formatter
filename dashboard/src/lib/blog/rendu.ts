@@ -1,4 +1,7 @@
 import { Marked } from "marked";
+import { ancre } from "@/lib/texte/ancre";
+
+export { ancre };
 
 /**
  * Le rendu d'un billet : du markdown vers du HTML, plus le sommaire.
@@ -26,16 +29,6 @@ export type TonEncadre = "attention" | "chiffre" | "exemple";
 const TONS: TonEncadre[] = ["attention", "chiffre", "exemple"];
 
 /** « Le piège du calendrier » → « le-piege-du-calendrier ». */
-export function ancre(titre: string): string {
-  const base = titre
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 60);
-  return base || "section";
-}
 
 function echapper(texte: string): string {
   return texte
@@ -87,13 +80,18 @@ export async function rendreBillet(
       // qui défile horizontalement — pas le tableau.
       table(token) {
         const entete = token.header
-          .map((cellule) => `<th>${this.parser.parseInline(cellule.tokens)}</th>`)
+          .map(
+            (cellule) => `<th>${this.parser.parseInline(cellule.tokens)}</th>`,
+          )
           .join("");
         const corps = token.rows
           .map(
             (ligne) =>
               `<tr>${ligne
-                .map((cellule) => `<td>${this.parser.parseInline(cellule.tokens)}</td>`)
+                .map(
+                  (cellule) =>
+                    `<td>${this.parser.parseInline(cellule.tokens)}</td>`,
+                )
                 .join("")}</tr>`,
           )
           .join("");

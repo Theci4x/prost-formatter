@@ -5,7 +5,17 @@ import { listeAllergenes } from "@/types/allergenes";
 import type { Langue, MenuItem } from "@/types/menu";
 
 /**
- * Un plat sur la carte publique : photo, nom, prix, allergènes déclarés.
+ * Un plat sur la carte publique : une carte à photo, pas une ligne.
+ *
+ * Le format a changé, et pour une raison qui n'est pas décorative. Une
+ * vignette de 96 pixels à gauche d'une ligne de texte sert à identifier
+ * un plat qu'on cherche ; une photo en pleine largeur sert à en donner
+ * envie. Une carte de restaurant fait le second travail — c'est même à
+ * peu près son seul travail, une fois que le client est assis.
+ *
+ * Le prix passe en orange et en gras parce qu'il est la deuxième chose
+ * qu'on regarde après la photo, et qu'en gris à côté du nom il se
+ * cherchait.
  *
  * Extrait de la page pour être rendu deux fois — dans la carte, et dans
  * la liste des plats dont les allergènes n'ont pas été déclarés, quand un
@@ -24,48 +34,54 @@ export function PlatCarte({
   const formats = formatsDe(plat);
 
   return (
-    <li className="flex items-start gap-4 rounded-2xl border border-zinc-200/70 bg-white p-4 shadow-sm">
+    <li className="flex flex-col overflow-hidden rounded-2xl border border-zinc-200/70 bg-white shadow-sm">
       {plat.photo_url && (
-        <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-zinc-100 sm:h-24 sm:w-24">
+        /* Le rapport 4/3 est celui d'une assiette photographiée de biais,
+           et il est tenu quelle que soit la photo envoyée : une grille
+           dont les images n'ont pas la même hauteur se lit comme une
+           page cassée. */
+        <div className="relative aspect-[4/3] w-full bg-zinc-100">
           <Image
             src={plat.photo_url}
             alt={affiche.nom}
             fill
-            sizes="96px"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             className="object-cover"
           />
         </div>
       )}
-      <span className="flex min-w-0 flex-1 flex-col gap-1">
-        <span className="flex items-baseline justify-between gap-3">
-          <span className="text-sm font-medium text-zinc-900">
+
+      <div className="flex flex-1 flex-col gap-1.5 p-4">
+        <div className="flex items-baseline justify-between gap-3">
+          <span className="text-base font-semibold text-zinc-900">
             {affiche.nom}
           </span>
-          {/* Un plat à formats n'a pas de prix unique à afficher : les
-              formats prennent sa place, sur leur propre ligne, parce
-              qu'« au verre 6,50 € · à la bouteille 28,00 € » à droite
-              d'un nom écraserait le nom. */}
           {!formats && plat.prix_centimes !== null && (
-            <span className="shrink-0 text-sm font-medium tabular-nums text-zinc-700">
+            <span className="shrink-0 text-base font-semibold tabular-nums text-brand-orange">
               {formatPrix(plat.prix_centimes)}
             </span>
           )}
-        </span>
+        </div>
+
         {affiche.description && (
-          <span className="text-sm text-zinc-500">{affiche.description}</span>
+          <span className="text-sm leading-relaxed text-zinc-500">
+            {affiche.description}
+          </span>
         )}
+
         {formats && (
-          <span className="text-sm font-medium tabular-nums text-zinc-700">
+          <span className="text-sm font-semibold tabular-nums text-brand-orange">
             {formatsLisibles(formats, affiche.formats)}
           </span>
         )}
+
         {plat.allergenes !== null && plat.allergenes.length > 0 && (
-          <span className="text-xs text-zinc-400">
+          <span className="mt-auto pt-1.5 text-xs text-zinc-400">
             {anglais ? "Allergens" : "Allergènes"} :{" "}
             {listeAllergenes(plat.allergenes, anglais)}
           </span>
         )}
-      </span>
+      </div>
     </li>
   );
 }

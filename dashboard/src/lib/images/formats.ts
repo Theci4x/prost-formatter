@@ -17,8 +17,14 @@ import type { Options } from "@/lib/images/preparer";
  * photo de plat, non.
  */
 
-/** La vignette d'un plat : 96 px CSS sur la carte publique, recadrée carrée. */
-export const PLAT: Options = { minCote: 400, maxCote: 1200 };
+/**
+ * La photo d'un plat. Elle occupait 96 px de côté ; depuis que la carte
+ * publique est une grille de cartes, elle fait toute la largeur d'une
+ * colonne en 4/3 — donc jusqu'à environ 1200 pixels réels sur un
+ * téléphone. Le plancher monte en conséquence : une photo tout juste
+ * acceptable en vignette est franchement floue en grand.
+ */
+export const PLAT: Options = { minCote: 800, maxCote: 1600 };
 
 /** Une photo d'espace : 240 px CSS dans la bande de la page publique. */
 export const ESPACE: Options = { minCote: 500, maxCote: 1600 };
