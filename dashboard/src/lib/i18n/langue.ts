@@ -28,19 +28,38 @@ export {
 } from "@/lib/i18n/langues";
 
 /**
- * Celle du compte, ou le français.
+ * Celle de ce navigateur, sinon celle du compte, sinon le français.
+ *
+ * L'ordre n'est pas indifférent. Le témoin est la préférence **de cet
+ * écran-là** : c'est lui qu'on vient de poser en cliquant, il ne dépend
+ * d'aucun service extérieur, et il rend donc le clic immédiatement
+ * visible. Le compte est le repli, et il sert le cas qui compte : une
+ * connexion depuis un autre appareil, où aucun témoin n'a encore été
+ * posé, et où la langue choisie la semaine dernière doit revenir toute
+ * seule.
+ *
+ * Avant, seul le compte était lu. Un échec de l'appel d'authentification
+ * — ou tout ce qui empêchait l'écriture — laissait l'écran en français
+ * sans que rien ne le dise, et on cliquait trois fois sur « 中文 » en
+ * croyant le bouton cassé.
  *
  * Ne lève jamais : une session expirée ou une base indisponible doivent
  * donner un écran en français, pas une page d'erreur.
  */
 export async function langueUtilisateur(): Promise<Langue> {
   try {
+    const choisie = (await cookies()).get(COOKIE_LANGUE)?.value;
+    if (estLangue(choisie)) return choisie;
+  } catch {
+    // Pas de requête : on tente quand même le compte.
+  }
+  try {
     const supabase = await createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    const choisie = user?.user_metadata?.langue;
-    return estLangue(choisie) ? choisie : "fr";
+    const duCompte = user?.user_metadata?.langue;
+    return estLangue(duCompte) ? duCompte : "fr";
   } catch {
     return "fr";
   }
