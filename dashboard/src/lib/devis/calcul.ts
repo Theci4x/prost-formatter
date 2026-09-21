@@ -7,6 +7,9 @@
  * est un appel du restaurateur le lendemain.
  */
 
+import type { Langue } from "@/lib/i18n/langues";
+import { DEVIS } from "@/lib/i18n/devis";
+
 export const STATUTS = ["brouillon", "envoye", "accepte", "refuse"] as const;
 export type StatutDevis = (typeof STATUTS)[number];
 
@@ -168,21 +171,23 @@ export type Devis = {
 export function decidable(
   devis: Devis,
   maintenant: Date,
+  /** La langue du client. Par défaut le français, comme la feuille. */
+  langue: Langue = "fr",
 ): { possible: true } | { possible: false; motif: string } {
+  const d = DEVIS[langue] ?? DEVIS.fr;
   if (devis.statut === "accepte") {
-    return { possible: false, motif: "Ce devis a déjà été accepté." };
+    return { possible: false, motif: d.dejaAccepte };
   }
   if (devis.statut === "refuse") {
-    return { possible: false, motif: "Ce devis a été refusé." };
+    return { possible: false, motif: d.dejaRefuse };
   }
   if (devis.statut === "brouillon") {
-    return { possible: false, motif: "Ce devis n'a pas encore été envoyé." };
+    return { possible: false, motif: d.pasEncoreEnvoye };
   }
   if (estExpire(devis.valide_jusquau, maintenant)) {
     return {
       possible: false,
-      motif:
-        "La validité de ce devis est dépassée. Contactez l'établissement pour en obtenir un nouveau.",
+      motif: d.validiteDepassee,
     };
   }
   return { possible: true };

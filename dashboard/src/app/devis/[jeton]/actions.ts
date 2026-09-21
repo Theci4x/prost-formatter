@@ -4,6 +4,8 @@ import { randomBytes } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createServiceClient } from "@/lib/supabase/service";
+import { langueVisiteur } from "@/lib/i18n/langue";
+import { DEVIS } from "@/lib/i18n/devis";
 import { calculer, decidable, type StatutDevis } from "@/lib/devis/calcul";
 import { prevenirReponseDevis } from "@/lib/courriel/devis";
 import { notifierEtablissement } from "@/lib/push/envoyer";
@@ -56,10 +58,12 @@ export async function accepterDevis(
   formData: FormData,
 ): Promise<ReponseState> {
   const jeton = (formData.get("jeton") as string)?.trim();
-  if (!jeton) return { erreur: "Devis introuvable.", fait: false };
+  const d = DEVIS[await langueVisiteur()];
+
+  if (!jeton) return { erreur: d.devisIntrouvable, fait: false };
 
   const { supabase, devis } = await charger(jeton);
-  if (!devis) return { erreur: "Devis introuvable.", fait: false };
+  if (!devis) return { erreur: d.devisIntrouvable, fait: false };
 
   const verdict = decidable(devis, new Date());
   if (!verdict.possible) return { erreur: verdict.motif, fait: false };
@@ -91,9 +95,9 @@ export async function accepterDevis(
 
   if (error) {
     console.error("[accepterDevis]", error);
-    return { erreur: "L'acceptation a échoué. Réessayez dans un instant.", fait: false };
+    return { erreur: d.acceptationEchouee, fait: false };
   }
-  if (!accepte) return { erreur: "Ce devis a déjà reçu une réponse.", fait: false };
+  if (!accepte) return { erreur: d.dejaRepondu, fait: false };
 
   // Ce que le client vient d'accepter commande la suite : un acompte à
   // régler, ou une table ferme. Le montant est recopié sur la réservation
@@ -171,10 +175,12 @@ export async function refuserDevis(
 ): Promise<ReponseState> {
   const jeton = (formData.get("jeton") as string)?.trim();
   const motif = ((formData.get("motif") as string) ?? "").trim().slice(0, 500);
-  if (!jeton) return { erreur: "Devis introuvable.", fait: false };
+  const d = DEVIS[await langueVisiteur()];
+
+  if (!jeton) return { erreur: d.devisIntrouvable, fait: false };
 
   const { supabase, devis } = await charger(jeton);
-  if (!devis) return { erreur: "Devis introuvable.", fait: false };
+  if (!devis) return { erreur: d.devisIntrouvable, fait: false };
 
   const verdict = decidable(devis, new Date());
   if (!verdict.possible) return { erreur: verdict.motif, fait: false };
@@ -193,9 +199,9 @@ export async function refuserDevis(
 
   if (error) {
     console.error("[refuserDevis]", error);
-    return { erreur: "Le refus n'a pas pu être enregistré.", fait: false };
+    return { erreur: d.refusEchoue, fait: false };
   }
-  if (!refuse) return { erreur: "Ce devis a déjà reçu une réponse.", fait: false };
+  if (!refuse) return { erreur: d.dejaRepondu, fait: false };
 
   const { data: resaData } = await supabase
     .from("restaurant_reservations")

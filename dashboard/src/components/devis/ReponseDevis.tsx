@@ -6,6 +6,8 @@ import {
   refuserDevis,
   type ReponseState,
 } from "@/app/devis/[jeton]/actions";
+import type { Langue } from "@/lib/i18n/langues";
+import { DEVIS } from "@/lib/i18n/devis";
 
 const initial: ReponseState = { erreur: null, fait: false };
 
@@ -19,11 +21,14 @@ const initial: ReponseState = { erreur: null, fait: false };
 export function ReponseDevis({
   jeton,
   acompte,
+  langue,
 }: {
   jeton: string;
   /** Le montant à régler en acceptant, déjà mis en forme. Null s'il n'y en a pas. */
   acompte: string | null;
+  langue: Langue;
 }) {
+  const d = DEVIS[langue];
   const [refusOuvert, setRefusOuvert] = useState(false);
   const [etatAccepte, actionAccepter, acceptation] = useActionState(
     accepterDevis,
@@ -40,8 +45,7 @@ export function ReponseDevis({
   if (etatRefuse.fait) {
     return (
       <p className="rounded-2xl border border-line bg-brand-cream p-5 text-sm text-ink-soft print:hidden">
-        Votre réponse est transmise. Merci d&apos;avoir pris le temps de nous le
-        dire.
+        {d.reponseTransmise}
       </p>
     );
   }
@@ -49,7 +53,7 @@ export function ReponseDevis({
   if (etatAccepte.fait) {
     return (
       <p className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-sm text-emerald-900 print:hidden">
-        Devis accepté. L&apos;établissement est prévenu et revient vers vous.
+        {d.devisAccepte}
       </p>
     );
   }
@@ -63,12 +67,10 @@ export function ReponseDevis({
           disabled={occupe}
           className="rounded-xl bg-ink px-6 py-4 text-base font-semibold text-white transition-colors hover:bg-brand-navy disabled:opacity-50"
         >
-          {acceptation ? "Enregistrement…" : "Accepter ce devis"}
+          {acceptation ? d.enregistrement : d.accepterCeDevis}
         </button>
         <span className="text-xs text-ink-soft">
-          {acompte
-            ? `Vous serez ensuite dirigé vers le règlement de l'acompte de ${acompte}.`
-            : "Votre accord vaut confirmation de la réservation."}
+          {acompte ? d.dirigeVersAcompte(acompte) : d.accordVautConfirmation}
         </span>
       </form>
 
@@ -79,12 +81,12 @@ export function ReponseDevis({
         >
           <input type="hidden" name="jeton" value={jeton} />
           <label className="flex flex-col gap-1 text-sm font-medium text-ink">
-            Ce qui ne convient pas{" "}
-            <span className="font-normal text-ink-soft">(facultatif)</span>
+            {d.ceQuiNeConvientPas}{" "}
+            <span className="font-normal text-ink-soft">{d.facultatif}</span>
             <textarea
               name="motif"
               rows={3}
-              placeholder="Le budget, la date, le nombre de convives…"
+              placeholder={d.exemplesRefus}
               className="rounded-lg border border-line bg-paper px-3 py-2 text-base font-normal outline-none focus:border-brand-orange"
             />
           </label>
@@ -94,14 +96,14 @@ export function ReponseDevis({
               disabled={occupe}
               className="rounded-lg border border-line px-4 py-2.5 text-sm font-semibold text-ink transition-colors hover:border-red-300 hover:text-red-700 disabled:opacity-50"
             >
-              {refus ? "Envoi…" : "Confirmer le refus"}
+              {refus ? d.envoi : d.confirmerLeRefus}
             </button>
             <button
               type="button"
               onClick={() => setRefusOuvert(false)}
               className="rounded-lg px-4 py-2.5 text-sm text-ink-soft hover:text-ink"
             >
-              Annuler
+              {d.annuler}
             </button>
           </div>
         </form>
@@ -111,7 +113,7 @@ export function ReponseDevis({
           onClick={() => setRefusOuvert(true)}
           className="w-fit text-sm text-ink-soft underline-offset-2 hover:text-ink hover:underline"
         >
-          Ce devis ne me convient pas
+          {d.neMeConvientPas}
         </button>
       )}
 

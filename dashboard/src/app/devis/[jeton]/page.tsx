@@ -6,12 +6,16 @@ import { ReponseDevis } from "@/components/devis/ReponseDevis";
 import { BoutonImprimer } from "@/components/devis/BoutonImprimer";
 import { SignatureKlarr } from "@/components/brand/SignatureKlarr";
 import { decidable, formatEuros, type StatutDevis } from "@/lib/devis/calcul";
+import { langueVisiteur } from "@/lib/i18n/langue";
+import { DEVIS } from "@/lib/i18n/devis";
 
-export const metadata: Metadata = {
-  title: "Votre devis",
-  // Un devis nominatif n'a rien à faire dans un moteur de recherche.
-  robots: { index: false, follow: false },
-};
+// Un devis nominatif n'a rien à faire dans un moteur de recherche.
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: DEVIS[await langueVisiteur()].votreDevis,
+    robots: { index: false, follow: false },
+  };
+}
 
 type LigneBrute = {
   libelle: string;
@@ -49,6 +53,8 @@ export default async function DevisPublicPage({
   params: Promise<{ jeton: string }>;
 }) {
   const { jeton } = await params;
+  const langue = await langueVisiteur();
+  const d = DEVIS[langue];
   const supabase = createServiceClient();
 
   const { data, error } = await supabase
@@ -109,7 +115,7 @@ export default async function DevisPublicPage({
       ).data as { nom: string } | null)
     : null;
 
-  const verdict = decidable(devis, new Date());
+  const verdict = decidable(devis, new Date(), langue);
 
   return (
     <div className="flex min-h-screen flex-col bg-brand-cream print:bg-white">
@@ -152,11 +158,22 @@ export default async function DevisPublicPage({
           }
         />
 
+        {/* La feuille ci-dessus reste en français : c'est la pièce
+            contractuelle, celle qu'on opposera si quelque chose se
+            discute. On le dit au lecteur plutôt que de le laisser croire
+            à une traduction oubliée — et tout ce qu'il a à faire, en
+            dessous, est dans sa langue. */}
+        {d.documentEnFrancais && (
+          <p className="text-sm text-ink-soft print:hidden">
+            {d.documentEnFrancais}
+          </p>
+        )}
+
         {/* Un client fait souvent signer le devis par quelqu'un d'autre :
             son conjoint, son comité d'entreprise, son patron. Il lui faut
             donc un document à emporter, pas seulement une page. */}
         <div className="flex flex-wrap gap-3 print:hidden">
-          <BoutonImprimer />
+          <BoutonImprimer libelle={d.imprimerOuPdf} />
         </div>
 
         {verdict.possible ? (
@@ -167,6 +184,7 @@ export default async function DevisPublicPage({
                 ? formatEuros(devis.acompte_centimes)
                 : null
             }
+            langue={langue}
           />
         ) : (
           <p className="rounded-2xl border border-line bg-paper p-5 text-sm text-ink-soft print:hidden">
@@ -174,7 +192,7 @@ export default async function DevisPublicPage({
           </p>
         )}
 
-        <SignatureKlarr texte="Devis propulsé par" className="print:hidden" />
+        <SignatureKlarr texte={d.signatureDevis} className="print:hidden" />
       </main>
     </div>
   );
