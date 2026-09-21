@@ -8,8 +8,6 @@ export const billet: Billet = {
   categorie: "ouvrir",
   publieLe: "2026-09-20",
   misAJourLe: "2026-09-20",
-  // BROUILLON — sources à ouvrir une par une avant publication.
-  brouillon: true,
   sources: [
     {
       intitule:

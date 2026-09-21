@@ -8,25 +8,18 @@ export const billet: Billet = {
   categorie: "ouvrir",
   publieLe: "2026-09-20",
   misAJourLe: "2026-09-20",
-  // BROUILLON — sources à ouvrir une par une avant publication.
-  brouillon: true,
   sources: [
     {
       intitule:
         "Loi n° 65-557 du 10 juillet 1965 fixant le statut de la copropriété des immeubles bâtis",
       url: "https://www.legifrance.gouv.fr/loda/id/LEGITEXT000006068256/",
     },
-    {
-      intitule:
-        "Code de la construction et de l'habitation, article L113-8 — antériorité des activités agricoles, industrielles, artisanales, commerciales ou aéroportuaires",
-      url: "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000043975767/",
-    },
   ],
   essentiel: [
     "Le règlement de copropriété s'impose au bail. Une clause d'habitation bourgeoise stricte interdit toute activité commerciale, quoi que le bailleur vous ait dit.",
     "Même sans interdiction, c'est lui qui commande le passage du conduit, l'enseigne, la climatisation, les horaires et les livraisons.",
     "Les procès-verbaux d'assemblée générale valent autant que le règlement : ils disent ce que la copropriété a déjà refusé à d'autres.",
-    "L'antériorité protège une activité installée contre un voisin qui arrive après. Elle ne protège jamais celui qui arrive.",
+    "Le bruit et les odeurs se plaident même quand tout est autorisé. Et c'est votre restaurant qui est le nouveau venu, pas les habitants.",
   ],
   suite: [
     {
@@ -84,10 +77,10 @@ Une activité parfaitement licite peut être condamnée pour trouble anormal de 
 
 Les trois classiques d'un restaurant en immeuble d'habitation : le bruit de la ventilation la nuit, les odeurs de cuisson, et les clients qui parlent fort en terrasse à minuit.
 
-::: exemple L'antériorité ne joue pas dans votre sens
-La loi protège l'activité installée en premier : celui qui vient habiter à côté d'un restaurant existant ne peut pas se plaindre de nuisances qu'il pouvait constater en arrivant.
+::: exemple Ne comptez sur aucune priorité
+On entend souvent qu'une activité installée la première est protégée contre ceux qui viennent s'installer à côté ensuite. Quel que soit le détail de cette règle, elle ne joue pas dans votre sens ici.
 
-C'est exactement l'inverse de votre situation. Les habitants sont là depuis vingt ans ; c'est vous qui arrivez. L'antériorité est de leur côté.
+Les habitants de l'immeuble sont là depuis vingt ans ; c'est vous qui arrivez. Votre restaurant est le nouveau venu, et c'est à lui de s'adapter au voisinage, pas l'inverse. Traitez le bruit et les odeurs pendant le chantier, quand ça coûte encore dix fois moins cher.
 :::
 
 ## Ce que ça coûte de ne pas lire
