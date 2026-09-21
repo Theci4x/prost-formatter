@@ -1,4 +1,4 @@
-import type { MenuItem } from "@/types/menu";
+import type { Format, MenuItem } from "@/types/menu";
 
 /**
  * La carte : la mettre dans l'ordre, et la montrer.
@@ -65,6 +65,43 @@ export function enCentimes(brut: string): number | null | undefined {
   if (!propre) return null;
   if (!/^\d+(\.\d{1,2})?$/.test(propre)) return undefined;
   return Math.round(Number(propre) * 100);
+}
+
+/**
+ * Les formats d'un plat, ou rien.
+ *
+ * On ne renvoie un tableau que s'il est réellement rempli : une colonne
+ * à `[]` — que la base refuse, mais qu'une lecture peut produire — doit
+ * se comporter comme une absence, pas comme un plat sans aucun prix.
+ */
+export function formatsDe(item: { formats: Format[] | null }): Format[] | null {
+  const formats = item.formats;
+  if (!Array.isArray(formats) || formats.length === 0) return null;
+  return formats;
+}
+
+/**
+ * Les formats mis bout à bout : « 6 pièces 9,50 € · 12 pièces 17,00 € ».
+ *
+ * Les libellés peuvent venir d'une traduction ; on les prend alors dans
+ * l'ordre des formats, et on retombe sur le français dès qu'il en manque
+ * un. Une carte anglaise où seul le deuxième format serait traduit se
+ * lirait plus mal qu'une carte entièrement française.
+ */
+export function formatsLisibles(
+  formats: Format[],
+  libelles?: string[],
+): string {
+  const traduits =
+    libelles && libelles.length === formats.length && libelles.every(Boolean)
+      ? libelles
+      : null;
+  return formats
+    .map(
+      (format, rang) =>
+        `${traduits ? traduits[rang] : format.libelle} ${formatPrix(format.prix_centimes)}`,
+    )
+    .join(" · ");
 }
 
 export type Repositionnement = { id: string; ordre: number };

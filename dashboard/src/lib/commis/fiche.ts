@@ -5,7 +5,12 @@ import type { MenuItem } from "@/types/menu";
 import type { Horaires, JourSemaine } from "@/types/restaurant";
 import { JOURS_SEMAINE } from "@/types/restaurant";
 import { heureLisible } from "@/lib/site/horaires";
-import { carteOrganisee, formatPrix } from "@/lib/menu/carte";
+import {
+  carteOrganisee,
+  formatPrix,
+  formatsDe,
+  formatsLisibles,
+} from "@/lib/menu/carte";
 import { traductionAJour, traductionDe } from "@/lib/menu/traduction";
 import { cartePubliee } from "@/lib/menu/publication";
 import { listeAllergenes } from "@/types/allergenes";
@@ -148,9 +153,16 @@ function carteLisible(items: MenuItem[]): string[] {
   return carteOrganisee(items).map((bloc) => {
     const plats = bloc.plats
       .map((plat) => {
-        const prix = plat.prix_centimes
-          ? ` (${formatPrix(plat.prix_centimes)})`
-          : "";
+        // Un plat à formats n'a pas un prix mais plusieurs, et c'est
+        // exactement ce qu'un client demande au Commis : « c'est combien,
+        // les escargots ? ». Lui donner le prix unique d'un plat qui n'en
+        // a plus le ferait annoncer un tarif qui n'existe pas.
+        const formats = formatsDe(plat);
+        const prix = formats
+          ? ` (${formatsLisibles(formats)})`
+          : plat.prix_centimes
+            ? ` (${formatPrix(plat.prix_centimes)})`
+            : "";
         const detail = plat.description ? ` — ${plat.description}` : "";
         const anglais = traductionAJour(plat, "en")
           ? traductionDe(plat, "en")

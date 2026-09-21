@@ -1,6 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
-import { carteOrganisee, carteVisible, formatPrix } from "@/lib/menu/carte";
+import {
+  carteOrganisee,
+  carteVisible,
+  formatPrix,
+  formatsDe,
+  formatsLisibles,
+} from "@/lib/menu/carte";
 import type { MenuItem } from "@/types/menu";
 import { listeAllergenes } from "@/types/allergenes";
 import {
@@ -50,7 +56,7 @@ export function Carte({ items, slug }: { items: MenuItem[]; slug?: string }) {
                       <span className="text-base font-medium text-zinc-900">
                         {plat.nom}
                       </span>
-                      {plat.prix_centimes !== null && (
+                      {!formatsDe(plat) && plat.prix_centimes !== null && (
                         <span className="shrink-0 text-sm font-medium tabular-nums text-zinc-700">
                           {formatPrix(plat.prix_centimes)}
                         </span>
@@ -59,6 +65,13 @@ export function Carte({ items, slug }: { items: MenuItem[]; slug?: string }) {
                     {plat.description && (
                       <span className="text-base text-zinc-500">
                         {plat.description}
+                      </span>
+                    )}
+                    {/* Même règle que sur la carte publique : les formats
+                        prennent la place du prix unique, sur leur ligne. */}
+                    {formatsDe(plat) && (
+                      <span className="text-sm font-medium tabular-nums text-zinc-700">
+                        {formatsLisibles(formatsDe(plat)!)}
                       </span>
                     )}
                     {plat.allergenes !== null && plat.allergenes.length > 0 && (

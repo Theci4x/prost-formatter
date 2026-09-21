@@ -1,5 +1,22 @@
 import type { Langue, MenuItem, TraductionPlat } from "@/types/menu";
 
+/** Les libellés de format d'un plat, dans leur ordre. */
+export function libellesFormats(item: {
+  formats: MenuItem["formats"];
+}): string[] {
+  return (item.formats ?? []).map((format) => format.libelle);
+}
+
+/** Deux listes de libellés identiques, dans le même ordre. */
+function memesLibelles(a: string[] | undefined, b: string[] | undefined) {
+  const gauche = a ?? [];
+  const droite = b ?? [];
+  return (
+    gauche.length === droite.length &&
+    gauche.every((libelle, rang) => libelle === droite[rang])
+  );
+}
+
 /**
  * La carte dans la langue du client.
  *
@@ -25,7 +42,11 @@ export function traductionAJour(item: MenuItem, langue: Langue): boolean {
   return (
     traduction.source.nom === item.nom &&
     (traduction.source.description ?? null) === (item.description ?? null) &&
-    traduction.source.categorie === item.categorie
+    traduction.source.categorie === item.categorie &&
+    // Un format ajouté, renommé ou supprimé rend la traduction caduque au
+    // même titre qu'un nom corrigé : la carte anglaise afficherait sinon
+    // « 6 pieces » à côté d'un prix qui n'est plus celui-là.
+    memesLibelles(traduction.source.formats, libellesFormats(item))
   );
 }
 
@@ -38,6 +59,8 @@ export type PlatAffiche = {
   nom: string;
   description: string | null;
   categorie: string;
+  /** Les libellés de format dans la langue lue, quand ils existent. */
+  formats?: string[];
 };
 
 /** Le plat tel qu'il s'affiche, avec repli sur le français. */
@@ -48,6 +71,7 @@ export function platAffiche(item: MenuItem, langue: Langue): PlatAffiche {
       nom: traduction.nom,
       description: traduction.description,
       categorie: traduction.categorie,
+      formats: traduction.formats,
     };
   }
   return {

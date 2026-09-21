@@ -1,6 +1,7 @@
 import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
 import type { MenuItem, TraductionPlat } from "@/types/menu";
+import { libellesFormats } from "@/lib/menu/traduction";
 
 /**
  * Traduire une carte de restaurant en anglais.
@@ -20,11 +21,12 @@ Règles :
 - Garde en français ce qui n'a pas de traduction : appellations (Saint-Nectaire, Comté, Côtes du Rhône), plats passés tels quels en anglais (tartare, foie gras, crème brûlée, confit), noms propres. Un nom français reconnaissable vaut mieux qu'une traduction littérale qui ne veut rien dire.
 - N'invente RIEN. Si la description est absente, renvoie null. N'ajoute ni ingrédient, ni cuisson, ni accompagnement qui ne soit pas dans le texte français.
 - N'ajoute pas de prix, ils sont gérés à part.
+- Quand un plat porte des formats (« 6 pièces », « au verre », « grande assiette »), traduis chaque libellé, dans le même ordre, et renvoie-les dans "formats". Ce sont des quantités et des contenants, pas des noms de plats : « 6 pièces » → « 6 pieces », « à la bouteille » → « by the bottle ». Si le plat n'a pas de formats, renvoie un tableau vide.
 - Reste court : une carte se lit debout, pas un roman.
 - Une catégorie se traduit par son équivalent d'usage : Entrées → Starters, Plats → Main courses, Desserts → Desserts, Fromages → Cheese, Boissons → Drinks, Vins → Wine.
 
 Réponds UNIQUEMENT par un tableau JSON, sans texte autour, de la forme :
-[{"id": "...", "nom": "...", "description": "..." ou null, "categorie": "..."}]
+[{"id": "...", "nom": "...", "description": "..." ou null, "categorie": "...", "formats": ["...", "..."]}]
 Un objet par plat reçu, avec le même id.`;
 
 type Reponse = {
@@ -32,6 +34,7 @@ type Reponse = {
   nom: string;
   description: string | null;
   categorie: string;
+  formats?: unknown;
 };
 
 /** Extrait le tableau JSON, même si le modèle l'a entouré de texte. */
@@ -73,6 +76,7 @@ export async function traduirePlats(
             nom: item.nom,
             description: item.description,
             categorie: item.categorie,
+            formats: libellesFormats(item),
           })),
         ),
       },
@@ -93,6 +97,23 @@ export async function traduirePlats(
     if (!source) continue;
     if (!traduit.nom || typeof traduit.nom !== "string") continue;
 
+    // Les formats ne sont retenus que si le modèle en a renvoyé exactement
+    // autant que le plat en porte. Un de trop ou un de trop peu, et on
+    // garde les libellés français : associer « by the glass » au prix de
+    // la bouteille est pire que de ne pas traduire.
+    const attendus = libellesFormats(source);
+    const renvoyes = Array.isArray(traduit.formats)
+      ? traduit.formats.map((libelle) =>
+          typeof libelle === "string" ? libelle.trim() : "",
+        )
+      : [];
+    const formats =
+      attendus.length > 0 &&
+      renvoyes.length === attendus.length &&
+      renvoyes.every((libelle) => libelle.length > 0)
+        ? renvoyes
+        : attendus;
+
     resultat.set(source.id, {
       nom: traduit.nom.trim(),
       description:
@@ -103,10 +124,12 @@ export async function traduirePlats(
         typeof traduit.categorie === "string" && traduit.categorie.trim()
           ? traduit.categorie.trim()
           : source.categorie,
+      formats,
       source: {
         nom: source.nom,
         description: source.description,
         categorie: source.categorie,
+        formats: attendus,
       },
     });
   }

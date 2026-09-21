@@ -12,8 +12,14 @@ import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
 import { PlatForm } from "@/components/menu/PlatForm";
 import { PhotoPlat } from "@/components/menu/PhotoPlat";
 import { AllergenesPlat } from "@/components/menu/AllergenesPlat";
+import { FormatsPlat } from "@/components/menu/FormatsPlat";
 import { TraduireCarte } from "@/components/menu/TraduireCarte";
-import { carteOrganisee, formatPrix } from "@/lib/menu/carte";
+import {
+  carteOrganisee,
+  formatPrix,
+  formatsDe,
+  formatsLisibles,
+} from "@/lib/menu/carte";
 import { aTraduire, traductionCaduque } from "@/lib/menu/traduction";
 import { qrSvg, urlCarte } from "@/lib/menu/qr";
 import { exiger } from "@/lib/equipe/roles";
@@ -67,10 +73,7 @@ export default async function MenuPage({
   const supabase = await createClient();
   const [restaurantResult, itemsResult] = await Promise.all([
     supabase.from("restaurants").select("*").eq("id", id).maybeSingle(),
-    supabase
-      .from("restaurant_menu_items")
-      .select("*")
-      .eq("restaurant_id", id),
+    supabase.from("restaurant_menu_items").select("*").eq("restaurant_id", id),
   ]);
 
   const restaurant = restaurantResult.data as Restaurant | null;
@@ -102,10 +105,10 @@ export default async function MenuPage({
       <p className="max-w-2xl text-sm text-zinc-500">
         Ta carte s&apos;affiche sur ta page de réservation, sous les
         disponibilités : le client sait ce qu&apos;il vient manger avant de
-        demander une table. Les catégories apparaissent dans l&apos;ordre où
-        tu les ranges ici, pas par ordre alphabétique. Le carré à gauche de
-        chaque plat ajoute sa photo : un carpaccio photographié se commande
-        plus qu&apos;un carpaccio décrit.
+        demander une table. Les catégories apparaissent dans l&apos;ordre où tu
+        les ranges ici, pas par ordre alphabétique. Le carré à gauche de chaque
+        plat ajoute sa photo : un carpaccio photographié se commande plus
+        qu&apos;un carpaccio décrit.
       </p>
 
       {/* La déclaration des allergènes n'est pas un confort : pour un plat
@@ -116,14 +119,14 @@ export default async function MenuPage({
       {sansAllergenes > 0 && (
         <div className="flex flex-col gap-1 rounded-2xl border border-amber-200 bg-amber-50 p-5">
           <span className="text-sm font-medium text-amber-900">
-            {sansAllergenes} plat{sansAllergenes > 1 ? "s" : ""} sans
-            allergènes déclarés
+            {sansAllergenes} plat{sansAllergenes > 1 ? "s" : ""} sans allergènes
+            déclarés
           </span>
           <span className="text-sm text-amber-800">
             La loi demande que la liste des allergènes soit écrite et
             consultable sans que le client ait à la demander. Coche-les sous
-            chaque plat : ta carte les affiche, et ton document allergènes
-            se fabrique tout seul à partir de là.
+            chaque plat : ta carte les affiche, et ton document allergènes se
+            fabrique tout seul à partir de là.
           </span>
         </div>
       )}
@@ -270,34 +273,44 @@ export default async function MenuPage({
                 <h2 className="text-sm font-semibold uppercase tracking-wide text-brand-navy">
                   {bloc.categorie}
                 </h2>
-                <div className="flex items-center gap-1">
-                  {rang > 0 && (
-                    <Action
-                      action={monterCategorie}
-                      champs={{
-                        restaurant_id: id,
-                        categorie: bloc.categorie,
-                        sens: "haut",
-                      }}
-                      libelle={`Monter ${bloc.categorie}`}
-                    >
-                      ↑
-                    </Action>
-                  )}
-                  {rang < blocs.length - 1 && (
-                    <Action
-                      action={monterCategorie}
-                      champs={{
-                        restaurant_id: id,
-                        categorie: bloc.categorie,
-                        sens: "bas",
-                      }}
-                      libelle={`Descendre ${bloc.categorie}`}
-                    >
-                      ↓
-                    </Action>
-                  )}
-                </div>
+                {/* Deux flèches nues à côté d'un titre ne disent pas ce
+                    qu'elles déplacent : on les lit comme le tri d'une
+                    colonne, ou on ne les voit pas du tout. Le mot dit que
+                    c'est le bloc entier qui bouge, plats compris — et il
+                    n'apparaît que s'il y a quelque chose à réordonner. */}
+                {blocs.length > 1 && (
+                  <div className="flex items-center gap-1">
+                    <span className="text-xs text-zinc-400">
+                      Déplacer la catégorie
+                    </span>
+                    {rang > 0 && (
+                      <Action
+                        action={monterCategorie}
+                        champs={{
+                          restaurant_id: id,
+                          categorie: bloc.categorie,
+                          sens: "haut",
+                        }}
+                        libelle={`Monter ${bloc.categorie}`}
+                      >
+                        ↑
+                      </Action>
+                    )}
+                    {rang < blocs.length - 1 && (
+                      <Action
+                        action={monterCategorie}
+                        champs={{
+                          restaurant_id: id,
+                          categorie: bloc.categorie,
+                          sens: "bas",
+                        }}
+                        libelle={`Descendre ${bloc.categorie}`}
+                      >
+                        ↓
+                      </Action>
+                    )}
+                  </div>
+                )}
               </div>
 
               <ul className="flex flex-col divide-y divide-zinc-100">
@@ -336,13 +349,19 @@ export default async function MenuPage({
                         </span>
                       )}
                       <AllergenesPlat restaurantId={id} plat={plat} />
+                      <FormatsPlat restaurantId={id} plat={plat} />
                     </span>
 
                     <span className="flex items-center gap-3">
+                      {/* Les formats l'emportent sur le prix unique :
+                          c'est ce que le client verra, donc c'est ce que
+                          le restaurateur doit relire ici. */}
                       <span className="text-sm font-medium tabular-nums text-zinc-700">
-                        {plat.prix_centimes === null
-                          ? "—"
-                          : formatPrix(plat.prix_centimes)}
+                        {formatsDe(plat)
+                          ? formatsLisibles(formatsDe(plat)!)
+                          : plat.prix_centimes === null
+                            ? "—"
+                            : formatPrix(plat.prix_centimes)}
                       </span>
                       <span className="flex items-center gap-1">
                         {index > 0 && (

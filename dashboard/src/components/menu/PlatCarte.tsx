@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { formatPrix } from "@/lib/menu/carte";
+import { formatPrix, formatsDe, formatsLisibles } from "@/lib/menu/carte";
 import { platAffiche } from "@/lib/menu/traduction";
 import { listeAllergenes } from "@/types/allergenes";
 import type { Langue, MenuItem } from "@/types/menu";
@@ -21,6 +21,7 @@ export function PlatCarte({
 }) {
   const affiche = platAffiche(plat, langue);
   const anglais = langue === "en";
+  const formats = formatsDe(plat);
 
   return (
     <li className="flex items-start gap-4 rounded-2xl border border-zinc-200/70 bg-white p-4 shadow-sm">
@@ -40,7 +41,11 @@ export function PlatCarte({
           <span className="text-sm font-medium text-zinc-900">
             {affiche.nom}
           </span>
-          {plat.prix_centimes !== null && (
+          {/* Un plat à formats n'a pas de prix unique à afficher : les
+              formats prennent sa place, sur leur propre ligne, parce
+              qu'« au verre 6,50 € · à la bouteille 28,00 € » à droite
+              d'un nom écraserait le nom. */}
+          {!formats && plat.prix_centimes !== null && (
             <span className="shrink-0 text-sm font-medium tabular-nums text-zinc-700">
               {formatPrix(plat.prix_centimes)}
             </span>
@@ -48,6 +53,11 @@ export function PlatCarte({
         </span>
         {affiche.description && (
           <span className="text-sm text-zinc-500">{affiche.description}</span>
+        )}
+        {formats && (
+          <span className="text-sm font-medium tabular-nums text-zinc-700">
+            {formatsLisibles(formats, affiche.formats)}
+          </span>
         )}
         {plat.allergenes !== null && plat.allergenes.length > 0 && (
           <span className="text-xs text-zinc-400">

@@ -16,7 +16,11 @@ import { aTraduire } from "@/lib/menu/traduction";
 import { allergenesValides } from "@/types/allergenes";
 import { traduirePlats } from "@/lib/menu/traduire";
 import {
+  FORMATS_MAX,
+  FORMAT_LIBELLE_MAX,
   MENU_VIDE,
+  type Format,
+  type FormatsState,
   type MenuItem,
   type MenuValeurs,
   type Traductions,
@@ -204,6 +208,96 @@ export async function enregistrerAllergenes(formData: FormData) {
   revalidatePath(`/dashboard/${restaurantId}/menu`);
 }
 
+/**
+ * Enregistrer les formats d'un plat : « par 6 » à 9,50 €, « par 12 » à
+ * 17 €.
+ *
+ * Le formulaire envoie autant de lignes qu'il en propose, la plupart
+ * vides. Une ligne entièrement vide est ignorée — c'est la façon de
+ * supprimer un format, et la façon de ne pas en créer. Une ligne à
+ * moitié remplie, en revanche, est une erreur qu'il faut dire : « par
+ * 12 » sans prix ou 17 € sans libellé sont des saisies interrompues, pas
+ * des intentions.
+ *
+ * Tout effacer ramène le plat à son prix unique. C'est pour ça que la
+ * colonne vaut NULL plutôt qu'un tableau vide : « aucun format » et « un
+ * seul prix » sont la même chose, et doivent le rester.
+ */
+export async function enregistrerFormats(
+  state: FormatsState,
+  formData: FormData,
+): Promise<FormatsState> {
+  const echec = (error: string): FormatsState => ({
+    error,
+    rendu: state.rendu,
+  });
+  const restaurantId = texte(formData.get("restaurant_id"));
+  const id = texte(formData.get("id"));
+  if (!peutGerer(await roleSur(restaurantId))) {
+    return echec("Seul un gérant peut modifier la carte.");
+  }
+
+  const libelles = formData.getAll("format_libelle").map((v) => texte(v));
+  const prix = formData.getAll("format_prix").map((v) => texte(v));
+
+  const formats: Format[] = [];
+  for (let rang = 0; rang < Math.max(libelles.length, prix.length); rang++) {
+    const libelle = (libelles[rang] ?? "").trim();
+    const brut = (prix[rang] ?? "").trim();
+    if (!libelle && !brut) continue;
+
+    if (!libelle) {
+      return echec(`Il manque le libellé du format à ${brut}.`);
+    }
+    if (libelle.length > FORMAT_LIBELLE_MAX) {
+      return echec(
+        `« ${libelle.slice(0, 20)}… » est trop long pour un format.`,
+      );
+    }
+    const centimes = enCentimes(brut);
+    if (centimes === undefined) {
+      return echec(`« ${brut} » ne se lit pas comme un prix.`);
+    }
+    if (centimes === null) {
+      return echec(`Il manque le prix du format « ${libelle} ».`);
+    }
+    formats.push({ libelle, prix_centimes: centimes });
+  }
+
+  if (formats.length > FORMATS_MAX) {
+    return echec(`Pas plus de ${FORMATS_MAX} formats par plat.`);
+  }
+  const vus = new Set<string>();
+  for (const format of formats) {
+    const cle = format.libelle.toLowerCase();
+    if (vus.has(cle)) {
+      return echec(`Le format « ${format.libelle} » est en double.`);
+    }
+    vus.add(cle);
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("restaurant_menu_items")
+    .update({
+      formats: formats.length > 0 ? formats : null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id)
+    .eq("restaurant_id", restaurantId);
+
+  if (error) {
+    console.error("[enregistrerFormats]", error);
+    return echec("Les formats n'ont pas été enregistrés.");
+  }
+
+  revalidatePath(`/dashboard/${restaurantId}/menu`);
+  // Le compteur remonte le formulaire avec ce qui vient d'être enregistré :
+  // React vide les champs après une action, et un éditeur qui se vide
+  // laisse croire que les formats ont disparu.
+  return { error: null, rendu: state.rendu + 1 };
+}
+
 export async function monterPlat(formData: FormData) {
   const restaurantId = texte(formData.get("restaurant_id"));
   const id = texte(formData.get("id"));
@@ -243,7 +337,6 @@ export async function basculerCartePublique(formData: FormData) {
   if (error) console.error("[basculerCartePublique]", error);
   revalidatePath(`/dashboard/${restaurantId}/menu`);
 }
-
 
 /**
  * La photo d'un plat. Une seule : on remplace, on n'empile pas. L'ancien
@@ -361,7 +454,6 @@ export async function retirerPhotoPlat(formData: FormData) {
   revalidatePath(`/dashboard/${restaurantId}/menu`);
 }
 
-
 /**
  * Traduire en anglais ce qui ne l'est pas encore, ou ne l'est plus depuis
  * que le français a changé. Ce qui est déjà à jour n'est pas renvoyé au
@@ -412,7 +504,10 @@ export async function traduireCarte(formData: FormData): Promise<{
       const plat = manquants.find((item) => item.id === id)!;
       // Les autres langues déjà enregistrées sont conservées : on ne remplace
       // que l'anglais.
-      const suite: Traductions = { ...(plat.traductions ?? {}), en: traduction };
+      const suite: Traductions = {
+        ...(plat.traductions ?? {}),
+        en: traduction,
+      };
       return supabase
         .from("restaurant_menu_items")
         .update({ traductions: suite, updated_at: maintenant })
