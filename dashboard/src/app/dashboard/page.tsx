@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { AlertsPanel } from "@/components/dashboard/AlertsPanel";
 import { CarteRestaurant } from "@/components/dashboard/CarteRestaurant";
 import { ACCUEIL } from "@/lib/i18n/accueil";
+import { DETAILS, dateDuJour } from "@/lib/i18n/detailsAccueil";
 import { ChoixLangueSite } from "@/components/landing/ChoixLangueSite";
 import { choisirLangue } from "@/app/dashboard/langue-actions";
 import { langueUtilisateur } from "@/lib/i18n/langue";
@@ -26,6 +27,7 @@ type RestaurantEtendu = Restaurant & {
 export default async function DashboardPage() {
   const langue = await langueUtilisateur();
   const t = ACCUEIL[langue];
+  const d = DETAILS[langue];
   const supabase = await createClient();
   const { data } = await supabase
     .from("restaurants")
@@ -83,21 +85,15 @@ export default async function DashboardPage() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="font-serif text-3xl text-ink sm:text-4xl">
-            {restaurants.length === 1 ? "Votre restaurant" : "Vos restaurants"}
+            {d.titreListe(restaurants.length)}
           </h1>
-          <p className="text-sm text-ink-soft">
-            {new Date().toLocaleDateString("fr-FR", {
-              weekday: "long",
-              day: "numeric",
-              month: "long",
-            })}
-          </p>
+          <p className="text-sm text-ink-soft">{dateDuJour(langue)}</p>
         </div>
         <Link
           href="/dashboard/new"
           className="rounded-lg border border-line bg-paper px-4 py-2 text-sm font-semibold text-ink transition-colors hover:border-ink"
         >
-          Ajouter un restaurant
+          {d.ajouterRestaurant}
         </Link>
       </div>
 
@@ -135,6 +131,7 @@ export default async function DashboardPage() {
           {restaurants.map((restaurant) => (
             <CarteRestaurant
               t={t}
+              langue={langue}
               key={restaurant.id}
               restaurant={restaurant}
               role={roles.get(restaurant.id) ?? null}

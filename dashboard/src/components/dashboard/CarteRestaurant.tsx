@@ -4,6 +4,12 @@ import type { Pouls } from "@/lib/dashboard/pouls";
 import { publicationsGoogleOuvertes } from "@/lib/google/business";
 import { campagnesOuvertes } from "@/lib/campagnes/message";
 import type { ClesAccueil } from "@/lib/i18n/accueil";
+import {
+  DETAILS,
+  dateCourte,
+  type DetailsAccueil,
+} from "@/lib/i18n/detailsAccueil";
+import type { Langue } from "@/lib/i18n/langue";
 import { peutGerer, type Role } from "@/lib/equipe/roles";
 import {
   type Acces,
@@ -187,17 +193,7 @@ const ICONES = {
   ),
 };
 
-function dateCourte(iso: string): string {
-  return new Date(iso).toLocaleString("fr-FR", {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
-function groupes(t: ClesAccueil): Groupe[] {
+function groupes(t: ClesAccueil, d: DetailsAccueil, langue: Langue): Groupe[] {
   return [
     {
       titre: t.groupes.service,
@@ -208,9 +204,7 @@ function groupes(t: ClesAccueil): Groupe[] {
           resume: t.entrees.reservations.resume,
           icone: ICONES.reservations,
           detail: (p) =>
-            p.aConfirmer > 0
-              ? `${p.aConfirmer} demande${p.aConfirmer > 1 ? "s" : ""} à confirmer`
-              : "Rien en attente",
+            p.aConfirmer > 0 ? d.aConfirmer(p.aConfirmer) : d.rienEnAttente,
           attention: (p) => p.aConfirmer > 0,
         },
         {
@@ -224,8 +218,8 @@ function groupes(t: ClesAccueil): Groupe[] {
           // la case, donc ce que vaut le fichier aujourd'hui.
           detail: (p) =>
             p.contacts.total > 0
-              ? `${p.contacts.total} client${p.contacts.total > 1 ? "s" : ""} · ${p.contacts.joignables} joignable${p.contacts.joignables > 1 ? "s" : ""}`
-              : "Aucun client enregistré",
+              ? d.clients(p.contacts.total, p.contacts.joignables)
+              : d.aucunClient,
         },
         // Masquées tant que le domaine d'envoi n'est pas vérifié : une
         // campagne programmée qui ne part jamais coûte plus cher qu'une
@@ -240,8 +234,8 @@ function groupes(t: ClesAccueil): Groupe[] {
                 minimum: "gerant" as const,
                 detail: (p: Pouls) =>
                   p.contacts.joignables > 0
-                    ? `${p.contacts.joignables} destinataire${p.contacts.joignables > 1 ? "s" : ""}`
-                    : "Personne n'a encore accepté",
+                    ? d.destinataires(p.contacts.joignables)
+                    : d.personneAcceptee,
               },
             ]
           : []),
@@ -252,9 +246,7 @@ function groupes(t: ClesAccueil): Groupe[] {
           icone: ICONES.service,
           detail: (p) => {
             const total = p.couvertsMidi + p.couvertsSoir;
-            return total > 0
-              ? `${total} couvert${total > 1 ? "s" : ""} aujourd'hui`
-              : "Aucun couvert confirmé aujourd'hui";
+            return total > 0 ? d.couvertsAujourdhui(total) : d.aucunCouvert;
           },
         },
       ],
@@ -268,7 +260,7 @@ function groupes(t: ClesAccueil): Groupe[] {
           resume: t.entrees.vitrine.resume,
           icone: ICONES.vitrine,
           minimum: "gerant",
-          detail: (p) => (p.sitePublie ? "En ligne" : "Pas encore publié"),
+          detail: (p) => (p.sitePublie ? d.enLigne : d.pasPublie),
           attention: (p) => !p.sitePublie,
         },
         {
@@ -279,10 +271,10 @@ function groupes(t: ClesAccueil): Groupe[] {
           minimum: "gerant",
           detail: (p) =>
             p.cartePubliee
-              ? `Publiée · ${p.nombrePlats} plat${p.nombrePlats > 1 ? "s" : ""}`
+              ? d.cartePubliee(p.nombrePlats)
               : p.nombrePlats > 0
-                ? `${p.nombrePlats} plat${p.nombrePlats > 1 ? "s" : ""}, pas encore publiée`
-                : "Pas encore saisie",
+                ? d.carteNonPubliee(p.nombrePlats)
+                : d.carteVide,
         },
         {
           href: "photos",
@@ -292,8 +284,8 @@ function groupes(t: ClesAccueil): Groupe[] {
           minimum: "gerant",
           detail: (p) =>
             p.nombrePhotos > 0
-              ? `${p.nombrePhotos} photo${p.nombrePhotos > 1 ? "s" : ""}${p.couvertureUrl ? " · couverture choisie" : ""}`
-              : "Aucune photo",
+              ? d.photos(p.nombrePhotos, Boolean(p.couvertureUrl))
+              : d.aucunePhoto,
           attention: (p) => p.nombrePhotos === 0,
         },
         {
@@ -307,7 +299,10 @@ function groupes(t: ClesAccueil): Groupe[] {
           // case s'allume tant que ce n'est pas le cas — ces réponses
           // sont ce qui épargne les appels en plein service.
           detail: (p) =>
-            `${p.questionsSuggerees.repondues} sur ${p.questionsSuggerees.attendues}`,
+            d.avancement(
+              p.questionsSuggerees.repondues,
+              p.questionsSuggerees.attendues,
+            ),
           attention: (p) =>
             p.questionsSuggerees.repondues < p.questionsSuggerees.attendues,
         },
@@ -331,12 +326,12 @@ function groupes(t: ClesAccueil): Groupe[] {
           minimum: "gerant",
           detail: (p) =>
             p.note != null
-              ? `${p.note.toFixed(1).replace(".", ",")} ★ · ${p.nombreAvis ?? 0} avis${
-                  p.avisCetteSemaine
-                    ? ` · ${p.avisCetteSemaine > 0 ? "+" : ""}${p.avisCetteSemaine} cette semaine`
-                    : ""
-                }`
-              : "Premier relevé la nuit prochaine",
+              ? d.note(
+                  p.note.toFixed(1).replace(".", ","),
+                  p.nombreAvis ?? 0,
+                  p.avisCetteSemaine ?? null,
+                )
+              : d.premierReleve,
         },
         {
           href: "retours",
@@ -345,7 +340,7 @@ function groupes(t: ClesAccueil): Groupe[] {
           icone: ICONES.retours,
           minimum: "gerant",
           detail: (p) =>
-            p.retoursALire > 0 ? `${p.retoursALire} à lire` : "Rien de nouveau",
+            p.retoursALire > 0 ? d.aLire(p.retoursALire) : d.rienDeNouveau,
           attention: (p) => p.retoursALire > 0,
         },
         {
@@ -368,8 +363,8 @@ function groupes(t: ClesAccueil): Groupe[] {
                 minimum: "gerant" as const,
                 detail: (p: Pouls) =>
                   p.prochainPost
-                    ? `Prochaine : ${dateCourte(p.prochainPost)}`
-                    : "Aucune programmée",
+                    ? d.prochainePublication(dateCourte(p.prochainPost, langue))
+                    : d.aucuneProgrammee,
               },
             ]
           : []),
@@ -380,9 +375,7 @@ function groupes(t: ClesAccueil): Groupe[] {
           icone: ICONES.ia,
           minimum: "gerant",
           detail: (p) =>
-            p.ia
-              ? `Cité sur ${p.ia.citees} question${p.ia.citees > 1 ? "s" : ""} sur ${p.ia.total}`
-              : "Pas encore vérifié",
+            p.ia ? d.citeSur(p.ia.citees, p.ia.total) : d.pasEncoreVerifie,
         },
       ],
     },
@@ -410,7 +403,7 @@ function groupes(t: ClesAccueil): Groupe[] {
               p.connexions.instagram && "Instagram",
               p.connexions.tiktok && "TikTok",
             ].filter(Boolean);
-            return liees.length > 0 ? liees.join(" · ") : "Rien de relié";
+            return liees.length > 0 ? liees.join(" · ") : d.rienDeRelie;
           },
           attention: (p) => !p.connexions.google,
         },
@@ -486,6 +479,7 @@ export function CarteRestaurant({
   acces,
   pouls,
   t,
+  langue,
 }: {
   restaurant: { id: string; nom: string; adresse: string | null };
   role: Role | null;
@@ -493,9 +487,13 @@ export function CarteRestaurant({
   pouls: Pouls;
   /** Les phrases de l'écran, dans la langue du compte. */
   t: ClesAccueil;
+  langue: Langue;
 }) {
   const base = `/dashboard/${restaurant.id}`;
   const couverts = pouls.couvertsMidi + pouls.couvertsSoir;
+  // Les phrases qui comptent quelque chose. Voir `detailsAccueil.ts` :
+  // elles ne peuvent pas vivre dans le même dictionnaire que les autres.
+  const d = DETAILS[langue];
 
   return (
     <li className="flex flex-col overflow-hidden rounded-3xl border border-line bg-paper shadow-[0_24px_60px_-40px_oklch(20%_0.02_60/35%)]">
@@ -611,28 +609,18 @@ export function CarteRestaurant({
                 ? `${pouls.couvertsMidi} · ${pouls.couvertsSoir}`
                 : "—"
             }
-            libelle={
-              couverts > 0 ? "couverts midi · soir" : "aucun couvert confirmé"
-            }
+            libelle={couverts > 0 ? d.couvertsMidiSoir : d.aucunCouvertConfirme}
             href={`${base}/service`}
           />
           <Chiffre
             valeur={String(pouls.aConfirmer)}
-            libelle={
-              pouls.aConfirmer > 1
-                ? "demandes à confirmer"
-                : "demande à confirmer"
-            }
+            libelle={d.demandesAConfirmer(pouls.aConfirmer)}
             href={`${base}/reservations`}
             attention={pouls.aConfirmer > 0}
           />
           <Chiffre
             valeur={String(pouls.retoursALire)}
-            libelle={
-              pouls.retoursALire > 1
-                ? "retours clients à lire"
-                : "retour client à lire"
-            }
+            libelle={d.retoursClientsALire(pouls.retoursALire)}
             href={`${base}/retours`}
             attention={pouls.retoursALire > 0}
           />
@@ -643,8 +631,8 @@ export function CarteRestaurant({
             libelle={
               pouls.note != null
                 ? pouls.avisCetteSemaine
-                  ? `sur Google · ${pouls.avisCetteSemaine > 0 ? "+" : ""}${pouls.avisCetteSemaine} avis cette semaine`
-                  : `sur Google · ${pouls.nombreAvis ?? 0} avis`
+                  ? d.surGoogleSemaine(pouls.avisCetteSemaine)
+                  : d.surGoogleAvis(pouls.nombreAvis ?? 0)
                 : "note Google, premier relevé cette nuit"
             }
             href={`${base}/avis`}
@@ -653,7 +641,7 @@ export function CarteRestaurant({
       </div>
 
       <div className="flex flex-col gap-7 px-6 py-6 sm:px-8">
-        {groupes(t).map((groupe) => {
+        {groupes(t, d, langue).map((groupe) => {
           const entrees = groupe.entrees.filter((entree) =>
             accessible(entree.minimum, role),
           );
