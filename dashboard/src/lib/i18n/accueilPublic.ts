@@ -29,6 +29,7 @@ export type Question = { question: string; reponse: string };
 export type ClesAccueilPublic = {
   meta: { titre: string; description: string };
   nav: {
+    outils: string;
     fonctionnement: string;
     test: string;
     tarifs: string;
@@ -240,6 +241,7 @@ const fr: ClesAccueilPublic = {
       "Votre fiche Google, vos avis, votre visibilité dans les réponses des IA et vos réservations, au même endroit. Sans commission par couvert.",
   },
   nav: {
+    outils: "Outils gratuits",
     fonctionnement: "Comment ça marche",
     test: "Tester ma présence Google",
     tarifs: "Tarifs",
@@ -597,6 +599,7 @@ const en: ClesAccueilPublic = {
       "Your Google listing, your reviews, your visibility in AI answers and your bookings, all in one place. No commission per cover.",
   },
   nav: {
+    outils: "Free tools",
     fonctionnement: "How it works",
     test: "Test my Google presence",
     tarifs: "Pricing",
@@ -937,6 +940,7 @@ const zh: ClesAccueilPublic = {
       "Google 商家资料、顾客评价、AI 回答中的曝光度和订位，全部集中在一处。不按每位客人抽成。",
   },
   nav: {
+    outils: "免费工具",
     fonctionnement: "运作方式",
     test: "检测我的 Google 曝光",
     tarifs: "价格",

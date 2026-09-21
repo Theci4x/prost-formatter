@@ -183,6 +183,20 @@ export default async function Home() {
           </span>
         </div>
         <div className="hidden gap-9 sm:flex" style={{ alignItems: "center" }}>
+          {/* En tête, et pas dans le pied de page : quatre outils
+              gratuits enterrés sous toute la page ne servent à personne,
+              et c'est précisément ce que le visiteur cherche avant de
+              savoir s'il nous fait confiance. */}
+          <Link
+            href="/ouvrir-un-restaurant"
+            style={{
+              fontSize: 14,
+              fontWeight: 600,
+              color: "var(--accent-dark)",
+            }}
+          >
+            {t.nav.outils}
+          </Link>
           <a
             href="#benefices"
             style={{ fontSize: 14, fontWeight: 500, color: "var(--ink-soft)" }}
