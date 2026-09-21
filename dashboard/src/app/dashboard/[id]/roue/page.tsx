@@ -269,6 +269,12 @@ export default async function RouePage({
                       dangerouslySetInnerHTML={{ __html: qr }}
                     />
                   )}
+                  <Link
+                    href={`/dashboard/${id}/roue/panneau`}
+                    className="w-fit rounded-md border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy active:border-brand-navy"
+                  >
+                    Le panneau à imprimer, avec les avis
+                  </Link>
                 </>
               )}
               <form action={basculerRoue} className="pt-1">
