@@ -831,6 +831,13 @@ export default async function Home() {
             Klarr
           </span>
         </div>
+        {/* Les outils gratuits, dans leur propre rangée.
+            Ils se rejoignent surtout par une recherche Google, mais ils
+            n'avaient jusqu'ici aucun chemin depuis le site lui-même :
+            présents au plan du site, introuvables pour un visiteur. Une
+            rangée à part plutôt qu'onze liens en file — le journal et
+            les mentions n'ont pas la même fonction, les mélanger les
+            rend tous illisibles. */}
         <div
           style={{
             display: "flex",
@@ -841,9 +848,52 @@ export default async function Home() {
             color: "var(--ink-soft)",
           }}
         >
-          {/* Le journal en tête du pied de page : c'est la porte d'entrée
-              de ceux qui arrivent par une recherche, et la seule page du
-              site qui leur parle avant qu'ils sachent ce qu'est Klarr. */}
+          <span style={{ fontWeight: 600, color: "var(--ink)" }}>
+            {t.pied.outils}
+          </span>
+          <Link href="/ouvrir-un-restaurant" style={{ color: "inherit" }}>
+            {t.pied.ouvrir}
+          </Link>
+          <Link
+            href="/diagnostic-local-restaurant"
+            style={{ color: "inherit" }}
+          >
+            {t.pied.diagnostic}
+          </Link>
+          <Link
+            href="/calendrier-ouverture-restaurant"
+            style={{ color: "inherit" }}
+          >
+            {t.pied.calendrier}
+          </Link>
+          <Link
+            href="/audit-fiche-google-restaurant"
+            style={{ color: "inherit" }}
+          >
+            {t.pied.audit}
+          </Link>
+          <Link
+            href="/calculateur-commissions-restaurant"
+            style={{ color: "inherit" }}
+          >
+            {t.pied.calculateur}
+          </Link>
+        </div>
+
+        {/* Le journal en tête de la seconde rangée : c'est la porte
+            d'entrée de ceux qui arrivent par une recherche, et la seule
+            page du site qui leur parle avant qu'ils sachent ce qu'est
+            Klarr. */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: 18,
+            fontSize: 13,
+            color: "var(--ink-soft)",
+          }}
+        >
           <Link href="/blog" style={{ color: "inherit" }}>
             {t.pied.journal}
           </Link>

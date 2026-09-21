@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Commis } from "@/components/commis/Commis";
+import { EnteteOutil } from "@/components/outils/EnteteOutil";
 import { RappelOuverture } from "@/components/ouverture/RappelOuverture";
 import { DonneesStructurees } from "@/components/seo/DonneesStructurees";
 import { filAriane } from "@/lib/seo/donnees-structurees";
@@ -78,6 +79,8 @@ const ETAPES: Etape[] = [
 export default function OuvrirPage() {
   return (
     <div className="flex min-h-screen flex-col bg-brand-cream">
+      <EnteteOutil />
+
       <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 px-5 py-12">
         <DonneesStructurees
           donnees={filAriane([

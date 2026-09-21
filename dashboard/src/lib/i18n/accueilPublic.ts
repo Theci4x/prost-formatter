@@ -157,6 +157,13 @@ export type ClesAccueilPublic = {
     mention: string;
   };
   pied: {
+    /** L'intitulé de la rangée d'outils, au-dessus des mentions. */
+    outils: string;
+    ouvrir: string;
+    diagnostic: string;
+    calendrier: string;
+    audit: string;
+    calculateur: string;
     journal: string;
     aide: string;
     mentions: string;
@@ -555,6 +562,12 @@ const fr: ClesAccueilPublic = {
     mention: "Aucun compte à créer. Aucune commission pour le restaurant.",
   },
   pied: {
+    outils: "Outils gratuits",
+    ouvrir: "Ouvrir un restaurant",
+    diagnostic: "Diagnostic d'un local",
+    calendrier: "Calendrier d'ouverture",
+    audit: "Audit de fiche Google",
+    calculateur: "Calculateur de commissions",
     journal: "Le journal",
     aide: "Aide",
     mentions: "Mentions légales",
@@ -901,6 +914,12 @@ const en: ClesAccueilPublic = {
     mention: "No account to create. No commission for the restaurant.",
   },
   pied: {
+    outils: "Free tools",
+    ouvrir: "Opening a restaurant",
+    diagnostic: "Check a site",
+    calendrier: "Opening timeline",
+    audit: "Google listing audit",
+    calculateur: "Commission calculator",
     journal: "Journal (in French)",
     aide: "Help",
     mentions: "Legal notice",
@@ -1225,6 +1244,12 @@ const zh: ClesAccueilPublic = {
     mention: "无需注册账号。餐厅无需支付抽成。",
   },
   pied: {
+    outils: "免费工具",
+    ouvrir: "开一家餐厅",
+    diagnostic: "选址诊断",
+    calendrier: "开业时间表",
+    audit: "Google 商家资料检测",
+    calculateur: "抽成计算器",
     journal: "专栏（法语）",
     aide: "帮助",
     mentions: "法律声明",
