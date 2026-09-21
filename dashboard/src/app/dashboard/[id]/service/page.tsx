@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { langueUtilisateur } from "@/lib/i18n/langue";
 import { RESERVATIONS } from "@/lib/i18n/reservations";
+import { SERVICE } from "@/lib/i18n/service";
+import { dateJour } from "@/lib/i18n/dates";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { SaisieReservation } from "@/components/reservations/SaisieReservation";
@@ -53,14 +55,6 @@ function decalerJour(date: string, jours: number): string {
   return d.toISOString().slice(0, 10);
 }
 
-function formatLong(date: string): string {
-  return new Date(`${date}T12:00:00`).toLocaleDateString("fr-FR", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  });
-}
-
 export default async function ServicePage({
   params,
   searchParams,
@@ -72,6 +66,7 @@ export default async function ServicePage({
   // Le dictionnaire du carnet : ces composants sont les siens.
   const langue = await langueUtilisateur();
   const r = RESERVATIONS[langue];
+  const sv = SERVICE[langue];
   await exigerModule(id, "reservations");
   const query = await searchParams;
   const supabase = await createClient();
@@ -139,10 +134,10 @@ export default async function ServicePage({
             href={`/dashboard/${id}/reservations`}
             className="text-sm text-zinc-500 hover:text-zinc-900"
           >
-            ← Réservations
+            {sv.retourCarnet}
           </Link>
           <h1 className="text-2xl font-semibold text-zinc-900 first-letter:capitalize">
-            {formatLong(jour)}
+            {dateJour(jour, langue)}
           </h1>
           <p className="text-sm text-zinc-500">{restaurant.nom}</p>
         </div>
@@ -152,29 +147,27 @@ export default async function ServicePage({
             href={`/dashboard/${id}/service?jour=${decalerJour(jour, -1)}`}
             className="rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-600 hover:border-brand-navy hover:text-brand-navy"
           >
-            ← Veille
+            {sv.veille}
           </Link>
           <Link
             href={`/dashboard/${id}/service`}
             className="rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-600 hover:border-brand-navy hover:text-brand-navy"
           >
-            Aujourd&apos;hui
+            {sv.aujourdhui}
           </Link>
           <Link
             href={`/dashboard/${id}/service?jour=${decalerJour(jour, 1)}`}
             className="rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-600 hover:border-brand-navy hover:text-brand-navy"
           >
-            Lendemain →
+            {sv.lendemain}
           </Link>
         </div>
       </div>
 
       {fermeture && (
         <p className="rounded-2xl border border-amber-300 bg-amber-50 p-5 text-sm font-medium text-amber-900">
-          {motifFermeture(fermeture)} Aucune réservation ne peut être prise ce
-          jour-là.
-          {confirmees.length > 0 &&
-            " Les convives ci-dessous étaient attendus : pense à les prévenir."}
+          {motifFermeture(fermeture, sv)} {sv.fermeAucuneReservation}
+          {confirmees.length > 0 && ` ${sv.fermePrevenir}`}
         </p>
       )}
 
@@ -212,7 +205,7 @@ export default async function ServicePage({
       {enAttente.length > 0 && (
         <section className="flex flex-col gap-3">
           <h2 className="text-base font-semibold text-zinc-900">
-            En attente de ta réponse
+            {sv.enAttente}
           </h2>
           <ul className="flex flex-col gap-3">
             {enAttente.map((ligne) => (
@@ -227,8 +220,8 @@ export default async function ServicePage({
                   <span className="text-zinc-600">
                     {ligne.heure_arrivee &&
                       ` · ${heureLisible(ligne.heure_arrivee)}`}
-                    · {ligne.couverts} couverts
-                    {ligne.type === "privatisation" && " · privatisation"}
+                    · {r.couverts(ligne.couverts)}
+                    {ligne.type === "privatisation" && ` · ${r.privatisation}`}
                   </span>
                 </span>
                 <DecisionDemande
@@ -244,7 +237,7 @@ export default async function ServicePage({
 
       {servicesDuJour.length === 0 ? (
         <p className="rounded-2xl border border-zinc-200/70 bg-white p-5 text-sm text-zinc-500 shadow-sm">
-          Aucun service ce jour-là.
+          {sv.aucunService}
         </p>
       ) : (
         servicesDuJour.map((service) => {
@@ -321,6 +314,7 @@ export default async function ServicePage({
 
                       {tablesSalle.length > 0 && (
                         <PlanService
+                          sv={sv}
                           tables={tablesSalle}
                           espaceId={espace.id}
                           reservations={actifs}
@@ -332,12 +326,13 @@ export default async function ServicePage({
 
                       {duService.length === 0 ? (
                         <p className="text-sm text-zinc-400">
-                          Personne pour l&apos;instant.
+                          {sv.personnePourInstant}
                         </p>
                       ) : (
                         <ul className="flex flex-col divide-y divide-zinc-100">
                           {duService.map((ligne) => (
                             <LigneService
+                              sv={sv}
                               key={ligne.id}
                               restaurantId={id}
                               jour={jour}
@@ -362,6 +357,7 @@ export default async function ServicePage({
                               {tablesSalle.length > 0 &&
                                 ligne.type !== "privatisation" && (
                                   <PlacerReservation
+                                    sv={sv}
                                     restaurantId={id}
                                     reservationId={ligne.id}
                                     couverts={ligne.couverts}
@@ -392,10 +388,7 @@ export default async function ServicePage({
 
       {servicesDuJour.length > 0 && (
         <p className="text-xs text-zinc-400">
-          Heures indicatives : Klarr retient le service, pas l&apos;heure
-          d&apos;arrivée de chaque table.{" "}
-          {formatHeure(servicesDuJour[0].heure_debut)} est le début du premier
-          service.
+          {sv.heuresIndicatives(formatHeure(servicesDuJour[0].heure_debut))}
         </p>
       )}
     </div>

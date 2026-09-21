@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import type { ClesService } from "@/lib/i18n/service";
 import { BoutonAction } from "@/components/reservations/BoutonAction";
 import {
   annulerReservation,
@@ -74,7 +75,9 @@ function Contact({
       <span className="text-xs font-semibold uppercase tracking-[0.06em] text-ink-soft">
         {libelle}
       </span>
-      <span className="truncate text-[15px] font-medium text-ink">{valeur}</span>
+      <span className="truncate text-[15px] font-medium text-ink">
+        {valeur}
+      </span>
     </a>
   );
 }
@@ -84,6 +87,7 @@ export function LigneService({
   detail,
   jour,
   children,
+  sv,
 }: {
   restaurantId: string;
   detail: DetailLigne;
@@ -91,6 +95,7 @@ export function LigneService({
   jour: string;
   /** Le placement à table, rendu par le serveur. */
   children: React.ReactNode;
+  sv: ClesService;
 }) {
   const [ouvert, setOuvert] = useState(false);
 
@@ -114,12 +119,12 @@ export function LigneService({
               {detail.clientNom}
               {detail.type === "privatisation" && (
                 <span className="ml-2 rounded-full bg-brand-orange-soft px-2 py-0.5 text-xs font-medium text-brand-navy">
-                  privatisé
+                  {sv.privatise}
                 </span>
               )}
               {detail.absenceConstatee && (
                 <span className="ml-2 rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-ink-soft">
-                  absent
+                  {sv.absent}
                 </span>
               )}
             </span>
@@ -161,7 +166,7 @@ export function LigneService({
               {detail.telephone && (
                 <Contact
                   href={`tel:${detail.telephone}`}
-                  libelle="Appeler"
+                  libelle={sv.appeler}
                   valeur={detail.telephone}
                 />
               )}
@@ -175,7 +180,7 @@ export function LigneService({
               {detail.email && (
                 <Contact
                   href={`mailto:${detail.email}`}
-                  libelle="E-mail"
+                  libelle={sv.email}
                   valeur={detail.email}
                 />
               )}
@@ -183,16 +188,14 @@ export function LigneService({
           )}
 
           {!detail.telephone && !detail.email && (
-            <p className="text-sm text-ink-soft">
-              Ce client n&apos;a laissé ni téléphone ni adresse.
-            </p>
+            <p className="text-sm text-ink-soft">{sv.niTelephoneNiAdresse}</p>
           )}
 
           <dl className="flex flex-wrap gap-x-8 gap-y-2 text-sm">
             {detail.heure && (
               <div className="flex flex-col">
                 <dt className="text-xs uppercase tracking-[0.06em] text-ink-soft">
-                  Arrivée
+                  {sv.arrivee}
                 </dt>
                 <dd className="font-medium text-ink">
                   {detail.heure.slice(0, 5).replace(":", "h")}
@@ -201,14 +204,14 @@ export function LigneService({
             )}
             <div className="flex flex-col">
               <dt className="text-xs uppercase tracking-[0.06em] text-ink-soft">
-                Couverts
+                {sv.couvertsLabel}
               </dt>
               <dd className="font-medium text-ink">{detail.couverts}</dd>
             </div>
             {detail.occasion && (
               <div className="flex flex-col">
                 <dt className="text-xs uppercase tracking-[0.06em] text-ink-soft">
-                  Occasion
+                  {sv.occasion}
                 </dt>
                 <dd className="font-medium text-ink">{detail.occasion}</dd>
               </div>
@@ -218,7 +221,7 @@ export function LigneService({
           {detail.message && (
             <div className="flex flex-col gap-1">
               <span className="text-xs uppercase tracking-[0.06em] text-ink-soft">
-                Ce que le client a écrit
+                {sv.ceQueLeClientAEcrit}
               </span>
               <p className="whitespace-pre-line text-sm leading-relaxed text-ink">
                 {detail.message}
@@ -229,7 +232,7 @@ export function LigneService({
           {detail.noteInterne && (
             <div className="flex flex-col gap-1">
               <span className="text-xs uppercase tracking-[0.06em] text-ink-soft">
-                Votre note
+                {sv.votreNote}
               </span>
               <p className="whitespace-pre-line text-sm leading-relaxed text-ink">
                 {detail.noteInterne}
@@ -248,8 +251,8 @@ export function LigneService({
                   restaurant_id: restaurantId,
                   retirer: "1",
                 }}
-                libelle="Retirer le constat d'absence"
-                enCours="Retrait…"
+                libelle={sv.retirerConstatAbsence}
+                enCours={sv.enCoursRetrait}
                 className="text-sm font-medium text-ink-soft hover:text-ink"
               />
             ) : (
@@ -260,8 +263,8 @@ export function LigneService({
                     reservation_id: detail.id,
                     restaurant_id: restaurantId,
                   }}
-                  libelle="Noter comme absent"
-                  enCours="Enregistrement…"
+                  libelle={sv.noterAbsent}
+                  enCours={sv.enCoursEnregistrement}
                   className="text-sm font-medium text-ink-soft hover:text-ink"
                 />
               )
@@ -274,8 +277,8 @@ export function LigneService({
                   reservation_id: detail.id,
                   restaurant_id: restaurantId,
                 }}
-                libelle="Annuler cette table"
-                enCours="Annulation…"
+                libelle={sv.annulerCetteTable}
+                enCours={sv.enCoursAnnulation}
                 className="text-sm font-medium text-red-600 hover:text-red-800"
               />
             )}

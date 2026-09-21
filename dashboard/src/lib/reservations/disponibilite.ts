@@ -77,8 +77,24 @@ export function fermetureApplicable(
 }
 
 /** Le motif tel qu'on le montre au client : jamais une case vide. */
-export function motifFermeture(fermeture: Fermeture): string {
-  return fermeture.motif ? `Fermé — ${fermeture.motif}` : "Fermé ce jour-là.";
+/**
+ * Le motif d'une fermeture, dans la langue qu'on lui donne.
+ *
+ * Le dictionnaire est facultatif, et le repli est le français. Les
+ * appels internes de ce fichier alimentent la `raison` d'un créneau, qui
+ * ressort aussi sur la page de réservation publique : y faire passer un
+ * dictionnaire de tableau de bord mélangerait deux écrans qui n'ont ni
+ * le même lecteur ni la même langue. L'écran de service, lui, passe le
+ * sien.
+ */
+export function motifFermeture(
+  fermeture: Fermeture,
+  sv: { ferme: string; fermePour(motif: string): string } = {
+    ferme: "Fermé ce jour-là.",
+    fermePour: (motif) => `Fermé — ${motif}`,
+  },
+): string {
+  return fermeture.motif ? sv.fermePour(fermeture.motif) : sv.ferme;
 }
 
 /**
@@ -142,7 +158,7 @@ export function heureDesMinutes(minutes: number): string {
 export function dureeDuService(service: Service): number {
   const debut = minutesDeLHeure(service.heure_debut);
   const fin = minutesDeLHeure(service.heure_fin);
-  return ((fin - debut + 1440) % 1440) || 1440;
+  return (fin - debut + 1440) % 1440 || 1440;
 }
 
 /** Le décalage d'une heure depuis l'ouverture du service, en minutes. */
@@ -151,7 +167,8 @@ export function decalageDepuisLOuverture(
   heure: string,
 ): number {
   return (
-    (minutesDeLHeure(heure) - minutesDeLHeure(service.heure_debut) + 1440) % 1440
+    (minutesDeLHeure(heure) - minutesDeLHeure(service.heure_debut) + 1440) %
+    1440
   );
 }
 

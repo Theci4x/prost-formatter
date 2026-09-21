@@ -1,3 +1,4 @@
+import type { ClesService } from "@/lib/i18n/service";
 import {
   cadreDuPlan,
   occupationDuPlan,
@@ -21,11 +22,13 @@ export function PlanService({
   espaceId,
   reservations,
   reperes = [],
+  sv,
 }: {
   tables: TableSalle[];
   espaceId: string;
   reservations: ReservationPlacable[];
   reperes?: Repere[];
+  sv: ClesService;
 }) {
   const occupation = occupationDuPlan({ tables, espaceId, reservations });
   if (occupation.length === 0) return null;
@@ -76,10 +79,12 @@ export function PlanService({
             key={table.id}
             title={
               prise
-                ? `${table.nom} — ${occupants
-                    .map((o) => o.client_nom)
-                    .join(", ")} (${couverts} couverts)`
-                : `${table.nom} — libre, ${table.places} places`
+                ? sv.tableOccupee(
+                    table.nom,
+                    occupants.map((o) => o.client_nom).join(", "),
+                    couverts,
+                  )
+                : sv.tableLibre(table.nom, table.places)
             }
             style={{
               left: `${(table.x - cadre.x) * echelle}%`,

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import type { ClesService } from "@/lib/i18n/service";
 import { placerReservation } from "@/app/dashboard/[id]/reservations/plan/actions";
 import type { TableSalle } from "@/types/plan";
 
@@ -14,12 +15,14 @@ export function PlacerReservation({
   tableActuelle,
   couverts,
   tables,
+  sv,
 }: {
   restaurantId: string;
   reservationId: string;
   tableActuelle: TableSalle | null;
   couverts: number;
   tables: TableSalle[];
+  sv: ClesService;
 }) {
   const [erreur, setErreur] = useState<string | null>(null);
   const [enCours, startTransition] = useTransition();
@@ -42,13 +45,13 @@ export function PlacerReservation({
       <label className="flex items-center gap-2 text-sm">
         <span className="text-zinc-500">Table</span>
         <select
-          aria-label="Table de cette réservation"
+          aria-label={sv.tableDeCetteReservation}
           value={tableActuelle?.id ?? ""}
           disabled={enCours}
           onChange={(event) => changer(event.target.value)}
           className="rounded-md border border-zinc-300 px-2 py-1 text-sm outline-none focus:border-brand-navy disabled:opacity-50"
         >
-          <option value="">À placer</option>
+          <option value="">{sv.aPlacer}</option>
           {/* La table occupée reste dans la liste, sans quoi le menu
               afficherait « À placer » sur un groupe déjà assis. */}
           {tableActuelle &&
@@ -57,7 +60,7 @@ export function PlacerReservation({
             )}
           {tables.map((table) => (
             <option key={table.id} value={table.id}>
-              {table.nom} · {table.places}p
+              {sv.tableEtPlaces(table.nom, table.places)}
             </option>
           ))}
         </select>
