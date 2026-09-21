@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import type { ClesReservations } from "@/lib/i18n/reservations";
 import {
   accepterDemande,
   refuserDemande,
@@ -12,9 +13,11 @@ const initialState: DecisionState = { error: null };
 export function DecisionDemande({
   reservationId,
   restaurantId,
+  r,
 }: {
   reservationId: string;
   restaurantId: string;
+  r: ClesReservations;
 }) {
   const [state, action, pending] = useActionState(
     accepterDemande,
@@ -37,7 +40,7 @@ export function DecisionDemande({
             disabled={pending}
             className="rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover disabled:opacity-50"
           >
-            {pending ? "Confirmation…" : "Accepter"}
+            {pending ? r.confirmationEnCours : r.accepter}
           </button>
         </form>
 
@@ -49,7 +52,7 @@ export function DecisionDemande({
             disabled={refusEnCours}
             className="rounded-md border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-600 transition-colors hover:border-red-300 hover:text-red-700 disabled:opacity-50"
           >
-            {refusEnCours ? "Refus…" : "Refuser"}
+            {refusEnCours ? r.refusEnCours : r.refuser}
           </button>
         </form>
       </div>

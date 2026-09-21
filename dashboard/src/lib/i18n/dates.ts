@@ -1,0 +1,52 @@
+import type { Langue } from "@/lib/i18n/langue";
+
+/**
+ * Les dates du tableau de bord, dans la langue du lecteur.
+ *
+ * Un seul endroit, et c'est le point. Chaque écran avait sa petite
+ * fonction `formatDate` figée en « fr-FR », recopiée de page en page :
+ * traduire l'interface en laissant « mardi 1 juin » au milieu d'une
+ * phrase chinoise ne trompe personne, et corriger quinze copies en
+ * corrige toujours quatorze.
+ *
+ * Le chinois n'écrit pas les dates comme nous — « 6月1日星期二 », le mois
+ * avant le jour et le jour de la semaine à la fin. C'est `Intl` qui le
+ * sait, pas nous : on lui donne la locale et on le laisse faire.
+ */
+
+const LOCALE: Record<Langue, string> = {
+  fr: "fr-FR",
+  en: "en-GB",
+  zh: "zh-CN",
+};
+
+function locale(langue: Langue): string {
+  return LOCALE[langue] ?? "fr-FR";
+}
+
+/** « mardi 1 juin » — la date d'un service, sans l'année. */
+export function dateJour(jour: string, langue: Langue): string {
+  return new Date(`${jour}T12:00:00`).toLocaleDateString(locale(langue), {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
+}
+
+/** « 18 septembre à 14h05 » : assez précis pour ne pas relancer deux fois. */
+export function dateHeure(iso: string, langue: Langue): string {
+  return new Date(iso).toLocaleString(locale(langue), {
+    day: "numeric",
+    month: "long",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+/** « 1 juin » — pour une liste, où l'année encombre. */
+export function dateBreve(iso: string, langue: Langue): string {
+  return new Date(iso).toLocaleDateString(locale(langue), {
+    day: "numeric",
+    month: "short",
+  });
+}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import type { ClesReservations } from "@/lib/i18n/reservations";
 import {
   enregistrerNote,
   type DecisionState,
@@ -20,10 +21,12 @@ export function NoteInterne({
   reservationId,
   restaurantId,
   note,
+  r,
 }: {
   reservationId: string;
   restaurantId: string;
   note: string | null;
+  r: ClesReservations;
 }) {
   const [state, action, pending] = useActionState(enregistrerNote, initial);
 
@@ -39,15 +42,13 @@ export function NoteInterne({
           className="flex min-w-60 flex-1 flex-col gap-1 text-sm font-medium text-zinc-700"
           htmlFor={`note-${reservationId}`}
         >
-          Note interne{" "}
-          <span className="font-normal text-zinc-400">
-            (jamais visible du client)
-          </span>
+          {r.noteInterne}{" "}
+          <span className="font-normal text-zinc-400">{r.jamaisVisible}</span>
           <input
             id={`note-${reservationId}`}
             name="note_interne"
             defaultValue={note ?? ""}
-            placeholder="Allergie aux fruits de mer, arrive à 19h30…"
+            placeholder={r.placeholderNote}
             className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-brand-navy"
           />
         </label>
@@ -56,7 +57,7 @@ export function NoteInterne({
           disabled={pending}
           className="rounded-md border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy disabled:opacity-50"
         >
-          {pending ? "Enregistrement…" : "Enregistrer"}
+          {pending ? r.enCours.enregistrement : r.enregistrer}
         </button>
       </div>
 
@@ -67,7 +68,7 @@ export function NoteInterne({
       ) : (
         !pending &&
         state !== initial && (
-          <p className="text-xs text-emerald-700">Note enregistrée.</p>
+          <p className="text-xs text-emerald-700">{r.noteEnregistree}</p>
         )
       )}
     </form>

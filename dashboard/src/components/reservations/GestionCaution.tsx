@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import type { ClesReservations } from "@/lib/i18n/reservations";
 import {
   debiter,
   libererCaution,
@@ -19,10 +20,12 @@ export function GestionCaution({
   reservationId,
   restaurantId,
   plafond,
+  r,
 }: {
   reservationId: string;
   restaurantId: string;
   plafond: number;
+  r: ClesReservations;
 }) {
   const [state, action, pending] = useActionState(debiter, initialState);
   const [ouvert, setOuvert] = useState(false);
@@ -36,7 +39,7 @@ export function GestionCaution({
             onClick={() => setOuvert(true)}
             className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:border-red-500 hover:text-red-600"
           >
-            Débiter la caution
+            {r.debiterCaution}
           </button>
           <form action={libererCaution}>
             <input type="hidden" name="reservation_id" value={reservationId} />
@@ -45,7 +48,7 @@ export function GestionCaution({
               type="submit"
               className="text-sm font-medium text-zinc-500 hover:text-zinc-900"
             >
-              Libérer — le groupe est venu
+              {r.libererGroupeVenu}
             </button>
           </form>
         </div>
@@ -57,7 +60,7 @@ export function GestionCaution({
             className="text-sm font-medium text-zinc-700"
             htmlFor={`debit-${reservationId}`}
           >
-            Combien prélever ?
+            {r.combienPrelever}
           </label>
           <div className="flex flex-wrap items-center gap-2">
             <input
@@ -68,7 +71,7 @@ export function GestionCaution({
               className="w-32 rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-brand-navy"
             />
             <span className="text-sm text-zinc-500">
-              € — {formatEuros(plafond)} au maximum
+              {r.auMaximum(formatEuros(plafond))}
             </span>
           </div>
           <div className="flex flex-wrap items-center gap-4">
@@ -77,14 +80,14 @@ export function GestionCaution({
               disabled={pending}
               className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:opacity-50"
             >
-              {pending ? "Prélèvement…" : "Prélever maintenant"}
+              {pending ? r.prelevementEnCours : r.preleverMaintenant}
             </button>
             <button
               type="button"
               onClick={() => setOuvert(false)}
               className="text-sm text-zinc-500 hover:text-zinc-900"
             >
-              Annuler
+              {r.annuler}
             </button>
           </div>
         </form>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import type { ClesReservations } from "@/lib/i18n/reservations";
 import {
   corrigerCoordonnees,
   renvoyerConfirmation,
@@ -31,6 +32,7 @@ export function CoordonneesClient({
   email,
   telephone,
   renvoyable,
+  r,
 }: {
   reservationId: string;
   restaurantId: string;
@@ -42,6 +44,7 @@ export function CoordonneesClient({
    * rien à confirmer, et proposer de le renvoyer serait un piège.
    */
   renvoyable: boolean;
+  r: ClesReservations;
 }) {
   const [ouvert, setOuvert] = useState(false);
   // Une soumission a-t-elle eu lieu ? Sans ce drapeau, « Enregistré » ne
@@ -72,7 +75,7 @@ export function CoordonneesClient({
           onClick={() => setOuvert(true)}
           className="text-xs font-medium text-zinc-400 transition-colors hover:text-zinc-900"
         >
-          Corriger
+          {r.corriger}
         </button>
         {/* Le compagnon de la correction : une adresse rectifiée ne fait
             pas repartir ce qui est déjà parti dans le vide. C'est ici
@@ -84,8 +87,8 @@ export function CoordonneesClient({
               reservation_id: reservationId,
               restaurant_id: restaurantId,
             }}
-            libelle="Renvoyer l'e-mail"
-            enCours="Envoi…"
+            libelle={r.renvoyerEmail}
+            enCours={r.enCours.envoi}
             className="text-xs font-medium text-zinc-400 transition-colors hover:text-zinc-900"
           />
         )}
@@ -106,7 +109,7 @@ export function CoordonneesClient({
         <input
           name="client_nom"
           defaultValue={nom}
-          aria-label="Nom du client"
+          aria-label={r.nomClient}
           placeholder="Nom"
           className={`${champ} w-full basis-full sm:w-auto sm:flex-1 sm:basis-40`}
         />
@@ -115,8 +118,8 @@ export function CoordonneesClient({
           defaultValue={email}
           type="email"
           inputMode="email"
-          aria-label="Adresse e-mail du client"
-          placeholder="adresse@exemple.fr"
+          aria-label={r.emailClient}
+          placeholder={r.placeholderEmail}
           className={`${champ} w-full basis-full sm:w-auto sm:flex-1 sm:basis-56`}
         />
         <input
@@ -124,8 +127,8 @@ export function CoordonneesClient({
           defaultValue={telephone ?? ""}
           type="tel"
           inputMode="tel"
-          aria-label="Téléphone du client"
-          placeholder="06 12 34 56 78"
+          aria-label={r.telephoneClient}
+          placeholder={r.placeholderTelephone}
           className={`${champ} w-full basis-full sm:w-44 sm:basis-auto`}
         />
       </div>
@@ -142,28 +145,25 @@ export function CoordonneesClient({
           disabled={pending}
           className="rounded-lg bg-ink px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy disabled:opacity-50"
         >
-          {pending ? "Enregistrement…" : "Enregistrer"}
+          {pending ? r.enCours.enregistrement : r.enregistrer}
         </button>
         <button
           type="button"
           onClick={() => setOuvert(false)}
           className="text-sm text-ink-soft hover:text-ink"
         >
-          Fermer
+          {r.fermer}
         </button>
         {/* Le formulaire ne se referme pas tout seul : refermé à l'envoi,
             il emporterait le message d'erreur d'une adresse refusée. */}
         {tente && !pending && !state.error && (
           <span className="text-xs font-medium text-emerald-700">
-            Enregistré.
+            {r.enregistre}
           </span>
         )}
         {/* Ce qui est déjà parti est parti : le dire ici évite de croire
             qu'une adresse corrigée renvoie la confirmation. */}
-        <span className="text-xs text-ink-soft">
-          Les e-mails déjà envoyés ne repartent pas. Un devis, lui, se
-          renvoie.
-        </span>
+        <span className="text-xs text-ink-soft">{r.dejaEnvoyes}</span>
       </div>
     </form>
   );

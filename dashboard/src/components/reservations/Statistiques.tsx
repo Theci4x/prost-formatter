@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { ClesReservations } from "@/lib/i18n/reservations";
 import type { Statistiques as Stats } from "@/lib/reservations/statistiques";
 import { JOURS_ISO, type Espace } from "@/types/reservation";
 
@@ -23,9 +24,7 @@ function Tuile({
         {valeur}
       </span>
       <span className="text-sm text-zinc-600">{libelle}</span>
-      {precision && (
-        <span className="text-xs text-zinc-400">{precision}</span>
-      )}
+      {precision && <span className="text-xs text-zinc-400">{precision}</span>}
     </div>
   );
 }
@@ -157,12 +156,14 @@ export function Statistiques({
   espaces,
   jours,
   lienPeriode,
+  r,
 }: {
   stats: Stats;
   espaces: Espace[];
   jours: number;
   /** Construit le lien d'une période sans perdre le reste de la page. */
   lienPeriode: (jours: number) => string;
+  r: ClesReservations;
 }) {
   const nomEspace = new Map(espaces.map((e) => [e.id, e.nom]));
 
@@ -170,14 +171,12 @@ export function Statistiques({
     <section id="statistiques" className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-col gap-0.5">
-          <h2 className="text-base font-semibold text-zinc-900">Statistiques</h2>
+          <h2 className="text-base font-semibold text-zinc-900">
+            {r.statistiques}
+          </h2>
           {/* Fenêtre passée, dite explicitement : sans cette ligne, un carnet
               bien rempli pour le mois prochain ferait croire à un bug. */}
-          <p className="text-sm text-zinc-500">
-            Ce qui s&apos;est passé sur les{" "}
-            {jours === 365 ? "365" : jours} derniers jours, aujourd&apos;hui
-            compris. Ce qui est à venir est dans le calendrier.
-          </p>
+          <p className="text-sm text-zinc-500">{r.fenetre(jours)}</p>
         </div>
         <div className="flex gap-1 rounded-lg bg-zinc-100 p-1">
           {[30, 90, 365].map((option) => (
@@ -190,7 +189,7 @@ export function Statistiques({
                   : "text-zinc-600 hover:text-zinc-900"
               }`}
             >
-              {option === 365 ? "1 an" : `${option} j`}
+              {r.periode(option)}
             </Link>
           ))}
         </div>
@@ -199,7 +198,7 @@ export function Statistiques({
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Tuile
           valeur={String(stats.couvertsConfirmes)}
-          libelle="Couverts confirmés"
+          libelle={r.tuiles.couverts}
           precision={
             stats.couvertsMoyens
               ? `${stats.couvertsMoyens.toFixed(1).replace(".", ",")} par réservation`
@@ -208,16 +207,16 @@ export function Statistiques({
         />
         <Tuile
           valeur={String(stats.reservationsConfirmees)}
-          libelle="Réservations confirmées"
+          libelle={r.tuiles.reservations}
         />
         <Tuile
           valeur={pourcent(stats.partEnLigne)}
-          libelle="Venues de ta page"
+          libelle={r.tuiles.venuesPage}
           precision="le reste est pris au téléphone"
         />
         <Tuile
           valeur={pourcent(stats.tauxAcceptation)}
-          libelle="Demandes acceptées"
+          libelle={r.tuiles.acceptees}
           precision={`sur ${stats.demandesEnLigne} demande${stats.demandesEnLigne > 1 ? "s" : ""} reçue${stats.demandesEnLigne > 1 ? "s" : ""}`}
         />
       </div>
@@ -228,57 +227,53 @@ export function Statistiques({
       {stats.absences > 0 && (
         <div className="rounded-2xl border border-amber-200/70 bg-amber-50/60 p-5">
           <p className="text-sm text-amber-900">
-            <span className="font-semibold">
-              {stats.absences} table{stats.absences > 1 ? "s" : ""} restée
-              {stats.absences > 1 ? "s" : ""} vide
-              {stats.absences > 1 ? "s" : ""}
-            </span>{" "}
-            — {stats.couvertsPerdus} couvert
-            {stats.couvertsPerdus > 1 ? "s" : ""} perdu
-            {stats.couvertsPerdus > 1 ? "s" : ""}, soit{" "}
-            {pourcent(stats.tauxAbsence)} des réservations confirmées.
+            {r.absences(
+              stats.absences,
+              stats.couvertsPerdus,
+              pourcent(stats.tauxAbsence),
+            )}
           </p>
           <p className="mt-1 text-xs text-amber-800">
-            Constatées à la main depuis le carnet du jour. Au-delà de
-            quelques pour cent, une caution à partir d&apos;un certain
-            nombre de convives règle la question sans fâcher personne.
+            Constatées à la main depuis le carnet du jour. Au-delà de quelques
+            pour cent, une caution à partir d&apos;un certain nombre de convives
+            règle la question sans fâcher personne.
           </p>
         </div>
       )}
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Barres
-          titre="Couverts par jour de la semaine"
-          unite="couverts"
+          titre={r.parJour}
+          unite={r.uniteCouverts}
           lignes={stats.parJour.map((ligne) => {
             const jour = JOURS_ISO.find((j) => j.valeur === ligne.jour);
             return {
               cle: String(ligne.jour),
               libelle: jour ? jour.long : String(ligne.jour),
               valeur: ligne.couverts,
-              detail: `${ligne.reservations} réservation(s), ${ligne.couverts} couverts`,
+              detail: r.detailBarre(ligne.reservations, ligne.couverts),
             };
           })}
         />
         <Barres
-          titre="Couverts par espace"
+          titre={r.parEspace}
           unite="couverts"
           lignes={stats.parEspace.map((ligne) => ({
             cle: ligne.espaceId,
-            libelle: nomEspace.get(ligne.espaceId) ?? "Espace supprimé",
+            libelle: nomEspace.get(ligne.espaceId) ?? r.espaceSupprime,
             valeur: ligne.couverts,
             detail: `${ligne.reservations} réservation(s), ${ligne.couverts} couverts`,
           }))}
         />
         <Repartition
-          titre="Individuelles et privatisations"
-          a={{ libelle: "Individuelles", valeur: stats.parType.table }}
-          b={{ libelle: "Privatisations", valeur: stats.parType.privatisation }}
+          titre={r.parType}
+          a={{ libelle: r.individuelles, valeur: stats.parType.table }}
+          b={{ libelle: r.privatisations, valeur: stats.parType.privatisation }}
         />
         <Repartition
-          titre="D'où viennent les réservations"
-          a={{ libelle: "Ta page en ligne", valeur: stats.parOrigine.client }}
-          b={{ libelle: "Téléphone", valeur: stats.parOrigine.restaurateur }}
+          titre={r.parOrigine}
+          a={{ libelle: r.tapage, valeur: stats.parOrigine.client }}
+          b={{ libelle: r.telephone, valeur: stats.parOrigine.restaurateur }}
         />
       </div>
     </section>

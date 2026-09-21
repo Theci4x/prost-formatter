@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { langueUtilisateur } from "@/lib/i18n/langue";
+import { RESERVATIONS } from "@/lib/i18n/reservations";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { SaisieReservation } from "@/components/reservations/SaisieReservation";
@@ -67,6 +69,9 @@ export default async function ServicePage({
   searchParams: Promise<{ jour?: string }>;
 }) {
   const { id } = await params;
+  // Le dictionnaire du carnet : ces composants sont les siens.
+  const langue = await langueUtilisateur();
+  const r = RESERVATIONS[langue];
   await exigerModule(id, "reservations");
   const query = await searchParams;
   const supabase = await createClient();
@@ -85,26 +90,26 @@ export default async function ServicePage({
     reperesResult,
     fermetures,
   ] = await Promise.all([
-      supabase.from("restaurants").select("*").eq("id", id).maybeSingle(),
-      supabase
-        .from("restaurant_espaces")
-        .select("*")
-        .eq("restaurant_id", id)
-        .order("ordre"),
-      supabase
-        .from("restaurant_services")
-        .select("*")
-        .eq("restaurant_id", id)
-        .order("heure_debut"),
-      supabase
-        .from("restaurant_reservations")
-        .select("*")
-        .eq("restaurant_id", id)
-        .eq("date_reservation", jour),
-      supabase.from("restaurant_tables").select("*").eq("restaurant_id", id),
-      supabase.from("restaurant_reperes").select("*").eq("restaurant_id", id),
-      chargerFermetures(supabase, id, jour),
-    ]);
+    supabase.from("restaurants").select("*").eq("id", id).maybeSingle(),
+    supabase
+      .from("restaurant_espaces")
+      .select("*")
+      .eq("restaurant_id", id)
+      .order("ordre"),
+    supabase
+      .from("restaurant_services")
+      .select("*")
+      .eq("restaurant_id", id)
+      .order("heure_debut"),
+    supabase
+      .from("restaurant_reservations")
+      .select("*")
+      .eq("restaurant_id", id)
+      .eq("date_reservation", jour),
+    supabase.from("restaurant_tables").select("*").eq("restaurant_id", id),
+    supabase.from("restaurant_reperes").select("*").eq("restaurant_id", id),
+    chargerFermetures(supabase, id, jour),
+  ]);
 
   const restaurant = restaurantResult.data as Restaurant | null;
   if (!restaurant) notFound();
@@ -201,6 +206,7 @@ export default async function ServicePage({
         restaurantId={id}
         espaces={espaces}
         services={services}
+        r={r}
       />
 
       {enAttente.length > 0 && (
@@ -225,7 +231,11 @@ export default async function ServicePage({
                     {ligne.type === "privatisation" && " · privatisation"}
                   </span>
                 </span>
-                <DecisionDemande reservationId={ligne.id} restaurantId={id} />
+                <DecisionDemande
+                  reservationId={ligne.id}
+                  restaurantId={id}
+                  r={r}
+                />
               </li>
             ))}
           </ul>
@@ -246,134 +256,136 @@ export default async function ServicePage({
           const aPlacer = reservationsNonPlacees(actifs);
 
           return (
-          <section key={service.id} className="flex flex-col gap-4">
-            <h2 className="text-base font-semibold text-zinc-900">
-              {service.nom}{" "}
-              <span className="font-normal text-zinc-500">
-                {formatCreneau(service.heure_debut, service.heure_fin)}
-              </span>
-              {tables.length > 0 && aPlacer.length > 0 && (
-                <span className="ml-2 rounded-full bg-brand-orange-soft px-2 py-0.5 text-xs font-medium text-brand-navy">
-                  {aPlacer.length} à placer
+            <section key={service.id} className="flex flex-col gap-4">
+              <h2 className="text-base font-semibold text-zinc-900">
+                {service.nom}{" "}
+                <span className="font-normal text-zinc-500">
+                  {formatCreneau(service.heure_debut, service.heure_fin)}
                 </span>
-              )}
-            </h2>
+                {tables.length > 0 && aPlacer.length > 0 && (
+                  <span className="ml-2 rounded-full bg-brand-orange-soft px-2 py-0.5 text-xs font-medium text-brand-navy">
+                    {aPlacer.length} à placer
+                  </span>
+                )}
+              </h2>
 
-            <div className="grid gap-4 lg:grid-cols-2">
-              {espaces.map((espace) => {
-                const dispo = disponibiliteEspace({
-                  espace,
-                  service,
-                  date: jour,
-                  couverts: 1,
-                  reservations: lignes,
-                  fermetures,
-                  maintenant,
-                });
-                const duService = confirmees.filter(
-                  (l) =>
-                    l.espace_id === espace.id && l.service_id === service.id,
-                );
-                // Une salle qui ne se loue qu'en entier n'a pas de plan :
-                // le groupe qui la privatise la prend toute.
-                const tablesSalle = salleADessiner(espace)
-                  ? tablesDeLEspace(tables, espace.id)
-                  : [];
+              <div className="grid gap-4 lg:grid-cols-2">
+                {espaces.map((espace) => {
+                  const dispo = disponibiliteEspace({
+                    espace,
+                    service,
+                    date: jour,
+                    couverts: 1,
+                    reservations: lignes,
+                    fermetures,
+                    maintenant,
+                  });
+                  const duService = confirmees.filter(
+                    (l) =>
+                      l.espace_id === espace.id && l.service_id === service.id,
+                  );
+                  // Une salle qui ne se loue qu'en entier n'a pas de plan :
+                  // le groupe qui la privatise la prend toute.
+                  const tablesSalle = salleADessiner(espace)
+                    ? tablesDeLEspace(tables, espace.id)
+                    : [];
 
-                return (
-                  <div
-                    key={espace.id}
-                    className="flex flex-col gap-3 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm"
-                  >
-                    <div className="flex flex-wrap items-baseline justify-between gap-2">
-                      <span className="font-medium text-zinc-900">
-                        {espace.nom}
-                      </span>
-                      <span className="text-sm tabular-nums text-zinc-600">
-                        {dispo.occupes} / {espace.capacite} couverts
-                      </span>
-                    </div>
+                  return (
+                    <div
+                      key={espace.id}
+                      className="flex flex-col gap-3 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm"
+                    >
+                      <div className="flex flex-wrap items-baseline justify-between gap-2">
+                        <span className="font-medium text-zinc-900">
+                          {espace.nom}
+                        </span>
+                        <span className="text-sm tabular-nums text-zinc-600">
+                          {dispo.occupes} / {espace.capacite} couverts
+                        </span>
+                      </div>
 
-                    {/* Jauge du créneau : pleine en rouge, pour qu'un coup
+                      {/* Jauge du créneau : pleine en rouge, pour qu'un coup
                         d'œil suffise en plein service. */}
-                    <span className="flex h-2 w-full overflow-hidden rounded-[4px] bg-zinc-100">
-                      <span
-                        className={`h-2 rounded-[4px] ${
-                          dispo.restants === 0 ? "bg-red-500" : "bg-brand-navy"
-                        }`}
-                        style={{
-                          width: `${Math.min((dispo.occupes / espace.capacite) * 100, 100)}%`,
-                        }}
-                      />
-                    </span>
+                      <span className="flex h-2 w-full overflow-hidden rounded-[4px] bg-zinc-100">
+                        <span
+                          className={`h-2 rounded-[4px] ${
+                            dispo.restants === 0
+                              ? "bg-red-500"
+                              : "bg-brand-navy"
+                          }`}
+                          style={{
+                            width: `${Math.min((dispo.occupes / espace.capacite) * 100, 100)}%`,
+                          }}
+                        />
+                      </span>
 
-                    {tablesSalle.length > 0 && (
-                      <PlanService
-                        tables={tablesSalle}
-                        espaceId={espace.id}
-                        reservations={actifs}
-                        reperes={reperes.filter(
-                          (repere) => repere.espace_id === espace.id,
-                        )}
-                      />
-                    )}
+                      {tablesSalle.length > 0 && (
+                        <PlanService
+                          tables={tablesSalle}
+                          espaceId={espace.id}
+                          reservations={actifs}
+                          reperes={reperes.filter(
+                            (repere) => repere.espace_id === espace.id,
+                          )}
+                        />
+                      )}
 
-                    {duService.length === 0 ? (
-                      <p className="text-sm text-zinc-400">
-                        Personne pour l&apos;instant.
-                      </p>
-                    ) : (
-                      <ul className="flex flex-col divide-y divide-zinc-100">
-                        {duService.map((ligne) => (
-                          <LigneService
-                            key={ligne.id}
-                            restaurantId={id}
-                            jour={jour}
-                            detail={{
-                              id: ligne.id,
-                              clientNom: ligne.client_nom,
-                              telephone: ligne.client_telephone,
-                              email: ligne.client_email,
-                              couverts: ligne.couverts,
-                              heure: ligne.heure_arrivee,
-                              occasion: ligne.occasion,
-                              message: ligne.message,
-                              noteInterne: ligne.note_interne,
-                              type: ligne.type,
-                              statut: ligne.statut,
-                              absenceConstatee: Boolean(
-                                ligne.absence_constatee_le,
-                              ),
-                              date: ligne.date_reservation,
-                            }}
-                          >
-                            {tablesSalle.length > 0 &&
-                              ligne.type !== "privatisation" && (
-                                <PlacerReservation
-                                  restaurantId={id}
-                                  reservationId={ligne.id}
-                                  couverts={ligne.couverts}
-                                  tableActuelle={
-                                    tablesSalle.find(
-                                      (table) => table.id === ligne.table_id,
-                                    ) ?? null
-                                  }
-                                  tables={tablesProposees({
-                                    tables: tablesSalle,
-                                    reservation: ligne as ReservationPlacable,
-                                    occupees: actifs,
-                                  })}
-                                />
-                              )}
-                          </LigneService>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </section>
+                      {duService.length === 0 ? (
+                        <p className="text-sm text-zinc-400">
+                          Personne pour l&apos;instant.
+                        </p>
+                      ) : (
+                        <ul className="flex flex-col divide-y divide-zinc-100">
+                          {duService.map((ligne) => (
+                            <LigneService
+                              key={ligne.id}
+                              restaurantId={id}
+                              jour={jour}
+                              detail={{
+                                id: ligne.id,
+                                clientNom: ligne.client_nom,
+                                telephone: ligne.client_telephone,
+                                email: ligne.client_email,
+                                couverts: ligne.couverts,
+                                heure: ligne.heure_arrivee,
+                                occasion: ligne.occasion,
+                                message: ligne.message,
+                                noteInterne: ligne.note_interne,
+                                type: ligne.type,
+                                statut: ligne.statut,
+                                absenceConstatee: Boolean(
+                                  ligne.absence_constatee_le,
+                                ),
+                                date: ligne.date_reservation,
+                              }}
+                            >
+                              {tablesSalle.length > 0 &&
+                                ligne.type !== "privatisation" && (
+                                  <PlacerReservation
+                                    restaurantId={id}
+                                    reservationId={ligne.id}
+                                    couverts={ligne.couverts}
+                                    tableActuelle={
+                                      tablesSalle.find(
+                                        (table) => table.id === ligne.table_id,
+                                      ) ?? null
+                                    }
+                                    tables={tablesProposees({
+                                      tables: tablesSalle,
+                                      reservation: ligne as ReservationPlacable,
+                                      occupees: actifs,
+                                    })}
+                                  />
+                                )}
+                            </LigneService>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
           );
         })
       )}

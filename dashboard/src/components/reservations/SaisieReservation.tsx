@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import type { ClesReservations } from "@/lib/i18n/reservations";
 import {
   ajouterReservation,
   type SaisieState,
@@ -27,11 +28,13 @@ function Champs({
   restaurantId,
   espaces,
   services,
+  r,
   valeurs,
 }: {
   restaurantId: string;
   espaces: Espace[];
   services: Service[];
+  r: ClesReservations;
   valeurs: SaisieValeurs;
 }) {
   // Le type commande le reste : une réservation ordinaire n'a pas à choisir
@@ -51,7 +54,7 @@ function Champs({
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <label className={label} htmlFor="saisie-nom">
-          Nom du client
+          {r.champNom}
           <input
             id="saisie-nom"
             name="client_nom"
@@ -64,14 +67,14 @@ function Champs({
             porte la confirmation, le rappel de la veille et le lien pour
             rendre la table : sans elle, la réservation est muette. */}
         <label className={label} htmlFor="saisie-email">
-          E-mail
+          {r.champEmail}
           <input
             id="saisie-email"
             name="client_email"
             type="email"
             required
             defaultValue={valeurs.email}
-            placeholder="client@exemple.fr"
+            placeholder={r.placeholderEmailClient}
             className={champ}
           />
         </label>
@@ -94,7 +97,7 @@ function Champs({
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <label className={label} htmlFor="saisie-date">
-          Date
+          {r.champDate}
           <input
             id="saisie-date"
             name="date_reservation"
@@ -105,7 +108,7 @@ function Champs({
           />
         </label>
         <label className={label} htmlFor="saisie-couverts">
-          Couverts
+          {r.champCouverts}
           <input
             id="saisie-couverts"
             name="couverts"
@@ -117,7 +120,7 @@ function Champs({
           />
         </label>
         <label className={label} htmlFor="saisie-service">
-          Service
+          {r.champService}
           <select
             id="saisie-service"
             name="service_id"
@@ -151,7 +154,7 @@ function Champs({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <label className={label} htmlFor="saisie-type">
-          Type
+          {r.champType}
           <select
             id="saisie-type"
             name="type"
@@ -162,19 +165,17 @@ function Champs({
             className={champ}
           >
             {ordinaires.length > 0 && (
-              <option value="table">Réservation individuelle</option>
+              <option value="table">{r.typeTable}</option>
             )}
             {privatisables.length > 0 && (
-              <option value="privatisation">
-                Privatisation d&apos;un espace
-              </option>
+              <option value="privatisation">{r.typePrivatisation}</option>
             )}
           </select>
         </label>
 
         {type === "privatisation" ? (
           <label className={label} htmlFor="saisie-espace">
-            Espace à privatiser
+            {r.champEspace}
             <select
               id="saisie-espace"
               name="espace_id"
@@ -183,7 +184,7 @@ function Champs({
             >
               {privatisables.map((option) => (
                 <option key={option.id} value={option.id}>
-                  {option.nom} — {option.capacite} couverts
+                  {r.espaceOption(option.nom, option.capacite)}
                 </option>
               ))}
             </select>
@@ -197,14 +198,14 @@ function Champs({
 
       <label className={label} htmlFor="saisie-note">
         <span>
-          Note interne{" "}
-          <span className="font-normal text-zinc-400">(facultatif)</span>
+          {r.noteInterne}{" "}
+          <span className="font-normal text-zinc-400">{r.facultatif}</span>
         </span>
         <input
           id="saisie-note"
           name="note_interne"
           defaultValue={valeurs.note}
-          placeholder="Table près de la fenêtre, allergie…"
+          placeholder={r.placeholderNoteSaisie}
           className={champ}
         />
       </label>
@@ -234,10 +235,12 @@ export function SaisieReservation({
   restaurantId,
   espaces,
   services,
+  r,
 }: {
   restaurantId: string;
   espaces: Espace[];
   services: Service[];
+  r: ClesReservations;
 }) {
   const [state, action, pending] = useActionState(
     ajouterReservation,
@@ -254,7 +257,7 @@ export function SaisieReservation({
         onClick={() => setOuvert(true)}
         className="w-fit rounded-md border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 shadow-sm transition-colors hover:border-brand-navy hover:text-brand-navy"
       >
-        + Réservation prise au téléphone
+        {r.saisieOuvrir}
       </button>
     );
   }
@@ -264,9 +267,7 @@ export function SaisieReservation({
       action={action}
       className="flex flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm"
     >
-      <h3 className="text-sm font-semibold text-zinc-900">
-        Réservation prise au téléphone
-      </h3>
+      <h3 className="text-sm font-semibold text-zinc-900">{r.saisieTitre}</h3>
 
       {/* Voir EspaceForm : la clé remonte les champs avec les valeurs que
           l'action vient de renvoyer, saisie à corriger comprise. */}
@@ -275,6 +276,7 @@ export function SaisieReservation({
         restaurantId={restaurantId}
         espaces={espaces}
         services={services}
+        r={r}
         valeurs={state.valeurs}
       />
 
@@ -286,14 +288,14 @@ export function SaisieReservation({
           disabled={pending}
           className="rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover disabled:opacity-50"
         >
-          {pending ? "Enregistrement…" : "Enregistrer la réservation"}
+          {pending ? r.enCours.enregistrement : r.enregistrerReservation}
         </button>
         <button
           type="button"
           onClick={() => setOuvert(false)}
           className="text-sm text-zinc-500 hover:text-zinc-900"
         >
-          Fermer
+          {r.fermer}
         </button>
       </div>
     </form>

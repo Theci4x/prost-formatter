@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { langueUtilisateur } from "@/lib/i18n/langue";
+import { RESERVATIONS } from "@/lib/i18n/reservations";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -13,14 +15,8 @@ import {
   leverCaution,
   relancerPaiement,
 } from "@/app/dashboard/[id]/reservations/actions";
-import {
-  libelleAcompte,
-  type StatutAcompte,
-} from "@/lib/reservations/acompte";
-import {
-  libelleCaution,
-  type StatutCaution,
-} from "@/lib/reservations/caution";
+import { libelleAcompte, type StatutAcompte } from "@/lib/reservations/acompte";
+import { libelleCaution, type StatutCaution } from "@/lib/reservations/caution";
 import { exiger } from "@/lib/equipe/roles";
 import {
   LIBELLE_STATUT,
@@ -109,6 +105,9 @@ export default async function DevisPage({
   params: Promise<{ id: string; reservationId: string }>;
 }) {
   const { id, reservationId } = await params;
+  // Le dictionnaire du carnet : ces composants sont les siens.
+  const langue = await langueUtilisateur();
+  const r = RESERVATIONS[langue];
   await exiger(id, "gerant");
 
   const supabase = await createClient();
@@ -209,8 +208,8 @@ export default async function DevisPage({
       <div className="flex flex-col gap-2 rounded-2xl border border-line bg-paper p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <span className="text-[15px] font-semibold text-ink">
-            {reservation.client_nom ?? "Client"} —{" "}
-            {reservation.couverts} couvert
+            {reservation.client_nom ?? "Client"} — {reservation.couverts}{" "}
+            couvert
             {reservation.couverts > 1 ? "s" : ""} le{" "}
             {new Date(
               `${reservation.date_reservation}T12:00:00`,
@@ -266,7 +265,7 @@ export default async function DevisPage({
             <span className="text-xs font-semibold uppercase tracking-[0.08em] text-ink-soft">
               Lien du devis
             </span>
-            <LienAcompte lien={lien} />
+            <LienAcompte lien={lien} r={r} />
           </div>
         )}
       </div>
@@ -282,10 +281,13 @@ export default async function DevisPage({
           </span>
           <span className="text-xs text-zinc-600">
             {reservation.caution_statut === "attendue"
-              ? "Ton client a reçu ce lien par e-mail : il enregistrera sa carte, rien ne sera prélevé."
-              : "Ton client a reçu ce lien par e-mail : il paiera sur ton compte Stripe, sans commission."}
+              ? r.lienCaution
+              : r.lienAcompte}
           </span>
-          <LienAcompte lien={`${siteUrl()}/paiement/${reservation.paiement_token}`} />
+          <LienAcompte
+            lien={`${siteUrl()}/paiement/${reservation.paiement_token}`}
+            r={r}
+          />
           <div className="flex flex-wrap items-center gap-3">
             <BoutonAction
               action={relancerPaiement}
@@ -359,8 +361,8 @@ export default async function DevisPage({
       {fige && (
         <p className="rounded-2xl border border-line bg-brand-orange-soft p-4 text-sm leading-relaxed text-ink">
           Ce devis a été accepté : son contenu est figé. Ce que le client a
-          accepté ne doit plus pouvoir changer — établissez-en un nouveau si
-          la prestation évolue.
+          accepté ne doit plus pouvoir changer — établissez-en un nouveau si la
+          prestation évolue.
         </p>
       )}
 
@@ -370,7 +372,9 @@ export default async function DevisPage({
         lignesInitiales={lignes.map((ligne) => ({
           libelle: ligne.libelle,
           quantite: String(ligne.quantite).replace(/\.00$/, ""),
-          prix: (ligne.prix_unitaire_centimes / 100).toFixed(2).replace(".", ","),
+          prix: (ligne.prix_unitaire_centimes / 100)
+            .toFixed(2)
+            .replace(".", ","),
           tva: Number(ligne.tva_taux),
         }))}
         tauxParDefaut={Number(devis.tva_taux)}

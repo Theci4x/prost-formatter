@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import type { ClesReservations } from "@/lib/i18n/reservations";
 
 /**
  * Le lien de paiement, à copier. Klarr ne sait pas encore envoyer d'e-mail :
@@ -8,7 +9,13 @@ import { useState } from "react";
  * son client — SMS, WhatsApp, sa propre messagerie. Rien ne l'attend, rien ne
  * se perd dans des indésirables, et il voit ce qu'il envoie.
  */
-export function LienAcompte({ lien }: { lien: string }) {
+export function LienAcompte({
+  lien,
+  r,
+}: {
+  lien: string;
+  r: ClesReservations;
+}) {
   const [copie, setCopie] = useState(false);
 
   return (
@@ -16,7 +23,7 @@ export function LienAcompte({ lien }: { lien: string }) {
       <input
         readOnly
         value={lien}
-        aria-label="Lien de paiement de l'acompte"
+        aria-label={r.lienPaiement}
         onFocus={(evenement) => evenement.currentTarget.select()}
         className="min-w-0 flex-1 rounded-md border border-zinc-200 bg-zinc-50 px-3 py-1.5 font-mono text-xs text-zinc-600"
       />
@@ -36,7 +43,7 @@ export function LienAcompte({ lien }: { lien: string }) {
         }}
         className="shrink-0 rounded-md border border-zinc-200 px-3 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
       >
-        {copie ? "Copié" : "Copier"}
+        {copie ? r.copie : r.copier}
       </button>
     </span>
   );
