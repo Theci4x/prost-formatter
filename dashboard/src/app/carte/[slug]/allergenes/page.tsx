@@ -12,7 +12,7 @@ import { cartePubliee } from "@/lib/menu/publication";
 import { chargerAcces } from "@/lib/abonnement/acces";
 import { SignatureKlarr } from "@/components/brand/SignatureKlarr";
 import { ALLERGENES, libelleAllergene } from "@/types/allergenes";
-import { ETIQUETTES, t } from "@/lib/menu/etiquettes";
+import { ETIQUETTES, META_ALLERGENES, t } from "@/lib/menu/etiquettes";
 import {
   MENTION_ALLERGENES,
   MENTION_PRIX,
@@ -70,16 +70,25 @@ async function charger(slug: string) {
 
 export async function generateMetadata({
   params,
+  searchParams,
 }: {
   params: Promise<Params>;
+  searchParams: Promise<Query>;
 }): Promise<Metadata> {
   const { slug } = await params;
   const charge = await charger(slug);
-  if (!charge) return { title: "Allergènes" };
+  // La langue vient de l'adresse, comme sur la carte — pas du témoin ni
+  // de l'en-tête du navigateur. Le titre d'onglet suit donc la page.
+  const demandee = lireLangue((await searchParams).lang);
+  if (!charge)
+    return { title: t(ETIQUETTES.allergenes, demandee) };
+
+  const langue = langueDisponible(charge.items, demandee) ? demandee : "fr";
+  const meta = META_ALLERGENES[langue] ?? META_ALLERGENES.fr;
 
   return {
-    title: `Allergènes — ${charge.restaurant.nom}`,
-    description: `La liste des allergènes plat par plat, à la carte de ${charge.restaurant.nom}.`,
+    title: meta.titre(charge.restaurant.nom),
+    description: meta.description(charge.restaurant.nom),
     alternates: { canonical: `/carte/${slug}/allergenes` },
     robots: { index: true, follow: true },
   };

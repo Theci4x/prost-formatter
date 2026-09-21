@@ -1,4 +1,6 @@
 import type { MediaInstagram } from "@/lib/facebook/oauth";
+import type { Langue } from "@/lib/i18n/langues";
+import { VITRINE } from "@/lib/i18n/vitrine";
 
 /**
  * La bande Instagram de la vitrine.
@@ -14,20 +16,31 @@ import type { MediaInstagram } from "@/lib/facebook/oauth";
  * chaque rotation de signature — un coût permanent pour un bénéfice nul,
  * Instagram servant déjà des images calibrées.
  */
+/** Faute de pseudo, on nomme l'établissement plutôt que de laisser un trou. */
+const SANS_PSEUDO: Record<Langue, string> = {
+  fr: "l’établissement",
+  en: "the restaurant",
+  zh: "本店",
+};
+
 export function FluxInstagram({
   pseudo,
   medias,
+  langue = "fr",
 }: {
   pseudo: string;
   medias: MediaInstagram[];
+  langue?: Langue;
 }) {
+  const v = VITRINE[langue];
+  const nomParDefaut = SANS_PSEUDO[langue] ?? SANS_PSEUDO.fr;
   if (medias.length === 0) return null;
 
   return (
     <section className="flex flex-col gap-4">
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
         <h2 className="text-lg font-semibold text-zinc-900">
-          En ce moment sur Instagram
+          {v.enCeMomentSurInstagram}
         </h2>
         {pseudo && (
           <a
@@ -59,7 +72,7 @@ export function FluxInstagram({
                 // publiée par le restaurant » est plus honnête qu'un texte
                 // alternatif inventé, et moins bavard qu'une légende
                 // entière lue à voix haute.
-                alt={`Publication Instagram de ${pseudo || "l'établissement"}`}
+                alt={v.publicationInstagram(pseudo || nomParDefaut)}
                 loading="lazy"
                 decoding="async"
                 className="aspect-square w-full object-cover transition-transform duration-300 group-hover:scale-105"

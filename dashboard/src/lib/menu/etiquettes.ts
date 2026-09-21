@@ -149,3 +149,31 @@ export function resumeFiltre(
     reste: ecartes > 0 ? ` · ${ecartes} écarté${ecartes > 1 ? "s" : ""}` : null,
   };
 }
+
+/**
+ * Ce que Google et les réseaux sociaux lisent du tableau des allergènes.
+ *
+ * À part des étiquettes parce que le nom de l'établissement s'y glisse,
+ * et qu'il ne se glisse pas au même endroit : le français met le sujet
+ * devant et le lieu derrière, le chinois fait l'inverse — « 本店的过敏原 »
+ * n'a de sens qu'une fois le nom posé en tête.
+ */
+export const META_ALLERGENES: Record<
+  Langue,
+  { titre(nom: string): string; description(nom: string): string }
+> = {
+  fr: {
+    titre: (nom) => `Allergènes — ${nom}`,
+    description: (nom) =>
+      `La liste des allergènes plat par plat, à la carte de ${nom}.`,
+  },
+  en: {
+    titre: (nom) => `Allergens — ${nom}`,
+    description: (nom) =>
+      `The allergens on ${nom}'s menu, listed dish by dish.`,
+  },
+  zh: {
+    titre: (nom) => `${nom} 过敏原一览`,
+    description: (nom) => `${nom}菜单上各道菜的过敏原逐一列出。`,
+  },
+};

@@ -1,3 +1,5 @@
+import { nomJour, heure as heureTraduite } from "@/lib/i18n/jours";
+import type { Langue } from "@/lib/i18n/langues";
 import {
   JOURS_SEMAINE,
   type Horaires,
@@ -86,21 +88,46 @@ export function plagesHoraires(horaires: Horaires): PlageHoraire[] {
 
 const MAJUSCULE = (mot: string) => mot.charAt(0).toUpperCase() + mot.slice(1);
 
+/** Le numéro ISO d'un jour nommé — lundi vaut 1, comme dans la base. */
+function isoDuJour(jour: JourSemaine): number {
+  return JOURS_SEMAINE.indexOf(jour) + 1;
+}
+
+/**
+ * Ce qui sépare le premier et le dernier jour d'une plage. Le chinois
+ * n'écrit pas un tiret entre deux jours : « 星期一至星期五 » est la forme
+ * qu'on lit sur une devanture, et un tiret s'y lirait comme une faute.
+ */
+const A: Record<Langue, string> = { fr: " – ", en: " – ", zh: "至" };
+
+/** Entre deux services du même jour. */
+const ET: Record<Langue, string> = { fr: " et ", en: " and ", zh: "、" };
+
+const FERME: Record<Langue, string> = {
+  fr: "Fermé",
+  en: "Closed",
+  zh: "休息",
+};
+
 /** L'intitulé d'une plage : « Lundi », ou « Lundi – vendredi ». */
-export function intitulePlage(plage: PlageHoraire): string {
-  return plage.debut === plage.fin
-    ? MAJUSCULE(plage.debut)
-    : `${MAJUSCULE(plage.debut)} – ${plage.fin}`;
+export function intitulePlage(plage: PlageHoraire, langue: Langue = "fr"): string {
+  const debut = MAJUSCULE(nomJour(isoDuJour(plage.debut), langue));
+  if (plage.debut === plage.fin) return debut;
+  // Le second jour reste en minuscules en français — « Lundi – vendredi »,
+  // pas « Lundi – Vendredi ». Ailleurs, `Intl` décide de la casse.
+  const fin = nomJour(isoDuJour(plage.fin), langue);
+  return `${debut}${A[langue] ?? A.fr}${langue === "fr" ? fin : MAJUSCULE(fin)}`;
 }
 
 /** Les heures d'une plage, ou la mention de fermeture. */
-export function heuresPlage(plage: PlageHoraire, ferme = "Fermé"): string {
-  if (!plage.ouverture || !plage.fermeture) return ferme;
-  const continu = `${heureLisible(plage.ouverture)} – ${heureLisible(plage.fermeture)}`;
+export function heuresPlage(plage: PlageHoraire, langue: Langue = "fr"): string {
+  if (!plage.ouverture || !plage.fermeture) return FERME[langue] ?? FERME.fr;
+  const h = (valeur: string) => heureTraduite(valeur, langue);
+  const continu = `${h(plage.ouverture)} – ${h(plage.fermeture)}`;
   if (!plage.seconde) return continu;
   // « et » plutôt qu'une virgule : une virgule entre deux plages horaires
   // se lit comme une énumération de jours quand on survole la page.
-  return `${continu} et ${heureLisible(plage.seconde.ouverture)} – ${heureLisible(plage.seconde.fermeture)}`;
+  return `${continu}${ET[langue] ?? ET.fr}${h(plage.seconde.ouverture)} – ${h(plage.seconde.fermeture)}`;
 }
 
 /** Vrai si la fiche annonce au moins un jour d'ouverture. */

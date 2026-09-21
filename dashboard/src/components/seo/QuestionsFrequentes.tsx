@@ -1,4 +1,6 @@
 import type { QuestionFrequente } from "@/lib/seo/donnees-structurees";
+import type { Langue } from "@/lib/i18n/langues";
+import { VITRINE } from "@/lib/i18n/vitrine";
 
 /**
  * Les questions fréquentes, sur la vitrine.
@@ -9,15 +11,23 @@ import type { QuestionFrequente } from "@/lib/seo/donnees-structurees";
  */
 export function QuestionsFrequentes({
   questions,
+  langue = "fr",
 }: {
   questions: QuestionFrequente[];
+  /**
+   * Les questions et leurs réponses sont écrites par le restaurateur :
+   * elles restent dans sa langue. Seul le titre du bloc se traduit — ce
+   * qui est déjà ce qu'on cherche, puisque c'est lui qui dit à un
+   * lecteur chinois ce qu'il a sous les yeux.
+   */
+  langue?: Langue;
 }) {
   if (questions.length === 0) return null;
 
   return (
     <section className="flex flex-col gap-4">
       <h2 className="text-lg font-semibold text-zinc-900">
-        Questions fréquentes
+        {VITRINE[langue].questionsFrequentes}
       </h2>
       <dl className="flex flex-col divide-y divide-zinc-200/70 rounded-2xl border border-zinc-200/70 bg-white px-5 shadow-sm">
         {questions.map((q) => (

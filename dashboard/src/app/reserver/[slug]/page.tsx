@@ -26,6 +26,7 @@ import { BandePhotos } from "@/components/reservations/BandePhotos";
 import { formatCreneau, type Espace, type Service } from "@/types/reservation";
 import { heureLisible } from "@/lib/site/horaires";
 import { SignatureKlarr } from "@/components/brand/SignatureKlarr";
+import { ChoixLangueSite } from "@/components/landing/ChoixLangueSite";
 import { langueVisiteur } from "@/lib/i18n/langue";
 import { RESERVER } from "@/lib/i18n/reserver";
 import type { Langue } from "@/lib/i18n/langues";
@@ -382,11 +383,18 @@ export default async function ReserverPage({
               {restaurant.nom}
             </span>
           </span>
-          {restaurant.adresse && (
-            <span className="text-base text-zinc-500">
-              {restaurant.adresse}
-            </span>
-          )}
+          <span className="flex shrink-0 items-center gap-3">
+            {restaurant.adresse && (
+              <span className="hidden text-base text-zinc-500 sm:inline">
+                {restaurant.adresse}
+              </span>
+            )}
+            {/* Le client arrive ici par un QR collé sur une table : il
+                n'est jamais passé par l'accueil, et n'a donc jamais eu
+                l'occasion de choisir sa langue. C'est le seul endroit où
+                il peut le faire. */}
+            <ChoixLangueSite courante={langue} />
+          </span>
         </div>
       </header>
 

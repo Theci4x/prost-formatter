@@ -7,7 +7,10 @@ import { GalerieRestaurant } from "@/components/reservations/GalerieRestaurant";
 import { CouvertureVitrine } from "@/components/reservations/CouvertureVitrine";
 import { BandePhotos } from "@/components/reservations/BandePhotos";
 import { SignatureKlarr } from "@/components/brand/SignatureKlarr";
-import { langueVisiteur } from "@/lib/i18n/langue";
+import { langueIndexable, type Langue } from "@/lib/i18n/langue";
+import { VITRINE } from "@/lib/i18n/vitrine";
+import { montantLisible } from "@/lib/i18n/nombres";
+import { ChoixLangueSite } from "@/components/landing/ChoixLangueSite";
 import { DonneesStructurees } from "@/components/seo/DonneesStructurees";
 import {
   restaurantSchema,
@@ -86,8 +89,9 @@ export async function generateMetadata({
   params: Promise<Params>;
 }): Promise<Metadata> {
   const { slug } = await params;
+  const v = VITRINE[await langueIndexable()];
   const restaurant = await chargerVitrine(slug);
-  if (!restaurant) return { title: "Restaurant" };
+  if (!restaurant) return { title: v.restaurant };
 
   // L'image de partage est la couverture : c'est elle qu'on a choisie
   // pour représenter la maison, elle doit l'être aussi sur WhatsApp et
@@ -113,13 +117,13 @@ export async function generateMetadata({
   // déjà — et ceux-là n'ont pas besoin de Google.
   const lieu = restaurant.adresse?.split(",").pop()?.trim();
   const titre = lieu
-    ? `${restaurant.nom} — restaurant à ${lieu}`
-    : `${restaurant.nom} — restaurant`;
+    ? v.titreLieu(restaurant.nom, lieu)
+    : v.titreSeul(restaurant.nom);
   const description =
     restaurant.description?.slice(0, 155) ??
     (restaurant.adresse
-      ? `${restaurant.nom}, ${restaurant.adresse}. Carte, horaires et réservation en ligne.`
-      : `${restaurant.nom}. Carte, horaires et réservation en ligne.`);
+      ? v.descriptionAvecAdresse(restaurant.nom, restaurant.adresse)
+      : v.descriptionSeule(restaurant.nom));
   const image = (photo as { url: string } | null)?.url;
 
   return {
@@ -131,7 +135,7 @@ export async function generateMetadata({
       title: titre,
       description,
       siteName: restaurant.nom,
-      locale: "fr_FR",
+      locale: v.localeOg,
       ...(image ? { images: [image] } : {}),
     },
     twitter: {
@@ -148,23 +152,23 @@ export async function generateMetadata({
  * Rien si aucune garantie n'est réclamée : une ligne « aucun acompte » ne
  * rassure pas, elle fait penser qu'il y en a parfois un.
  */
-function garantieLisible(espace: Espace): string | null {
-  const euros = (centimes: number) =>
-    (centimes / 100).toLocaleString("fr-FR", {
-      minimumFractionDigits: centimes % 100 === 0 ? 0 : 2,
-      maximumFractionDigits: 2,
-    });
-  const seuil = espace.garantie_seuil_couverts
-    ? ` à partir de ${espace.garantie_seuil_couverts} convives`
-    : "";
+function garantieLisible(espace: Espace, langue: Langue): string | null {
+  const v = VITRINE[langue];
+  const seuil = espace.garantie_seuil_couverts ?? null;
 
   if (espace.acompte_centimes) {
-    const par = espace.acompte_mode === "par_couvert" ? " par personne" : "";
-    return `Acompte de ${euros(espace.acompte_centimes)} €${par}${seuil}, à verser pour confirmer.`;
+    return v.acompte(
+      montantLisible(espace.acompte_centimes, langue),
+      espace.acompte_mode === "par_couvert",
+      seuil,
+    );
   }
   if (espace.caution_centimes) {
-    const par = espace.caution_mode === "par_couvert" ? " par personne" : "";
-    return `Empreinte de carte de ${euros(espace.caution_centimes)} €${par}${seuil} — rien n'est prélevé, sauf si le groupe ne vient pas.`;
+    return v.caution(
+      montantLisible(espace.caution_centimes, langue),
+      espace.caution_mode === "par_couvert",
+      seuil,
+    );
   }
   return null;
 }
@@ -193,7 +197,11 @@ export default async function VitrinePage({
   const restaurant = await chargerVitrine(slug);
   if (!restaurant) notFound();
 
-  const langue = await langueVisiteur();
+  // La vitrine est *la* page indexée : elle ne devine jamais la langue
+  // d'après l'en-tête du visiteur, sans quoi Google indexerait la
+  // version anglaise d'un restaurant parisien (voir `langueIndexable`).
+  const langue = await langueIndexable();
+  const v = VITRINE[langue];
 
   const supabase = createServiceClient();
   const [
@@ -312,21 +320,22 @@ export default async function VitrinePage({
               {restaurant.nom}
             </span>
           </span>
-          <nav className="flex items-center gap-4 text-sm">
+          <nav className="flex items-center gap-3 text-sm">
             {carte.publiee && (
               <Link
                 href={`/carte/${slug}`}
                 className="font-medium text-zinc-600 hover:text-zinc-900"
               >
-                La carte
+                {v.laCarte}
               </Link>
             )}
             <Link
               href={`/reserver/${slug}`}
               className="rounded-lg bg-ink px-4 py-2 font-semibold text-white transition-colors hover:bg-brand-navy"
             >
-              Réserver
+              {v.reserver}
             </Link>
+            <ChoixLangueSite courante={langue} />
           </nav>
         </div>
       </header>
@@ -394,10 +403,10 @@ export default async function VitrinePage({
           )}
           {reputation?.note && reputation.nombre_avis ? (
             <p className="text-base text-zinc-600">
-              <span className="font-medium text-zinc-900">
-                {Number(reputation.note).toFixed(1)}
-              </span>{" "}
-              sur Google · {reputation.nombre_avis} avis
+              {v.noteSurGoogle(
+                Number(reputation.note).toFixed(1),
+                reputation.nombre_avis,
+              )}
             </p>
           ) : null}
           {restaurant.description && (
@@ -410,14 +419,14 @@ export default async function VitrinePage({
               href={`/reserver/${slug}`}
               className="rounded-lg bg-ink px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy"
             >
-              Réserver une table
+              {v.reserverUneTable}
             </Link>
             {carte.publiee && (
               <Link
                 href={`/carte/${slug}`}
                 className="rounded-lg border border-line bg-paper px-5 py-2.5 text-sm font-semibold text-ink transition-colors hover:border-ink"
               >
-                Voir la carte
+                {v.voirLaCarte}
               </Link>
             )}
           </div>
@@ -434,7 +443,7 @@ export default async function VitrinePage({
         />
 
         {apercuCarte.length > 0 && (
-          <Section titre="Un aperçu de la carte">
+          <Section titre={v.apercuDeLaCarte}>
             <ul className="flex flex-col divide-y divide-zinc-200/70 rounded-2xl border border-zinc-200/70 bg-white px-5 shadow-sm">
               {apercuCarte[0].plats.slice(0, 3).map((plat) => (
                 <li
@@ -463,20 +472,24 @@ export default async function VitrinePage({
               href={`/carte/${slug}`}
               className="w-fit text-sm font-medium text-brand-orange hover:underline"
             >
-              Voir toute la carte
+              {v.voirTouteLaCarte}
             </Link>
           </Section>
         )}
 
         {instagram && (
-          <FluxInstagram pseudo={instagram.pseudo} medias={instagram.medias} />
+          <FluxInstagram
+            pseudo={instagram.pseudo}
+            medias={instagram.medias}
+            langue={langue}
+          />
         )}
 
-        <Section titre="Infos pratiques">
+        <Section titre={v.infosPratiques}>
           <div className="grid gap-5 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm sm:grid-cols-2">
             <div className="flex flex-col gap-2">
               <span className="text-base font-medium text-zinc-900">
-                Nous trouver
+                {v.nousTrouver}
               </span>
               {restaurant.adresse ? (
                 <>
@@ -493,12 +506,12 @@ export default async function VitrinePage({
                     rel="noopener noreferrer"
                     className="w-fit text-sm font-medium text-brand-orange hover:underline"
                   >
-                    Itinéraire
+                    {v.itineraire}
                   </a>
                 </>
               ) : (
                 <span className="text-base text-zinc-400">
-                  Adresse non renseignée
+                  {v.adresseNonRenseignee}
                 </span>
               )}
               {restaurant.telephone && (
@@ -513,7 +526,7 @@ export default async function VitrinePage({
 
             <div className="flex flex-col gap-2">
               <span className="text-base font-medium text-zinc-900">
-                Horaires
+                {v.horaires}
               </span>
               {horairesRenseignes(restaurant.horaires ?? {}) ? (
                 <ul className="flex flex-col gap-1 text-sm">
@@ -523,21 +536,21 @@ export default async function VitrinePage({
                       className="flex justify-between gap-4"
                     >
                       <span className="text-zinc-600">
-                        {intitulePlage(plage)}
+                        {intitulePlage(plage, langue)}
                       </span>
                       <span
                         className={
                           plage.ouverture ? "text-zinc-900" : "text-zinc-400"
                         }
                       >
-                        {heuresPlage(plage)}
+                        {heuresPlage(plage, langue)}
                       </span>
                     </li>
                   ))}
                 </ul>
               ) : (
                 <span className="text-base text-zinc-400">
-                  Horaires non renseignés
+                  {v.horairesNonRenseignes}
                 </span>
               )}
             </div>
@@ -545,11 +558,8 @@ export default async function VitrinePage({
         </Section>
 
         {privatisables.length > 0 && (
-          <Section titre="Privatiser un espace">
-            <p className="text-base text-zinc-600">
-              Anniversaire, repas d&apos;équipe, séminaire : l&apos;espace est à
-              vous seuls pendant tout le service.
-            </p>
+          <Section titre={v.privatiserUnEspace}>
+            <p className="text-base text-zinc-600">{v.privatisationChapo}</p>
 
             {/* Une salle qu'on privatise se choisit sur photo. La lister en
                 une ligne de noms, comme avant, revenait à demander au client
@@ -566,8 +576,11 @@ export default async function VitrinePage({
                     </span>
                     <span className="text-base text-zinc-500">
                       {espace.privatisation_minimum
-                        ? `De ${espace.privatisation_minimum} à ${espace.capacite} couverts`
-                        : `Jusqu'à ${espace.capacite} couverts`}
+                        ? v.deAJusqua(
+                            espace.privatisation_minimum,
+                            espace.capacite,
+                          )
+                        : v.jusqua(espace.capacite)}
                     </span>
                   </div>
 
@@ -589,9 +602,9 @@ export default async function VitrinePage({
                       qui la lit ici sait à quoi s'en tenir, et le
                       restaurateur ne perd plus son temps avec ceux que ça
                       rebute. */}
-                  {garantieLisible(espace) && (
+                  {garantieLisible(espace, langue) && (
                     <p className="mt-3 text-sm text-zinc-500">
-                      {garantieLisible(espace)}
+                      {garantieLisible(espace, langue)}
                     </p>
                   )}
 
@@ -599,7 +612,7 @@ export default async function VitrinePage({
                     href={`/reserver/${slug}?espace=${espace.id}`}
                     className="mt-3 inline-block rounded-md border border-zinc-300 px-4 py-2 text-base font-medium text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
                   >
-                    Demander {espace.nom}
+                    {v.demander(espace.nom)}
                   </Link>
                 </li>
               ))}
@@ -616,10 +629,10 @@ export default async function VitrinePage({
             </p>
           </div>
         )}
-        <QuestionsFrequentes questions={questions} />
+        <QuestionsFrequentes questions={questions} langue={langue} />
 
         <SignatureKlarr
-          texte="Site et réservations propulsés par"
+          texte={v.propulseePar}
           className="mx-auto max-w-3xl"
         />
       </footer>
