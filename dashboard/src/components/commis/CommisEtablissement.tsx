@@ -37,6 +37,9 @@ export function CommisEtablissement({
   }, [tours, enCours]);
 
   useEffect(() => {
+    // Même raison que dans le Commis de Klarr : le champ visé fait 16 px,
+    // sans quoi Safari iOS zoomerait la page à l'ouverture. Celui-ci est
+    // ouvert par des clients, au téléphone, sur la page de réservation.
     if (ouvert) champ.current?.focus();
   }, [ouvert]);
 
@@ -135,7 +138,7 @@ export function CommisEtablissement({
       <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 py-4">
         {tours.length === 0 && (
           <div className="flex flex-col gap-3">
-            <p className="text-sm text-zinc-600">
+            <p className="text-base text-zinc-600">
               Posez-moi vos questions sur {nom}. Pour savoir s&apos;il reste une
               table, c&apos;est le formulaire au-dessus qui fait foi.
             </p>
@@ -159,8 +162,8 @@ export function CommisEtablissement({
             key={index}
             className={
               tour.role === "user"
-                ? "ml-auto max-w-[85%] rounded-2xl rounded-br-sm bg-brand-navy px-3.5 py-2.5 text-sm text-white"
-                : "mr-auto max-w-[90%] whitespace-pre-wrap rounded-2xl rounded-bl-sm bg-zinc-100 px-3.5 py-2.5 text-sm leading-relaxed text-zinc-800"
+                ? "ml-auto max-w-[85%] rounded-2xl rounded-br-sm bg-brand-navy px-3.5 py-2.5 text-base text-white"
+                : "mr-auto max-w-[90%] whitespace-pre-wrap rounded-2xl rounded-bl-sm bg-zinc-100 px-3.5 py-2.5 text-base leading-relaxed text-zinc-800"
             }
           >
             {tour.content || (enCours && index === tours.length - 1 ? "…" : "")}
@@ -183,7 +186,7 @@ export function CommisEtablissement({
           disabled={enCours}
           placeholder="Votre question…"
           aria-label={`Votre question à ${nom}`}
-          className="min-w-0 flex-1 rounded-full border border-zinc-300 px-4 py-2 text-sm outline-none focus:border-brand-navy disabled:opacity-50"
+          className="min-w-0 flex-1 rounded-full border border-zinc-300 px-4 py-2 text-base outline-none focus:border-brand-navy disabled:opacity-50"
         />
         <button
           type="submit"

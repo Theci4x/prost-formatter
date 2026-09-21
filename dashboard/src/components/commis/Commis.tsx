@@ -59,6 +59,12 @@ export function Commis({ connecte = false }: { connecte?: boolean }) {
     fin.current?.scrollIntoView({ block: "end" });
   }, [tours, enCours]);
 
+  // Le curseur va dans le champ dès l'ouverture : on ouvre le Commis
+  // pour écrire, pas pour regarder. Conséquence à ne pas défaire —
+  // Safari iOS zoome la page si le champ visé fait moins de 16 px, et
+  // il le ferait donc ici à l'ouverture, avant le moindre geste. D'où
+  // le `text-base` du champ plus bas, qui n'est pas une question de
+  // goût.
   useEffect(() => {
     if (ouvert) champ.current?.focus();
   }, [ouvert]);
@@ -142,9 +148,7 @@ export function Commis({ connecte = false }: { connecte?: boolean }) {
     >
       <div className="flex items-center justify-between gap-3 border-b border-zinc-200 px-4 py-3">
         <span className="flex flex-col">
-          <span className="text-sm font-semibold text-zinc-900">
-            Le Commis
-          </span>
+          <span className="text-sm font-semibold text-zinc-900">Le Commis</span>
           <span className="text-xs text-zinc-500">
             Il répond sur Klarr, à partir de l&apos;aide
           </span>
@@ -162,7 +166,7 @@ export function Commis({ connecte = false }: { connecte?: boolean }) {
       <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 py-4">
         {tours.length === 0 && (
           <div className="flex flex-col gap-3">
-            <p className="text-sm text-zinc-600">
+            <p className="text-base text-zinc-600">
               {connecte
                 ? "Demande-moi comment faire quelque chose dans Klarr."
                 : "Posez-moi vos questions sur Klarr."}
@@ -187,12 +191,11 @@ export function Commis({ connecte = false }: { connecte?: boolean }) {
             key={index}
             className={
               tour.role === "user"
-                ? "ml-auto max-w-[85%] rounded-2xl rounded-br-sm bg-brand-navy px-3.5 py-2.5 text-sm text-white"
-                : "mr-auto max-w-[90%] whitespace-pre-wrap rounded-2xl rounded-bl-sm bg-zinc-100 px-3.5 py-2.5 text-sm leading-relaxed text-zinc-800"
+                ? "ml-auto max-w-[85%] rounded-2xl rounded-br-sm bg-brand-navy px-3.5 py-2.5 text-base text-white"
+                : "mr-auto max-w-[90%] whitespace-pre-wrap rounded-2xl rounded-bl-sm bg-zinc-100 px-3.5 py-2.5 text-base leading-relaxed text-zinc-800"
             }
           >
-            {tour.content ||
-              (enCours && index === tours.length - 1 ? "…" : "")}
+            {tour.content || (enCours && index === tours.length - 1 ? "…" : "")}
           </div>
         ))}
         {prospect && (envoye || rappel || aMontreDeLInteret) && (
@@ -238,7 +241,7 @@ export function Commis({ connecte = false }: { connecte?: boolean }) {
           disabled={enCours}
           placeholder={connecte ? "Ta question…" : "Votre question…"}
           aria-label="Votre question au Commis"
-          className="min-w-0 flex-1 rounded-full border border-zinc-300 px-4 py-2 text-sm outline-none focus:border-brand-navy disabled:opacity-50"
+          className="min-w-0 flex-1 rounded-full border border-zinc-300 px-4 py-2 text-base outline-none focus:border-brand-navy disabled:opacity-50"
         />
         <button
           type="submit"
