@@ -1,6 +1,8 @@
 "use server";
 
 import { createServiceClient } from "@/lib/supabase/service";
+import { langueVisiteur } from "@/lib/i18n/langue";
+import { ANNULER } from "@/lib/i18n/annuler";
 
 export type DesabonnementState = { error: string | null; fait: boolean };
 
@@ -23,7 +25,10 @@ export async function seDesabonner(
   formData: FormData,
 ): Promise<DesabonnementState> {
   const jeton = ((formData.get("jeton") as string | null) ?? "").trim();
-  if (!jeton) return { error: "Lien invalide.", fait: false };
+  // L'action lit le témoin de langue, comme la page qui l'a affichée.
+  const a = ANNULER[await langueVisiteur()];
+
+  if (!jeton) return { error: a.lienInvalide, fait: false };
 
   const supabase = createServiceClient();
   const { data, error } = await supabase
@@ -37,16 +42,13 @@ export async function seDesabonner(
 
   if (error) {
     console.error("[desabonnement]", error.message);
-    return {
-      error: "La désinscription a échoué. Réessayez dans un instant.",
-      fait: false,
-    };
+    return { error: a.desinscriptionEchouee, fait: false };
   }
 
   // Se désinscrire deux fois réussit deux fois : la date est simplement
   // réécrite, et personne ne doit tomber sur une erreur pour avoir
   // recliqué un vieux lien. Un jeton inconnu, lui, n'apprend rien de
   // plus que ce que la page disait déjà.
-  if (!data) return { error: "Ce lien n'est plus valide.", fait: false };
+  if (!data) return { error: a.lienPlusValide, fait: false };
   return { error: null, fait: true };
 }

@@ -1,6 +1,8 @@
 import { randomBytes } from "node:crypto";
 import type { Service } from "@/types/reservation";
 import { debutDuService } from "@/lib/reservations/disponibilite";
+import type { Langue } from "@/lib/i18n/langues";
+import { ANNULER } from "@/lib/i18n/annuler";
 
 /**
  * L'annulation par le client.
@@ -48,20 +50,25 @@ export function peutAnnuler(
   reservation: ReservationAnnulable,
   service: Service | null,
   maintenant: Date,
+  /**
+   * La langue du client, qui lira le motif. Par défaut le français : les
+   * appels depuis le tableau de bord n'ont rien à traduire.
+   */
+  langue: Langue = "fr",
 ): VerdictAnnulation {
+  const a = ANNULER[langue] ?? ANNULER.fr;
   if (reservation.statut === "annulee") {
     return {
       possible: false,
       dejaFait: true,
-      motif: "Cette réservation est déjà annulée. Il n'y a rien de plus à faire.",
+      motif: a.dejaAnnulee,
     };
   }
   if (reservation.statut === "refusee" || reservation.statut === "expiree") {
     return {
       possible: false,
       dejaFait: true,
-      motif:
-        "Cette réservation n'est plus active : elle n'a pas été retenue par l'établissement.",
+      motif: a.plusActive,
     };
   }
 
@@ -72,8 +79,7 @@ export function peutAnnuler(
     return {
       possible: false,
       dejaFait: false,
-      motif:
-        "Un acompte a été réglé pour cette réservation. Contacte directement l'établissement : lui seul peut décider du remboursement.",
+      motif: a.acompteRegleAnnulation,
     };
   }
 
@@ -87,7 +93,7 @@ export function peutAnnuler(
     return {
       possible: false,
       dejaFait: false,
-      motif: "Ce service est passé : il n'y a plus rien à annuler.",
+      motif: a.servicePasseAnnulation,
     };
   }
 

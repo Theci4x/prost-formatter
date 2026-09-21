@@ -1,5 +1,7 @@
 import type { Service } from "@/types/reservation";
 import { debutDuService } from "@/lib/reservations/disponibilite";
+import type { Langue } from "@/lib/i18n/langues";
+import { ANNULER } from "@/lib/i18n/annuler";
 
 /**
  * La modification par le client.
@@ -39,34 +41,34 @@ export function peutModifier(
   /** Vrai quand un devis accepté porte sur cette réservation. */
   devisAccepte: boolean,
   maintenant: Date,
+  /** La langue du client, qui lira le motif. */
+  langue: Langue = "fr",
 ): VerdictModification {
+  const a = ANNULER[langue] ?? ANNULER.fr;
   if (reservation.statut === "annulee") {
     return {
       possible: false,
-      motif: "Cette réservation est annulée : il n'y a plus rien à modifier.",
+      motif: a.plusRienAModifier,
     };
   }
   if (reservation.statut === "refusee" || reservation.statut === "expiree") {
     return {
       possible: false,
-      motif:
-        "Cette réservation n'est plus active : elle n'a pas été retenue par l'établissement.",
+      motif: a.plusActive,
     };
   }
 
   if (devisAccepte) {
     return {
       possible: false,
-      motif:
-        "Un devis a été accepté pour cet événement : le prix a été arrêté pour ce nombre de convives. Contacte l'établissement, il établira une nouvelle proposition.",
+      motif: a.devisAccepte,
     };
   }
 
   if (reservation.acompte_statut === "paye") {
     return {
       possible: false,
-      motif:
-        "Un acompte a été réglé pour cette réservation. Contacte directement l'établissement : lui seul peut revoir ce qui a été convenu.",
+      motif: a.acompteRegleModification,
     };
   }
 
@@ -79,8 +81,7 @@ export function peutModifier(
   ) {
     return {
       possible: false,
-      motif:
-        "Une empreinte de carte a été enregistrée pour cette réservation. Contacte l'établissement pour la modifier.",
+      motif: a.empreintePrise,
     };
   }
 
@@ -92,7 +93,7 @@ export function peutModifier(
   if (maintenant.getTime() > fin) {
     return {
       possible: false,
-      motif: "Ce service est passé : il n'y a plus rien à modifier.",
+      motif: a.servicePasseModification,
     };
   }
 

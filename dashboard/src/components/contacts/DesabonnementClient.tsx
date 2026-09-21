@@ -5,6 +5,8 @@ import {
   seDesabonner,
   type DesabonnementState,
 } from "@/app/desabonnement/[jeton]/actions";
+import type { Langue } from "@/lib/i18n/langues";
+import { ANNULER } from "@/lib/i18n/annuler";
 
 const initial: DesabonnementState = { error: null, fait: false };
 
@@ -26,24 +28,26 @@ export function DesabonnementClient({
   jeton,
   restaurantNom,
   email,
+  langue,
 }: {
   jeton: string;
   restaurantNom: string;
   email: string;
+  langue: Langue;
 }) {
+  const a = ANNULER[langue];
   const [state, action, pending] = useActionState(seDesabonner, initial);
 
   if (state.fait) {
     return (
       <div className="flex flex-col gap-3">
         <p className="text-sm leading-relaxed text-zinc-600">
-          C&apos;est fait. <strong>{email}</strong> ne recevra plus les
-          actualités de {restaurantNom}.
+          {a.cestFait(restaurantNom).avant}
+          <strong>{email}</strong>
+          {a.cestFait(restaurantNom).apres}
         </p>
         <p className="text-sm leading-relaxed text-zinc-500">
-          Les e-mails liés à vos réservations — confirmation, rappel, annulation
-          — continuent de partir : ce ne sont pas des messages commerciaux, et
-          vous en avez besoin.
+          {a.courrielsDeService}
         </p>
       </div>
     );
@@ -53,15 +57,16 @@ export function DesabonnementClient({
     <form action={action} className="flex flex-col gap-4">
       <input type="hidden" name="jeton" value={jeton} />
       <p className="text-sm leading-relaxed text-zinc-600">
-        <strong>{email}</strong> reçoit les actualités et offres de{" "}
-        {restaurantNom}. Un clic suffit pour arrêter.
+        {a.recoitLesActualites(restaurantNom).avant}
+        <strong>{email}</strong>
+        {a.recoitLesActualites(restaurantNom).apres}
       </p>
       <button
         type="submit"
         disabled={pending}
         className="w-fit rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover disabled:opacity-50"
       >
-        {pending ? "En cours…" : "Me désinscrire"}
+        {pending ? a.desinscriptionEnCours : a.meDesinscrire}
       </button>
       {state.error && (
         <p className="text-sm text-red-600" role="alert">

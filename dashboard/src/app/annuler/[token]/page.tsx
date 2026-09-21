@@ -6,21 +6,18 @@ import { heuresDArrivee } from "@/lib/reservations/disponibilite";
 import { peutModifier } from "@/lib/reservations/modification";
 import type { Service } from "@/types/reservation";
 import { SignatureKlarr } from "@/components/brand/SignatureKlarr";
-import { heureLisible } from "@/lib/site/horaires";
+import { langueVisiteur } from "@/lib/i18n/langue";
+import { ANNULER } from "@/lib/i18n/annuler";
+import { dateJour } from "@/lib/i18n/dates";
+import { heure as heureTraduite } from "@/lib/i18n/jours";
 
 // Un lien personnel, envoyé par e-mail : il n'a rien à faire dans un
 // moteur de recherche.
-export const metadata: Metadata = {
-  title: "Ma réservation",
-  robots: { index: false, follow: false },
-};
-
-function dateLisible(iso: string): string {
-  return new Date(`${iso}T12:00:00`).toLocaleDateString("fr-FR", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  });
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: ANNULER[await langueVisiteur()].maReservation,
+    robots: { index: false, follow: false },
+  };
 }
 
 export default async function AnnulerPage({
@@ -29,6 +26,10 @@ export default async function AnnulerPage({
   params: Promise<{ token: string }>;
 }) {
   const { token } = await params;
+  // Lien personnel envoyé par courriel, donc « noindex » : la page peut
+  // suivre la langue du navigateur.
+  const langue = await langueVisiteur();
+  const a = ANNULER[langue];
 
   // Lecture avec la clé de service : le client n'a pas de compte, le
   // jeton est ce qui l'autorise. On ne lit que de quoi lui rappeler ce
@@ -88,22 +89,26 @@ export default async function AnnulerPage({
 
   const modifiable =
     reservation && service
-      ? peutModifier(reservation, service, devisAccepte, new Date()).possible
+      ? peutModifier(reservation, service, devisAccepte, new Date(), langue)
+          .possible
       : false;
   const aujourdhui = new Date().toISOString().slice(0, 10);
 
   const resume = reservation
-    ? `${nom ?? "L'établissement"} — ${dateLisible(reservation.date_reservation)}` +
-      (reservation.heure_arrivee
-        ? ` à ${heureLisible(reservation.heure_arrivee.slice(0, 5))}`
-        : "") +
-      `, ${reservation.couverts} couvert${reservation.couverts > 1 ? "s" : ""}.`
+    ? a.resume(
+        nom ?? a.lEtablissement,
+        dateJour(reservation.date_reservation, langue),
+        reservation.heure_arrivee
+          ? heureTraduite(reservation.heure_arrivee.slice(0, 5), langue)
+          : null,
+        reservation.couverts,
+      )
     : "";
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-brand-cream px-6 py-16">
       <div className="flex w-full max-w-md flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm">
-        <h1 className="font-serif text-3xl text-ink">Ma réservation</h1>
+        <h1 className="font-serif text-3xl text-ink">{a.maReservation}</h1>
 
         {reservation ? (
           <>
@@ -122,25 +127,26 @@ export default async function AnnulerPage({
                 couverts={reservation.couverts}
                 heures={heuresDArrivee(service)}
                 dateMin={aujourdhui}
+                langue={langue}
               />
             )}
             <AnnulationClient
               token={token}
               resume={resume}
               discret={modifiable}
+              langue={langue}
             />
           </>
         ) : (
           // Le même message pour un lien inventé et pour un lien périmé :
           // rien ne doit permettre de deviner qu'une réservation existe.
           <p className="text-sm leading-relaxed text-zinc-600">
-            Ce lien n&apos;est plus valide. Si tu dois annuler une réservation,
-            contacte directement l&apos;établissement.
+            {a.lienPerime}
           </p>
         )}
       </div>
 
-      <SignatureKlarr texte="Réservations propulsées par" />
+      <SignatureKlarr texte={a.signatureReservations} />
     </div>
   );
 }

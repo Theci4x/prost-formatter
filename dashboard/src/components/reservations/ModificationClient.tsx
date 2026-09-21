@@ -5,6 +5,9 @@ import {
   modifierParLeClient,
   type ModificationState,
 } from "@/app/annuler/[token]/actions";
+import type { Langue } from "@/lib/i18n/langues";
+import { ANNULER } from "@/lib/i18n/annuler";
+import { heure as heureTraduite } from "@/lib/i18n/jours";
 
 const initial: ModificationState = { error: null, fait: false };
 
@@ -28,6 +31,7 @@ export function ModificationClient({
   couverts,
   heures,
   dateMin,
+  langue,
 }: {
   token: string;
   date: string;
@@ -36,15 +40,16 @@ export function ModificationClient({
   /** Les heures d'arrivée du service, telles que proposées à la réservation. */
   heures: string[];
   dateMin: string;
+  langue: Langue;
 }) {
+  const a = ANNULER[langue];
   const [ouvert, setOuvert] = useState(false);
   const [state, action, pending] = useActionState(modifierParLeClient, initial);
 
   if (state.fait && !state.error) {
     return (
       <p className="rounded-xl bg-emerald-50 px-4 py-3 text-sm leading-relaxed text-emerald-800">
-        C&apos;est modifié. L&apos;établissement est prévenu, et tu reçois la
-        confirmation par e-mail.
+        {a.cestModifie}
       </p>
     );
   }
@@ -62,7 +67,7 @@ export function ModificationClient({
         onClick={() => setOuvert(true)}
         className="w-fit rounded-md bg-brand-navy px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover"
       >
-        Modifier ma réservation
+        {a.modifierMaReservation}
       </button>
     );
   }
@@ -76,7 +81,7 @@ export function ModificationClient({
 
       <div className="flex flex-wrap gap-3">
         <label className="flex min-w-0 flex-1 basis-36 flex-col gap-1 text-sm font-medium text-ink">
-          Date
+          {a.dateLabel}
           <input
             type="date"
             name="date"
@@ -87,7 +92,7 @@ export function ModificationClient({
         </label>
 
         <label className="flex min-w-0 flex-col gap-1 text-sm font-medium text-ink">
-          Heure
+          {a.heureLabel}
           <select
             name="heure"
             defaultValue={heure ?? heures[0]}
@@ -95,14 +100,14 @@ export function ModificationClient({
           >
             {heures.map((h) => (
               <option key={h} value={h}>
-                {h.replace(":", "h")}
+                {heureTraduite(h, langue)}
               </option>
             ))}
           </select>
         </label>
 
         <label className="flex min-w-0 flex-col gap-1 text-sm font-medium text-ink">
-          Convives
+          {a.convivesLabel}
           <input
             type="number"
             name="couverts"
@@ -126,14 +131,14 @@ export function ModificationClient({
           disabled={pending}
           className="rounded-md bg-brand-navy px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover disabled:opacity-50"
         >
-          {pending ? "Modification…" : "Enregistrer le changement"}
+          {pending ? a.modificationEnCours : a.enregistrerLeChangement}
         </button>
         <button
           type="button"
           onClick={() => setOuvert(false)}
           className="text-sm text-zinc-500 hover:text-zinc-900"
         >
-          Laisser comme ça
+          {a.laisserCommeCa}
         </button>
       </div>
     </form>

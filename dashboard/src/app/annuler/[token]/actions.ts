@@ -2,6 +2,8 @@
 
 import { createServiceClient } from "@/lib/supabase/service";
 import { peutAnnuler } from "@/lib/reservations/annulation";
+import { langueVisiteur } from "@/lib/i18n/langue";
+import { ANNULER } from "@/lib/i18n/annuler";
 import { prevenirAnnulationClient } from "@/lib/courriel/reservation";
 import {
   alerteModification,
@@ -38,7 +40,11 @@ export async function annulerParLeClient(
   formData: FormData,
 ): Promise<AnnulationState> {
   const token = ((formData.get("token") as string | null) ?? "").trim();
-  if (!token) return { error: "Lien invalide.", fait: false };
+  // L'action lit le témoin de langue, comme la page qui l'a affichée.
+  const langue = await langueVisiteur();
+  const a = ANNULER[langue];
+
+  if (!token) return { error: a.lienInvalide, fait: false };
 
   const supabase = createServiceClient();
 
@@ -67,7 +73,7 @@ export async function annulerParLeClient(
 
   // Un jeton inconnu ne dit pas s'il a existé : la même phrase pour un
   // lien inventé et pour un lien périmé.
-  if (!reservation) return { error: "Ce lien n'est plus valide.", fait: false };
+  if (!reservation) return { error: a.lienPlusValide, fait: false };
 
   const { data: serviceData } = reservation.service_id
     ? await supabase
@@ -78,7 +84,7 @@ export async function annulerParLeClient(
     : { data: null };
   const service = serviceData as Service | null;
 
-  const verdict = peutAnnuler(reservation, service, new Date());
+  const verdict = peutAnnuler(reservation, service, new Date(), langue);
   if (!verdict.possible) {
     return { error: verdict.motif, fait: verdict.dejaFait };
   }
@@ -99,7 +105,7 @@ export async function annulerParLeClient(
 
   if (error) {
     console.error("[annulerParLeClient]", error);
-    return { error: "L'annulation a échoué. Réessaie dans un instant.", fait: false };
+    return { error: a.annulationEchouee, fait: false };
   }
 
   const { data: restaurantData } = await supabase
@@ -180,12 +186,15 @@ export async function modifierParLeClient(
   const date = ((formData.get("date") as string | null) ?? "").trim();
   const heure = ((formData.get("heure") as string | null) ?? "").trim().slice(0, 5);
   const couverts = Number(formData.get("couverts"));
-  if (!token) return { error: "Lien invalide.", fait: false };
+  const langue = await langueVisiteur();
+  const a = ANNULER[langue];
+
+  if (!token) return { error: a.lienInvalide, fait: false };
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-    return { error: "Choisis une date.", fait: false };
+    return { error: a.choisisUneDate, fait: false };
   }
   if (!Number.isInteger(couverts) || couverts <= 0) {
-    return { error: "Indique un nombre de convives.", fait: false };
+    return { error: a.indiqueDesConvives, fait: false };
   }
 
   const supabase = createServiceClient();
@@ -212,7 +221,7 @@ export async function modifierParLeClient(
     acompte_statut: string | null;
     caution_statut: string | null;
   } | null;
-  if (!reservation) return { error: "Ce lien n'est plus valide.", fait: false };
+  if (!reservation) return { error: a.lienPlusValide, fait: false };
 
   const [espaceResult, serviceResult, devisResult] = await Promise.all([
     supabase
@@ -239,32 +248,37 @@ export async function modifierParLeClient(
   const devisAccepte =
     (devisResult.data as { statut: string } | null)?.statut === "accepte";
 
-  const verdict = peutModifier(reservation, service, devisAccepte, new Date());
+  const verdict = peutModifier(
+    reservation,
+    service,
+    devisAccepte,
+    new Date(),
+    langue,
+  );
   if (!verdict.possible) return { error: verdict.motif, fait: false };
 
   if (!espace || !service) {
     return {
-      error:
-        "Cette réservation ne peut plus être modifiée en ligne. Contacte l'établissement.",
+      error: a.plusModifiableEnLigne,
       fait: false,
     };
   }
 
   const maintenant = new Date();
   if (!serviceOuvertCeJour(date, service)) {
-    return { error: "Ce service n'est pas assuré ce jour-là.", fait: false };
+    return { error: a.servicePasCeJour, fait: false };
   }
   if (servicePasseOuTropTard(date, service, maintenant)) {
     return {
       error:
         service.delai_heures > 0
-          ? `Les changements ferment ${service.delai_heures} h avant le service.`
-          : "Ce service est passé.",
+          ? a.changementsFerment(service.delai_heures)
+          : a.servicePasse,
       fait: false,
     };
   }
   if (!heuresDArrivee(service).includes(heure)) {
-    return { error: "Choisis une heure dans la liste proposée.", fait: false };
+    return { error: a.heureHorsListe, fait: false };
   }
 
   const [reservationsResult, fermetures] = await Promise.all([
@@ -293,14 +307,13 @@ export async function modifierParLeClient(
     reservations: voisines,
     fermetures,
     maintenant,
+    langue,
   });
   const possible =
     reservation.type === "table" ? dispo.peutRecevoirTable : dispo.peutEtrePrivatise;
   if (!possible) {
     return {
-      error:
-        dispo.raison ??
-        "Ce créneau n'est plus libre. Choisis-en un autre, ou contacte l'établissement.",
+      error: dispo.raison ?? a.creneauPlusLibre,
       fait: false,
     };
   }
@@ -334,7 +347,7 @@ export async function modifierParLeClient(
   if (error || !modifiee) {
     console.error("[modifierParLeClient]", error);
     return {
-      error: "La modification a échoué. Réessaie dans un instant.",
+      error: a.modificationEchouee,
       fait: false,
     };
   }
