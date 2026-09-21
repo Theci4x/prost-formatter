@@ -16,7 +16,18 @@ export function urlCarte(slug: string): string {
  * grossir le motif au point de le rendre illisible de loin.
  */
 export function qrSvg(slug: string): Promise<string> {
-  return QRCode.toString(urlCarte(slug), {
+  return qrSvgDe(urlCarte(slug));
+}
+
+/**
+ * Le même, pour n'importe quelle adresse.
+ *
+ * La carte n'est plus la seule chose qu'on pose sur une table : le jeu a
+ * son propre panneau, avec son propre QR. Les réglages d'impression, eux,
+ * ne changent pas — ils ont été choisis pour du papier taché de sauce.
+ */
+export function qrSvgDe(url: string): Promise<string> {
+  return QRCode.toString(url, {
     type: "svg",
     errorCorrectionLevel: "M",
     margin: 2,
@@ -26,7 +37,12 @@ export function qrSvg(slug: string): Promise<string> {
 
 /** Le même, en PNG : ce qu'attendent les imprimeurs et Canva. */
 export function qrPng(slug: string): Promise<Buffer> {
-  return QRCode.toBuffer(urlCarte(slug), {
+  return qrPngDe(urlCarte(slug));
+}
+
+/** Le même, pour n'importe quelle adresse. */
+export function qrPngDe(url: string): Promise<Buffer> {
+  return QRCode.toBuffer(url, {
     errorCorrectionLevel: "M",
     margin: 2,
     width: 1024,

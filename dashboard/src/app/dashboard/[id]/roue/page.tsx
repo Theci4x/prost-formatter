@@ -16,6 +16,7 @@ import type { Restaurant } from "@/types/restaurant";
 import { siteUrl } from "@/lib/site-url";
 import { exiger } from "@/lib/equipe/roles";
 import { exigerModule } from "@/lib/abonnement/acces";
+import { qrSvgDe } from "@/lib/menu/qr";
 
 function Puce({
   children,
@@ -97,6 +98,12 @@ export default async function RouePage({
   const gagnantes = lots.filter((lot) => lot.gagnant && lot.poids > 0).length;
   const prete = lots.length >= 2 && gagnantes >= 1;
 
+  // Le jeu a sa propre adresse, distincte du totem : ce ne sont pas les
+  // mêmes gestes. Le totem demande un retour à quelqu'un qui part, le
+  // panneau du jeu attire quelqu'un qui est encore à table.
+  const adresseJeu = slug ? `${siteUrl()}/jeu/${slug}` : null;
+  const qr = adresseJeu ? await qrSvgDe(adresseJeu) : null;
+
   return (
     <div className="flex flex-1 flex-col gap-10 px-6 py-8">
       <PageHeader
@@ -106,9 +113,10 @@ export default async function RouePage({
       />
 
       <p className="max-w-2xl text-sm text-zinc-500">
-        Le client scanne le totem, on lui ouvre ta fiche Google, et au retour il
-        tourne la roue. Son lot part par e-mail et se présente à la visite
-        suivante — c&apos;est une raison de revenir autant qu&apos;un cadeau.
+        Un panneau sur la table, avec son propre QR code : le client scanne,
+        tourne la roue, et son lot part par e-mail pour la visite suivante —
+        c&apos;est une raison de revenir autant qu&apos;un cadeau. Le totem des
+        avis reste à part, il ne change pas.
       </p>
 
       {/* Ce que le restaurateur doit savoir avant d'allumer. Il prend le
@@ -239,15 +247,29 @@ export default async function RouePage({
               <p className="text-sm font-medium text-emerald-700">
                 La roue tourne.
               </p>
-              {slug && (
-                <a
-                  href={`/avis/${slug}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-fit break-all font-medium text-brand-orange hover:underline"
-                >
-                  {siteUrl()}/avis/{slug}
-                </a>
+              {adresseJeu && (
+                <>
+                  <p className="text-sm text-zinc-500">
+                    L&apos;adresse à mettre sur le panneau du jeu. Ce n&apos;est
+                    pas celle du totem des avis.
+                  </p>
+                  <a
+                    href={`/jeu/${slug}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-fit break-all font-medium text-brand-orange hover:underline"
+                  >
+                    {adresseJeu}
+                  </a>
+                  {/* Le QR en vectoriel : un panneau s'imprime, et un QR en
+                      pixels grossis ne se scanne plus. */}
+                  {qr && (
+                    <div
+                      className="w-40 rounded-xl border border-zinc-200 bg-white p-2 [&>svg]:h-auto [&>svg]:w-full"
+                      dangerouslySetInnerHTML={{ __html: qr }}
+                    />
+                  )}
+                </>
               )}
               <form action={basculerRoue} className="pt-1">
                 <input type="hidden" name="restaurant_id" value={id} />
