@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Commis } from "@/components/commis/Commis";
 import { EnteteOutil } from "@/components/outils/EnteteOutil";
+import { SuiteOutils } from "@/components/outils/SuiteOutils";
 import { DonneesStructurees } from "@/components/seo/DonneesStructurees";
 import { filAriane } from "@/lib/seo/donnees-structurees";
 import { siteUrl } from "@/lib/site-url";
@@ -250,6 +251,7 @@ export default async function DiagnosticPage({
             Ouvrir un restaurant : tout ce qu&apos;on découvre trop tard →
           </Link>
         </div>
+        <SuiteOutils actuel="diagnostic" />
       </main>
 
       <Commis />

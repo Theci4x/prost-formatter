@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Commis } from "@/components/commis/Commis";
 import { EnteteOutil } from "@/components/outils/EnteteOutil";
+import { SuiteOutils } from "@/components/outils/SuiteOutils";
 import { RappelOuverture } from "@/components/ouverture/RappelOuverture";
 import { DonneesStructurees } from "@/components/seo/DonneesStructurees";
 import { filAriane } from "@/lib/seo/donnees-structurees";
@@ -228,6 +229,7 @@ export default async function CalendrierPage({
             Ce local peut-il accueillir votre restaurant ? →
           </Link>
         </div>
+        <SuiteOutils actuel="calendrier" />
       </main>
 
       <Commis />

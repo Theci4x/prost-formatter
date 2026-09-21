@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Commis } from "@/components/commis/Commis";
 import { EnteteOutil } from "@/components/outils/EnteteOutil";
+import { SuiteOutils } from "@/components/outils/SuiteOutils";
 import { DonneesStructurees } from "@/components/seo/DonneesStructurees";
 import { filAriane } from "@/lib/seo/donnees-structurees";
 import { siteUrl } from "@/lib/site-url";
@@ -212,6 +213,7 @@ export default function AuditPage() {
             Le calendrier, à rebours depuis votre date d&apos;ouverture →
           </Link>
         </div>
+        <SuiteOutils actuel="audit" />
       </main>
 
       <Commis />
