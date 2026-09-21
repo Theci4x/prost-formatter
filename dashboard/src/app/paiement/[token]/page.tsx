@@ -1,14 +1,16 @@
 import { notFound, redirect } from "next/navigation";
 import { createServiceClient } from "@/lib/supabase/service";
 import { creerPaiementAcompte, paiementAbouti } from "@/lib/stripe/paiement";
-import { formatEuros, resumePourClient } from "@/lib/reservations/acompte";
-import { engagementClient } from "@/lib/reservations/caution";
 import { cautionEnregistree, demanderCaution } from "@/lib/stripe/caution";
+import { langueVisiteur } from "@/lib/i18n/langue";
+import { PAIEMENT } from "@/lib/i18n/paiement";
+import { sommeEuros } from "@/lib/i18n/nombres";
+import { dateLongue } from "@/lib/i18n/dates";
+import { creneau } from "@/lib/i18n/jours";
 import {
   prevenirAcompteRegle,
   prevenirCautionDeposee,
 } from "@/lib/push/argent";
-import { formatCreneau } from "@/types/reservation";
 import { chargerSeance, PaiementSeance } from "./seance";
 
 import type { Metadata } from "next";
@@ -16,10 +18,12 @@ import type { Metadata } from "next";
 // L'adresse de cette page contient le jeton de paiement du client. Un moteur
 // qui l'indexe le publie : rien de ce qui est ici n'a vocation à être trouvé
 // par une recherche.
-export const metadata: Metadata = {
-  title: "Paiement",
-  robots: { index: false, follow: false, nocache: true },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: PAIEMENT[await langueVisiteur()].titreOnglet,
+    robots: { index: false, follow: false, nocache: true },
+  };
+}
 
 export const dynamic = "force-dynamic";
 
@@ -42,15 +46,6 @@ type Ligne = {
   stripe_setup_session_id: string | null;
 };
 
-function formatDate(date: string): string {
-  return new Date(`${date}T12:00:00`).toLocaleDateString("fr-FR", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-}
-
 function Cadre({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-brand-cream px-6 py-16">
@@ -70,6 +65,11 @@ export default async function PaiementPage({
 }) {
   const { token } = await params;
   const query = await searchParams;
+  // La page porte « noindex » — le jeton est dans l'adresse : elle peut
+  // deviner la langue du navigateur sans conséquence pour Google.
+  const langue = await langueVisiteur();
+  const p = PAIEMENT[langue];
+  const formatDate = (date: string) => dateLongue(date, langue);
 
   // Le jeton est la seule autorisation : on ne demande pas au visiteur de se
   // connecter, c'est un client du restaurant, pas un utilisateur de Klarr.
@@ -93,6 +93,7 @@ export default async function PaiementPage({
           token={token}
           retour={Boolean(query.retour)}
           annule={Boolean(query.annule)}
+          langue={langue}
         />
       );
     }
@@ -148,8 +149,9 @@ export default async function PaiementPage({
 
   if (!restaurant || !espace) notFound();
 
-  const somme = formatEuros(
+  const somme = sommeEuros(
     (enCaution ? ligne.caution_centimes : ligne.acompte_centimes) ?? 0,
+    langue,
   );
 
   // — Caution déjà enregistrée : rien de plus à demander au client.
@@ -160,16 +162,17 @@ export default async function PaiementPage({
     return (
       <Cadre>
         <span className="text-sm font-medium text-emerald-700">
-          Carte enregistrée
+          {p.carteEnregistreeBadge}
         </span>
         <h1 className="text-xl font-semibold text-zinc-900">
-          Votre réservation chez {restaurant.nom} est confirmée.
+          {p.reservationConfirmee(restaurant.nom)}
         </h1>
         <p className="text-sm text-zinc-600">
-          Rien n&apos;a été prélevé. Votre carte reste en garantie jusqu&apos;à{" "}
-          {somme}, et ne sera débitée qu&apos;en cas d&apos;annulation tardive
-          ou d&apos;absence. {restaurant.nom} vous attend le{" "}
-          {formatDate(ligne.date_reservation)}.
+          {p.cautionDejaPosee(
+            somme,
+            restaurant.nom,
+            formatDate(ligne.date_reservation),
+          )}
         </p>
       </Cadre>
     );
@@ -180,14 +183,17 @@ export default async function PaiementPage({
     return (
       <Cadre>
         <span className="text-sm font-medium text-emerald-700">
-          Acompte reçu
+          {p.acompteRecuBadge}
         </span>
         <h1 className="text-xl font-semibold text-zinc-900">
-          Votre réservation chez {restaurant.nom} est confirmée.
+          {p.reservationConfirmee(restaurant.nom)}
         </h1>
         <p className="text-sm text-zinc-600">
-          Nous avons bien reçu votre acompte de {somme}. Cette page vaut reçu ;{" "}
-          {restaurant.nom} vous attend le {formatDate(ligne.date_reservation)}.
+          {p.acompteRecuTexte(
+            somme,
+            restaurant.nom,
+            formatDate(ligne.date_reservation),
+          )}
         </p>
       </Cadre>
     );
@@ -197,11 +203,10 @@ export default async function PaiementPage({
     return (
       <Cadre>
         <h1 className="text-xl font-semibold text-zinc-900">
-          Cette réservation n&apos;est plus active.
+          {p.plusActiveTitre}
         </h1>
         <p className="text-sm text-zinc-600">
-          Aucun paiement n&apos;est attendu. Contactez {restaurant.nom} si vous
-          pensez qu&apos;il s&apos;agit d&apos;une erreur.
+          {p.plusActiveTexte(restaurant.nom)}
         </p>
       </Cadre>
     );
@@ -286,12 +291,10 @@ export default async function PaiementPage({
     return (
       <Cadre>
         <h1 className="text-xl font-semibold text-zinc-900">
-          Le paiement n&apos;est pas encore ouvert.
+          {p.pasOuvertTitre}
         </h1>
         <p className="text-sm text-zinc-600">
-          {restaurant.nom} doit terminer la configuration de ses paiements.
-          Reprenez contact avec l&apos;établissement — rien n&apos;est perdu,
-          votre réservation reste enregistrée.
+          {p.pasOuvertReservation(restaurant.nom)}
         </p>
       </Cadre>
     );
@@ -317,10 +320,12 @@ export default async function PaiementPage({
       const paiement = await creerPaiementAcompte({
         compteStripe: connexion.stripe_account_id,
         token,
-        intitule: resumePourClient(
-          espace,
+        // L'intitulé s'affiche sur la page de Stripe : il parle la langue
+        // du client, pas celle du serveur.
+        intitule: p.intitulePrivatisation(
+          espace.nom,
           ligne.couverts,
-          ligne.acompte_centimes ?? 0,
+          sommeEuros(ligne.acompte_centimes ?? 0, langue),
         ),
         centimes: ligne.acompte_centimes ?? 0,
         emailClient: ligne.client_email,
@@ -342,28 +347,31 @@ export default async function PaiementPage({
       <div className="flex flex-col gap-1">
         <span className="text-sm text-zinc-500">{restaurant.nom}</span>
         <h1 className="text-xl font-semibold text-zinc-900">
-          {enCaution ? `Carte en garantie` : `Acompte de ${somme}`}
+          {enCaution ? p.carteEnGarantie : p.acompteDe(somme)}
         </h1>
       </div>
 
       {enCaution && (
         <p className="rounded-xl bg-brand-orange-soft p-4 text-sm text-brand-navy">
-          {engagementClient(restaurant.nom, ligne.caution_centimes ?? 0)}
+          {p.engagement(
+            restaurant.nom,
+            sommeEuros(ligne.caution_centimes ?? 0, langue),
+          )}
         </p>
       )}
 
       <dl className="flex flex-col gap-2 border-y border-zinc-100 py-4 text-sm">
         {[
-          ["Au nom de", ligne.client_nom],
-          ["Date", formatDate(ligne.date_reservation)],
+          [p.auNomDe, ligne.client_nom],
+          [p.dateLabel, formatDate(ligne.date_reservation)],
           [
-            "Service",
+            p.serviceLabel,
             service
-              ? `${service.nom} — ${formatCreneau(service.heure_debut, service.heure_fin)}`
+              ? `${service.nom} — ${creneau(service.heure_debut, service.heure_fin, langue)}`
               : null,
           ],
-          ["Espace privatisé", espace.nom],
-          ["Convives", `${ligne.couverts} couverts`],
+          [p.espacePrivatise, espace.nom],
+          [p.convivesLabel, p.convivesValeur(ligne.couverts)],
         ]
           .filter(([, valeur]) => valeur)
           .map(([libelle, valeur]) => (
@@ -375,30 +383,26 @@ export default async function PaiementPage({
       </dl>
 
       {query.annule && !echec && (
-        <p className="text-sm text-zinc-500">
-          Paiement interrompu. Vous pouvez reprendre quand vous voulez, votre
-          réservation est toujours là.
-        </p>
+        <p className="text-sm text-zinc-500">{p.interrompuReservation}</p>
       )}
 
       {echec || !lienStripe ? (
         <p className="text-sm text-red-600">
-          Le paiement est momentanément indisponible. Réessayez dans quelques
-          minutes, ou contactez {restaurant.nom}.
+          {p.indisponible(restaurant.nom)}
         </p>
       ) : (
         <a
           href={lienStripe}
           className="rounded-md bg-brand-navy px-4 py-3 text-center text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover"
         >
-          {enCaution ? "Enregistrer ma carte" : `Payer ${somme}`}
+          {enCaution ? p.enregistrerMaCarte : p.payer(somme)}
         </a>
       )}
 
       <p className="text-xs text-zinc-400">
         {enCaution
-          ? `Carte enregistrée par Stripe, chez ${restaurant.nom}. Aucun montant n'est prélevé aujourd'hui, et Klarr ne perçoit aucune commission.`
-          : `Paiement traité par Stripe, directement au bénéfice de ${restaurant.nom}. Klarr ne perçoit aucune commission.`}
+          ? p.piedCaution(restaurant.nom)
+          : p.piedAcompte(restaurant.nom)}
       </p>
     </Cadre>
   );

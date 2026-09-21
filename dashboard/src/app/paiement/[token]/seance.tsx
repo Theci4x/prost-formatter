@@ -1,8 +1,11 @@
 import { redirect } from "next/navigation";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { creerPaiementAcompte, paiementAbouti } from "@/lib/stripe/paiement";
-import { formatEuros } from "@/lib/reservations/acompte";
-import { formatHeure } from "@/types/reservation";
+import type { Langue } from "@/lib/i18n/langues";
+import { PAIEMENT } from "@/lib/i18n/paiement";
+import { sommeEuros } from "@/lib/i18n/nombres";
+import { dateLongue } from "@/lib/i18n/dates";
+import { heure as heureTraduite } from "@/lib/i18n/jours";
 
 type Seance = {
   id: string;
@@ -87,15 +90,6 @@ export async function chargerSeance(
   };
 }
 
-function formatJour(date: string): string {
-  return new Date(`${date}T12:00:00`).toLocaleDateString("fr-FR", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-}
-
 function Cadre({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-brand-cream px-6 py-16">
@@ -111,23 +105,27 @@ export async function PaiementSeance({
   token,
   retour,
   annule,
+  langue,
 }: {
   seance: Seance;
   token: string;
   retour: boolean;
   annule: boolean;
+  langue: Langue;
 }) {
-  const somme = formatEuros(seance.montant_centimes);
+  const p = PAIEMENT[langue];
+  const somme = sommeEuros(seance.montant_centimes, langue);
+  const formatJour = (date: string) => dateLongue(date, langue);
+  const heureSeance = heureTraduite(seance.heure, langue);
 
   if (seance.statut === "annulee") {
     return (
       <Cadre>
         <h1 className="text-xl font-semibold text-zinc-900">
-          Cette inscription a été annulée.
+          {p.inscriptionAnnuleeTitre}
         </h1>
         <p className="text-sm text-zinc-600">
-          Aucun paiement n&apos;est attendu. Contactez {seance.nom_restaurant}{" "}
-          si vous pensez qu&apos;il s&apos;agit d&apos;une erreur.
+          {p.inscriptionAnnuleeTexte(seance.nom_restaurant)}
         </p>
       </Cadre>
     );
@@ -137,16 +135,18 @@ export async function PaiementSeance({
     return (
       <Cadre>
         <span className="text-sm font-medium text-emerald-700">
-          Inscription confirmée
+          {p.inscriptionConfirmeeBadge}
         </span>
         <h1 className="text-xl font-semibold text-zinc-900">
           {seance.nom_experience}
         </h1>
         <p className="text-sm text-zinc-600">
-          Nous avons bien reçu votre paiement de {somme}.{" "}
-          {seance.nom_restaurant} vous attend le{" "}
-          {formatJour(seance.date_seance)} à {formatHeure(seance.heure)}. Cette
-          page vaut reçu.
+          {p.seanceReglee(
+            somme,
+            seance.nom_restaurant,
+            formatJour(seance.date_seance),
+            heureSeance,
+          )}
         </p>
       </Cadre>
     );
@@ -179,12 +179,10 @@ export async function PaiementSeance({
     return (
       <Cadre>
         <h1 className="text-xl font-semibold text-zinc-900">
-          Le paiement n&apos;est pas encore ouvert.
+          {p.pasOuvertTitre}
         </h1>
         <p className="text-sm text-zinc-600">
-          {seance.nom_restaurant} doit terminer la configuration de ses
-          paiements. Reprenez contact avec l&apos;établissement — votre place
-          reste enregistrée.
+          {p.pasOuvertSeance(seance.nom_restaurant)}
         </p>
       </Cadre>
     );
@@ -196,7 +194,12 @@ export async function PaiementSeance({
     const paiement = await creerPaiementAcompte({
       compteStripe: seance.compte_stripe,
       token,
-      intitule: `${seance.nom_experience} — ${seance.places} place${seance.places > 1 ? "s" : ""} le ${formatJour(seance.date_seance)}`,
+      // L'intitulé se lit sur la page de Stripe : même langue que celle-ci.
+      intitule: p.intituleSeance(
+        seance.nom_experience,
+        seance.places,
+        formatJour(seance.date_seance),
+      ),
       centimes: seance.montant_centimes,
       emailClient: seance.client_email,
       reservationId: seance.id,
@@ -222,16 +225,16 @@ export async function PaiementSeance({
 
       <dl className="flex flex-col gap-2 border-y border-zinc-100 py-4 text-sm">
         {[
-          ["Au nom de", seance.client_nom],
-          ["Date", formatJour(seance.date_seance)],
+          [p.auNomDe, seance.client_nom],
+          [p.dateLabel, formatJour(seance.date_seance)],
           [
-            "Heure",
+            p.heureLabel,
             seance.duree_minutes
-              ? `${formatHeure(seance.heure)} · ${seance.duree_minutes} min`
-              : formatHeure(seance.heure),
+              ? `${heureSeance} · ${seance.duree_minutes} min`
+              : heureSeance,
           ],
-          ["Places", `${seance.places} place${seance.places > 1 ? "s" : ""}`],
-          ["Total", somme],
+          [p.placesLabel, p.placesValeur(seance.places)],
+          [p.totalLabel, somme],
         ].map(([libelle, valeur]) => (
           <div key={libelle} className="flex justify-between gap-4">
             <dt className="text-zinc-500">{libelle}</dt>
@@ -241,29 +244,24 @@ export async function PaiementSeance({
       </dl>
 
       {annule && !echec && (
-        <p className="text-sm text-zinc-500">
-          Paiement interrompu. Votre place est retenue le temps que vous
-          reveniez.
-        </p>
+        <p className="text-sm text-zinc-500">{p.interrompuSeance}</p>
       )}
 
       {echec || !lien ? (
         <p className="text-sm text-red-600">
-          Le paiement est momentanément indisponible. Réessayez dans quelques
-          minutes, ou contactez {seance.nom_restaurant}.
+          {p.indisponible(seance.nom_restaurant)}
         </p>
       ) : (
         <a
           href={lien}
           className="rounded-md bg-brand-navy px-4 py-3 text-center text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover"
         >
-          Payer {somme}
+          {p.payer(somme)}
         </a>
       )}
 
       <p className="text-xs text-zinc-400">
-        Paiement traité par Stripe, directement au bénéfice de{" "}
-        {seance.nom_restaurant}. Klarr ne perçoit aucune commission.
+        {p.piedAcompte(seance.nom_restaurant)}
       </p>
     </Cadre>
   );
