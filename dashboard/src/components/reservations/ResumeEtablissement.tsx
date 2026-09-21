@@ -1,11 +1,17 @@
+import type { Langue } from "@/lib/i18n/langues";
+import { RESERVER, type ClesReserver } from "@/lib/i18n/reserver";
 import { formatHeure } from "@/types/reservation";
 import type { ResumeEtablissement as Resume } from "@/lib/reservations/resume";
 
-const PRIVATISATION: Record<Resume["privatisation"], string> = {
-  totale: "Totale",
-  partielle: "Partielle",
-  aucune: "Non proposée",
-};
+/** Les trois états d'une privatisation, dans la langue du visiteur. */
+function privatisationLisible(
+  etat: Resume["privatisation"],
+  r: ClesReserver,
+): string {
+  if (etat === "totale") return r.privatisationTotale;
+  if (etat === "partielle") return r.privatisationPartielle;
+  return r.nonProposee;
+}
 
 function Fait({
   icone,
@@ -44,11 +50,14 @@ export function ResumeEtablissement({
   resume,
   note,
   nombreAvis,
+  langue,
 }: {
   resume: Resume;
   note: number | null;
   nombreAvis: number | null;
+  langue: Langue;
 }) {
+  const r = RESERVER[langue];
   if (resume.capaciteMax === 0 && resume.finLaPlusTardive === null) return null;
 
   return (
@@ -73,8 +82,8 @@ export function ResumeEtablissement({
       <div className="grid grid-cols-2 gap-y-5 sm:grid-cols-4">
         {resume.capaciteMax > 0 && (
           <Fait
-            libelle="Réservation"
-            valeur={`Jusqu'à ${resume.capaciteMax} pers.`}
+            libelle={r.reservationResume}
+            valeur={r.jusquaPersonnes(resume.capaciteMax)}
             icone={
               <svg width="22" height="22" viewBox="0 0 24 24" {...traits}>
                 <path d="M16 20v-1.5a3.5 3.5 0 0 0-3.5-3.5h-5A3.5 3.5 0 0 0 4 18.5V20" />
@@ -86,8 +95,8 @@ export function ResumeEtablissement({
           />
         )}
         <Fait
-          libelle="Privatisation"
-          valeur={PRIVATISATION[resume.privatisation]}
+          libelle={r.privatisationResume}
+          valeur={privatisationLisible(resume.privatisation, r)}
           icone={
             <svg width="22" height="22" viewBox="0 0 24 24" {...traits}>
               <path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z" />
@@ -97,7 +106,7 @@ export function ResumeEtablissement({
         />
         {resume.finLaPlusTardive && (
           <Fait
-            libelle="Jusqu'à"
+            libelle={r.jusquaLabel}
             valeur={formatHeure(resume.finLaPlusTardive)}
             icone={
               <svg width="22" height="22" viewBox="0 0 24 24" {...traits}>
@@ -109,7 +118,7 @@ export function ResumeEtablissement({
         )}
         {resume.espaces > 0 && (
           <Fait
-            libelle="Espaces"
+            libelle={r.espacesResume}
             valeur={`${resume.espaces} ${resume.espaces > 1 ? "salles" : "salle"}`}
             icone={
               <svg width="22" height="22" viewBox="0 0 24 24" {...traits}>

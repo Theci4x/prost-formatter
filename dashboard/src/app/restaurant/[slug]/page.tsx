@@ -7,6 +7,7 @@ import { GalerieRestaurant } from "@/components/reservations/GalerieRestaurant";
 import { CouvertureVitrine } from "@/components/reservations/CouvertureVitrine";
 import { BandePhotos } from "@/components/reservations/BandePhotos";
 import { SignatureKlarr } from "@/components/brand/SignatureKlarr";
+import { langueVisiteur } from "@/lib/i18n/langue";
 import { DonneesStructurees } from "@/components/seo/DonneesStructurees";
 import {
   restaurantSchema,
@@ -191,6 +192,8 @@ export default async function VitrinePage({
   const { slug } = await params;
   const restaurant = await chargerVitrine(slug);
   if (!restaurant) notFound();
+
+  const langue = await langueVisiteur();
 
   const supabase = createServiceClient();
   const [
@@ -424,7 +427,11 @@ export default async function VitrinePage({
             annonce, le texte et le bouton convertissent, les autres
             photos illustrent. Placée avant, elle repoussait l'action
             principale sous un écran de vignettes. */}
-        <GalerieRestaurant photos={galerie} nom={restaurant.nom} />
+        <GalerieRestaurant
+          photos={galerie}
+          nom={restaurant.nom}
+          langue={langue}
+        />
 
         {apercuCarte.length > 0 && (
           <Section titre="Un aperçu de la carte">

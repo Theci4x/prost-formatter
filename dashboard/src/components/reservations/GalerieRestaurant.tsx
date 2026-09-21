@@ -1,5 +1,8 @@
 "use client";
 
+import type { Langue } from "@/lib/i18n/langues";
+import { RESERVER } from "@/lib/i18n/reserver";
+
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import type { RestaurantPhoto } from "@/types/photo";
@@ -58,10 +61,13 @@ function Vignette({
 export function GalerieRestaurant({
   photos,
   nom,
+  langue,
 }: {
   photos: RestaurantPhoto[];
   nom: string;
+  langue: Langue;
 }) {
+  const r = RESERVER[langue];
   const [ouverte, setOuverte] = useState(false);
 
   // Échap ferme la visionneuse, et le fond de page cesse de défiler derrière.
@@ -165,7 +171,7 @@ export function GalerieRestaurant({
                 onClick={() => setOuverte(false)}
                 className="rounded-md border border-white/40 px-3 py-1.5 text-sm hover:bg-white/10"
               >
-                Fermer
+                {r.fermerLaGalerie}
               </button>
             </div>
             <ul

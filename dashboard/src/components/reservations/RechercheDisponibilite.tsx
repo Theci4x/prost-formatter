@@ -1,5 +1,8 @@
 "use client";
 
+import type { Langue } from "@/lib/i18n/langues";
+import { RESERVER } from "@/lib/i18n/reserver";
+
 import { usePathname, useRouter } from "next/navigation";
 import { useOptimistic, useTransition } from "react";
 
@@ -30,6 +33,7 @@ export function RechercheDisponibilite({
   espaces,
   dateMin,
   children,
+  langue,
 }: {
   date: string;
   couverts: number;
@@ -39,7 +43,9 @@ export function RechercheDisponibilite({
   dateMin: string;
   /** Les créneaux, rendus par le serveur. */
   children: React.ReactNode;
+  langue: Langue;
 }) {
+  const r = RESERVER[langue];
   const router = useRouter();
   const chemin = usePathname();
   const [enCours, demarrer] = useTransition();
@@ -89,7 +95,7 @@ export function RechercheDisponibilite({
         )}
 
         <label className="flex min-w-0 flex-1 basis-36 flex-col gap-1 text-sm font-medium text-ink sm:flex-none sm:basis-auto">
-          Date
+          {r.champDate}
           <input
             type="date"
             name="date"
@@ -111,14 +117,14 @@ export function RechercheDisponibilite({
             clavier. Ce sont de vrais boutons d'envoi, qui portent leur
             valeur — sans JavaScript, ils marchent encore. */}
         <div className="flex shrink-0 flex-col gap-1 text-sm font-medium text-ink">
-          Convives
+          {r.champConvives}
           <div className="flex items-center gap-1 rounded-lg border border-line bg-paper p-1">
             <button
               type="submit"
               name="couverts"
               value={Math.max(1, choix.couverts - 1)}
               disabled={choix.couverts <= 1}
-              aria-label="Un convive de moins"
+              aria-label={r.unConviveDeMoins}
               onClick={(evenement) => {
                 evenement.preventDefault();
                 naviguer({ couverts: Math.max(1, choix.couverts - 1) });
@@ -134,7 +140,7 @@ export function RechercheDisponibilite({
               type="submit"
               name="couverts"
               value={choix.couverts + 1}
-              aria-label="Un convive de plus"
+              aria-label={r.unConviveDePlus}
               onClick={(evenement) => {
                 evenement.preventDefault();
                 naviguer({ couverts: choix.couverts + 1 });
@@ -151,7 +157,7 @@ export function RechercheDisponibilite({
             et repartirait sans savoir que la salle se loue. */}
         {espaces && espaces.length > 0 && (
           <label className="flex w-full min-w-0 basis-full flex-col gap-1 text-sm font-medium text-ink sm:w-auto sm:basis-auto">
-            Je souhaite
+            {r.jeSouhaite}
             <select
               name="espace"
               value={choix.espaceId ?? ""}
@@ -160,11 +166,10 @@ export function RechercheDisponibilite({
               }
               className={`${champ} w-full min-w-0 max-w-full`}
             >
-              <option value="">Réserver une table</option>
+              <option value="">{r.reserverUneTable}</option>
               {espaces.map((espace) => (
                 <option key={espace.id} value={espace.id}>
-                  Privatiser {espace.nom} — jusqu&apos;à {espace.capacite}{" "}
-                  couverts
+                  {r.privatiserJusqua(espace.nom, espace.capacite)}
                 </option>
               ))}
             </select>
@@ -178,7 +183,7 @@ export function RechercheDisponibilite({
             type="submit"
             className="rounded-lg bg-ink px-4 py-2.5 text-sm font-semibold text-white"
           >
-            Voir les disponibilités
+            {r.voirLesDisponibilites}
           </button>
         </noscript>
       </form>

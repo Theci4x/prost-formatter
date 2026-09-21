@@ -1,3 +1,5 @@
+import type { Langue } from "@/lib/i18n/langues";
+import { RESERVER } from "@/lib/i18n/reserver";
 import { InscriptionForm } from "./InscriptionForm";
 import { formatEuros } from "@/lib/reservations/acompte";
 import { formatHeure } from "@/types/reservation";
@@ -21,11 +23,14 @@ export function SectionExperiences({
   slug,
   experiences,
   seancesParExperience,
+  langue,
 }: {
   slug: string;
   experiences: Experience[];
   seancesParExperience: Map<string, Seance[]>;
+  langue: Langue;
 }) {
+  const r = RESERVER[langue];
   const avecSeances = experiences.filter(
     (experience) => (seancesParExperience.get(experience.id) ?? []).length > 0,
   );
@@ -35,11 +40,9 @@ export function SectionExperiences({
     <section className="flex flex-col gap-4">
       <div className="flex flex-col gap-1">
         <h2 className="text-base font-semibold text-zinc-900">
-          Ateliers et expériences
+          {r.ateliersTitre}
         </h2>
-        <p className="text-sm text-zinc-500">
-          Des séances à places limitées, en plus du service.
-        </p>
+        <p className="text-sm text-zinc-500">{r.ateliersChapo}</p>
       </div>
 
       {avecSeances.map((experience) => {

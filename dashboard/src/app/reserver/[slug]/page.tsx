@@ -141,11 +141,13 @@ export async function generateMetadata({
 function Conditions({
   espace,
   couverts,
+  langue,
 }: {
   espace: Espace;
   couverts: number;
+  langue: Langue;
 }) {
-  const conditions = conditionsPrivatisation(espace, couverts);
+  const conditions = conditionsPrivatisation(espace, couverts, langue);
   if (conditions.length === 0) return null;
 
   return (
@@ -423,6 +425,7 @@ export default async function ReserverPage({
         </div>
 
         <ResumeEtablissement
+          langue={langue}
           resume={resumeEtablissement(espaces, services)}
           note={reputation?.note ? Number(reputation.note) : null}
           nombreAvis={reputation?.nombre_avis ?? null}
@@ -431,6 +434,7 @@ export default async function ReserverPage({
         {/* Le choix de la date et des convives, et les créneaux qu'il
             commande, dans un seul bloc : ils se lisent ensemble. */}
         <RechercheDisponibilite
+          langue={langue}
           date={date}
           couverts={couverts}
           espaceId={espaceDemande?.id ?? null}
@@ -533,6 +537,7 @@ export default async function ReserverPage({
                         <Conditions
                           espace={espaceDemande}
                           couverts={couverts}
+                          langue={langue}
                         />
 
                         {demandee?.peutEtrePrivatise ? (
@@ -546,6 +551,7 @@ export default async function ReserverPage({
                             type="privatisation"
                             libelle={r.privatiser(espaceDemande.nom)}
                             restaurantNom={restaurant.nom}
+                            langue={langue}
                             principal
                           />
                         ) : (
@@ -601,6 +607,7 @@ export default async function ReserverPage({
                               type="table"
                               libelle={r.reserverUneTable}
                               restaurantNom={restaurant.nom}
+                              langue={langue}
                               principal
                             />
                           </div>
@@ -658,6 +665,7 @@ export default async function ReserverPage({
                                   <Conditions
                                     espace={dispo.espace}
                                     couverts={couverts}
+                                    langue={langue}
                                   />
 
                                   <DemandeForm
@@ -670,6 +678,7 @@ export default async function ReserverPage({
                                     type="privatisation"
                                     libelle={r.privatiser(dispo.espace.nom)}
                                     restaurantNom={restaurant.nom}
+                                    langue={langue}
                                   />
                                 </li>
                               ))}
@@ -703,6 +712,7 @@ export default async function ReserverPage({
             donc aucune : on les reprend alors en bandeau, faute de mieux que
             rien. */}
         <GalerieRestaurant
+          langue={langue}
           photos={
             photosEtablissement.length > 0
               ? photosEtablissement
@@ -721,6 +731,7 @@ export default async function ReserverPage({
         />
 
         <SectionExperiences
+          langue={langue}
           slug={slug}
           experiences={experiences}
           seancesParExperience={

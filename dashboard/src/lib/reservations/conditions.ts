@@ -1,4 +1,6 @@
 import type { Espace } from "@/types/reservation";
+import type { Langue } from "@/lib/i18n/langue";
+import { RESERVER } from "@/lib/i18n/reserver";
 import { garantieRequise } from "@/lib/reservations/garantie";
 
 /**
@@ -38,16 +40,18 @@ function euros(centimes: number): string {
 export function conditionsPrivatisation(
   espace: Espace,
   couverts: number,
+  langue: Langue = "fr",
 ): Condition[] {
+  const r = RESERVER[langue];
   const conditions: Condition[] = [];
 
   if (espace.minimum_consommation_centimes) {
     conditions.push({
-      libelle: `Minimum de consommation : ${euros(
-        espace.minimum_consommation_centimes,
-      )} € ${espace.minimum_consommation_ht ? "HT" : "TTC"}`,
-      precision:
-        "Rien n'est encaissé à la réservation : ce montant se règle à l'addition.",
+      libelle: r.minimumConsommation(
+        euros(espace.minimum_consommation_centimes),
+        espace.minimum_consommation_ht !== false,
+      ),
+      precision: r.minimumConsommationPrecision,
     });
   }
 
@@ -55,17 +59,15 @@ export function conditionsPrivatisation(
 
   if (garantie.acompteCentimes) {
     conditions.push({
-      libelle: `Acompte : ${euros(garantie.acompteCentimes)} €`,
-      precision:
-        "Demandé une fois la demande acceptée, par un lien de paiement sécurisé. Il vient en déduction de l'addition.",
+      libelle: r.acompteDe(euros(garantie.acompteCentimes)),
+      precision: r.acomptePrecision,
     });
   } else if (garantie.cautionCentimes) {
     conditions.push({
-      libelle: `Carte en garantie : ${euros(garantie.cautionCentimes)} €`,
+      libelle: r.carteEnGarantie(euros(garantie.cautionCentimes)),
       // La nuance vaut la phrase : beaucoup de clients renoncent en
       // croyant qu'on les débite, alors que rien ne part.
-      precision:
-        "Rien n'est prélevé. La carte est enregistrée, et ne serait débitée qu'en cas de défection.",
+      precision: r.cartePrecision,
     });
   }
 

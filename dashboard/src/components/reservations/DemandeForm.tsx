@@ -1,5 +1,8 @@
 "use client";
 
+import type { Langue } from "@/lib/i18n/langues";
+import { RESERVER } from "@/lib/i18n/reserver";
+
 import { useActionState, useState } from "react";
 import {
   demanderReservation,
@@ -31,6 +34,7 @@ export function DemandeForm({
   libelle,
   restaurantNom,
   principal = false,
+  langue,
 }: {
   slug: string;
   espaceId: string;
@@ -45,7 +49,9 @@ export function DemandeForm({
   restaurantNom: string;
   /** L'action principale du créneau : pleine, sombre, impossible à rater. */
   principal?: boolean;
+  langue: Langue;
 }) {
+  const r = RESERVER[langue];
   const [state, action, pending] = useActionState(
     demanderReservation,
     initialState,
@@ -88,7 +94,7 @@ export function DemandeForm({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <label className={label} htmlFor={`nom-${cle}`}>
-          Ton nom
+          {r.tonNom}
           <input
             id={`nom-${cle}`}
             name="client_nom"
@@ -97,7 +103,7 @@ export function DemandeForm({
           />
         </label>
         <label className={label} htmlFor={`email-${cle}`}>
-          E-mail
+          {r.email}
           <input
             id={`email-${cle}`}
             name="client_email"
@@ -107,25 +113,25 @@ export function DemandeForm({
           />
         </label>
         <label className={label} htmlFor={`tel-${cle}`}>
-          Téléphone{" "}
-          <span className="font-normal text-zinc-400">(facultatif)</span>
+          {r.telephone}{" "}
+          <span className="font-normal text-zinc-400">{r.facultatif}</span>
           <input id={`tel-${cle}`} name="client_telephone" className={champ} />
         </label>
         <label className={label} htmlFor={`occasion-${cle}`}>
-          Occasion{" "}
-          <span className="font-normal text-zinc-400">(facultatif)</span>
+          {r.occasion}{" "}
+          <span className="font-normal text-zinc-400">{r.facultatif}</span>
           <input
             id={`occasion-${cle}`}
             name="occasion"
-            placeholder="Anniversaire, repas d'équipe…"
+            placeholder={r.occasionExemple}
             className={champ}
           />
         </label>
       </div>
 
       <label className={label} htmlFor={`message-${cle}`}>
-        Un mot pour l&apos;établissement{" "}
-        <span className="font-normal text-zinc-400">(facultatif)</span>
+        {r.unMotPour}{" "}
+        <span className="font-normal text-zinc-400">{r.facultatif}</span>
         <textarea
           id={`message-${cle}`}
           name="message"
@@ -143,10 +149,7 @@ export function DemandeForm({
           name="accepte_communications"
           className="mt-0.5"
         />
-        <span>
-          J&apos;accepte de recevoir les actualités et offres de {restaurantNom}{" "}
-          par e-mail. Je peux me désinscrire à tout moment.
-        </span>
+        <span>{r.accepteActualites(restaurantNom)}</span>
       </label>
 
       {state.error && <p className="text-base text-red-600">{state.error}</p>}
@@ -157,14 +160,14 @@ export function DemandeForm({
           disabled={pending}
           className="rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover disabled:opacity-50"
         >
-          {pending ? "Envoi…" : "Envoyer ma demande"}
+          {pending ? r.envoi : r.envoyerMaDemande}
         </button>
         <button
           type="button"
           onClick={() => setOuvert(false)}
           className="text-base text-zinc-500 hover:text-zinc-900"
         >
-          Annuler
+          {r.annuler}
         </button>
       </div>
 
@@ -174,9 +177,7 @@ export function DemandeForm({
           est vrai dans tous les cas — un e-mail part tout de suite —,
           sauf pour la privatisation, qui passe toujours par le patron. */}
       <p className="text-sm text-zinc-400">
-        {type === "privatisation"
-          ? "Une privatisation est validée par l'établissement : tu reçois un e-mail de suivi tout de suite, puis sa réponse. Aucun paiement n'est demandé à cette étape."
-          : "Tu reçois un e-mail immédiatement : ta confirmation si la table est acquise, l'accusé de réception de ta demande sinon. Aucun paiement n'est demandé à cette étape."}
+        {type === "privatisation" ? r.apresPrivatisation : r.apresTable}
       </p>
     </form>
   );
