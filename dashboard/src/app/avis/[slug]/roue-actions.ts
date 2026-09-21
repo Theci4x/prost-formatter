@@ -19,6 +19,8 @@ import {
 import { courrielDuLot } from "@/lib/roue/courriel";
 import { siteUrl } from "@/lib/site-url";
 import { type JeuState } from "@/lib/roue/jeu";
+import { langueVisiteur } from "@/lib/i18n/langue";
+import { AVIS } from "@/lib/i18n/avis";
 
 /**
  * Tourner la roue.
@@ -54,18 +56,17 @@ export async function jouer(
     .toLowerCase();
   const consent = donnees.get("consentement") !== null;
 
+  // La langue du joueur : elle sert aux refus, et surtout à la lettre qui
+  // porte le lot. C'est le seul moment où on la connaît — le courriel
+  // arrive plus tard, sans requête pour la lui redemander.
+  const langue = await langueVisiteur();
+  const a = AVIS[langue];
+
   if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-    return {
-      error: "Une adresse e-mail valide, pour t'envoyer ton lot.",
-      resultat: null,
-    };
+    return { error: a.emailValidePourLot, resultat: null };
   }
   if (!consent) {
-    return {
-      error:
-        "Il faut accepter de recevoir le lot par e-mail — c'est comme ça qu'on te l'envoie.",
-      resultat: null,
-    };
+    return { error: a.consentementRequis, resultat: null };
   }
 
   const supabase = createServiceClient();
@@ -76,7 +77,7 @@ export async function jouer(
     .eq("slug_reservation", slug)
     .maybeSingle();
   const maison = maisonData as MaisonJeu | null;
-  if (!maison) return { error: "Ce jeu n'existe plus.", resultat: null };
+  if (!maison) return { error: a.jeuInexistant, resultat: null };
 
   const { data: roueData } = await supabase
     .from("restaurant_roue")
@@ -89,7 +90,7 @@ export async function jouer(
     delai_rejeu_jours: number;
   } | null;
   if (!roue?.active)
-    return { error: "Ce jeu n'est pas ouvert.", resultat: null };
+    return { error: a.jeuPasOuvert, resultat: null };
 
   // Le plafond du visiteur avant tout le reste : c'est lui qui empêche de
   // vider le stock depuis une seule table.
@@ -101,10 +102,7 @@ export async function jouer(
     secretEmpreinte(),
   );
   if (!(await consommer(supabase, visiteur, PARTIES_PAR_JOUR))) {
-    return {
-      error: "Tu as déjà joué aujourd'hui. À la prochaine visite !",
-      resultat: null,
-    };
+    return { error: a.dejaJoueAujourdhui, resultat: null };
   }
 
   // La règle du rejeu, par adresse cette fois : le plafond au-dessus
@@ -121,10 +119,7 @@ export async function jouer(
     ? new Date((derniere as { created_at: string }).created_at)
     : null;
   if (!peutRejouer(dernierJeu, roue.delai_rejeu_jours)) {
-    return {
-      error: "Tu as déjà tenté ta chance récemment. Reviens nous voir !",
-      resultat: null,
-    };
+    return { error: a.dejaTenteRecemment, resultat: null };
   }
 
   const [{ data: lotsData }, { data: partiesData }] = await Promise.all([
@@ -163,10 +158,7 @@ export async function jouer(
 
   const tirage = tirer(candidats);
   if (!tirage) {
-    return {
-      error: "Tous les lots sont partis pour cette fois. Merci d'être passé !",
-      resultat: null,
-    };
+    return { error: a.lotsEpuises, resultat: null };
   }
 
   const maintenant = new Date();
@@ -197,17 +189,11 @@ export async function jouer(
       partieId = (data as { id: string }).id;
     } else if (error && !error.message.includes("duplicate")) {
       console.error("[roue/jouer]", error.message);
-      return {
-        error: "Le jeu a eu un raté. Réessaie dans un instant.",
-        resultat: null,
-      };
+      return { error: a.jeuRate, resultat: null };
     }
   }
   if (!partieId || !code) {
-    return {
-      error: "Le jeu a eu un raté. Réessaie dans un instant.",
-      resultat: null,
-    };
+    return { error: a.jeuRate, resultat: null };
   }
 
   // L'adresse entre au fichier client avec son consentement daté. Une
@@ -243,6 +229,7 @@ export async function jouer(
       code,
       expireLe: fin,
       adresseTotem: `${siteUrl()}/avis/${maison.slug_reservation ?? slug}`,
+      langue,
     });
     await envoyerCourriel({
       destinataire: email,

@@ -201,10 +201,10 @@ const zh: ClesPaiement = {
   carteEnregistreeBadge: "已记录信用卡",
   reservationConfirmee: (maison) => `您在${maison}的订位已确认。`,
   cautionDejaPosee: (plafond, maison, date) =>
-    `没有扣款。您的信用卡作为担保，额度为 ${plafond}，只有临时取消或未到场才会扣款。${maison}等您 ${date} 光临。`,
+    `没有扣款。您的信用卡作为担保，额度为 ${plafond}，只有临时取消或未到场才会扣款。${maison}等您 ${date}光临。`,
   acompteRecuBadge: "已收到定金",
   acompteRecuTexte: (somme, maison, date) =>
-    `我们已收到您的定金 ${somme}。本页即为收据；${maison}等您 ${date} 光临。`,
+    `我们已收到您的定金 ${somme}。本页即为收据；${maison}等您 ${date}光临。`,
 
   plusActiveTitre: "这个订位已失效。",
   plusActiveTexte: (maison) =>

@@ -9,6 +9,8 @@ import {
   empreinte,
   secretEmpreinte,
 } from "@/lib/limites/publiques";
+import { langueVisiteur } from "@/lib/i18n/langue";
+import { AVIS } from "@/lib/i18n/avis";
 
 export type RetourState = { error: string | null; envoye: boolean };
 
@@ -30,12 +32,13 @@ export async function envoyerRetour(
   const message = String(formData.get("message") ?? "").trim();
   const contact = String(formData.get("contact") ?? "").trim();
 
-  if (!message) return { error: "Dis-nous ce qui n'a pas été.", envoye: false };
+  // Le formulaire était traduit, ses refus non : le client lisait tout
+  // dans sa langue sauf la phrase qui lui demandait de recommencer.
+  const a = AVIS[await langueVisiteur()];
+
+  if (!message) return { error: a.ditNousQuoi, envoye: false };
   if (message.length > 4000) {
-    return {
-      error: "Message trop long — 4000 caractères au plus.",
-      envoye: false,
-    };
+    return { error: a.messageTropLong, envoye: false };
   }
 
   // La clé de service : la table n'est pas ouverte en écriture au public,
@@ -85,10 +88,7 @@ export async function envoyerRetour(
 
   if (error) {
     console.error("[avis/retour]", error.message);
-    return {
-      error: "Envoi impossible. Réessaie dans un instant.",
-      envoye: false,
-    };
+    return { error: a.envoiImpossible, envoye: false };
   }
 
   // Prévenir tout de suite : un retour lu trois jours plus tard ne rattrape

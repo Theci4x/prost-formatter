@@ -4,6 +4,8 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { RouePublique } from "@/components/roue/RouePublique";
 import { SignatureKlarr } from "@/components/brand/SignatureKlarr";
 import { lienAvisGoogle } from "@/lib/avis/liens";
+import { langueVisiteur } from "@/lib/i18n/langue";
+import { AVIS } from "@/lib/i18n/avis";
 
 /**
  * Le jeu, à sa propre adresse.
@@ -92,9 +94,10 @@ export async function generateMetadata({
   params: Promise<Params>;
 }): Promise<Metadata> {
   const { slug } = await params;
+  const a = AVIS[await langueVisiteur()];
   const jeu = await chargerJeu(slug);
   return {
-    title: jeu ? `Tentez votre chance — ${jeu.nom}` : "Tentez votre chance",
+    title: jeu ? a.tentezVotreChanceChez(jeu.nom) : a.tentezVotreChance,
     // Une page atteinte par un panneau sur la table n'a rien à faire dans
     // les résultats de recherche : elle ne s'adresse qu'à qui est déjà là.
     robots: { index: false, follow: false },
@@ -103,6 +106,9 @@ export async function generateMetadata({
 
 export default async function JeuPage({ params }: { params: Promise<Params> }) {
   const { slug } = await params;
+  // Comme le totem : « noindex », donc libre de suivre le téléphone.
+  const langue = await langueVisiteur();
+  const a = AVIS[langue];
   const jeu = await chargerJeu(slug);
   if (!jeu) notFound();
 
@@ -121,19 +127,16 @@ export default async function JeuPage({ params }: { params: Promise<Params> }) {
           sousTitre={jeu.sousTitre}
           cases={jeu.cases}
           lienGoogle={lienAvisGoogle(jeu.placeId)}
+          langue={langue}
         />
       ) : (
         <div className="flex flex-col gap-2 rounded-2xl border border-zinc-200/70 bg-white p-6 text-center">
-          <p className="text-base font-medium text-ink">
-            Le jeu est fermé pour le moment.
-          </p>
-          <p className="text-sm text-ink-soft">
-            Merci d&apos;être passé — revenez tenter votre chance bientôt.
-          </p>
+          <p className="text-base font-medium text-ink">{a.jeuFerme}</p>
+          <p className="text-sm text-ink-soft">{a.jeuFermeDetail}</p>
         </div>
       )}
 
-      <SignatureKlarr texte="Jeu propulsé par" />
+      <SignatureKlarr texte={a.signatureJeu} />
     </main>
   );
 }

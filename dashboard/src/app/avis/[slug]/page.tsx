@@ -5,6 +5,8 @@ import { ChoixAvis } from "@/components/avis/ChoixAvis";
 import { SignatureKlarr } from "@/components/brand/SignatureKlarr";
 import { lienAvisGoogle } from "@/lib/avis/liens";
 import { searchPlace } from "@/lib/google/places";
+import { langueVisiteur } from "@/lib/i18n/langue";
+import { AVIS } from "@/lib/i18n/avis";
 
 type Params = { slug: string };
 
@@ -68,9 +70,10 @@ export async function generateMetadata({
   params: Promise<Params>;
 }): Promise<Metadata> {
   const { slug } = await params;
+  const a = AVIS[await langueVisiteur()];
   const maison = await chargerMaison(slug);
   return {
-    title: maison ? `Votre avis — ${maison.nom}` : "Votre avis",
+    title: maison ? a.votreAvisChez(maison.nom) : a.votreAvis,
     // Une page atteinte par un totem sur la table n'a rien à faire dans les
     // résultats de recherche : elle ne s'adresse qu'à qui est déjà venu.
     robots: { index: false, follow: false },
@@ -83,6 +86,10 @@ export default async function AvisPage({
   params: Promise<Params>;
 }) {
   const { slug } = await params;
+  // Page « noindex » : elle ne s'adresse qu'à quelqu'un qui a déjà dîné
+  // ici, et peut donc suivre la langue de son téléphone.
+  const langue = await langueVisiteur();
+  const a = AVIS[langue];
   const maison = await chargerMaison(slug);
   if (!maison) notFound();
 
@@ -92,21 +99,23 @@ export default async function AvisPage({
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center gap-8 px-6 py-12">
       <div className="flex flex-col gap-2 text-center">
         <h1 className="font-serif text-4xl text-ink">{maison.nom}</h1>
-        <p className="text-base text-ink-soft">
-          Merci d&apos;être venu. Deux minutes pour nous dire comment
-          c&apos;était ?
-        </p>
+        <p className="text-base text-ink-soft">{a.mercidEtreVenu}</p>
       </div>
 
-      <ChoixAvis slug={slug} nom={maison.nom} lienGoogle={lienGoogle} />
+      <ChoixAvis
+        slug={slug}
+        nom={maison.nom}
+        lienGoogle={lienGoogle}
+        langue={langue}
+      />
 
       {!lienGoogle && (
         <p className="text-center text-xs text-zinc-400">
-          L&apos;avis public sera disponible bientôt.
+          {a.avisBientotDisponible}
         </p>
       )}
 
-      <SignatureKlarr texte="Avis et retours propulsés par" />
+      <SignatureKlarr texte={a.signatureAvis} />
     </main>
   );
 }

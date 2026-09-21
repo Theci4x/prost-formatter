@@ -3,6 +3,8 @@
 import { useActionState, useEffect, useRef, useState } from "react";
 import { jouer } from "@/app/avis/[slug]/roue-actions";
 import { JEU_INITIAL } from "@/lib/roue/jeu";
+import type { Langue } from "@/lib/i18n/langues";
+import { AVIS } from "@/lib/i18n/avis";
 
 /**
  * La roue, côté client.
@@ -106,14 +108,22 @@ export function RouePublique({
   sousTitre,
   cases,
   lienGoogle,
+  langue,
 }: {
   slug: string;
+  /**
+   * Le titre et les libellés des lots sont tapés par le restaurateur : ils
+   * restent tels quels. S'il veut une roue en anglais, il l'écrit en
+   * anglais — c'est sa voix, on ne la double pas.
+   */
   titre: string;
   sousTitre: string | null;
   /** Les libellés, dans l'ordre exact que le serveur indexe. */
   cases: string[];
   lienGoogle: string | null;
+  langue: Langue;
 }) {
+  const a = AVIS[langue];
   const [state, action, pending] = useActionState(jouer, JEU_INITIAL);
   const [angle, setAngle] = useState(0);
   const [arretee, setArretee] = useState(false);
@@ -161,7 +171,7 @@ export function RouePublique({
               : undefined,
           }}
           role="img"
-          aria-label={`Roue à ${cases.length} cases`}
+          aria-label={a.roueACases(cases.length)}
         >
           {cases.map((libelle, index) => (
             <Secteur
@@ -190,10 +200,7 @@ export function RouePublique({
               <p className="font-mono text-3xl font-bold tracking-[0.18em] text-brand-navy">
                 {resultat.code}
               </p>
-              <p className="text-sm text-zinc-600">
-                Le code part aussi par e-mail. Présente-le lors de ta prochaine
-                visite.
-              </p>
+              <p className="text-sm text-zinc-600">{a.codeParEmail}</p>
             </>
           ) : (
             <p className="text-base font-medium text-ink">{resultat.libelle}</p>
@@ -206,7 +213,7 @@ export function RouePublique({
               rel="noopener noreferrer"
               className="mt-1 w-full rounded-md border border-zinc-300 px-4 py-2.5 text-sm font-medium text-ink transition-colors hover:border-ink"
             >
-              Laisser un avis sur Google
+              {a.laisserUnAvisSurGoogle}
             </a>
           )}
         </div>
@@ -214,13 +221,13 @@ export function RouePublique({
         <form action={action} className="flex flex-col gap-3">
           <input type="hidden" name="slug" value={slug} />
           <label className="flex flex-col gap-1 text-sm text-zinc-700">
-            Ton e-mail
+            {a.tonEmail}
             <input
               name="email"
               type="email"
               required
               autoComplete="email"
-              placeholder="prenom@exemple.fr"
+              placeholder={a.exempleEmail}
               // 16 px au moins : en dessous, iOS zoome sur le champ et le
               // client se retrouve avec une page décadrée.
               className="w-full rounded-md border border-zinc-300 px-3 py-2 text-base outline-none focus:border-brand-navy"
@@ -234,10 +241,7 @@ export function RouePublique({
               className="mt-0.5"
               required
             />
-            <span>
-              J&apos;accepte de recevoir mon lot par e-mail, et des nouvelles de
-              la maison. Je peux me désinscrire à tout moment.
-            </span>
+            <span>{a.consentementLot}</span>
           </label>
 
           {state.error && (
@@ -251,7 +255,7 @@ export function RouePublique({
             disabled={pending || Boolean(resultat)}
             className="rounded-md bg-brand-navy px-4 py-3 text-base font-medium text-white transition-colors hover:bg-brand-navy-hover active:bg-brand-navy-hover disabled:opacity-50"
           >
-            {pending || resultat ? "La roue tourne…" : "Tourner la roue"}
+            {pending || resultat ? a.laRoueTourne : a.tournerLaRoue}
           </button>
         </form>
       )}
