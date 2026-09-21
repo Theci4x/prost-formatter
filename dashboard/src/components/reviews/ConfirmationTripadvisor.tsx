@@ -49,9 +49,7 @@ export function ConfirmationTripadvisor({
               <span className="font-medium text-zinc-700">{nomTrouve}</span>
             </span>
           ) : (
-            <span className="text-zinc-500">
-              Aucun établissement associé.
-            </span>
+            <span className="text-zinc-500">Aucun établissement associé.</span>
           )}
           <button
             type="button"

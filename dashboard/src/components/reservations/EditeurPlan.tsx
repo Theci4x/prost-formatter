@@ -160,7 +160,12 @@ export function EditeurPlan({
     });
   }
 
-  function deplacer(genre: "table" | "repere", id: string, x: number, y: number) {
+  function deplacer(
+    genre: "table" | "repere",
+    id: string,
+    x: number,
+    y: number,
+  ) {
     appliquer((courant) => {
       const liste = genre === "table" ? courant.tables : courant.reperes;
       const element = liste.find((e) => e.id === id);
@@ -264,8 +269,8 @@ export function EditeurPlan({
         <p className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
           Le plan compte {places - espace.capacite} places de plus que la
           capacité déclarée de cette salle. Klarr continue de s&apos;arrêter à{" "}
-          {espace.capacite} couverts pour accepter les réservations : corrige
-          la capacité dans la configuration si le plan a raison.
+          {espace.capacite} couverts pour accepter les réservations : corrige la
+          capacité dans la configuration si le plan a raison.
         </p>
       )}
 
@@ -316,8 +321,8 @@ export function EditeurPlan({
           className={outil}
           disabled={zoom >= ZOOMS[ZOOMS.length - 1]}
           onClick={() =>
-            setZoom((z) =>
-              ZOOMS[Math.min(ZOOMS.indexOf(z) + 1, ZOOMS.length - 1)],
+            setZoom(
+              (z) => ZOOMS[Math.min(ZOOMS.indexOf(z) + 1, ZOOMS.length - 1)],
             )
           }
         >
@@ -621,9 +626,8 @@ export function EditeurPlan({
               </label>
               {chevauchements.has(tableSelectionnee.id) && (
                 <p className="text-xs text-amber-700">
-                  Cette table en recouvre une autre. Ce n&apos;est pas
-                  interdit — on rapproche des tables — mais vérifie que
-                  c&apos;est voulu.
+                  Cette table en recouvre une autre. Ce n&apos;est pas interdit
+                  — on rapproche des tables — mais vérifie que c&apos;est voulu.
                 </p>
               )}
             </div>

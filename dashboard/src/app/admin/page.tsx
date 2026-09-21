@@ -11,10 +11,7 @@ import {
   TEINTE_STATUT,
   type Suivi,
 } from "@/lib/suivi";
-import {
-  calculerAcces,
-  essaiLePlusLong,
-} from "@/lib/abonnement/modules";
+import { calculerAcces, essaiLePlusLong } from "@/lib/abonnement/modules";
 
 export const metadata: Metadata = {
   title: "Administration — Klarr",
@@ -203,7 +200,9 @@ export default async function AdminPage() {
         .limit(20),
       supabase
         .from("restaurants")
-        .select("id, nom, adresse, proprietaire_id, created_at, acces_offert_jusqu_au")
+        .select(
+          "id, nom, adresse, proprietaire_id, created_at, acces_offert_jusqu_au",
+        )
         .order("created_at", { ascending: false })
         .limit(20),
       supabase
@@ -366,7 +365,9 @@ export default async function AdminPage() {
                   <th className="px-5 py-3 font-semibold">Contact</th>
                   <th className="px-5 py-3 font-semibold">Abonnement</th>
                   <th className="px-5 py-3 font-semibold">Accès</th>
-                  <th className="px-5 py-3 font-semibold">Offert jusqu&apos;au</th>
+                  <th className="px-5 py-3 font-semibold">
+                    Offert jusqu&apos;au
+                  </th>
                   <th className="px-5 py-3 font-semibold">Créé le</th>
                   <th className="px-5 py-3 font-semibold">Suivi</th>
                 </tr>

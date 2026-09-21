@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import type { ClesReservations } from "@/lib/i18n/reservations";
+import type { Langue } from "@/lib/i18n/langues";
+import { RESERVATIONS } from "@/lib/i18n/reservations";
 
 /**
  * Le lien de paiement, à copier. Klarr ne sait pas encore envoyer d'e-mail :
@@ -11,11 +12,12 @@ import type { ClesReservations } from "@/lib/i18n/reservations";
  */
 export function LienAcompte({
   lien,
-  r,
+  langue,
 }: {
   lien: string;
-  r: ClesReservations;
+  langue: Langue;
 }) {
+  const r = RESERVATIONS[langue];
   const [copie, setCopie] = useState(false);
 
   return (

@@ -1,7 +1,8 @@
 "use client";
 
 import { useActionState } from "react";
-import type { ClesReservations } from "@/lib/i18n/reservations";
+import type { Langue } from "@/lib/i18n/langues";
+import { RESERVATIONS } from "@/lib/i18n/reservations";
 import {
   accepterDemande,
   refuserDemande,
@@ -13,12 +14,13 @@ const initialState: DecisionState = { error: null };
 export function DecisionDemande({
   reservationId,
   restaurantId,
-  r,
+  langue,
 }: {
   reservationId: string;
   restaurantId: string;
-  r: ClesReservations;
+  langue: Langue;
 }) {
+  const r = RESERVATIONS[langue];
   const [state, action, pending] = useActionState(
     accepterDemande,
     initialState,

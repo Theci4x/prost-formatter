@@ -1,7 +1,8 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import type { ClesReservations } from "@/lib/i18n/reservations";
+import type { Langue } from "@/lib/i18n/langues";
+import { RESERVATIONS } from "@/lib/i18n/reservations";
 import {
   ajouterReservation,
   type SaisieState,
@@ -28,15 +29,16 @@ function Champs({
   restaurantId,
   espaces,
   services,
-  r,
+  langue,
   valeurs,
 }: {
   restaurantId: string;
   espaces: Espace[];
   services: Service[];
-  r: ClesReservations;
+  langue: Langue;
   valeurs: SaisieValeurs;
 }) {
+  const r = RESERVATIONS[langue];
   // Le type commande le reste : une réservation ordinaire n'a pas à choisir
   // sa salle — c'est le travail de Klarr de la placer. Seule une
   // privatisation désigne un espace, puisqu'elle le prend en entier.
@@ -235,13 +237,14 @@ export function SaisieReservation({
   restaurantId,
   espaces,
   services,
-  r,
+  langue,
 }: {
   restaurantId: string;
   espaces: Espace[];
   services: Service[];
-  r: ClesReservations;
+  langue: Langue;
 }) {
+  const r = RESERVATIONS[langue];
   const [state, action, pending] = useActionState(
     ajouterReservation,
     initialState,
@@ -276,7 +279,7 @@ export function SaisieReservation({
         restaurantId={restaurantId}
         espaces={espaces}
         services={services}
-        r={r}
+        langue={langue}
         valeurs={state.valeurs}
       />
 

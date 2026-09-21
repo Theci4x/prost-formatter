@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import type { ClesCarte } from "@/lib/i18n/carte";
+import { CARTE } from "@/lib/i18n/carte";
 import { traduireCarte } from "@/app/dashboard/[id]/menu/actions";
 import { NOM_LANGUE } from "@/lib/i18n/langues";
 import { LANGUES_TRADUITES, type Langue } from "@/types/menu";
@@ -24,13 +24,14 @@ import { LANGUES_TRADUITES, type Langue } from "@/types/menu";
 export function TraduireCarte({
   restaurantId,
   aTraduire,
-  c,
+  langue,
 }: {
   restaurantId: string;
   /** Ce qu'il reste à traduire, par langue. */
   aTraduire: Record<Exclude<Langue, "fr">, number>;
-  c: ClesCarte;
+  langue: Langue;
 }) {
+  const c = CARTE[langue];
   const [message, setMessage] = useState<string | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
   const [enCours, setEnCours] = useState<Langue | null>(null);

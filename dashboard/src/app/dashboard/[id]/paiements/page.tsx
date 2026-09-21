@@ -48,13 +48,17 @@ export default async function PaiementsPage({
 
   // L'état est relu chez Stripe : un dossier complété depuis la connexion
   // doit s'afficher comme tel sans que le restaurateur ait à se reconnecter.
-  const frais = connexion ? await relireCompte(connexion.stripe_account_id) : null;
-  const etat = frais ?? (connexion
-    ? {
-        paiementsActifs: connexion.paiements_actifs,
-        dossierComplet: connexion.dossier_complet,
-      }
-    : null);
+  const frais = connexion
+    ? await relireCompte(connexion.stripe_account_id)
+    : null;
+  const etat =
+    frais ??
+    (connexion
+      ? {
+          paiementsActifs: connexion.paiements_actifs,
+          dossierComplet: connexion.dossier_complet,
+        }
+      : null);
   const aFaire = etat ? diagnostic(etat) : null;
 
   return (
@@ -83,8 +87,8 @@ export default async function PaiementsPage({
         </p>
         <p className="text-sm text-zinc-500">
           L&apos;argent va directement chez toi : Klarr ne le touche jamais et
-          ne prélève aucune commission. Tes virements, tes remboursements et
-          tes litiges restent dans ton tableau de bord Stripe, comme
+          ne prélève aucune commission. Tes virements, tes remboursements et tes
+          litiges restent dans ton tableau de bord Stripe, comme
           aujourd&apos;hui.
         </p>
       </div>

@@ -81,7 +81,9 @@ export function FacebookConnectButton({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
-  const [pageOptions, setPageOptions] = useState<FacebookPageOption[] | null>(null);
+  const [pageOptions, setPageOptions] = useState<FacebookPageOption[] | null>(
+    null,
+  );
 
   const appId = process.env.NEXT_PUBLIC_FACEBOOK_APP_ID;
   const configId = process.env.NEXT_PUBLIC_FACEBOOK_LOGIN_CONFIG_ID;
@@ -128,11 +130,15 @@ export function FacebookConnectButton({
     setPageOptions(null);
 
     if (!appId) {
-      setError("Configuration Facebook manquante (NEXT_PUBLIC_FACEBOOK_APP_ID).");
+      setError(
+        "Configuration Facebook manquante (NEXT_PUBLIC_FACEBOOK_APP_ID).",
+      );
       return;
     }
     if (!window.FB) {
-      setError("Le SDK Facebook se charge encore, réessaie dans quelques secondes.");
+      setError(
+        "Le SDK Facebook se charge encore, réessaie dans quelques secondes.",
+      );
       return;
     }
 

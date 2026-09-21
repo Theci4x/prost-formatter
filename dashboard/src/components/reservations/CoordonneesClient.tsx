@@ -1,7 +1,8 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import type { ClesReservations } from "@/lib/i18n/reservations";
+import type { Langue } from "@/lib/i18n/langues";
+import { RESERVATIONS } from "@/lib/i18n/reservations";
 import {
   corrigerCoordonnees,
   renvoyerConfirmation,
@@ -32,7 +33,7 @@ export function CoordonneesClient({
   email,
   telephone,
   renvoyable,
-  r,
+  langue,
 }: {
   reservationId: string;
   restaurantId: string;
@@ -44,8 +45,9 @@ export function CoordonneesClient({
    * rien à confirmer, et proposer de le renvoyer serait un piège.
    */
   renvoyable: boolean;
-  r: ClesReservations;
+  langue: Langue;
 }) {
+  const r = RESERVATIONS[langue];
   const [ouvert, setOuvert] = useState(false);
   // Une soumission a-t-elle eu lieu ? Sans ce drapeau, « Enregistré » ne
   // se distingue pas de l'état neuf — et le déduire dans un effet ferait

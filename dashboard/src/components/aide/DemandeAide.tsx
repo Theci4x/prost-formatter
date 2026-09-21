@@ -2,10 +2,7 @@
 
 import { useActionState } from "react";
 import { usePathname } from "next/navigation";
-import {
-  envoyerDemandeAide,
-  type DemandeAideState,
-} from "@/app/aide/actions";
+import { envoyerDemandeAide, type DemandeAideState } from "@/app/aide/actions";
 
 const initial: DemandeAideState = { status: "idle" };
 
@@ -44,11 +41,7 @@ export function DemandeAide({ connecte }: { connecte: boolean }) {
       action={action}
       className="flex flex-col gap-3 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm"
     >
-      <input
-        type="hidden"
-        name="ecran"
-        value={ecran}
-      />
+      <input type="hidden" name="ecran" value={ecran} />
 
       {!connecte && (
         <div className="flex flex-col gap-1.5">

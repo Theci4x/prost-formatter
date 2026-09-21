@@ -128,6 +128,9 @@ export function decrireErreur(
   return {
     titre: `Erreur sur ${requete.path}`,
     lignes,
+    // Une panne ne s'annonce pas dans le canal où l'on suit les
+    // prospects : elle a le sien.
+    canal: "bugs",
   };
 }
 

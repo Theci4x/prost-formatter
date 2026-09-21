@@ -6,7 +6,7 @@ import {
   type ServiceState,
 } from "@/app/dashboard/[id]/reservations/actions";
 import { type Service, type ServiceValeurs } from "@/types/reservation";
-import type { ClesConfiguration } from "@/lib/i18n/configuration";
+import { CONFIGURATION } from "@/lib/i18n/configuration";
 import type { Langue } from "@/lib/i18n/langues";
 import { creneau, joursSemaine, listeJours } from "@/lib/i18n/jours";
 
@@ -30,15 +30,14 @@ function Champs({
   restaurantId,
   service,
   valeurs,
-  cfg,
   langue,
 }: {
   restaurantId: string;
   service: Service;
   valeurs: ServiceValeurs;
-  cfg: ClesConfiguration;
   langue: Langue;
 }) {
+  const cfg = CONFIGURATION[langue];
   return (
     <>
       <input type="hidden" name="restaurant_id" value={restaurantId} />
@@ -150,14 +149,13 @@ function Champs({
 export function ServiceModifiable({
   restaurantId,
   service,
-  cfg,
   langue,
 }: {
   restaurantId: string;
   service: Service;
-  cfg: ClesConfiguration;
   langue: Langue;
 }) {
+  const cfg = CONFIGURATION[langue];
   // On retient le numéro de rendu auquel le formulaire a été ouvert plutôt
   // qu'un simple booléen : l'état « ouvert » se déduit alors du résultat de
   // l'action, sans effet de bord — un enregistrement réussi le referme, un
@@ -218,7 +216,6 @@ export function ServiceModifiable({
         restaurantId={restaurantId}
         service={service}
         valeurs={state.valeurs}
-        cfg={cfg}
         langue={langue}
       />
 

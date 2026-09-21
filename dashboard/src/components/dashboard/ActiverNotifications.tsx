@@ -223,9 +223,9 @@ export function ActiverNotifications({
           Les notifications sont bloquées sur cet appareil.
         </p>
         <p className="text-sm leading-relaxed text-ink-soft">
-          Le blocage vient du navigateur, pas de Klarr : nous ne pouvons plus
-          le demander nous-mêmes. Autorisez les notifications pour klarr.net
-          dans les réglages de votre navigateur, puis rechargez cette page.
+          Le blocage vient du navigateur, pas de Klarr : nous ne pouvons plus le
+          demander nous-mêmes. Autorisez les notifications pour klarr.net dans
+          les réglages de votre navigateur, puis rechargez cette page.
         </p>
       </div>
     );
@@ -285,8 +285,8 @@ export function ActiverNotifications({
 
       {teste && (
         <p className="text-sm text-emerald-700">
-          Envoyée. Elle doit arriver dans les secondes qui viennent — verrouillez
-          l&apos;écran pour la voir comme un vrai soir de service.
+          Envoyée. Elle doit arriver dans les secondes qui viennent —
+          verrouillez l&apos;écran pour la voir comme un vrai soir de service.
         </p>
       )}
       {erreur && <p className="text-sm text-red-600">{erreur}</p>}

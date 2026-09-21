@@ -2,7 +2,8 @@
 
 import { useActionState } from "react";
 import { enregistrerConfirmation } from "@/app/dashboard/[id]/reservations/actions";
-import type { ClesConfiguration } from "@/lib/i18n/configuration";
+import type { Langue } from "@/lib/i18n/langues";
+import { CONFIGURATION } from "@/lib/i18n/configuration";
 
 const champ =
   "w-full rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-brand-navy";
@@ -20,14 +21,15 @@ export function ReglesConfirmation({
   auto,
   delaiHeures,
   emailContact,
-  cfg,
+  langue,
 }: {
   restaurantId: string;
   auto: boolean;
   delaiHeures: number;
   emailContact: string | null;
-  cfg: ClesConfiguration;
+  langue: Langue;
 }) {
+  const cfg = CONFIGURATION[langue];
   const [state, action, pending] = useActionState(enregistrerConfirmation, {
     error: null as string | null,
     ok: false,

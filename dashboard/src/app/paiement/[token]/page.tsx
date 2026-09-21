@@ -166,8 +166,7 @@ export default async function PaiementPage({
           Votre réservation chez {restaurant.nom} est confirmée.
         </h1>
         <p className="text-sm text-zinc-600">
-          Rien n&apos;a été prélevé. Votre carte reste en garantie jusqu&apos;à
-          {" "}
+          Rien n&apos;a été prélevé. Votre carte reste en garantie jusqu&apos;à{" "}
           {somme}, et ne sera débitée qu&apos;en cas d&apos;annulation tardive
           ou d&apos;absence. {restaurant.nom} vous attend le{" "}
           {formatDate(ligne.date_reservation)}.
@@ -187,8 +186,7 @@ export default async function PaiementPage({
           Votre réservation chez {restaurant.nom} est confirmée.
         </h1>
         <p className="text-sm text-zinc-600">
-          Nous avons bien reçu votre acompte de {somme}. Cette page vaut reçu ;
-          {" "}
+          Nous avons bien reçu votre acompte de {somme}. Cette page vaut reçu ;{" "}
           {restaurant.nom} vous attend le {formatDate(ligne.date_reservation)}.
         </p>
       </Cadre>

@@ -58,8 +58,7 @@ export function RechercheDisponibilite({
     const nouveau = {
       date: change.date ?? choix.date,
       couverts: change.couverts ?? choix.couverts,
-      espaceId:
-        change.espace !== undefined ? change.espace : choix.espaceId,
+      espaceId: change.espace !== undefined ? change.espace : choix.espaceId,
     };
 
     const params = new URLSearchParams();

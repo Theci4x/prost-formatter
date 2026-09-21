@@ -6,7 +6,7 @@ import {
   type ServiceState,
 } from "@/app/dashboard/[id]/reservations/actions";
 import { SERVICE_VIDE, type ServiceValeurs } from "@/types/reservation";
-import type { ClesConfiguration } from "@/lib/i18n/configuration";
+import { CONFIGURATION } from "@/lib/i18n/configuration";
 import type { Langue } from "@/lib/i18n/langues";
 import { joursSemaine } from "@/lib/i18n/jours";
 
@@ -23,15 +23,14 @@ const label = "flex flex-col gap-1 text-sm font-medium text-zinc-700";
 function Champs({
   restaurantId,
   valeurs,
-  cfg,
   langue,
 }: {
   restaurantId: string;
   valeurs: ServiceValeurs;
-  cfg: ClesConfiguration;
   /** Les jours de la semaine viennent d'`Intl`, pas du dictionnaire. */
   langue: Langue;
 }) {
+  const cfg = CONFIGURATION[langue];
   return (
     <>
       <input type="hidden" name="restaurant_id" value={restaurantId} />
@@ -137,13 +136,12 @@ function Champs({
 
 export function ServiceForm({
   restaurantId,
-  cfg,
   langue,
 }: {
   restaurantId: string;
-  cfg: ClesConfiguration;
   langue: Langue;
 }) {
+  const cfg = CONFIGURATION[langue];
   const [state, action, pending] = useActionState(addService, initialState);
   // Quand le navigateur refuse d'envoyer le formulaire — un champ horaire
   // incomplet, par exemple —, il n'affiche qu'une infobulle fugace. Sans ce
@@ -168,7 +166,6 @@ export function ServiceForm({
         key={state.rendu}
         restaurantId={restaurantId}
         valeurs={state.valeurs}
-        cfg={cfg}
         langue={langue}
       />
 

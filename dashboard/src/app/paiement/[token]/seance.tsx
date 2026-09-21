@@ -35,7 +35,14 @@ export async function chargerSeance(
     .maybeSingle();
 
   const place = data as
-    | (Omit<Seance, "nom_experience" | "heure" | "duree_minutes" | "nom_restaurant" | "compte_stripe"> & {
+    | (Omit<
+        Seance,
+        | "nom_experience"
+        | "heure"
+        | "duree_minutes"
+        | "nom_restaurant"
+        | "compte_stripe"
+      > & {
         experience_id: string;
       })
     | null;
@@ -223,10 +230,7 @@ export async function PaiementSeance({
               ? `${formatHeure(seance.heure)} · ${seance.duree_minutes} min`
               : formatHeure(seance.heure),
           ],
-          [
-            "Places",
-            `${seance.places} place${seance.places > 1 ? "s" : ""}`,
-          ],
+          ["Places", `${seance.places} place${seance.places > 1 ? "s" : ""}`],
           ["Total", somme],
         ].map(([libelle, valeur]) => (
           <div key={libelle} className="flex justify-between gap-4">

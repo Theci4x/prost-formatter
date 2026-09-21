@@ -1,7 +1,8 @@
 "use client";
 
 import { useActionState } from "react";
-import type { ClesCarte } from "@/lib/i18n/carte";
+import type { Langue } from "@/lib/i18n/langues";
+import { CARTE } from "@/lib/i18n/carte";
 import { ajouterPlat, type MenuState } from "@/app/dashboard/[id]/menu/actions";
 import {
   CATEGORIES_SUGGEREES,
@@ -23,13 +24,14 @@ function Champs({
   restaurantId,
   categories,
   valeurs,
-  c,
+  langue,
 }: {
   restaurantId: string;
   categories: string[];
   valeurs: MenuValeurs;
-  c: ClesCarte;
+  langue: Langue;
 }) {
+  const c = CARTE[langue];
   // Les catégories déjà utilisées d'abord : on complète une carte plus
   // souvent qu'on n'en commence une.
   const propositions = [
@@ -120,12 +122,13 @@ function Champs({
 export function PlatForm({
   restaurantId,
   categories,
-  c,
+  langue,
 }: {
   restaurantId: string;
   categories: string[];
-  c: ClesCarte;
+  langue: Langue;
 }) {
+  const c = CARTE[langue];
   const [state, action, pending] = useActionState(ajouterPlat, initialState);
 
   return (
@@ -140,7 +143,7 @@ export function PlatForm({
         restaurantId={restaurantId}
         categories={categories}
         valeurs={state.valeurs}
-        c={c}
+        langue={langue}
       />
 
       {state.error && <p className="text-sm text-red-600">{state.error}</p>}

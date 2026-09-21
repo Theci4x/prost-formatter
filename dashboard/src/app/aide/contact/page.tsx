@@ -33,7 +33,10 @@ export default async function ContactAidePage() {
             <KlarrWordmark className="text-zinc-700" />
           </Link>
           <span className="text-zinc-300">/</span>
-          <Link href="/aide" className="text-sm text-zinc-500 hover:text-zinc-700">
+          <Link
+            href="/aide"
+            className="text-sm text-zinc-500 hover:text-zinc-700"
+          >
             Aide
           </Link>
           <span className="text-zinc-300">/</span>
@@ -43,9 +46,7 @@ export default async function ContactAidePage() {
 
       <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-6 py-10">
         <div className="flex flex-col gap-2">
-          <h1 className="font-serif text-4xl text-ink">
-            Écrire à Klarr
-          </h1>
+          <h1 className="font-serif text-4xl text-ink">Écrire à Klarr</h1>
           <p className="text-sm text-zinc-500">
             {user
               ? "Votre établissement et l'écran d'où vous écrivez sont joints au message : vous n'avez rien à expliquer de tout ça."

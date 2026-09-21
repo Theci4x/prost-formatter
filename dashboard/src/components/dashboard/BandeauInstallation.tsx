@@ -196,9 +196,8 @@ export function BandeauInstallation() {
               <>
                 <li>
                   <strong className="font-semibold text-ink">1.</strong> Touchez
-                  le bouton <strong className="font-semibold text-ink">
-                    Partager
-                  </strong>{" "}
+                  le bouton{" "}
+                  <strong className="font-semibold text-ink">Partager</strong>{" "}
                   en bas de l&apos;écran — le carré avec une flèche vers le
                   haut.
                 </li>

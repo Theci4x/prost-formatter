@@ -36,8 +36,8 @@ export function AnnulationClient({
     return (
       <div className="flex flex-col gap-3">
         <p className="text-sm leading-relaxed text-zinc-600">
-          C&apos;est annulé. L&apos;établissement est prévenu et ta table
-          est remise à la réservation.
+          C&apos;est annulé. L&apos;établissement est prévenu et ta table est
+          remise à la réservation.
         </p>
         <p className="text-sm leading-relaxed text-zinc-600">
           Merci de l&apos;avoir rendue : c&apos;est ce qui permet à

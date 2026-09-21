@@ -230,7 +230,7 @@ function Ligne({
           renvoyable={
             demande.statut === "demande" || demande.statut === "confirmee"
           }
-          r={r}
+          langue={langue}
         />
         {(demande.occasion || demande.accepte_communications) && (
           <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm text-zinc-600">
@@ -342,7 +342,7 @@ function Ligne({
                 </span>
                 <LienAcompte
                   lien={`${site}/paiement/${demande.paiement_token}`}
-                  r={r}
+                  langue={langue}
                 />
                 <div className="flex flex-wrap items-center gap-3">
                   <BoutonAction
@@ -418,7 +418,7 @@ function Ligne({
                   reservationId={demande.id}
                   restaurantId={restaurantId}
                   plafond={demande.caution_centimes}
-                  r={r}
+                  langue={langue}
                 />
               )}
           </div>
@@ -484,7 +484,7 @@ function Ligne({
         <DecisionDemande
           reservationId={demande.id}
           restaurantId={restaurantId}
-          r={r}
+          langue={langue}
         />
       ) : (
         demande.statut === "confirmee" && (
@@ -505,7 +505,7 @@ function Ligne({
         reservationId={demande.id}
         restaurantId={restaurantId}
         note={demande.note_interne ?? null}
-        r={r}
+        langue={langue}
       />
     </li>
   );
@@ -726,7 +726,7 @@ export default async function ReservationsPage({
         restaurantId={id}
         espaces={espaces}
         services={services}
-        r={r}
+        langue={langue}
       />
 
       <section className="flex flex-col gap-4">

@@ -25,16 +25,14 @@ export function AlertsPanel({
         <h2 className="text-base font-semibold text-zinc-900">
           Ce qui a changé
         </h2>
-        <span className="text-xs text-zinc-400">
-          sur {FENETRE_JOURS} jours
-        </span>
+        <span className="text-xs text-zinc-400">sur {FENETRE_JOURS} jours</span>
       </div>
 
       {!surveillanceActive ? (
         <p className="text-sm text-zinc-500">
-          La surveillance démarre dès le premier relevé, la nuit prochaine.
-          Elle compare chaque jour ta note et ton nombre d&apos;avis à ceux
-          de la semaine précédente.
+          La surveillance démarre dès le premier relevé, la nuit prochaine. Elle
+          compare chaque jour ta note et ton nombre d&apos;avis à ceux de la
+          semaine précédente.
         </p>
       ) : alerts.length === 0 ? (
         <p className="text-sm text-zinc-500">

@@ -1,7 +1,8 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import type { ClesReservations } from "@/lib/i18n/reservations";
+import type { Langue } from "@/lib/i18n/langues";
+import { RESERVATIONS } from "@/lib/i18n/reservations";
 import {
   debiter,
   libererCaution,
@@ -20,13 +21,14 @@ export function GestionCaution({
   reservationId,
   restaurantId,
   plafond,
-  r,
+  langue,
 }: {
   reservationId: string;
   restaurantId: string;
   plafond: number;
-  r: ClesReservations;
+  langue: Langue;
 }) {
+  const r = RESERVATIONS[langue];
   const [state, action, pending] = useActionState(debiter, initialState);
   const [ouvert, setOuvert] = useState(false);
 

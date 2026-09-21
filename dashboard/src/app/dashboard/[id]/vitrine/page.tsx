@@ -26,7 +26,11 @@ export default async function VitrinePage({
       .select("id")
       .eq("restaurant_id", id)
       .limit(1),
-    supabase.from("restaurant_menu_items").select("id").eq("restaurant_id", id).limit(1),
+    supabase
+      .from("restaurant_menu_items")
+      .select("id")
+      .eq("restaurant_id", id)
+      .limit(1),
   ]);
 
   const restaurant = restaurantResult.data as
@@ -41,8 +45,12 @@ export default async function VitrinePage({
   // Ce qui rendrait la vitrine plus convaincante. On n'interdit rien : c'est
   // son établissement, et une page incomplète vaut mieux que pas de page.
   const manques = [
-    restaurant.adresse ? null : { texte: "ton adresse", ou: `/dashboard/${id}/edit` },
-    restaurant.telephone ? null : { texte: "ton téléphone", ou: `/dashboard/${id}/edit` },
+    restaurant.adresse
+      ? null
+      : { texte: "ton adresse", ou: `/dashboard/${id}/edit` },
+    restaurant.telephone
+      ? null
+      : { texte: "ton téléphone", ou: `/dashboard/${id}/edit` },
     restaurant.description
       ? null
       : { texte: "une description", ou: `/dashboard/${id}/edit` },
@@ -55,7 +63,9 @@ export default async function VitrinePage({
     (platsResult.data ?? []).length > 0
       ? null
       : { texte: "ta carte", ou: `/dashboard/${id}/menu` },
-  ].filter((manque): manque is { texte: string; ou: string } => manque !== null);
+  ].filter(
+    (manque): manque is { texte: string; ou: string } => manque !== null,
+  );
 
   return (
     <div className="flex flex-1 flex-col gap-8 px-6 py-8">
@@ -67,11 +77,11 @@ export default async function VitrinePage({
 
       <p className="max-w-2xl text-sm text-zinc-500">
         Ton site, engendré de ce que tu as déjà rempli : tes photos, ta carte,
-        tes horaires, ton adresse, ta note Google. Rien de plus à saisir, rien
-        à mettre en page. C&apos;est l&apos;adresse à donner à Google, à ta
-        fiche d&apos;établissement et à ton Instagram — et c&apos;est
-        exactement ce qu&apos;un audit de visibilité reproche à un restaurant
-        qui n&apos;en a pas.
+        tes horaires, ton adresse, ta note Google. Rien de plus à saisir, rien à
+        mettre en page. C&apos;est l&apos;adresse à donner à Google, à ta fiche
+        d&apos;établissement et à ton Instagram — et c&apos;est exactement ce
+        qu&apos;un audit de visibilité reproche à un restaurant qui n&apos;en a
+        pas.
       </p>
 
       <section className="flex max-w-2xl flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm">

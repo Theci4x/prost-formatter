@@ -199,7 +199,7 @@ export default async function ServicePage({
         restaurantId={id}
         espaces={espaces}
         services={services}
-        r={r}
+        langue={langue}
       />
 
       {enAttente.length > 0 && (
@@ -227,7 +227,7 @@ export default async function ServicePage({
                 <DecisionDemande
                   reservationId={ligne.id}
                   restaurantId={id}
-                  r={r}
+                  langue={langue}
                 />
               </li>
             ))}
@@ -332,7 +332,7 @@ export default async function ServicePage({
                         <ul className="flex flex-col divide-y divide-zinc-100">
                           {duService.map((ligne) => (
                             <LigneService
-                              sv={sv}
+                              langue={langue}
                               key={ligne.id}
                               restaurantId={id}
                               jour={jour}
@@ -357,7 +357,7 @@ export default async function ServicePage({
                               {tablesSalle.length > 0 &&
                                 ligne.type !== "privatisation" && (
                                   <PlacerReservation
-                                    sv={sv}
+                                    langue={langue}
                                     restaurantId={id}
                                     reservationId={ligne.id}
                                     couverts={ligne.couverts}

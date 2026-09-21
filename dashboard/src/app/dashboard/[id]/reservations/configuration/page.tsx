@@ -218,7 +218,11 @@ export default async function ConfigurationReservationsPage({
                   key={espace.id}
                   className="flex flex-wrap items-start justify-between gap-4 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm"
                 >
-                  <EspaceModifiable restaurantId={id} espace={espace} cfg={cfg}>
+                  <EspaceModifiable
+                    restaurantId={id}
+                    espace={espace}
+                    langue={langue}
+                  >
                     <div className="flex min-w-0 flex-col gap-2">
                       <span className="font-medium text-zinc-900">
                         {espace.nom}
@@ -260,7 +264,6 @@ export default async function ConfigurationReservationsPage({
                       restaurantId={id}
                       espaceId={espace.id}
                       photos={photosParEspace.get(espace.id) ?? []}
-                      cfg={cfg}
                       langue={langue}
                     />
                   </div>
@@ -270,7 +273,7 @@ export default async function ConfigurationReservationsPage({
           </ul>
         )}
 
-        <EspaceForm restaurantId={id} cfg={cfg} />
+        <EspaceForm restaurantId={id} langue={langue} />
       </section>
 
       <section className="flex flex-col gap-4">
@@ -291,7 +294,6 @@ export default async function ConfigurationReservationsPage({
                 <ServiceModifiable
                   restaurantId={id}
                   service={service}
-                  cfg={cfg}
                   langue={langue}
                 />
                 <Supprimer
@@ -305,7 +307,7 @@ export default async function ConfigurationReservationsPage({
           </ul>
         )}
 
-        <ServiceForm restaurantId={id} cfg={cfg} langue={langue} />
+        <ServiceForm restaurantId={id} langue={langue} />
       </section>
 
       <section className="flex flex-col gap-4">
@@ -321,7 +323,7 @@ export default async function ConfigurationReservationsPage({
           auto={publique.confirmation_auto ?? true}
           delaiHeures={publique.confirmation_auto_delai_heures ?? 24}
           emailContact={publique.email_contact ?? null}
-          cfg={cfg}
+          langue={langue}
         />
       </section>
 
@@ -374,7 +376,7 @@ export default async function ConfigurationReservationsPage({
           </ul>
         )}
 
-        <FermetureForm restaurantId={id} espaces={espaces} cfg={cfg} />
+        <FermetureForm restaurantId={id} espaces={espaces} langue={langue} />
       </section>
 
       <section className="flex flex-col gap-4">
@@ -389,7 +391,7 @@ export default async function ConfigurationReservationsPage({
           restaurantId={id}
           logoUrl={publique.logo_url ?? null}
           mentions={publique.mentions_legales ?? null}
-          cfg={cfg}
+          langue={langue}
         />
 
         <div className="flex flex-col gap-3 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm">

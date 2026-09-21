@@ -50,17 +50,16 @@ export default async function MerciPage({
               l&apos;adresse.
             </p>
             <p className="text-sm leading-relaxed text-zinc-600">
-              Un empêchement ? Préviens l&apos;établissement en répondant à
-              cet e-mail. Une table rendue à temps, c&apos;est une table qui
-              resert.
+              Un empêchement ? Préviens l&apos;établissement en répondant à cet
+              e-mail. Une table rendue à temps, c&apos;est une table qui resert.
             </p>
           </>
         ) : (
           <>
             <p className="text-sm leading-relaxed text-zinc-600">
-              L&apos;établissement la reçoit à l&apos;instant et te répond
-              sous 48 heures. Ton créneau est mis de côté jusque-là :
-              personne d&apos;autre ne peut le réserver.
+              L&apos;établissement la reçoit à l&apos;instant et te répond sous
+              48 heures. Ton créneau est mis de côté jusque-là : personne
+              d&apos;autre ne peut le réserver.
             </p>
             <p className="text-sm leading-relaxed text-zinc-600">
               Tu recevras la confirmation par e-mail. Rien n&apos;est débité

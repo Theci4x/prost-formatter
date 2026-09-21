@@ -1,5 +1,6 @@
 import "server-only";
 import { envoyerCourriel } from "@/lib/courriel/envoyer";
+import { crochetDu, type Canal } from "@/lib/notifications/canaux";
 
 /**
  * Ce que Klarr se dit à soi-même.
@@ -11,13 +12,22 @@ import { envoyerCourriel } from "@/lib/courriel/envoyer";
  *
  * Deux canaux, le second facultatif : l'e-mail part toujours vers les
  * adresses de `ADMIN_EMAILS` (la même liste qui ouvre /admin — une seule
- * liste à tenir à jour), et Slack ne reçoit que si `SLACK_WEBHOOK_URL`
- * est renseignée. Tant qu'elle ne l'est pas, aucune donnée ne sort chez
- * un prestataire de plus.
+ * liste à tenir à jour), et Slack ne reçoit que si le crochet de son
+ * canal est renseigné. Tant qu'il ne l'est pas, aucune donnée ne sort
+ * chez un prestataire de plus.
+ *
+ * Et deux canaux Slack, parce qu'une panne et un prospect ne s'annoncent
+ * pas au même monde. Une erreur serveur qui tombe dans le canal de
+ * l'équipe réveille tout le monde pour rien ; elle a le sien,
+ * `#bug-report`. Un canal sans crochet ne reçoit rien — on ne se rabat
+ * **jamais** sur le canal général, ce serait annoncer à tous exactement
+ * ce qu'on cherchait à ne pas annoncer.
  *
  * Rien d'ici ne lève ni ne bloque : une inscription ne doit pas échouer
  * parce qu'on n'a pas su se prévenir.
  */
+
+export type { Canal };
 
 export type Notification = {
   /** Une ligne, lisible sur l'écran de veille d'un téléphone. */
@@ -32,6 +42,8 @@ export type Notification = {
    * et on se trompe.
    */
   repondreA?: string;
+  /** Le canal Slack. L'e-mail, lui, part toujours au même endroit. */
+  canal?: Canal;
 };
 
 export type BilanNotification = {
@@ -77,7 +89,9 @@ function versHtml({ titre, lignes, lien }: Notification): string {
  * coup d'œil sur un quai de gare vaut mieux qu'une belle carte.
  */
 async function posterSurSlack(notification: Notification): Promise<boolean> {
-  const webhook = process.env.SLACK_WEBHOOK_URL;
+  const webhook = crochetDu(notification.canal ?? "equipe");
+  // Pas de crochet pour ce canal : on se tait. Se rabattre sur le canal
+  // général reviendrait à publier la panne devant toute l'équipe.
   if (!webhook) return false;
 
   const lignes = [`*${notification.titre}*`, ...notification.lignes];

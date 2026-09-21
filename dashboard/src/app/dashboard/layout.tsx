@@ -48,7 +48,7 @@ export default async function DashboardLayout({
           que ce soit, et absent dès que Klarr est installé. */}
       <BandeauInstallation />
       <main className="flex flex-1 flex-col">{children}</main>
-          <Commis connecte />
+      <Commis connecte />
     </div>
   );
 }

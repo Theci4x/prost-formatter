@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import type { ClesCarte } from "@/lib/i18n/carte";
+import { CARTE } from "@/lib/i18n/carte";
 import type { Langue } from "@/lib/i18n/langue";
 import { useRef, useState, useTransition } from "react";
 import {
@@ -31,16 +31,15 @@ export function PhotoPlat({
   platId,
   nom,
   photoUrl,
-  c,
   langue,
 }: {
   restaurantId: string;
   platId: string;
   nom: string;
   photoUrl: string | null;
-  c: ClesCarte;
   langue: Langue;
 }) {
+  const c = CARTE[langue];
   const [erreur, setErreur] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
   const [enCours, startTransition] = useTransition();

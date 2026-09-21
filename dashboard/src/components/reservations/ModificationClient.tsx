@@ -43,8 +43,8 @@ export function ModificationClient({
   if (state.fait && !state.error) {
     return (
       <p className="rounded-xl bg-emerald-50 px-4 py-3 text-sm leading-relaxed text-emerald-800">
-        C&apos;est modifié. L&apos;établissement est prévenu, et tu reçois
-        la confirmation par e-mail.
+        C&apos;est modifié. L&apos;établissement est prévenu, et tu reçois la
+        confirmation par e-mail.
       </p>
     );
   }

@@ -67,14 +67,13 @@ export default async function AnnulerPage({
   // De quoi proposer un changement : les heures du service, et le droit
   // de le faire. Un devis accepté ou un acompte réglé ferment la porte —
   // c'est un prix convenu, il se renégocie de vive voix.
-  const { data: serviceData } =
-    reservation?.service_id
-      ? await supabase
-          .from("restaurant_services")
-          .select("*")
-          .eq("id", reservation.service_id)
-          .maybeSingle()
-      : { data: null };
+  const { data: serviceData } = reservation?.service_id
+    ? await supabase
+        .from("restaurant_services")
+        .select("*")
+        .eq("id", reservation.service_id)
+        .maybeSingle()
+    : { data: null };
   const service = serviceData as Service | null;
 
   const { data: devisData } = reservation
@@ -135,8 +134,8 @@ export default async function AnnulerPage({
           // Le même message pour un lien inventé et pour un lien périmé :
           // rien ne doit permettre de deviner qu'une réservation existe.
           <p className="text-sm leading-relaxed text-zinc-600">
-            Ce lien n&apos;est plus valide. Si tu dois annuler une
-            réservation, contacte directement l&apos;établissement.
+            Ce lien n&apos;est plus valide. Si tu dois annuler une réservation,
+            contacte directement l&apos;établissement.
           </p>
         )}
       </div>

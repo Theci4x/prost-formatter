@@ -1,7 +1,8 @@
 "use client";
 
 import { useActionState } from "react";
-import type { ClesReservations } from "@/lib/i18n/reservations";
+import type { Langue } from "@/lib/i18n/langues";
+import { RESERVATIONS } from "@/lib/i18n/reservations";
 import {
   enregistrerNote,
   type DecisionState,
@@ -21,13 +22,14 @@ export function NoteInterne({
   reservationId,
   restaurantId,
   note,
-  r,
+  langue,
 }: {
   reservationId: string;
   restaurantId: string;
   note: string | null;
-  r: ClesReservations;
+  langue: Langue;
 }) {
+  const r = RESERVATIONS[langue];
   const [state, action, pending] = useActionState(enregistrerNote, initial);
 
   return (

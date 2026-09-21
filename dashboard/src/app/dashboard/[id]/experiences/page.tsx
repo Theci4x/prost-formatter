@@ -75,10 +75,9 @@ export default async function ExperiencesPage({
       />
 
       <p className="max-w-2xl text-sm text-zinc-500">
-        Un cours, un atelier, une dégustation : une séance à places limitées
-        qui revient selon le rythme que tu choisis. Elle apparaît sur ta page
-        de réservation, et le client paie sur ton compte Stripe — sans
-        commission.
+        Un cours, un atelier, une dégustation : une séance à places limitées qui
+        revient selon le rythme que tu choisis. Elle apparaît sur ta page de
+        réservation, et le client paie sur ton compte Stripe — sans commission.
       </p>
 
       {experiences.length > 0 && (
@@ -130,7 +129,11 @@ export default async function ExperiencesPage({
                   </div>
 
                   <form action={basculerExperience}>
-                    <input type="hidden" name="experience_id" value={experience.id} />
+                    <input
+                      type="hidden"
+                      name="experience_id"
+                      value={experience.id}
+                    />
                     <input type="hidden" name="restaurant_id" value={id} />
                     <input
                       type="hidden"
@@ -212,8 +215,16 @@ export default async function ExperiencesPage({
                               {place.client_email}
                             </a>
                             <form action={annulerPlace}>
-                              <input type="hidden" name="reservation_id" value={place.id} />
-                              <input type="hidden" name="restaurant_id" value={id} />
+                              <input
+                                type="hidden"
+                                name="reservation_id"
+                                value={place.id}
+                              />
+                              <input
+                                type="hidden"
+                                name="restaurant_id"
+                                value={id}
+                              />
                               <button
                                 type="submit"
                                 className="font-medium text-zinc-500 hover:text-red-600"

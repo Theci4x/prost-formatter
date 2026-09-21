@@ -173,7 +173,11 @@ export default async function MenuPage({
               {c.traductionChapo}
             </span>
           </div>
-          <TraduireCarte restaurantId={id} aTraduire={restantATraduire} c={c} />
+          <TraduireCarte
+            restaurantId={id}
+            aTraduire={restantATraduire}
+            langue={langue}
+          />
         </div>
       )}
 
@@ -234,7 +238,7 @@ export default async function MenuPage({
         )
       )}
 
-      <PlatForm restaurantId={id} categories={categories} c={c} />
+      <PlatForm restaurantId={id} categories={categories} langue={langue} />
 
       {blocs.length === 0 ? (
         <p className="rounded-2xl border border-zinc-200/70 bg-white p-5 text-sm text-zinc-500 shadow-sm">
@@ -302,7 +306,6 @@ export default async function MenuPage({
                       platId={plat.id}
                       nom={plat.nom}
                       photoUrl={plat.photo_url}
-                      c={c}
                       langue={langue}
                     />
                     <span
@@ -329,7 +332,11 @@ export default async function MenuPage({
                         </span>
                       )}
                       <AllergenesPlat restaurantId={id} plat={plat} c={c} />
-                      <FormatsPlat restaurantId={id} plat={plat} c={c} />
+                      <FormatsPlat
+                        restaurantId={id}
+                        plat={plat}
+                        langue={langue}
+                      />
                     </span>
 
                     <span className="flex items-center gap-3">

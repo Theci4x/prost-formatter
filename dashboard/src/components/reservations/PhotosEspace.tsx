@@ -7,7 +7,7 @@ import type { RestaurantPhoto } from "@/types/photo";
 import { LegendePhoto } from "@/components/photos/LegendePhoto";
 import { ESPACE, messageTropPetite } from "@/lib/images/formats";
 import { preparerPhoto } from "@/lib/images/preparer";
-import type { ClesConfiguration } from "@/lib/i18n/configuration";
+import { CONFIGURATION } from "@/lib/i18n/configuration";
 import type { Langue } from "@/lib/i18n/langues";
 
 // Même plafond que côté serveur : on refuse avant d'occuper la connexion.
@@ -28,16 +28,15 @@ export function PhotosEspace({
   restaurantId,
   espaceId,
   photos,
-  cfg,
   langue,
 }: {
   restaurantId: string;
   espaceId: string;
   photos: RestaurantPhoto[];
-  cfg: ClesConfiguration;
   /** Le refus d'une photo trop petite porte sa mesure : il se traduit à part. */
   langue: Langue;
 }) {
+  const cfg = CONFIGURATION[langue];
   const [erreur, setErreur] = useState<string | null>(null);
   const [enCours, startTransition] = useTransition();
   const champ = useRef<HTMLInputElement>(null);

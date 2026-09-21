@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import type { ClesService } from "@/lib/i18n/service";
+import type { Langue } from "@/lib/i18n/langues";
+import { SERVICE } from "@/lib/i18n/service";
 import { BoutonAction } from "@/components/reservations/BoutonAction";
 import {
   annulerReservation,
@@ -87,7 +88,7 @@ export function LigneService({
   detail,
   jour,
   children,
-  sv,
+  langue,
 }: {
   restaurantId: string;
   detail: DetailLigne;
@@ -95,8 +96,9 @@ export function LigneService({
   jour: string;
   /** Le placement à table, rendu par le serveur. */
   children: React.ReactNode;
-  sv: ClesService;
+  langue: Langue;
 }) {
+  const sv = SERVICE[langue];
   const [ouvert, setOuvert] = useState(false);
 
   // Le serveur revérifie de toute façon ; ici on évite seulement de

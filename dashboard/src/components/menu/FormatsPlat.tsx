@@ -1,7 +1,8 @@
 "use client";
 
 import { useActionState } from "react";
-import type { ClesCarte } from "@/lib/i18n/carte";
+import type { Langue } from "@/lib/i18n/langues";
+import { CARTE, type ClesCarte } from "@/lib/i18n/carte";
 import { enregistrerFormats } from "@/app/dashboard/[id]/menu/actions";
 import { formatsDe, formatsLisibles } from "@/lib/menu/carte";
 import {
@@ -77,12 +78,13 @@ function Lignes({ formats, c }: { formats: Format[] | null; c: ClesCarte }) {
 export function FormatsPlat({
   restaurantId,
   plat,
-  c,
+  langue,
 }: {
   restaurantId: string;
   plat: { id: string; nom: string; formats: Format[] | null };
-  c: ClesCarte;
+  langue: Langue;
 }) {
+  const c = CARTE[langue];
   const [state, action, pending] = useActionState(
     enregistrerFormats,
     FORMATS_INITIAL,

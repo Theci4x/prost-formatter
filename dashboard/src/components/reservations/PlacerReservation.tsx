@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import type { ClesService } from "@/lib/i18n/service";
+import type { Langue } from "@/lib/i18n/langues";
+import { SERVICE } from "@/lib/i18n/service";
 import { placerReservation } from "@/app/dashboard/[id]/reservations/plan/actions";
 import type { TableSalle } from "@/types/plan";
 
@@ -15,15 +16,16 @@ export function PlacerReservation({
   tableActuelle,
   couverts,
   tables,
-  sv,
+  langue,
 }: {
   restaurantId: string;
   reservationId: string;
   tableActuelle: TableSalle | null;
   couverts: number;
   tables: TableSalle[];
-  sv: ClesService;
+  langue: Langue;
 }) {
+  const sv = SERVICE[langue];
   const [erreur, setErreur] = useState<string | null>(null);
   const [enCours, startTransition] = useTransition();
 

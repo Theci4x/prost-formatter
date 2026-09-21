@@ -55,9 +55,9 @@ export default async function PhotosPage({
       <AjoutPhoto restaurantId={id} />
 
       <p className="max-w-2xl text-sm text-zinc-500">
-        Une de ces photos ouvre ton site vitrine, en grand. C&apos;est
-        elle qu&apos;on voit avant de lire quoi que ce soit : choisis la
-        salle pleine plutôt que le plat isolé.
+        Une de ces photos ouvre ton site vitrine, en grand. C&apos;est elle
+        qu&apos;on voit avant de lire quoi que ce soit : choisis la salle pleine
+        plutôt que le plat isolé.
       </p>
 
       {photos.length === 0 ? (

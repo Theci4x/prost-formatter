@@ -1,6 +1,7 @@
 "use client";
 
-import type { ClesAuth } from "@/lib/i18n/authentification";
+import type { Langue } from "@/lib/i18n/langues";
+import { AUTH } from "@/lib/i18n/authentification";
 
 import { useActionState } from "react";
 import Link from "next/link";
@@ -16,11 +17,12 @@ const initialState: AuthState = { error: null };
  */
 export function LoginForm({
   emailInitial,
-  t,
+  langue,
 }: {
   emailInitial?: string;
-  t: ClesAuth;
+  langue: Langue;
 }) {
+  const t = AUTH[langue];
   const [loginState, loginAction, loginPending] = useActionState(
     login,
     initialState,

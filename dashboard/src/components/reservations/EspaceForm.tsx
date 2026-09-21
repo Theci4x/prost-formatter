@@ -11,7 +11,11 @@ import {
   type Espace,
   type EspaceValeurs,
 } from "@/types/reservation";
-import type { ClesConfiguration } from "@/lib/i18n/configuration";
+import type { Langue } from "@/lib/i18n/langues";
+import {
+  CONFIGURATION,
+  type ClesConfiguration,
+} from "@/lib/i18n/configuration";
 
 const initialState: EspaceState = {
   error: null,
@@ -47,7 +51,7 @@ const label = "flex flex-col gap-1 text-sm font-medium text-zinc-700";
 function Champs({
   restaurantId,
   valeurs,
-  cfg,
+  langue,
   // Les deux formulaires — ajout et modification — cohabitent sur la même
   // page : sans préfixe, un « label for » désignerait le champ de l'autre.
   prefixe = "espace",
@@ -55,10 +59,11 @@ function Champs({
 }: {
   restaurantId: string;
   valeurs: EspaceValeurs;
-  cfg: ClesConfiguration;
+  langue: Langue;
   prefixe?: string;
   espaceId?: string;
 }) {
+  const cfg = CONFIGURATION[langue];
   // Le minimum de privatisation n'a de sens que si l'espace se privatise :
   // afficher le champ en permanence ferait croire qu'il est obligatoire.
   const [privatisable, setPrivatisable] = useState(valeurs.privatisable);
@@ -304,11 +309,12 @@ function Champs({
 
 export function EspaceForm({
   restaurantId,
-  cfg,
+  langue,
 }: {
   restaurantId: string;
-  cfg: ClesConfiguration;
+  langue: Langue;
 }) {
+  const cfg = CONFIGURATION[langue];
   const [state, action, pending] = useActionState(addEspace, initialState);
 
   return (
@@ -323,7 +329,7 @@ export function EspaceForm({
         key={state.rendu}
         restaurantId={restaurantId}
         valeurs={state.valeurs}
-        cfg={cfg}
+        langue={langue}
       />
 
       {state.error && <p className="text-sm text-red-600">{state.error}</p>}
@@ -380,15 +386,16 @@ function valeursDe(espace: Espace): EspaceValeurs {
 export function EspaceModifiable({
   restaurantId,
   espace,
-  cfg,
+  langue,
   children,
 }: {
   restaurantId: string;
   espace: Espace;
-  cfg: ClesConfiguration;
+  langue: Langue;
   /** Ce qu'on affiche tant que le formulaire est fermé. */
   children: React.ReactNode;
 }) {
+  const cfg = CONFIGURATION[langue];
   const [ouvertDepuis, setOuvertDepuis] = useState<number | null>(null);
   const [state, action, pending] = useActionState(modifierEspace, {
     error: null,
@@ -425,7 +432,7 @@ export function EspaceModifiable({
         espaceId={espace.id}
         prefixe={`mod-${espace.id}`}
         valeurs={state.valeurs}
-        cfg={cfg}
+        langue={langue}
       />
 
       {state.error && <p className="text-sm text-red-600">{state.error}</p>}

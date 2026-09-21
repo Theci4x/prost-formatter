@@ -30,13 +30,36 @@ export function KlarrMark({
       aria-hidden="true"
     >
       <defs>
-        <linearGradient id={gradientId} x1="40" y1="52" x2="76" y2="16" gradientUnits="userSpaceOnUse">
+        <linearGradient
+          id={gradientId}
+          x1="40"
+          y1="52"
+          x2="76"
+          y2="16"
+          gradientUnits="userSpaceOnUse"
+        >
           <stop offset="0" stopColor="#E8871E" />
           <stop offset="1" stopColor="#F7B84B" />
         </linearGradient>
       </defs>
-      <line x1="40" y1="52" x2="76" y2="88" stroke={barColor} strokeWidth="15" strokeLinecap="round" />
-      <line x1="40" y1="52" x2="76" y2="16" stroke={`url(#${gradientId})`} strokeWidth="15" strokeLinecap="round" />
+      <line
+        x1="40"
+        y1="52"
+        x2="76"
+        y2="88"
+        stroke={barColor}
+        strokeWidth="15"
+        strokeLinecap="round"
+      />
+      <line
+        x1="40"
+        y1="52"
+        x2="76"
+        y2="16"
+        stroke={`url(#${gradientId})`}
+        strokeWidth="15"
+        strokeLinecap="round"
+      />
       <rect x="22" y="14" width="16" height="72" rx="8" fill={barColor} />
       <g stroke="#F0A93C" strokeWidth="3.5" strokeLinecap="round">
         <line x1="76" y1="2" x2="76" y2="9" />

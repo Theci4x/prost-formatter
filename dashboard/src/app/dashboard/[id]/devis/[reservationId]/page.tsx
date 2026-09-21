@@ -265,7 +265,7 @@ export default async function DevisPage({
             <span className="text-xs font-semibold uppercase tracking-[0.08em] text-ink-soft">
               Lien du devis
             </span>
-            <LienAcompte lien={lien} r={r} />
+            <LienAcompte lien={lien} langue={langue} />
           </div>
         )}
       </div>
@@ -286,7 +286,7 @@ export default async function DevisPage({
           </span>
           <LienAcompte
             lien={`${siteUrl()}/paiement/${reservation.paiement_token}`}
-            r={r}
+            langue={langue}
           />
           <div className="flex flex-wrap items-center gap-3">
             <BoutonAction

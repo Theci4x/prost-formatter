@@ -67,7 +67,7 @@ export default async function LoginPage({
           </p>
         )}
 
-        <LoginForm t={t} emailInitial={email} />
+        <LoginForm langue={langue} emailInitial={email} />
 
         {/* Sans ce lien, le visiteur arrivé sur la connexion n'a aucun chemin
             de retour vers la page qui explique ce qu'est Klarr. */}

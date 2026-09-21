@@ -65,9 +65,7 @@ export function ResumeEtablissement({
             </span>
           </span>
           {nombreAvis !== null && (
-            <span className="text-zinc-500">
-              {nombreAvis} avis Google
-            </span>
+            <span className="text-zinc-500">{nombreAvis} avis Google</span>
           )}
         </div>
       )}

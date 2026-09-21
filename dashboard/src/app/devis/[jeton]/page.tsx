@@ -73,12 +73,16 @@ export default async function DevisPublicPage({
       .order("ordre"),
     supabase
       .from("restaurant_reservations")
-      .select("client_nom, couverts, date_reservation, heure_arrivee, espace_id")
+      .select(
+        "client_nom, couverts, date_reservation, heure_arrivee, espace_id",
+      )
       .eq("id", devis.reservation_id)
       .maybeSingle(),
     supabase
       .from("restaurants")
-      .select("nom, adresse, telephone, logo_url, mentions_legales, devis_mentions")
+      .select(
+        "nom, adresse, telephone, logo_url, mentions_legales, devis_mentions",
+      )
       .eq("id", devis.restaurant_id)
       .maybeSingle(),
   ]);
@@ -159,7 +163,9 @@ export default async function DevisPublicPage({
           <ReponseDevis
             jeton={jeton}
             acompte={
-              devis.acompte_centimes ? formatEuros(devis.acompte_centimes) : null
+              devis.acompte_centimes
+                ? formatEuros(devis.acompte_centimes)
+                : null
             }
           />
         ) : (

@@ -23,7 +23,9 @@ export function SignatureKlarr({
   className?: string;
 }) {
   return (
-    <div className={`flex items-center gap-2 text-sm text-zinc-400 ${className}`}>
+    <div
+      className={`flex items-center gap-2 text-sm text-zinc-400 ${className}`}
+    >
       <KlarrMark size={16} />
       <span>
         {texte}{" "}

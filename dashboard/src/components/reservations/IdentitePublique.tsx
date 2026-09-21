@@ -6,7 +6,8 @@ import {
   enregistrerIdentitePublique,
   televerserLogo,
 } from "@/app/dashboard/[id]/reservations/actions";
-import type { ClesConfiguration } from "@/lib/i18n/configuration";
+import type { Langue } from "@/lib/i18n/langues";
+import { CONFIGURATION } from "@/lib/i18n/configuration";
 
 // Même plafond que côté serveur : refuser ici évite d'envoyer quatre méga-
 // octets pour rien sur la connexion du restaurateur.
@@ -21,13 +22,14 @@ export function IdentitePublique({
   restaurantId,
   logoUrl,
   mentions,
-  cfg,
+  langue,
 }: {
   restaurantId: string;
   logoUrl: string | null;
   mentions: string | null;
-  cfg: ClesConfiguration;
+  langue: Langue;
 }) {
+  const cfg = CONFIGURATION[langue];
   const [erreur, setErreur] = useState<string | null>(null);
   const [enCours, startTransition] = useTransition();
   const champ = useRef<HTMLInputElement>(null);

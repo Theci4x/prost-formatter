@@ -10,7 +10,8 @@ import {
   type Espace,
   type FermetureValeurs,
 } from "@/types/reservation";
-import type { ClesConfiguration } from "@/lib/i18n/configuration";
+import type { Langue } from "@/lib/i18n/langues";
+import { CONFIGURATION } from "@/lib/i18n/configuration";
 
 const initialState: FermetureState = {
   error: null,
@@ -26,13 +27,14 @@ function Champs({
   restaurantId,
   espaces,
   valeurs,
-  cfg,
+  langue,
 }: {
   restaurantId: string;
   espaces: Espace[];
   valeurs: FermetureValeurs;
-  cfg: ClesConfiguration;
+  langue: Langue;
 }) {
+  const cfg = CONFIGURATION[langue];
   return (
     <>
       <input type="hidden" name="restaurant_id" value={restaurantId} />
@@ -100,12 +102,13 @@ function Champs({
 export function FermetureForm({
   restaurantId,
   espaces,
-  cfg,
+  langue,
 }: {
   restaurantId: string;
   espaces: Espace[];
-  cfg: ClesConfiguration;
+  langue: Langue;
 }) {
+  const cfg = CONFIGURATION[langue];
   const [state, action, pending] = useActionState(
     ajouterFermeture,
     initialState,
@@ -123,7 +126,7 @@ export function FermetureForm({
         restaurantId={restaurantId}
         espaces={espaces}
         valeurs={state.valeurs}
-        cfg={cfg}
+        langue={langue}
       />
 
       {state.error && <p className="text-sm text-red-600">{state.error}</p>}

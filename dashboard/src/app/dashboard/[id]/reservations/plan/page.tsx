@@ -24,15 +24,15 @@ export default async function PlanPage({
   const supabase = await createClient();
   const [restaurantResult, espacesResult, tablesResult, reperesResult] =
     await Promise.all([
-    supabase.from("restaurants").select("*").eq("id", id).maybeSingle(),
-    supabase
-      .from("restaurant_espaces")
-      .select("*")
-      .eq("restaurant_id", id)
-      .order("ordre"),
-    supabase.from("restaurant_tables").select("*").eq("restaurant_id", id),
-    supabase.from("restaurant_reperes").select("*").eq("restaurant_id", id),
-  ]);
+      supabase.from("restaurants").select("*").eq("id", id).maybeSingle(),
+      supabase
+        .from("restaurant_espaces")
+        .select("*")
+        .eq("restaurant_id", id)
+        .order("ordre"),
+      supabase.from("restaurant_tables").select("*").eq("restaurant_id", id),
+      supabase.from("restaurant_reperes").select("*").eq("restaurant_id", id),
+    ]);
 
   const restaurant = restaurantResult.data as Restaurant | null;
   if (!restaurant) notFound();
@@ -58,13 +58,13 @@ export default async function PlanPage({
         </Link>
         <h1 className="text-2xl font-semibold text-zinc-900">Plan de salle</h1>
         <p className="max-w-2xl text-sm text-zinc-500">
-          Dessine ta salle comme elle est — ta salle du bas, ton premier
-          étage, ta terrasse. Pose tes tables où tu veux, à la bonne taille,
-          tournées comme il faut, et ajoute le bar, l&apos;entrée ou un
-          poteau pour t&apos;y retrouver. Pendant le service, tu assignes
-          chaque réservation à une table depuis l&apos;écran du jour. Klarr
-          continue d&apos;accepter ou de refuser les réservations en
-          couverts : le plan sert à placer, pas à vendre.
+          Dessine ta salle comme elle est — ta salle du bas, ton premier étage,
+          ta terrasse. Pose tes tables où tu veux, à la bonne taille, tournées
+          comme il faut, et ajoute le bar, l&apos;entrée ou un poteau pour
+          t&apos;y retrouver. Pendant le service, tu assignes chaque réservation
+          à une table depuis l&apos;écran du jour. Klarr continue
+          d&apos;accepter ou de refuser les réservations en couverts : le plan
+          sert à placer, pas à vendre.
         </p>
       </div>
 
@@ -83,10 +83,10 @@ export default async function PlanPage({
             </>
           ) : (
             <>
-              Aucune de tes salles ne prend de réservation individuelle :
-              elles ne se louent qu&apos;en entier, et une salle privatisée
-              n&apos;a pas besoin de plan — le groupe prend tout. Coche
-              « réservations individuelles » sur une salle dans{" "}
+              Aucune de tes salles ne prend de réservation individuelle : elles
+              ne se louent qu&apos;en entier, et une salle privatisée n&apos;a
+              pas besoin de plan — le groupe prend tout. Coche « réservations
+              individuelles » sur une salle dans{" "}
               <Link
                 href={`/dashboard/${id}/reservations/configuration`}
                 className="text-brand-navy underline-offset-2 hover:underline"
@@ -113,9 +113,9 @@ export default async function PlanPage({
 
       {privatisationSeule.length > 0 && (
         <p className="text-sm text-zinc-500">
-          Sans plan, parce qu&apos;{privatisationSeule.length > 1 ? "elles" : "elle"}{" "}
-          ne se loue{privatisationSeule.length > 1 ? "nt" : ""} qu&apos;en
-          entier :{" "}
+          Sans plan, parce qu&apos;
+          {privatisationSeule.length > 1 ? "elles" : "elle"} ne se loue
+          {privatisationSeule.length > 1 ? "nt" : ""} qu&apos;en entier :{" "}
           <span className="font-medium text-zinc-700">
             {privatisationSeule.map((salle) => salle.nom).join(", ")}
           </span>
