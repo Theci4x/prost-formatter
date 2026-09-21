@@ -180,7 +180,7 @@ function carteLisible(items: MenuItem[]): string[] {
             ? " (allergènes non déclarés)"
             : plat.allergenes.length === 0
               ? " (aucun des quatorze allergènes déclarés)"
-              : ` (allergènes déclarés : ${listeAllergenes(plat.allergenes, false)})`;
+              : ` (allergènes déclarés : ${listeAllergenes(plat.allergenes, "fr")})`;
         return `${plat.nom}${prix}${detail}${versionEn}${allergenes}`;
       })
       .join(" ; ");

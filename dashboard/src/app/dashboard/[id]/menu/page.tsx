@@ -25,7 +25,7 @@ import { qrSvg, urlCarte } from "@/lib/menu/qr";
 import { exiger } from "@/lib/equipe/roles";
 import { exigerSection } from "@/lib/abonnement/acces";
 import { LIBELLE_MODULE, PRIX_MODULE } from "@/lib/abonnement/modules";
-import type { MenuItem } from "@/types/menu";
+import { LANGUES_TRADUITES, type Langue, type MenuItem } from "@/types/menu";
 import type { Restaurant } from "@/types/restaurant";
 
 const bouton =
@@ -85,7 +85,14 @@ export default async function MenuPage({
   const publique = restaurant.carte_publique === true;
   const visibles = items.filter((plat) => plat.actif).length;
   const slug = restaurant.slug_reservation;
-  const restantATraduire = aTraduire(items, "en").length;
+  // Un compte par langue : les traductions sont indépendantes, et une
+  // carte à jour en anglais peut n'avoir jamais vu le chinois.
+  const restantATraduire = Object.fromEntries(
+    LANGUES_TRADUITES.map((langue) => [
+      langue,
+      aTraduire(items, langue).length,
+    ]),
+  ) as Record<Exclude<Langue, "fr">, number>;
   // Un plat à la carte dont personne n'a examiné la composition. Les plats
   // décrochés ne comptent pas : ils ne sont servis à personne.
   const sansAllergenes = items.filter(
@@ -177,13 +184,14 @@ export default async function MenuPage({
         <div className="flex flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm sm:flex-row sm:items-start sm:justify-between">
           <div className="flex flex-col gap-2">
             <span className="text-sm font-medium text-zinc-900">
-              Ta carte en anglais
+              Ta carte en plusieurs langues
             </span>
             <span className="max-w-md text-sm text-zinc-500">
-              Le client choisit sa langue en haut de ta carte. Un plat que tu
+              Le client choisit sa langue en haut de ta carte. Une langue
+              n&apos;apparaît que si elle est vraiment traduite. Un plat que tu
               corriges en français repasse en français tant qu&apos;il
               n&apos;est pas retraduit — mieux vaut ça qu&apos;une carte
-              anglaise qui ment sur ce qu&apos;il y a dans l&apos;assiette.
+              étrangère qui ment sur ce qu&apos;il y a dans l&apos;assiette.
             </span>
           </div>
           <TraduireCarte restaurantId={id} aTraduire={restantATraduire} />

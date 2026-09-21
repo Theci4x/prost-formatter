@@ -15,11 +15,19 @@
  * l'avait signalé, parce que rien ne regardait ses dimensions — et
  * personne ne devine qu'un fichier accepté est inutilisable.
  *
- * Ici on ouvre l'image, on mesure, et on tranche. En dessous du plancher,
- * on refuse **en disant les dimensions trouvées** : « trop petite » sans
- * chiffre laisse le restaurateur essayer trois fois la même chose.
- * Au-dessus, on réduit et on réencode, donc la question du poids ne se
- * pose plus jamais.
+ * Ici on ouvre l'image, on mesure, et on tranche — mais en **deux**
+ * seuils, pas un seul, et c'est la leçon de la première version. Un
+ * plancher unique calé sur l'affichage idéal (800 px de côté pour une
+ * carte en pleine largeur à trois points par pixel) refusait la plupart
+ * des photos qu'on trouve sur le web, qui font 600 à 800 px : le
+ * restaurateur en essayait vingt pour en faire passer une. Un outil qui
+ * refuse vingt fois n'est pas exigeant, il est cassé.
+ *
+ * Donc : **on refuse** ce qui est franchement inutilisable, et **on
+ * prévient** pour ce qui passera en étant un peu mou. Dans les deux cas
+ * on donne les dimensions trouvées — « trop petite » sans chiffre laisse
+ * essayer trois fois la même chose. Au-dessus, on réduit et on réencode,
+ * donc la question du poids ne se pose plus jamais.
  *
  * Le recadrage, lui, n'a pas lieu ici. L'affichage est carré aujourd'hui
  * (`object-cover`), mais découper au moment de l'envoi détruirait
@@ -34,6 +42,12 @@ export type PhotoPreparee = {
   hauteur: number;
   /** Vrai si l'image a été réduite ou réencodée. */
   retravaillee: boolean;
+  /**
+   * Acceptée, mais en dessous du confortable : elle s'affichera, un peu
+   * molle sur un grand écran. On le dit sans bloquer — voir le commentaire
+   * du fichier.
+   */
+  juste: boolean;
 };
 
 export type PhotoRefusee = {
@@ -44,8 +58,10 @@ export type PhotoRefusee = {
 };
 
 export type Options = {
-  /** Plancher sur le plus petit côté, en pixels. */
+  /** En dessous, on refuse : l'image est inutilisable, pas seulement juste. */
   minCote: number;
+  /** En dessous, on accepte mais on prévient. */
+  conseilCote: number;
   /** Plafond sur le plus grand côté, en pixels. */
   maxCote: number;
   /** Qualité JPEG, de 0 à 1. */
@@ -98,7 +114,7 @@ async function mesurer(fichier: File): Promise<{
 
 export async function preparerPhoto(
   fichier: File,
-  { minCote, maxCote, qualite = 0.85 }: Options,
+  { minCote, conseilCote, maxCote, qualite = 0.85 }: Options,
 ): Promise<PhotoPreparee | PhotoRefusee> {
   const mesure = await mesurer(fichier);
   if (!mesure) return { ok: false, motif: "illisible" };
@@ -112,12 +128,21 @@ export async function preparerPhoto(
     return { ok: false, motif: "trop-petite", largeur: l, hauteur: h };
   }
 
+  const juste = petitCote < conseilCote;
+
   // Assez petite et déjà légère : on n'y touche pas. Réencoder une image
   // correcte ne fait que lui enlever de la qualité.
   const dejaBonne = grandCote <= maxCote && fichier.size <= 600 * 1024;
   if (dejaBonne) {
     if ("close" in source) source.close();
-    return { ok: true, fichier, largeur: l, hauteur: h, retravaillee: false };
+    return {
+      ok: true,
+      fichier,
+      largeur: l,
+      hauteur: h,
+      retravaillee: false,
+      juste,
+    };
   }
 
   const facteur = Math.min(1, maxCote / grandCote);
@@ -143,12 +168,20 @@ export async function preparerPhoto(
       largeur,
       hauteur,
       retravaillee: true,
+      juste,
     };
   } catch {
     // Le navigateur ne sait pas réencoder : l'original a déjà passé le
     // contrôle de dimensions, on le laisse partir tel quel. Le plafond
     // de poids du serveur reste là pour le cas extrême.
-    return { ok: true, fichier, largeur: l, hauteur: h, retravaillee: false };
+    return {
+      ok: true,
+      fichier,
+      largeur: l,
+      hauteur: h,
+      retravaillee: false,
+      juste,
+    };
   } finally {
     if ("close" in source) source.close();
   }

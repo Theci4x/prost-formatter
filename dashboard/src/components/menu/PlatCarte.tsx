@@ -3,6 +3,7 @@ import { formatPrix, formatsDe, formatsLisibles } from "@/lib/menu/carte";
 import { platAffiche } from "@/lib/menu/traduction";
 import { listeAllergenes } from "@/types/allergenes";
 import type { Langue, MenuItem } from "@/types/menu";
+import { ETIQUETTES, t } from "@/lib/menu/etiquettes";
 
 /**
  * Un plat sur la carte publique : une carte à photo, pas une ligne.
@@ -30,7 +31,6 @@ export function PlatCarte({
   langue: Langue;
 }) {
   const affiche = platAffiche(plat, langue);
-  const anglais = langue === "en";
   const formats = formatsDe(plat);
 
   return (
@@ -77,8 +77,9 @@ export function PlatCarte({
 
         {plat.allergenes !== null && plat.allergenes.length > 0 && (
           <span className="mt-auto pt-1.5 text-xs text-zinc-400">
-            {anglais ? "Allergens" : "Allergènes"} :{" "}
-            {listeAllergenes(plat.allergenes, anglais)}
+            {t(ETIQUETTES.allergenes, langue)}
+            {langue === "zh" ? "：" : " : "}
+            {listeAllergenes(plat.allergenes, langue)}
           </span>
         )}
       </div>

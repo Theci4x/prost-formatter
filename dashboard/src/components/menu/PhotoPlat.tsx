@@ -7,7 +7,7 @@ import {
   retirerPhotoPlat,
 } from "@/app/dashboard/[id]/menu/actions";
 import { poidsLisible, preparerPhoto } from "@/lib/images/preparer";
-import { PLAT, messageTropPetite } from "@/lib/images/formats";
+import { PLAT, messageJuste, messageTropPetite } from "@/lib/images/formats";
 
 // Même plafond que côté serveur : on refuse avant d'occuper la connexion.
 // Il ne sert plus qu'au cas où le navigateur n'a pas su réencoder.
@@ -75,9 +75,16 @@ export function PhotoPlat({
 
       const reponse = await envoyerPhotoPlat(donnees);
       setErreur(reponse.error);
-      if (!reponse.error && prete.retravaillee) {
+      if (!reponse.error) {
+        // La photo est enregistrée dans les deux cas. L'avertissement
+        // passe avant la note de réduction : savoir qu'elle sera un peu
+        // molle est plus utile que savoir qu'elle pesait 3 Mo.
         setNote(
-          `Réduite à ${prete.largeur} × ${prete.hauteur} px (${poidsLisible(prete.fichier.size)}).`,
+          prete.juste
+            ? messageJuste(prete.largeur, prete.hauteur, PLAT.conseilCote)
+            : prete.retravaillee
+              ? `Réduite à ${prete.largeur} × ${prete.hauteur} px (${poidsLisible(prete.fichier.size)}).`
+              : null,
         );
       }
       // Le champ est vidé dans tous les cas : le garder rempli laisse croire
@@ -159,7 +166,9 @@ export function PhotoPlat({
         <span className="max-w-[12rem] text-[10px] text-red-600">{erreur}</span>
       )}
       {!erreur && note && (
-        <span className="max-w-[12rem] text-[10px] text-zinc-400">{note}</span>
+        <span className="max-w-[14rem] text-[10px] leading-snug text-zinc-500">
+          {note}
+        </span>
       )}
     </span>
   );

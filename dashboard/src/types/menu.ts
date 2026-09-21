@@ -1,3 +1,5 @@
+import { LANGUES as LANGUES_SITE, type Langue } from "@/lib/i18n/langues";
+
 /**
  * La carte, côté valeurs partagées : lues par les formulaires, qui tournent
  * dans le navigateur, autant que par les actions serveur.
@@ -55,13 +57,21 @@ export type FormatsState = { error: string | null; rendu: number };
 
 export const FORMATS_INITIAL: FormatsState = { error: null, rendu: 0 };
 
-/** Les langues proposées au client. Le français est la langue de saisie. */
-export type Langue = "fr" | "en";
+/**
+ * Les langues proposées au client.
+ *
+ * C'est la liste du site, pas une liste à part : deux inventaires de
+ * langues finiraient par diverger, et le jour où une quatrième arrive,
+ * elle doit arriver partout ou nulle part. Le français reste la langue
+ * de saisie — c'est celle que le restaurateur tape, et celle d'où tout
+ * le reste est traduit.
+ */
+export type { Langue };
 
-export const LANGUES: { code: Langue; libelle: string; drapeau: string }[] = [
-  { code: "fr", libelle: "Français", drapeau: "FR" },
-  { code: "en", libelle: "English", drapeau: "EN" },
-];
+/** Les langues vers lesquelles on traduit. Le français n'en est pas. */
+export const LANGUES_TRADUITES = LANGUES_SITE.filter(
+  (code): code is Exclude<Langue, "fr"> => code !== "fr",
+);
 
 export type TraductionPlat = {
   nom: string;

@@ -9,6 +9,14 @@ import {
   lireLangue,
   platAffiche,
 } from "@/lib/menu/traduction";
+import { LANGUES_TRADUITES, type Langue } from "@/types/menu";
+import { NOM_LANGUE } from "@/lib/i18n/langues";
+import {
+  ETIQUETTES,
+  resumeFiltre,
+  t,
+  type Etiquette,
+} from "@/lib/menu/etiquettes";
 import { SignatureKlarr } from "@/components/brand/SignatureKlarr";
 import { cartePubliee } from "@/lib/menu/publication";
 import { PlatCarte } from "@/components/menu/PlatCarte";
@@ -26,6 +34,13 @@ import { chargerAcces } from "@/lib/abonnement/acces";
 import { DonneesStructurees } from "@/components/seo/DonneesStructurees";
 import { filAriane, menuSchema } from "@/lib/seo/donnees-structurees";
 import { siteUrl } from "@/lib/site-url";
+
+/** La signature de bas de page : de l'interface, pas de la loi. */
+const SIGNATURE: Etiquette = {
+  fr: "Carte propulsée par",
+  en: "Menu powered by",
+  zh: "菜单技术支持",
+};
 
 type Params = { slug: string };
 type Query = { lang?: string; sans?: string | string[] };
@@ -108,9 +123,15 @@ export default async function CartePage({
   if (!charge) notFound();
 
   const { restaurant, items } = charge;
-  const anglaisPossible = langueDisponible(items, "en");
-  const langue = anglaisPossible ? lireLangue(query.lang) : "fr";
-  const anglais = langue === "en";
+  // Une langue n'est proposée que si la carte y est réellement traduite :
+  // un sélecteur qui renvoie du français est une déception, pas une
+  // fonctionnalité.
+  const disponibles = LANGUES_TRADUITES.filter((code) =>
+    langueDisponible(items, code),
+  );
+  const demandee = lireLangue(query.lang);
+  const langue =
+    demandee !== "fr" && disponibles.includes(demandee) ? demandee : "fr";
   const allergies = allergiesDemandees(query.sans);
   const filtre = allergies.length > 0;
   const { compatibles, ecartes, indetermines } = filtrerCarte(
@@ -129,6 +150,12 @@ export default async function CartePage({
   // document partiel, qui dit ce qu'on sait, qu'un lien absent.
   const quelquesAllergenes = carteVisible(items).some(
     (plat) => plat.allergenes !== null,
+  );
+  const resume = resumeFiltre(
+    compatibles.length,
+    ecartes.length,
+    listeAllergenes(allergies, langue),
+    langue,
   );
 
   return (
@@ -152,30 +179,29 @@ export default async function CartePage({
 
           {/* De simples liens : la page doit fonctionner sans JavaScript,
               sur le téléphone d'un client au réseau incertain. */}
-          {anglaisPossible && (
+          {disponibles.length > 0 && (
             <nav aria-label="Langue" className="flex items-center gap-1">
-              <Link
-                href={`/carte/${slug}${filtre ? `?sans=${allergies.join(",")}` : ""}`}
-                aria-current={anglais ? undefined : "true"}
-                className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-                  anglais
-                    ? "text-zinc-500 hover:text-zinc-900"
-                    : "bg-brand-navy text-white"
-                }`}
-              >
-                Français
-              </Link>
-              <Link
-                href={`/carte/${slug}?lang=en${filtre ? `&sans=${allergies.join(",")}` : ""}`}
-                aria-current={anglais ? "true" : undefined}
-                className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-                  anglais
-                    ? "bg-brand-navy text-white"
-                    : "text-zinc-500 hover:text-zinc-900"
-                }`}
-              >
-                English
-              </Link>
+              {(["fr", ...disponibles] as Langue[]).map((code) => {
+                const sansFiltre = filtre ? `sans=${allergies.join(",")}` : "";
+                const params = [
+                  code === "fr" ? "" : `lang=${code}`,
+                  sansFiltre,
+                ].filter(Boolean);
+                return (
+                  <Link
+                    key={code}
+                    href={`/carte/${slug}${params.length ? `?${params.join("&")}` : ""}`}
+                    aria-current={code === langue ? "true" : undefined}
+                    className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                      code === langue
+                        ? "bg-brand-navy text-white"
+                        : "text-zinc-500 hover:text-zinc-900"
+                    }`}
+                  >
+                    {NOM_LANGUE[code]}
+                  </Link>
+                );
+              })}
             </nav>
           )}
         </div>
@@ -203,14 +229,14 @@ export default async function CartePage({
         />
         <div className="flex flex-col gap-1">
           <h1 className="font-serif text-4xl text-ink">
-            {anglais ? "Menu" : "La carte"}
+            {t(ETIQUETTES.titre, langue)}
           </h1>
           {restaurant.adresse && (
             <p className="text-sm text-zinc-500">{restaurant.adresse}</p>
           )}
         </div>
 
-        <FiltreAllergenes slug={slug} anglais={anglais} choisis={allergies} />
+        <FiltreAllergenes slug={slug} langue={langue} choisis={allergies} />
 
         <OngletsCategories
           sections={sections.map(({ ancre, titre }) => ({ ancre, titre }))}
@@ -218,28 +244,16 @@ export default async function CartePage({
 
         {filtre && (
           <p className="rounded-2xl border border-zinc-200/70 bg-white p-4 text-sm text-zinc-600 shadow-sm">
-            {anglais
-              ? `${compatibles.length} dish${compatibles.length > 1 ? "es" : ""} without ${listeAllergenes(allergies, true)}`
-              : `${compatibles.length} plat${compatibles.length > 1 ? "s" : ""} sans ${listeAllergenes(allergies, false)}`}
-            {ecartes.length > 0 && (
-              <span className="text-zinc-400">
-                {anglais
-                  ? ` · ${ecartes.length} set aside`
-                  : ` · ${ecartes.length} écarté${ecartes.length > 1 ? "s" : ""}`}
-              </span>
+            {resume.principal}
+            {resume.reste && (
+              <span className="text-zinc-400">{resume.reste}</span>
             )}
           </p>
         )}
 
         {blocs.length === 0 ? (
           <p className="rounded-2xl border border-zinc-200/70 bg-white p-5 text-sm text-zinc-500 shadow-sm">
-            {filtre
-              ? anglais
-                ? "No dish on the menu is declared free of what you avoid. Please ask us."
-                : "Aucun plat de la carte n'est déclaré sans ce que vous évitez. Demandez-nous."
-              : anglais
-                ? "The menu is being updated."
-                : "La carte est en cours de mise à jour."}
+            {t(filtre ? ETIQUETTES.rienSans : ETIQUETTES.enMaj, langue)}
           </p>
         ) : (
           sections.map(({ bloc, titre, ancre: id }) => (
@@ -276,12 +290,10 @@ export default async function CartePage({
           <section className="flex flex-col gap-4">
             <div className="flex flex-col gap-1">
               <h2 className="text-sm font-semibold uppercase tracking-wide text-amber-700">
-                {anglais ? "To ask us about" : "À nous demander"}
+                {t(ETIQUETTES.aDemander, langue)}
               </h2>
               <p className="text-sm text-zinc-500">
-                {anglais
-                  ? "We have not declared the allergens of these dishes yet. They are neither included nor ruled out — ask us and we will tell you."
-                  : "Nous n'avons pas encore déclaré les allergènes de ces plats. Ils ne sont ni retenus ni écartés : demandez-nous, nous vous répondrons."}
+                {t(ETIQUETTES.aDemanderTexte, langue)}
               </p>
             </div>
             <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -298,29 +310,19 @@ export default async function CartePage({
             — une cuisine de restaurant n'est pas cloisonnée, et laisser
             croire le contraire serait pire que se taire. */}
         <div className="flex flex-col gap-2 border-t border-zinc-200/70 pt-5 text-xs text-zinc-400">
-          <p>
-            {anglais
-              ? "Menu given for information only: it may change with the season and daily deliveries."
-              : "Carte donnée à titre indicatif : elle peut changer selon l'arrivage et la saison."}
-          </p>
-          <p>{anglais ? MENTION_PRIX.en : MENTION_PRIX.fr}</p>
+          <p>{t(ETIQUETTES.indicative, langue)}</p>
+          <p>{MENTION_PRIX[langue]}</p>
           <p>
             {quelquesAllergenes
-              ? anglais
-                ? MENTION_ALLERGENES.en
-                : MENTION_ALLERGENES.fr
-              : anglais
-                ? MENTION_ALLERGENES_ABSENTS.en
-                : MENTION_ALLERGENES_ABSENTS.fr}
+              ? MENTION_ALLERGENES[langue]
+              : MENTION_ALLERGENES_ABSENTS[langue]}
           </p>
           {quelquesAllergenes && (
             <Link
-              href={`/carte/${slug}/allergenes${anglais ? "?lang=en" : ""}`}
+              href={`/carte/${slug}/allergenes${langue === "fr" ? "" : `?lang=${langue}`}`}
               className="w-fit text-brand-navy underline-offset-2 hover:underline"
             >
-              {anglais
-                ? "See the full allergen table →"
-                : "Voir le tableau des allergènes →"}
+              {t(ETIQUETTES.tableauAllergenes, langue)}
             </Link>
           )}
         </div>
@@ -329,13 +331,13 @@ export default async function CartePage({
           href={`/reserver/${restaurant.slug_reservation}`}
           className="w-fit rounded-md bg-brand-navy px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover"
         >
-          {anglais ? "Book a table" : "Réserver une table"}
+          {t(ETIQUETTES.reserver, langue)}
         </Link>
       </main>
 
       <footer className="border-t border-zinc-200/70 px-5 py-6">
         <SignatureKlarr
-          texte={anglais ? "Menu powered by" : "Carte propulsée par"}
+          texte={t(SIGNATURE, langue)}
           className="mx-auto max-w-5xl"
         />
       </footer>

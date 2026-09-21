@@ -33,7 +33,7 @@ export function AllergenesPlat({
       <span className="text-xs text-zinc-500">Aucun allergène déclaré</span>
     ) : (
       <span className="text-xs text-zinc-500">
-        {listeAllergenes(declares, false)}
+        {listeAllergenes(declares, "fr")}
       </span>
     );
 

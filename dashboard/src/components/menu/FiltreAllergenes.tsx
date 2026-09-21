@@ -1,5 +1,11 @@
 import Link from "next/link";
-import { ALLERGENES, listeAllergenes } from "@/types/allergenes";
+import {
+  ALLERGENES,
+  libelleAllergene,
+  listeAllergenes,
+} from "@/types/allergenes";
+import { ETIQUETTES, t } from "@/lib/menu/etiquettes";
+import type { Langue } from "@/lib/i18n/langues";
 
 /**
  * « Je suis allergique à… », sur la carte publique.
@@ -25,11 +31,11 @@ import { ALLERGENES, listeAllergenes } from "@/types/allergenes";
  */
 export function FiltreAllergenes({
   slug,
-  anglais,
+  langue,
   choisis,
 }: {
   slug: string;
-  anglais: boolean;
+  langue: Langue;
   /** Les codes cochés, tels que l'adresse les porte. */
   choisis: string[];
 }) {
@@ -42,10 +48,10 @@ export function FiltreAllergenes({
     >
       <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-medium text-zinc-900">
         <span>
-          {anglais ? "I'm allergic to…" : "Je suis allergique à…"}
+          {t(ETIQUETTES.filtreTitre, langue)}
           {actif && (
             <span className="ml-2 font-normal text-zinc-500">
-              {listeAllergenes(choisis, anglais)}
+              {listeAllergenes(choisis, langue)}
             </span>
           )}
         </span>
@@ -57,11 +63,11 @@ export function FiltreAllergenes({
       <form method="get" className="mt-4 flex flex-col gap-4">
         {/* La langue ne doit pas se perdre en filtrant : un formulaire GET
             réécrit l'adresse entière. */}
-        {anglais && <input type="hidden" name="lang" value="en" />}
+        {langue !== "fr" && <input type="hidden" name="lang" value={langue} />}
 
         <fieldset className="flex flex-col gap-2">
           <legend className="sr-only">
-            {anglais ? "Allergens to avoid" : "Allergènes à écarter"}
+            {t(ETIQUETTES.filtreLegende, langue)}
           </legend>
           <div className="grid gap-x-4 gap-y-1.5 sm:grid-cols-2">
             {ALLERGENES.map((allergene) => (
@@ -76,7 +82,7 @@ export function FiltreAllergenes({
                   defaultChecked={choisis.includes(allergene.code)}
                   className="shrink-0 accent-brand-navy"
                 />
-                <span>{anglais ? allergene.en : allergene.fr}</span>
+                <span>{libelleAllergene(allergene.code, langue)}</span>
               </label>
             ))}
           </div>
@@ -87,22 +93,20 @@ export function FiltreAllergenes({
             type="submit"
             className="rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover"
           >
-            {anglais ? "Filter the menu" : "Filtrer la carte"}
+            {t(ETIQUETTES.filtreAppliquer, langue)}
           </button>
           {actif && (
             <Link
-              href={`/carte/${slug}${anglais ? "?lang=en" : ""}`}
+              href={`/carte/${slug}${langue === "fr" ? "" : `?lang=${langue}`}`}
               className="text-sm text-zinc-500 underline-offset-2 hover:text-zinc-900 hover:underline"
             >
-              {anglais ? "Show everything" : "Tout afficher"}
+              {t(ETIQUETTES.filtreTout, langue)}
             </Link>
           )}
         </div>
 
         <p className="text-xs text-zinc-500">
-          {anglais
-            ? "This filter reads what the restaurant has declared, ingredient by ingredient. It cannot rule out traces: our kitchen handles all fourteen regulated allergens. Always tell us before ordering."
-            : "Ce filtre lit ce que le restaurant a déclaré, ingrédient par ingrédient. Il ne peut pas exclure les traces : notre cuisine manipule les quatorze allergènes. Signalez-nous toujours votre allergie avant de commander."}
+          {t(ETIQUETTES.filtreReserve, langue)}
         </p>
       </form>
     </details>

@@ -76,7 +76,7 @@ export function Carte({ items, slug }: { items: MenuItem[]; slug?: string }) {
                     )}
                     {plat.allergenes !== null && plat.allergenes.length > 0 && (
                       <span className="text-sm text-zinc-400">
-                        Allergènes : {listeAllergenes(plat.allergenes, false)}
+                        Allergènes : {listeAllergenes(plat.allergenes, "fr")}
                       </span>
                     )}
                   </span>

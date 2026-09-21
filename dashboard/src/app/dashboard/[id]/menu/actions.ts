@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { peutGerer, roleSur } from "@/lib/equipe/roles";
+import { estLangue } from "@/lib/i18n/langues";
 import {
   deplacerCategorie,
   deplacerPlat,
@@ -465,6 +466,14 @@ export async function traduireCarte(formData: FormData): Promise<{
   traduits: number;
 }> {
   const restaurantId = texte(formData.get("restaurant_id"));
+  // La langue visée arrive du formulaire. Une valeur inconnue, ou le
+  // français, n'est pas une cible : le français est la langue de saisie,
+  // il n'y a rien à en traduire.
+  const brut = texte(formData.get("langue"));
+  if (!estLangue(brut) || brut === "fr") {
+    return { error: "Langue de traduction inconnue.", traduits: 0 };
+  }
+  const cible = brut;
   if (!peutGerer(await roleSur(restaurantId))) {
     return { error: "Seul un gérant peut traduire la carte.", traduits: 0 };
   }
@@ -477,14 +486,14 @@ export async function traduireCarte(formData: FormData): Promise<{
   }
 
   const carte = await chargerCarte(restaurantId);
-  const manquants = aTraduire(carte, "en");
+  const manquants = aTraduire(carte, cible);
   if (manquants.length === 0) {
     return { error: null, traduits: 0 };
   }
 
   let traductions;
   try {
-    traductions = await traduirePlats(manquants);
+    traductions = await traduirePlats(manquants, cible);
   } catch (erreur) {
     console.error("[traduireCarte]", erreur);
     return {
@@ -502,11 +511,12 @@ export async function traduireCarte(formData: FormData): Promise<{
   const ecritures = await Promise.all(
     [...traductions.entries()].map(([id, traduction]) => {
       const plat = manquants.find((item) => item.id === id)!;
-      // Les autres langues déjà enregistrées sont conservées : on ne remplace
-      // que l'anglais.
+      // Les autres langues déjà enregistrées sont conservées : on ne
+      // remplace que celle qu'on vient de produire. Écraser l'objet
+      // entier perdrait l'anglais en traduisant le chinois.
       const suite: Traductions = {
         ...(plat.traductions ?? {}),
-        en: traduction,
+        [cible]: traduction,
       };
       return supabase
         .from("restaurant_menu_items")

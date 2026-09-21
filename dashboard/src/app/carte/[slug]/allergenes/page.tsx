@@ -11,7 +11,8 @@ import {
 import { cartePubliee } from "@/lib/menu/publication";
 import { chargerAcces } from "@/lib/abonnement/acces";
 import { SignatureKlarr } from "@/components/brand/SignatureKlarr";
-import { ALLERGENES } from "@/types/allergenes";
+import { ALLERGENES, libelleAllergene } from "@/types/allergenes";
+import { ETIQUETTES, t } from "@/lib/menu/etiquettes";
 import {
   MENTION_ALLERGENES,
   MENTION_PRIX,
@@ -98,9 +99,11 @@ export default async function AllergenesPage({
 
   const { restaurant, items } = charge;
   const visibles = carteVisible(items);
-  const anglaisPossible = langueDisponible(items, "en");
-  const langue = anglaisPossible ? lireLangue(query.lang) : "fr";
-  const anglais = langue === "en";
+  // Même règle que sur la carte : une langue n'est offerte que si la
+  // carte y est réellement traduite.
+  const demandee = lireLangue(query.lang);
+  const langue =
+    demandee !== "fr" && langueDisponible(items, demandee) ? demandee : "fr";
   const blocs = carteOrganisee(visibles);
 
   // Rien de déclaré nulle part : on le dit franchement plutôt que de
@@ -115,10 +118,10 @@ export default async function AllergenesPage({
             {restaurant.nom}
           </span>
           <Link
-            href={`/carte/${slug}${anglais ? "?lang=en" : ""}`}
+            href={`/carte/${slug}${langue === "fr" ? "" : `?lang=${langue}`}`}
             className="text-sm text-brand-navy underline-offset-2 hover:underline"
           >
-            {anglais ? "← Back to the menu" : "← Revenir à la carte"}
+            {t(ETIQUETTES.retourCarte, langue)}
           </Link>
         </div>
       </header>
@@ -126,21 +129,19 @@ export default async function AllergenesPage({
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-5 py-8">
         <div className="flex flex-col gap-2">
           <h1 className="font-serif text-4xl text-ink">
-            {anglais ? TITRE_ALLERGENES.en : TITRE_ALLERGENES.fr}
+            {TITRE_ALLERGENES[langue]}
           </h1>
           {restaurant.adresse && (
             <p className="text-sm text-zinc-500">{restaurant.adresse}</p>
           )}
           <p className="max-w-2xl text-sm text-zinc-600">
-            {anglais ? MENTION_ALLERGENES.en : MENTION_ALLERGENES.fr}
+            {MENTION_ALLERGENES[langue]}
           </p>
         </div>
 
         {rienDeclare ? (
           <p className="rounded-2xl border border-zinc-200/70 bg-white p-5 text-sm text-zinc-500 shadow-sm">
-            {anglais
-              ? "This table is being prepared. Please ask us about any allergy before ordering."
-              : "Ce tableau est en cours de préparation. Signalez-nous toute allergie avant de commander."}
+            {t(ETIQUETTES.tableauEnCours, langue)}
           </p>
         ) : (
           blocs.map((bloc) => {
@@ -165,13 +166,11 @@ export default async function AllergenesPage({
                         </span>
                         {declares === null ? (
                           <span className="text-sm text-amber-700">
-                            {anglais ? "Please ask us" : "Demandez-nous"}
+                            {t(ETIQUETTES.demandezNous, langue)}
                           </span>
                         ) : declares.length === 0 ? (
                           <span className="text-sm text-zinc-500">
-                            {anglais
-                              ? "None of the fourteen"
-                              : "Aucun des quatorze"}
+                            {t(ETIQUETTES.aucunDesQuatorze, langue)}
                           </span>
                         ) : (
                           <span className="flex flex-wrap gap-1.5">
@@ -182,7 +181,7 @@ export default async function AllergenesPage({
                                 key={a.code}
                                 className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-700"
                               >
-                                {anglais ? a.en : a.fr}
+                                {libelleAllergene(a.code, langue)}
                               </span>
                             ))}
                           </span>
@@ -197,18 +196,14 @@ export default async function AllergenesPage({
         )}
 
         <div className="flex flex-col gap-2 border-t border-zinc-200/70 pt-5 text-xs text-zinc-400">
-          <p>{anglais ? MENTION_PRIX.en : MENTION_PRIX.fr}</p>
-          <p>
-            {anglais
-              ? "The fourteen allergens listed here are those required by Annex II of Regulation (EU) No 1169/2011."
-              : "Les quatorze allergènes listés sont ceux de l'annexe II du règlement (UE) n° 1169/2011."}
-          </p>
+          <p>{MENTION_PRIX[langue]}</p>
+          <p>{t(ETIQUETTES.sourceAnnexe, langue)}</p>
         </div>
       </main>
 
       <footer className="border-t border-zinc-200/70 px-5 py-6">
         <SignatureKlarr
-          texte={anglais ? "Menu powered by" : "Carte propulsée par"}
+          texte={t(ETIQUETTES.signature, langue)}
           className="mx-auto max-w-3xl"
         />
       </footer>

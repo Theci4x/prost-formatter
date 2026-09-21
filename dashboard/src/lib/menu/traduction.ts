@@ -1,3 +1,4 @@
+import { estLangue } from "@/lib/i18n/langues";
 import type { Langue, MenuItem, TraductionPlat } from "@/types/menu";
 
 /** Les libellés de format d'un plat, dans leur ordre. */
@@ -101,5 +102,5 @@ export function aTraduire(items: MenuItem[], langue: Langue): MenuItem[] {
 }
 
 export function lireLangue(brut: string | undefined): Langue {
-  return brut === "en" ? "en" : "fr";
+  return estLangue(brut) ? brut : "fr";
 }

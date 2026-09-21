@@ -2,7 +2,7 @@
 
 import { useRef, useState, useTransition } from "react";
 import { uploadPhoto } from "@/app/dashboard/[id]/photos/actions";
-import { GALERIE, messageTropPetite } from "@/lib/images/formats";
+import { GALERIE, messageJuste, messageTropPetite } from "@/lib/images/formats";
 import { poidsLisible, preparerPhoto } from "@/lib/images/preparer";
 
 // Même plafond que côté serveur : on refuse avant d'occuper la connexion.
@@ -58,11 +58,13 @@ export function AjoutPhoto({ restaurantId }: { restaurantId: string }) {
       const reponse = await uploadPhoto(donnees);
       setErreur(reponse.error);
       if (!reponse.error) {
-        if (prete.retravaillee) {
-          setNote(
-            `Réduite à ${prete.largeur} × ${prete.hauteur} px (${poidsLisible(prete.fichier.size)}).`,
-          );
-        }
+        setNote(
+          prete.juste
+            ? messageJuste(prete.largeur, prete.hauteur, GALERIE.conseilCote)
+            : prete.retravaillee
+              ? `Réduite à ${prete.largeur} × ${prete.hauteur} px (${poidsLisible(prete.fichier.size)}).`
+              : null,
+        );
         if (champ.current) champ.current.value = "";
       }
     });
