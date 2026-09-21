@@ -110,7 +110,7 @@ export default async function OuvrirPage() {
           </Link>
         </div>
 
-        <RappelOuverture source="plan-ouverture" />
+        <RappelOuverture source="plan-ouverture" langue={langue} />
       </main>
 
       <Commis />

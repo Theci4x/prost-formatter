@@ -110,6 +110,115 @@ export const SUITE = {
   },
 };
 
+/**
+ * Le formulaire « rappelez-moi le mois de mon ouverture ».
+ *
+ * Il vit sur deux pages traduites, et c'est le seul endroit de la série
+ * où le lecteur écrit plutôt que de lire : un bloc resté en français au
+ * milieu d'une page chinoise n'est pas seulement inélégant, il fait
+ * douter de ce qu'on est en train de donner comme adresse.
+ *
+ * Les refus viennent du serveur, qui répond en français et pose un code
+ * dans l'en-tête ; `motifs` est la table de correspondance. Un code
+ * inconnu retombe sur le texte français du serveur — une phrase qu'on ne
+ * lit pas vaut mieux qu'un formulaire qui ne dit rien.
+ */
+export const RAPPEL = {
+  titre: {
+    fr: "On vous rappelle le mois de votre ouverture ?",
+    en: "Shall we get back to you the month you open?",
+    zh: "要我们在您开业那个月联系您吗？",
+  },
+  chapo: {
+    fr: "Votre carnet de réservation, votre fiche Google et vos premiers couverts se décident dans les semaines qui précèdent l'ouverture. C'est là qu'on vous est utile, pas aujourd'hui.",
+    en: "Your booking system, your Google listing and your first covers are all decided in the weeks before opening. That is when we are useful to you — not today.",
+    zh: "订位系统、Google 商家资料、最早的那批客人，都是在开业前几周定下来的。我们在那个时候才帮得上您，不是今天。",
+  },
+  email: { fr: "Votre e-mail", en: "Your email", zh: "您的邮箱" },
+  date: {
+    fr: "Votre date d'ouverture",
+    en: "Your opening date",
+    zh: "您的开业日期",
+  },
+  nom: { fr: "Votre nom", en: "Your name", zh: "您的姓名" },
+  etablissement: { fr: "Le restaurant", en: "The restaurant", zh: "餐厅名称" },
+  ville: { fr: "La ville", en: "The town", zh: "所在城市" },
+  facultatif: { fr: "(facultatif)", en: "(optional)", zh: "（选填）" },
+  placeholderEtablissement: {
+    fr: "Nom, ou « pas encore décidé »",
+    en: "A name, or “not decided yet”",
+    zh: "名字，或者填「还没定」",
+  },
+  bouton: {
+    fr: "Me rappeler le moment venu",
+    en: "Remind me when the time comes",
+    zh: "到时候提醒我",
+  },
+  enCours: { fr: "Enregistrement…", en: "Saving…", zh: "正在保存…" },
+  promesse: {
+    fr: "Votre adresse ne sert qu'à ça : un appel ou un message, une fois, le mois de votre ouverture. Pas de lettre d'information, pas de revente, rien entre-temps. Pour être retiré de la liste avant ou après, un mot à contact@klarr.net suffit.",
+    en: "Your address is used for that and nothing else: one call or one message, once, the month you open. No newsletter, no reselling, nothing in between. To be taken off the list, before or after, one line to contact@klarr.net is enough.",
+    zh: "您的邮箱只用于这一件事：在您开业那个月，联系您一次，一通电话或一条消息。没有推送邮件，不会转卖，中间不打扰。想随时退出，写一封信到 contact@klarr.net 就行。",
+  },
+  faitTitre: {
+    fr: "C'est noté. On vous rappelle le mois venu.",
+    en: "Noted. We will come back to you that month.",
+    zh: "记下了。到那个月我们会联系您。",
+  },
+  faitTexte: {
+    fr: "D'ici là, vous n'entendrez pas parler de nous. Si votre date bouge, revenez remplir le même formulaire : elle se corrige.",
+    en: "Until then you will not hear from us. If your date moves, come back and fill in the same form: it overwrites the old one.",
+    zh: "在那之前您不会收到我们任何消息。如果日期有变动，回来重新填一次这张表就行，会直接覆盖。",
+  },
+  motifs: {
+    illisible: {
+      fr: "La demande n'a pas été comprise. Réessayez.",
+      en: "The request could not be read. Please try again.",
+      zh: "请求没能被读取，请再试一次。",
+    },
+    email: {
+      fr: "Cette adresse e-mail ne semble pas valide.",
+      en: "That email address does not look valid.",
+      zh: "这个邮箱地址看起来不对。",
+    },
+    "date-absente": {
+      fr: "Indiquez une date d'ouverture, même approximative.",
+      en: "Give an opening date, even a rough one.",
+      zh: "请填一个开业日期，大概的也可以。",
+    },
+    "date-illisible": {
+      fr: "Cette date ne se lit pas.",
+      en: "That date cannot be read.",
+      zh: "这个日期读不出来。",
+    },
+    "date-passee": {
+      fr: "Cette date est passée. Si vous êtes déjà ouvert, écrivez-nous plutôt à contact@klarr.net.",
+      en: "That date is in the past. If you are already open, write to us at contact@klarr.net instead.",
+      zh: "这个日期已经过了。如果您已经开业，请直接写信到 contact@klarr.net。",
+    },
+    "date-lointaine": {
+      fr: "Au-delà de trois ans, revenez nous voir quand le projet se précisera.",
+      en: "Beyond three years out, come back when the project firms up.",
+      zh: "三年以后的日期，等项目更明确了再回来找我们。",
+    },
+    limite: {
+      fr: "Nous avons déjà votre demande.",
+      en: "We already have your request.",
+      zh: "我们已经收到您的请求了。",
+    },
+    serveur: {
+      fr: "L'enregistrement a échoué. Écrivez-nous à contact@klarr.net.",
+      en: "Saving failed. Write to us at contact@klarr.net.",
+      zh: "保存失败。请写信到 contact@klarr.net。",
+    },
+    reseau: {
+      fr: "L'envoi a échoué. Écrivez-nous à contact@klarr.net.",
+      en: "Sending failed. Write to us at contact@klarr.net.",
+      zh: "发送失败。请写信到 contact@klarr.net。",
+    },
+  } satisfies Record<string, Trad>,
+};
+
 /** Le plan d'ouverture, qui relie les quatre. */
 export const PLAN = {
   surtitre: { fr: "Ouvrir", en: "Opening", zh: "开业" },

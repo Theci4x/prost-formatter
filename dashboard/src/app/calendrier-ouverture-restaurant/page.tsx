@@ -8,13 +8,16 @@ import { DonneesStructurees } from "@/components/seo/DonneesStructurees";
 import { filAriane } from "@/lib/seo/donnees-structurees";
 import { siteUrl } from "@/lib/site-url";
 import { langueIndexable } from "@/lib/i18n/langue";
+import { t } from "@/lib/i18n/outils";
 import {
+  ECRAN,
   PHASES,
   calendrier,
   dateLisible,
   jalonsDe,
   lireDate,
   ouvertureParDefaut,
+  resumeCalendrier,
 } from "@/lib/ouverture/calendrier";
 
 /**
@@ -24,6 +27,10 @@ import {
  * — un jalon national porte une date, un jalon local porte un numéro de
  * téléphone à composer. La raison est dans `calendrier.ts` : un délai
  * faux est pire qu'un délai absent, parce qu'on s'organise dessus.
+ *
+ * Les dates passent par `dateLisible(date, langue)` et non par un format
+ * français figé : c'est la page où la traduction se voit le plus, puisque
+ * le lecteur y compte des jours.
  */
 
 const CHEMIN = "/calendrier-ouverture-restaurant";
@@ -63,32 +70,20 @@ export default async function CalendrierPage({
 
         <div className="flex flex-col gap-3">
           <span className="text-xs font-semibold uppercase tracking-wide text-brand-orange">
-            Calendrier
+            {t(ECRAN.surtitre, langue)}
           </span>
           <h1 className="font-serif text-4xl text-ink sm:text-5xl">
-            Quand commencer quoi
+            {t(ECRAN.titre, langue)}
           </h1>
-          <p className="text-base text-zinc-600">
-            Donnez votre date d&apos;ouverture : on remonte le fil. Les
-            démarches dont le délai est fixé par un texte reçoivent une date.
-            Celles qui dépendent de votre mairie, de votre préfecture ou de
-            votre copropriété reçoivent un numéro à appeler — pas une date
-            inventée.
-          </p>
+          <p className="text-base text-zinc-600">{t(ECRAN.chapo, langue)}</p>
         </div>
 
         <div className="rounded-2xl border border-zinc-300 bg-white p-5">
           <p className="text-base font-semibold text-zinc-900">
-            Pourquoi on ne vous donne pas toutes les dates.
+            {t(ECRAN.pourquoiTitre, langue)}
           </p>
           <p className="mt-1.5 text-base text-zinc-600">
-            Un délai d&apos;instruction en mairie va de trois semaines à
-            plusieurs mois selon la commune, la saison et le dossier. Un outil
-            qui annoncerait « deux mois » se tromperait une fois sur deux, et
-            celui qui s&apos;en apercevrait serait celui qui ouvre en retard. Ce
-            qui ne varie jamais, en revanche, c&apos;est{" "}
-            <strong>l&apos;ordre</strong> : c&apos;est lui que cette page vous
-            donne en entier.
+            {t(ECRAN.pourquoiTexte, langue)}
           </p>
         </div>
 
@@ -101,7 +96,7 @@ export default async function CalendrierPage({
             className="flex flex-1 flex-col gap-1.5 text-base font-medium text-zinc-700"
             htmlFor="ouverture"
           >
-            Votre date d&apos;ouverture, même approximative
+            {t(ECRAN.champ, langue)}
             <input
               id="ouverture"
               name="ouverture"
@@ -118,7 +113,7 @@ export default async function CalendrierPage({
             type="submit"
             className="rounded-md bg-brand-navy px-5 py-2.5 text-base font-medium text-white transition-colors hover:bg-brand-navy-hover"
           >
-            Remonter le fil
+            {t(ECRAN.bouton, langue)}
           </button>
         </form>
 
@@ -126,12 +121,10 @@ export default async function CalendrierPage({
           <section className="flex flex-col gap-6">
             <div className="flex flex-col gap-1">
               <h2 className="font-serif text-3xl text-ink">
-                Ouverture le {dateLisible(ouverture)}
+                {t(ECRAN.ouvertureLe, langue)} {dateLisible(ouverture, langue)}
               </h2>
               <p className="text-base text-zinc-600">
-                {calcules} démarches sur {jalons.length} ont un délai fixé par
-                un texte : elles portent une date. Les autres dépendent de gens
-                qu&apos;il faut appeler.
+                {resumeCalendrier(calcules, jalons.length, langue)}
               </p>
             </div>
 
@@ -142,9 +135,11 @@ export default async function CalendrierPage({
                 <div key={phase.id} className="flex flex-col gap-3">
                   <div className="flex flex-col gap-0.5">
                     <h3 className="text-sm font-semibold uppercase tracking-wide text-brand-navy">
-                      {phase.titre}
+                      {t(phase.titre, langue)}
                     </h3>
-                    <p className="text-base text-zinc-500">{phase.chapo}</p>
+                    <p className="text-base text-zinc-500">
+                      {t(phase.chapo, langue)}
+                    </p>
                   </div>
 
                   <ul className="flex flex-col gap-3">
@@ -155,36 +150,38 @@ export default async function CalendrierPage({
                       >
                         <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
                           <span className="text-base font-medium text-zinc-900">
-                            {jalon.titre}
+                            {t(jalon.titre, langue)}
                           </span>
                           {jalon.date ? (
                             <span className="shrink-0 rounded-full bg-brand-navy px-2.5 py-0.5 text-xs font-medium text-white">
-                              {dateLisible(jalon.date)}
+                              {dateLisible(jalon.date, langue)}
                             </span>
                           ) : (
                             <span className="shrink-0 rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600">
-                              délai à demander
+                              {t(ECRAN.aDemander, langue)}
                             </span>
                           )}
                         </div>
 
-                        <p className="text-base text-zinc-600">{jalon.quoi}</p>
+                        <p className="text-base text-zinc-600">
+                          {t(jalon.quoi, langue)}
+                        </p>
 
                         {jalon.precedent && (
                           <p className="text-base text-zinc-500">
                             <span className="font-medium text-zinc-700">
-                              Après :
+                              {t(ECRAN.apres, langue)}
                             </span>{" "}
-                            {jalon.precedent.titre.toLowerCase()}.
+                            {t(jalon.precedent.titre, langue)}.
                           </p>
                         )}
 
                         {jalon.aQuiDemander && (
                           <p className="text-base text-zinc-500">
                             <span className="font-medium text-zinc-700">
-                              À qui demander :
+                              {t(ECRAN.aQuiDemander, langue)}
                             </span>{" "}
-                            {jalon.aQuiDemander}
+                            {t(jalon.aQuiDemander, langue)}
                           </p>
                         )}
 
@@ -193,7 +190,7 @@ export default async function CalendrierPage({
                             href={`/blog/${jalon.article}`}
                             className="w-fit text-base text-brand-navy underline-offset-2 hover:underline"
                           >
-                            En savoir plus →
+                            {t(ECRAN.enSavoirPlus, langue)}
                           </Link>
                         )}
                       </li>
@@ -203,32 +200,24 @@ export default async function CalendrierPage({
               );
             })}
 
-            <p className="text-sm text-zinc-500">
-              Les dates calculées sont des dates <em>limites</em>, pas des dates
-              conseillées : s&apos;y prendre la veille de l&apos;échéance,
-              c&apos;est n&apos;avoir aucune marge si un dossier est incomplet.
-              Cette page vit dans son adresse — gardez-la, elle se recalcule si
-              votre date bouge.
-            </p>
+            <p className="text-sm text-zinc-500">{t(ECRAN.note, langue)}</p>
           </section>
         )}
 
-        {planifie && <RappelOuverture source="calendrier" />}
+        {planifie && <RappelOuverture source="calendrier" langue={langue} />}
 
         <div className="flex flex-col gap-3 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm">
           <p className="text-base font-semibold text-zinc-900">
-            Avant tout ça, il y a le local.
+            {t(ECRAN.localTitre, langue)}
           </p>
           <p className="text-base text-zinc-600">
-            Aucune de ces démarches ne sert si l&apos;extraction, la destination
-            du bail ou la copropriété rendent le projet impossible. Ces cinq
-            points-là se vérifient avant de signer.
+            {t(ECRAN.localTexte, langue)}
           </p>
           <Link
             href="/diagnostic-local-restaurant"
             className="w-fit text-base text-brand-navy underline-offset-2 hover:underline"
           >
-            Ce local peut-il accueillir votre restaurant ? →
+            {t(ECRAN.localLien, langue)}
           </Link>
         </div>
         <SuiteOutils actuel="calendrier" langue={langue} />

@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { RAPPEL, t } from "@/lib/i18n/outils";
+import type { Langue } from "@/lib/i18n/langues";
 
 /**
  * « On vous recontacte le mois de votre ouverture. »
@@ -19,8 +21,19 @@ import { useState } from "react";
  * n'ouvre. Le texte est court parce qu'il est vrai : une adresse, une
  * date, un appel. Si la promesse demandait un paragraphe pour être
  * expliquée, c'est qu'elle serait à revoir.
+ *
+ * Le refus vient du serveur, qui répond en français et pose son motif
+ * dans l'en-tête `X-Klarr-Motif`. C'est ce code qu'on traduit, pas la
+ * phrase : un motif inconnu retombe sur le texte du serveur plutôt que
+ * de laisser le formulaire muet.
  */
-export function RappelOuverture({ source }: { source: string }) {
+export function RappelOuverture({
+  source,
+  langue,
+}: {
+  source: string;
+  langue: Langue;
+}) {
   const [email, setEmail] = useState("");
   const [nom, setNom] = useState("");
   const [etablissement, setEtablissement] = useState("");
@@ -52,12 +65,18 @@ export function RappelOuverture({ source }: { source: string }) {
         }),
       });
       if (!reponse.ok) {
-        setErreur(await reponse.text());
+        const motif = reponse.headers.get("X-Klarr-Motif") ?? "";
+        const connu = motif in RAPPEL.motifs;
+        setErreur(
+          connu
+            ? t(RAPPEL.motifs[motif as keyof typeof RAPPEL.motifs], langue)
+            : await reponse.text(),
+        );
         return;
       }
       setFait(true);
     } catch {
-      setErreur("L'envoi a échoué. Écrivez-nous à contact@klarr.net.");
+      setErreur(t(RAPPEL.motifs.reseau, langue));
     } finally {
       setEnvoi(false);
     }
@@ -67,11 +86,10 @@ export function RappelOuverture({ source }: { source: string }) {
     return (
       <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-6">
         <p className="text-sm font-semibold text-emerald-900">
-          C&apos;est noté. On vous rappelle le mois venu.
+          {t(RAPPEL.faitTitre, langue)}
         </p>
         <p className="mt-1.5 text-base text-emerald-800">
-          D&apos;ici là, vous n&apos;entendrez pas parler de nous. Si votre date
-          bouge, revenez remplir le même formulaire : elle se corrige.
+          {t(RAPPEL.faitTexte, langue)}
         </p>
       </div>
     );
@@ -84,18 +102,14 @@ export function RappelOuverture({ source }: { source: string }) {
     >
       <div className="flex flex-col gap-1">
         <p className="text-base font-semibold text-zinc-900">
-          On vous rappelle le mois de votre ouverture ?
+          {t(RAPPEL.titre, langue)}
         </p>
-        <p className="text-base text-zinc-600">
-          Votre carnet de réservation, votre fiche Google et vos premiers
-          couverts se décident dans les semaines qui précèdent l&apos;ouverture.
-          C&apos;est là qu&apos;on vous est utile, pas aujourd&apos;hui.
-        </p>
+        <p className="text-base text-zinc-600">{t(RAPPEL.chapo, langue)}</p>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="flex flex-col gap-1 text-base font-medium text-zinc-700">
-          Votre e-mail
+          {t(RAPPEL.email, langue)}
           <input
             type="email"
             value={email}
@@ -107,7 +121,7 @@ export function RappelOuverture({ source }: { source: string }) {
           />
         </label>
         <label className="flex flex-col gap-1 text-base font-medium text-zinc-700">
-          Votre date d&apos;ouverture
+          {t(RAPPEL.date, langue)}
           <input
             type="date"
             value={date}
@@ -118,8 +132,10 @@ export function RappelOuverture({ source }: { source: string }) {
           />
         </label>
         <label className="flex flex-col gap-1 text-base font-medium text-zinc-700">
-          Votre nom{" "}
-          <span className="font-normal text-zinc-400">(facultatif)</span>
+          {t(RAPPEL.nom, langue)}{" "}
+          <span className="font-normal text-zinc-400">
+            {t(RAPPEL.facultatif, langue)}
+          </span>
           <input
             value={nom}
             onChange={(e) => setNom(e.target.value)}
@@ -128,19 +144,23 @@ export function RappelOuverture({ source }: { source: string }) {
           />
         </label>
         <label className="flex flex-col gap-1 text-base font-medium text-zinc-700">
-          Le restaurant{" "}
-          <span className="font-normal text-zinc-400">(facultatif)</span>
+          {t(RAPPEL.etablissement, langue)}{" "}
+          <span className="font-normal text-zinc-400">
+            {t(RAPPEL.facultatif, langue)}
+          </span>
           <input
             value={etablissement}
             onChange={(e) => setEtablissement(e.target.value)}
             disabled={envoi}
-            placeholder="Nom, ou « pas encore décidé »"
+            placeholder={t(RAPPEL.placeholderEtablissement, langue)}
             className={champ}
           />
         </label>
         <label className="flex flex-col gap-1 text-base font-medium text-zinc-700 sm:col-span-2">
-          La ville{" "}
-          <span className="font-normal text-zinc-400">(facultatif)</span>
+          {t(RAPPEL.ville, langue)}{" "}
+          <span className="font-normal text-zinc-400">
+            {t(RAPPEL.facultatif, langue)}
+          </span>
           <input
             value={ville}
             onChange={(e) => setVille(e.target.value)}
@@ -161,15 +181,10 @@ export function RappelOuverture({ source }: { source: string }) {
         disabled={envoi || !email.trim() || !date}
         className="w-fit rounded-md bg-brand-navy px-5 py-2.5 text-base font-medium text-white transition-colors hover:bg-brand-navy-hover disabled:opacity-40"
       >
-        {envoi ? "Enregistrement…" : "Me rappeler le moment venu"}
+        {envoi ? t(RAPPEL.enCours, langue) : t(RAPPEL.bouton, langue)}
       </button>
 
-      <p className="text-sm text-zinc-500">
-        Votre adresse ne sert qu&apos;à ça : un appel ou un message, une fois,
-        le mois de votre ouverture. Pas de lettre d&apos;information, pas de
-        revente, rien entre-temps. Pour être retiré de la liste avant ou après,
-        un mot à contact@klarr.net suffit.
-      </p>
+      <p className="text-sm text-zinc-500">{t(RAPPEL.promesse, langue)}</p>
     </form>
   );
 }
