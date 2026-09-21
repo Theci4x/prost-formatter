@@ -26,6 +26,9 @@ import { BandePhotos } from "@/components/reservations/BandePhotos";
 import { formatCreneau, type Espace, type Service } from "@/types/reservation";
 import { heureLisible } from "@/lib/site/horaires";
 import { SignatureKlarr } from "@/components/brand/SignatureKlarr";
+import { langueVisiteur } from "@/lib/i18n/langue";
+import { RESERVER } from "@/lib/i18n/reserver";
+import type { Langue } from "@/lib/i18n/langues";
 import type { RestaurantPhoto } from "@/types/photo";
 import { Carte } from "@/components/menu/Carte";
 import { cartePubliee } from "@/lib/menu/publication";
@@ -167,8 +170,14 @@ function dateDuJour(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-function formatDateLongue(date: string): string {
-  return new Date(`${date}T12:00:00`).toLocaleDateString("fr-FR", {
+const LOCALE: Record<Langue, string> = {
+  fr: "fr-FR",
+  en: "en-GB",
+  zh: "zh-CN",
+};
+
+function formatDateLongue(date: string, langue: Langue): string {
+  return new Date(`${date}T12:00:00`).toLocaleDateString(LOCALE[langue], {
     weekday: "long",
     day: "numeric",
     month: "long",
@@ -195,6 +204,12 @@ export default async function ReserverPage({
   // présenteraient un soir où personne ne les attend.
   const acces = await chargerAcces(restaurant.id, createServiceClient());
   if (!acces.ouvert.reservations) notFound();
+
+  // La langue du visiteur : son témoin s'il en a un, sinon ce que dit son
+  // navigateur. Un touriste chinois qui scanne un QR sur la table n'a pas
+  // de témoin — c'est l'en-tête du navigateur qui le sauve.
+  const langue = await langueVisiteur();
+  const r = RESERVER[langue];
 
   const date =
     query.date && /^\d{4}-\d{2}-\d{2}$/.test(query.date)
@@ -404,11 +419,7 @@ export default async function ReserverPage({
           {restaurant.adresse && (
             <p className="text-base text-zinc-500">{restaurant.adresse}</p>
           )}
-          <p className="text-base text-zinc-500">
-            Choisis une date et un nombre de convives : nous n&apos;affichons
-            que ce qui est réellement disponible. Ta demande est confirmée par
-            l&apos;établissement.
-          </p>
+          <p className="text-base text-zinc-500">{r.chapo}</p>
         </div>
 
         <ResumeEtablissement
@@ -428,14 +439,12 @@ export default async function ReserverPage({
         >
           <section className="flex flex-col gap-4">
             <h2 className="text-base font-semibold text-zinc-900 first-letter:capitalize">
-              {formatDateLongue(date)} — {couverts} convive
-              {couverts > 1 ? "s" : ""}
+              {r.dateEtCouverts(formatDateLongue(date, langue), couverts)}
             </h2>
 
             {creneaux.length === 0 ? (
               <p className="rounded-2xl border border-zinc-200/70 bg-white p-5 text-base text-zinc-500 shadow-sm">
-                L&apos;établissement ne prend pas de réservation ce jour-là.
-                Essaie une autre date.
+                {r.pasDeReservationCeJour}
               </p>
             ) : (
               groupes.map((groupe) => {
@@ -477,7 +486,7 @@ export default async function ReserverPage({
                     {groupe.heures.length > 1 && (
                       <div className="flex flex-col gap-2">
                         <span className="text-base text-zinc-500">
-                          À quelle heure ?
+                          {r.aQuelleHeure}
                         </span>
                         <div className="flex flex-wrap gap-2">
                           {groupe.heures.map((h) => {
@@ -495,7 +504,7 @@ export default async function ReserverPage({
                             ) : (
                               <span
                                 key={h.heure}
-                                title="Complet à cette heure"
+                                title={r.completACetteHeure}
                                 className="rounded-lg border border-zinc-100 px-3 py-1.5 text-base text-zinc-300 line-through"
                               >
                                 {heureLisible(h.heure)}
@@ -509,11 +518,10 @@ export default async function ReserverPage({
                     {espaceDemande ? (
                       <div className="rounded-xl border border-zinc-200 bg-zinc-50/70 p-4">
                         <p className="font-medium text-zinc-900">
-                          Privatiser {espaceDemande.nom}
+                          {r.privatiser(espaceDemande.nom)}
                         </p>
                         <p className="mt-1 text-base text-zinc-500">
-                          {espaceDemande.description ??
-                            "L'espace est à vous seuls pendant tout le service."}
+                          {espaceDemande.description ?? r.espaceAVousSeuls}
                         </p>
                         <BandePhotos
                           photos={photosParEspace.get(espaceDemande.id) ?? []}
@@ -536,7 +544,7 @@ export default async function ReserverPage({
                             date={date}
                             couverts={couverts}
                             type="privatisation"
-                            libelle={`Privatiser ${espaceDemande.nom}`}
+                            libelle={r.privatiser(espaceDemande.nom)}
                             restaurantNom={restaurant.nom}
                             principal
                           />
@@ -545,7 +553,7 @@ export default async function ReserverPage({
                             <p className="text-base text-zinc-500">
                               {demandee?.raison ??
                                 creneau.raison ??
-                                "Cet espace ne se privatise pas sur ce service."}
+                                r.pasDePrivatisationCeService}
                             </p>
                             {/* Le client est venu pour deux et découvre un
                               minimum : lui faire retaper le nombre serait
@@ -557,8 +565,9 @@ export default async function ReserverPage({
                                   href={`?date=${date}&couverts=${espaceDemande.privatisation_minimum}&espace=${espaceDemande.id}`}
                                   className="w-fit text-sm font-medium text-brand-orange hover:underline"
                                 >
-                                  Voir pour{" "}
-                                  {espaceDemande.privatisation_minimum} convives
+                                  {r.voirPour(
+                                    espaceDemande.privatisation_minimum,
+                                  )}
                                 </a>
                               )}
                           </div>
@@ -574,14 +583,13 @@ export default async function ReserverPage({
                         {table ? (
                           <div className="rounded-xl border border-zinc-200 bg-zinc-50/70 p-4">
                             <p className="font-medium text-zinc-900">
-                              Une table pour {couverts} convive
+                              {r.uneTablePour(couverts)}
                               {couverts > 1 ? "s" : ""}
                             </p>
                             <p className="mt-1 text-base text-zinc-500">
-                              Placée par l&apos;établissement, comme au
-                              téléphone.
+                              {r.placeeParEtablissement}
                               {placesMax > couverts &&
-                                ` Il reste de la place jusqu'à ${placesMax} convives.`}
+                                r.resteDeLaPlace(placesMax)}
                             </p>
                             <DemandeForm
                               slug={slug}
@@ -591,7 +599,7 @@ export default async function ReserverPage({
                               date={date}
                               couverts={couverts}
                               type="table"
-                              libelle="Réserver une table"
+                              libelle={r.reserverUneTable}
                               restaurantNom={restaurant.nom}
                               principal
                             />
@@ -612,11 +620,10 @@ export default async function ReserverPage({
                         {privatisations.length > 0 && (
                           <div className="rounded-xl border border-zinc-200 bg-zinc-50/70 p-4">
                             <p className="font-medium text-zinc-900">
-                              Privatiser un espace
+                              {r.privatiserUnEspace}
                             </p>
                             <p className="mt-1 text-base text-zinc-500">
-                              L&apos;espace est à vous seuls pendant tout le
-                              service.
+                              {r.espaceAVousSeuls}
                             </p>
 
                             <ul className="mt-3 flex flex-col gap-3">
@@ -630,7 +637,7 @@ export default async function ReserverPage({
                                       {dispo.espace.nom}
                                     </span>
                                     <span className="text-base text-zinc-500">
-                                      Jusqu&apos;à {dispo.espace.capacite}{" "}
+                                      {r.jusqua(dispo.espace.capacite)}
                                       couverts
                                     </span>
                                   </div>
@@ -661,7 +668,7 @@ export default async function ReserverPage({
                                     date={date}
                                     couverts={couverts}
                                     type="privatisation"
-                                    libelle={`Privatiser ${dispo.espace.nom}`}
+                                    libelle={r.privatiser(dispo.espace.nom)}
                                     restaurantNom={restaurant.nom}
                                   />
                                 </li>
@@ -684,7 +691,7 @@ export default async function ReserverPage({
                 href={`?date=${date}&couverts=${couverts}`}
                 className="w-fit text-sm font-medium text-brand-orange hover:underline"
               >
-                Ou réserver simplement une table
+                {r.ouReserverSimplement}
               </a>
             )}
           </section>
@@ -748,10 +755,7 @@ export default async function ReserverPage({
             </p>
           </div>
         )}
-        <SignatureKlarr
-          texte="Réservations propulsées par"
-          className="mx-auto max-w-3xl"
-        />
+        <SignatureKlarr texte={r.propulseePar} className="mx-auto max-w-3xl" />
       </footer>
 
       {/* L'assistant n'apparaît que s'il a de quoi répondre. Une fiche

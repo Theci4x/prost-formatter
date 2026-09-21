@@ -1,11 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SignatureKlarr } from "@/components/brand/SignatureKlarr";
+import { langueVisiteur } from "@/lib/i18n/langue";
+import { RESERVER } from "@/lib/i18n/reserver";
 
-export const metadata: Metadata = {
-  title: "Demande envoyée",
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return {
+    title: RESERVER[await langueVisiteur()].mercititre,
+    robots: { index: false, follow: false },
+  };
+}
 
 export default async function MerciPage({
   params,
@@ -15,6 +19,7 @@ export default async function MerciPage({
   searchParams: Promise<{ confirmee?: string }>;
 }) {
   const { slug } = await params;
+  const r = RESERVER[await langueVisiteur()];
   // La plupart des réservations sont confirmées sur-le-champ : annoncer une
   // attente de 48 heures à quelqu'un dont la table est déjà prise serait
   // faux, et lui ferait rappeler pour vérifier.
@@ -40,30 +45,24 @@ export default async function MerciPage({
 
       <div className="flex max-w-md flex-col gap-3">
         <h1 className="font-serif text-4xl text-ink">
-          {confirmee ? "C'est réservé." : "Ta demande est partie."}
+          {confirmee ? r.confirmeeTitre : r.mercititre}
         </h1>
         {confirmee ? (
           <>
             <p className="text-sm leading-relaxed text-zinc-600">
-              Ta table est confirmée. Tu reçois le détail par e-mail dans
-              quelques instants — garde-le, il rappelle l&apos;heure et
-              l&apos;adresse.
+              {r.confirmeeDetail}
             </p>
             <p className="text-sm leading-relaxed text-zinc-600">
-              Un empêchement ? Préviens l&apos;établissement en répondant à cet
-              e-mail. Une table rendue à temps, c&apos;est une table qui resert.
+              {r.confirmeeEmpechement}
             </p>
           </>
         ) : (
           <>
             <p className="text-sm leading-relaxed text-zinc-600">
-              L&apos;établissement la reçoit à l&apos;instant et te répond sous
-              48 heures. Ton créneau est mis de côté jusque-là : personne
-              d&apos;autre ne peut le réserver.
+              {r.attenteDelai}
             </p>
             <p className="text-sm leading-relaxed text-zinc-600">
-              Tu recevras la confirmation par e-mail. Rien n&apos;est débité
-              tant que l&apos;établissement n&apos;a pas accepté.
+              {r.attenteRienDebite}
             </p>
           </>
         )}
@@ -73,10 +72,10 @@ export default async function MerciPage({
         href={`/reserver/${slug}`}
         className="rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
       >
-        Faire une autre demande
+        {r.faireUneAutreDemande}
       </Link>
 
-      <SignatureKlarr texte="Réservations propulsées par" className="mt-4" />
+      <SignatureKlarr texte={r.propulseePar} className="mt-4" />
     </div>
   );
 }
