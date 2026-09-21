@@ -72,6 +72,15 @@ const nextConfig: NextConfig = {
         ],
       },
       {
+        // La vitrine d'un restaurant se recalcule dans la langue du
+        // navigateur : sans « Vary », un cache intermédiaire servirait la
+        // version française à un client chinois parce qu'un Français est
+        // passé avant lui. Next ne cache pas cette page, mais les caches
+        // ne sont pas tous les nôtres.
+        source: "/restaurant/:slug",
+        headers: [{ key: "Vary", value: "Accept-Language, Cookie" }],
+      },
+      {
         // Le service worker doit rester frais : mis en cache, un appareil
         // garderait pour toujours une version qui n'affiche plus rien. Pas
         // de politique de contenu propre ici — à clé égale, c'est celle du

@@ -7,7 +7,7 @@ import { GalerieRestaurant } from "@/components/reservations/GalerieRestaurant";
 import { CouvertureVitrine } from "@/components/reservations/CouvertureVitrine";
 import { BandePhotos } from "@/components/reservations/BandePhotos";
 import { SignatureKlarr } from "@/components/brand/SignatureKlarr";
-import { langueIndexable, type Langue } from "@/lib/i18n/langue";
+import { langueVisiteur, type Langue } from "@/lib/i18n/langue";
 import { VITRINE } from "@/lib/i18n/vitrine";
 import { montantLisible } from "@/lib/i18n/nombres";
 import { ChoixLangueSite } from "@/components/landing/ChoixLangueSite";
@@ -89,7 +89,7 @@ export async function generateMetadata({
   params: Promise<Params>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const v = VITRINE[await langueIndexable()];
+  const v = VITRINE[await langueVisiteur()];
   const restaurant = await chargerVitrine(slug);
   if (!restaurant) return { title: v.restaurant };
 
@@ -197,10 +197,24 @@ export default async function VitrinePage({
   const restaurant = await chargerVitrine(slug);
   if (!restaurant) notFound();
 
-  // La vitrine est *la* page indexée : elle ne devine jamais la langue
-  // d'après l'en-tête du visiteur, sans quoi Google indexerait la
-  // version anglaise d'un restaurant parisien (voir `langueIndexable`).
-  const langue = await langueIndexable();
+  // La vitrine suit la langue du navigateur, contrairement aux pages de
+  // Klarr lui-même.
+  //
+  // La règle de `langueIndexable` — français pour tout le monde, une autre
+  // langue seulement pour qui clique — vaut pour les pages que Klarr écrit
+  // pour des restaurateurs français. Celle-ci n'est pas à nous : c'est la
+  // vitrine du restaurant, et son lecteur est un client, parfois un
+  // touriste, qui n'est pas passé par l'accueil et n'a donc jamais eu
+  // l'occasion de choisir. Le laisser sur une page française parce qu'il
+  // n'a pas trouvé le globe, c'est perdre le couvert.
+  //
+  // Le référencement ne souffre pas : Googlebot n'envoie pas d'en-tête
+  // « Accept-Language » par défaut, et sans en-tête `langueVisiteur` rend
+  // le français. Le balisage structuré suit la langue affichée, donc ne la
+  // contredit jamais, et `Vary: Accept-Language` prévient les caches (voir
+  // `next.config.ts`). Un choix explicite, lui, passe toujours devant :
+  // le témoin est lu en premier.
+  const langue = await langueVisiteur();
   const v = VITRINE[langue];
 
   const supabase = createServiceClient();
