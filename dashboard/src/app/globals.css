@@ -163,19 +163,19 @@ body {
      d'une traite : la taille qui convient à un pouce dans le métro n'est
      pas celle qui convient à un bras tendu devant un grand écran, et
      figer l'une des deux oblige l'autre à zoomer. */
-  font-size: clamp(1.0625rem, 1rem + 0.35vw, 1.1875rem);
+  font-size: clamp(1.0625rem, 0.95rem + 0.5vw, 1.25rem);
   line-height: 1.75;
   color: var(--ink-soft);
 }
 .billet h2 {
   font-family: var(--font-instrument-serif), Georgia, serif;
-  font-size: clamp(1.65rem, 1.5rem + 0.6vw, 2rem);
+  font-size: clamp(1.65rem, 1.45rem + 0.8vw, 2.15rem);
   line-height: 1.2;
   color: var(--ink);
   margin-top: 1.5rem;
 }
 .billet h3 {
-  font-size: clamp(1.0625rem, 1rem + 0.35vw, 1.1875rem);
+  font-size: clamp(1.0625rem, 0.95rem + 0.5vw, 1.25rem);
   font-weight: 700;
   color: var(--ink);
   margin-top: 0.8rem;

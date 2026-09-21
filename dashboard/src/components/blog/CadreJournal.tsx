@@ -42,6 +42,11 @@ export function CadreJournal({
    */
   journal?: { article?: string; langues?: Langue[] };
 }) {
+  // Une seule largeur pour tout le cadre — en-tête, corps, pied. Trois
+  // valeurs différentes donnaient un texte plus étroit que son propre fil
+  // d'Ariane, ce qui se lit comme une colonne posée de travers.
+  const largeur = large ? "max-w-4xl" : "max-w-2xl";
+
   return (
     <div
       className="klarr-grain"
@@ -72,7 +77,9 @@ export function CadreJournal({
           background: "var(--paper)",
         }}
       >
-        <div className="mx-auto flex w-full max-w-3xl flex-wrap items-center gap-2 px-6 py-4">
+        <div
+          className={`mx-auto flex w-full ${largeur} flex-wrap items-center gap-2 px-6 py-4`}
+        >
           <Link
             href="/"
             className="flex items-center gap-2"
@@ -103,8 +110,8 @@ export function CadreJournal({
       </header>
 
       <main
-        className={`mx-auto flex w-full flex-1 flex-col px-6 py-10 ${
-          large ? "max-w-3xl gap-12" : "max-w-2xl gap-8"
+        className={`mx-auto flex w-full flex-1 flex-col px-6 py-10 ${largeur} ${
+          large ? "gap-12" : "gap-8"
         }`}
       >
         {children}
@@ -112,7 +119,7 @@ export function CadreJournal({
 
       <footer style={{ borderTop: "1px solid var(--line)" }}>
         <div
-          className="mx-auto flex max-w-3xl flex-wrap items-center gap-x-5 gap-y-2 px-6 py-6"
+          className={`mx-auto flex ${largeur} flex-wrap items-center gap-x-5 gap-y-2 px-6 py-6`}
           style={{ fontSize: 14, color: "var(--ink-soft)" }}
         >
           <Link href="/">Accueil</Link>

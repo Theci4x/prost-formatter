@@ -8,6 +8,10 @@ export const billet: Billet = {
   categorie: "ouvrir",
   publieLe: "2026-09-20",
   misAJourLe: "2026-09-20",
+  image: {
+    fichier: "/blog/copropriete-restaurant.jpg",
+    alt: "Une brasserie installée au rez-de-chaussée d'un immeuble d'habitation, avec la cour intérieure et l'entrée mitoyenne de la copropriété.",
+  },
   sources: [
     {
       intitule:

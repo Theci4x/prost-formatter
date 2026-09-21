@@ -8,6 +8,10 @@ export const billet: Billet = {
   categorie: "ouvrir",
   publieLe: "2026-09-20",
   misAJourLe: "2026-09-20",
+  image: {
+    fichier: "/blog/extraction-conduit-toiture.jpg",
+    alt: "Une restauratrice devant sa brasserie montre le trajet de l'extraction : le conduit depuis la cuisine, la gaine métallique le long de la façade, la sortie en toiture.",
+  },
   sources: [
     {
       intitule:
