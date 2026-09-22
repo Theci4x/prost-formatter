@@ -50,6 +50,23 @@ const EDIREF = {
     propertyID: "SIREN",
     value: "503428369",
   },
+  /**
+   * Le gérant, tel que les mentions légales le nomment — et pas autrement.
+   *
+   * « Gérant d'EDIREF », donc, et pas « fondateur de Klarr » : c'est la
+   * même prudence qu'au-dessus, et c'est ce que la page dit déjà.
+   *
+   * Le `sameAs` est le sien, pas celui de la société. Une page LinkedIn
+   * personnelle dans le `sameAs` d'une Organization déclarerait que
+   * l'entreprise *est* cette personne — ce qui est faux, et un balisage
+   * faux dessert plus qu'il ne sert.
+   */
+  employee: {
+    "@type": "Person",
+    name: "Thomas Bavoil",
+    jobTitle: "Gérant",
+    sameAs: "https://www.linkedin.com/in/thomas-bavoil-8895a260/",
+  },
   description:
     "Société parisienne de création de sites web et de référencement. RCS Paris 503 428 369.",
   address: {
