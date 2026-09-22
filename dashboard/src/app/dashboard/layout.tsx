@@ -30,10 +30,13 @@ export default async function DashboardLayout({
     return (
       <div className="flex min-h-screen flex-1 flex-col bg-brand-cream">
         <header className="sticky top-0 z-10 flex items-center justify-between border-b border-zinc-200/70 bg-white/90 px-6 py-4 shadow-sm backdrop-blur">
-          <span className="flex items-center gap-2">
+          <Link
+            href="/dashboard"
+            className="-mx-2 flex items-center gap-2 rounded-lg px-2 py-1 transition-colors hover:bg-zinc-100 active:bg-zinc-200"
+          >
             <KlarrMark size={22} />
             <KlarrWordmark className="text-lg text-zinc-900" />
-          </span>
+          </Link>
         </header>
         <main className="flex flex-1 flex-col">
           <LiaisonCoupee
@@ -50,10 +53,22 @@ export default async function DashboardLayout({
   return (
     <div className="flex min-h-screen flex-1 flex-col bg-brand-cream">
       <header className="sticky top-0 z-10 flex items-center justify-between border-b border-zinc-200/70 bg-white/90 px-6 py-4 shadow-sm backdrop-blur">
-        <span className="flex items-center gap-2">
+        {/* Le logo ramène à la liste des établissements.
+            C'est le geste que tout le monde tente en premier pour
+            « revenir » — sur un téléphone il n'y a pas de barre
+            d'adresse, et le bouton retour du navigateur n'existe pas
+            dans une application installée. Un logo qui ne fait rien
+            oblige à ressortir de l'écran par où on y est entré.
+            `active:` en plus de `hover:` : un écran tactile n'a pas de
+            survol, et sans retour au doigt on croit avoir raté sa
+            cible et on tape deux fois. */}
+        <Link
+          href="/dashboard"
+          className="-mx-2 flex items-center gap-2 rounded-lg px-2 py-1 transition-colors hover:bg-zinc-100 active:bg-zinc-200"
+        >
           <KlarrMark size={22} />
           <KlarrWordmark className="text-lg text-zinc-900" />
-        </span>
+        </Link>
         <div className="flex items-center gap-4">
           {/* L'aide se cherche au moment où l'on bloque, pas après : elle
               doit être atteignable depuis n'importe quel écran. */}

@@ -1,6 +1,7 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { completude } from "@/lib/seo/questions-suggerees";
+import { ficheFermeeAlorsQuOnOuvre } from "@/lib/dashboard/anomalies";
 
 /**
  * Le pouls d'un établissement : les quelques chiffres qui changent chaque
@@ -353,11 +354,10 @@ export async function chargerPouls(
     retoursALire,
     statutGoogle: restaurant.google_statut ?? null,
     couvertsProches,
-    // « Fermé définitivement » n'entre pas dans l'anomalie : c'est un état
-    // qu'on ne corrige pas d'un clic, et l'annoncer comme une étourderie
-    // serait déplacé.
-    ficheFermeeAlorsQuOnOuvre:
-      restaurant.google_statut === "CLOSED_TEMPORARILY" && couvertsProches > 0,
+    ficheFermeeAlorsQuOnOuvre: ficheFermeeAlorsQuOnOuvre(
+      restaurant.google_statut,
+      couvertsProches,
+    ),
     note: dernier?.note != null ? Number(dernier.note) : null,
     nombreAvis: dernier?.nombre_avis ?? null,
     avisCetteSemaine,
