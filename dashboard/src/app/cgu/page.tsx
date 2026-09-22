@@ -15,7 +15,7 @@ export default function CguPage() {
   return (
     <LegalLayout
       title="Conditions générales d'utilisation"
-      version="2.1"
+      version="2.2"
       date="22 septembre 2026"
       current="cgu"
     >
@@ -269,13 +269,12 @@ export default function CguPage() {
 
       <LegalSection n="12" title="Jeux et loteries proposés à vos clients">
         <p>
-          Klarr met à votre disposition un module de jeu — la roue de la
-          fortune — que vous pouvez proposer à vos clients. Si vous
-          l&apos;activez, <strong>vous en êtes l&apos;organisateur</strong> :
-          vous en définissez les lots, les chances et la durée, et il vous
-          appartient d&apos;honorer les lots attribués. EDIREF fournit
-          l&apos;outil et n&apos;est ni organisateur, ni garant, ni partie au
-          jeu.
+          Klarr met à votre disposition un module de jeu — la roue de la fortune
+          — que vous pouvez proposer à vos clients. Si vous l&apos;activez,{" "}
+          <strong>vous en êtes l&apos;organisateur</strong> : vous en définissez
+          les lots, les chances et la durée, et il vous appartient
+          d&apos;honorer les lots attribués. EDIREF fournit l&apos;outil et
+          n&apos;est ni organisateur, ni garant, ni partie au jeu.
         </p>
         <p>
           Vous vous engagez à ne proposer que des lots que vous pouvez servir,
@@ -286,8 +285,8 @@ export default function CguPage() {
         <p>
           Un règlement est publié automatiquement à partir de vos réglages, à
           l&apos;adresse de votre jeu, et reste accessible au participant avant
-          qu&apos;il ne joue. Il reflète ce que le service applique réellement
-          — durée de validité, limites de participation, cases gagnantes et
+          qu&apos;il ne joue. Il reflète ce que le service applique réellement —
+          durée de validité, limites de participation, cases gagnantes et
           perdantes : vous ne pouvez pas en modifier le texte, précisément pour
           qu&apos;il ne puisse pas contredire le fonctionnement.
         </p>
@@ -402,6 +401,14 @@ export default function CguPage() {
           d&apos;un autre établissement, et nous les restituons ou les
           supprimons à la fin du contrat selon les modalités de la page{" "}
           <Link href="/suppression-donnees">suppression des données</Link>.
+        </p>
+        <p>
+          Cette relation est encadrée par l&apos;
+          <Link href="/sous-traitance">accord de sous-traitance</Link>, annexe
+          aux présentes CGU exigée par l&apos;article 28 du RGPD. Il précise ce
+          qui est traité, par qui, avec quelles garanties, et ce qu&apos;il
+          advient des données à la fin du contrat. Il est accepté en même temps
+          que les présentes conditions.
         </p>
       </LegalSection>
 

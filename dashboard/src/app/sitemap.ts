@@ -17,6 +17,7 @@ const PAGES_FIXES = [
   { chemin: "/cgu", priorite: 0.3 },
   { chemin: "/confidentialite", priorite: 0.3 },
   { chemin: "/suppression-donnees", priorite: 0.3 },
+  { chemin: "/sous-traitance", priorite: 0.3 },
   { chemin: "/aide", priorite: 0.6 },
   { chemin: "/aide/contact", priorite: 0.4 },
   { chemin: "/blog", priorite: 0.8 },

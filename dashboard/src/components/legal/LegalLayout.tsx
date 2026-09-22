@@ -20,6 +20,15 @@ const LEGAL_PAGES = [
     href: "/suppression-donnees",
     label: "Suppression des données",
   },
+  // L'annexe de l'article 28 du RGPD. Elle n'a pas sa place dans le pied
+  // de page de l'accueil — un visiteur qui découvre Klarr n'a rien à en
+  // faire — mais elle doit être à un clic des trois autres : c'est
+  // l'avocat d'un restaurateur qui la cherche, et il part des CGU.
+  {
+    slug: "sous-traitance",
+    href: "/sous-traitance",
+    label: "Accord de sous-traitance",
+  },
 ] as const;
 
 export type LegalPageSlug = (typeof LEGAL_PAGES)[number]["slug"];

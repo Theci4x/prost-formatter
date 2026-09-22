@@ -1,6 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalLayout, LegalSection } from "@/components/legal/LegalLayout";
+import {
+  SOUS_TRAITANTS,
+  enumererHorsUnion,
+  type NomSousTraitant,
+} from "@/lib/legal/sous-traitants";
 
 export const metadata: Metadata = {
   // Sans adresse canonique, klarr.net et www.klarr.net se font
@@ -20,11 +25,28 @@ const TETE =
 const CORPS =
   "[&_td]:px-4 [&_td]:py-2.5 [&_tr]:border-b [&_tr]:border-zinc-100 [&_tr:last-child]:border-0";
 
+/**
+ * Ce que chacun fait — vu de cette page-ci.
+ *
+ * Plus large que dans l'accord de sous-traitance : Vercel y mesure aussi
+ * l'audience du site, qui ne porte pas sur les convives et relève donc
+ * d'EDIREF responsable de traitement, pas d'EDIREF sous-traitant.
+ */
+const FINALITES: Record<NomSousTraitant, string> = {
+  Supabase: "Base de données, authentification, stockage de fichiers",
+  Vercel: "Hébergement de l'application et mesure d'audience agrégée",
+  Stripe:
+    "Paiement des abonnements, facturation, encaissement des acomptes et cautions",
+  Resend: "Acheminement des e-mails : confirmations, rappels, devis, campagnes",
+  Anthropic:
+    "Audits de visibilité, suggestions et propositions de réponse aux avis, à votre demande",
+};
+
 export default function ConfidentialitePage() {
   return (
     <LegalLayout
       title="Politique de confidentialité"
-      version="2.1"
+      version="2.2"
       date="22 septembre 2026"
       current="confidentialite"
     >
@@ -73,8 +95,12 @@ export default function ConfidentialitePage() {
           </li>
         </ul>
         <p>
-          Cette seconde relation est aussi encadrée par les{" "}
-          <Link href="/cgu">conditions d&apos;utilisation</Link>.
+          Cette seconde relation est encadrée par les{" "}
+          <Link href="/cgu">conditions d&apos;utilisation</Link> et détaillée
+          par l&apos;
+          <Link href="/sous-traitance">accord de sous-traitance</Link>, que
+          l&apos;article 28 du RGPD rend obligatoire entre un responsable de
+          traitement et son sous-traitant.
         </p>
       </LegalSection>
 
@@ -151,10 +177,10 @@ export default function ConfidentialitePage() {
             le journal des envois : à qui, quand, avec quel résultat.
           </li>
           <li>
-            <strong>Jeu (roue de la fortune)</strong> — l&apos;adresse e-mail
-            du participant, la date de sa participation, le lot obtenu, son
-            code de retrait et sa date d&apos;expiration. Le jeu est organisé
-            par le restaurateur, qui en est le responsable de traitement ; son
+            <strong>Jeu (roue de la fortune)</strong> — l&apos;adresse e-mail du
+            participant, la date de sa participation, le lot obtenu, son code de
+            retrait et sa date d&apos;expiration. Le jeu est organisé par le
+            restaurateur, qui en est le responsable de traitement ; son
             règlement figure sur la page du jeu.
           </li>
           <li>
@@ -163,12 +189,13 @@ export default function ConfidentialitePage() {
           </li>
         </ul>
         <p>
-          Le jeu s&apos;appuie aussi sur une <strong>empreinte technique non
-          nominative</strong> — dérivée de l&apos;adresse IP et du navigateur,
-          conservée sous forme d&apos;empreinte et jamais en clair — qui sert
-          uniquement à faire respecter le nombre de participations par appareil
-          et par jour. Elle ne permet pas d&apos;identifier une personne et ne
-          sert à rien d&apos;autre.
+          Le jeu s&apos;appuie aussi sur une{" "}
+          <strong>empreinte technique non nominative</strong> — dérivée de
+          l&apos;adresse IP et du navigateur, conservée sous forme
+          d&apos;empreinte et jamais en clair — qui sert uniquement à faire
+          respecter le nombre de participations par appareil et par jour. Elle
+          ne permet pas d&apos;identifier une personne et ne sert à rien
+          d&apos;autre.
         </p>
       </LegalSection>
 
@@ -306,43 +333,13 @@ export default function ConfidentialitePage() {
               </tr>
             </thead>
             <tbody className={CORPS}>
-              <tr>
-                <td>Supabase</td>
-                <td>Base de données, authentification, stockage de fichiers</td>
-                <td>Union européenne</td>
-              </tr>
-              <tr>
-                <td>Vercel</td>
-                <td>
-                  Hébergement de l&apos;application et mesure d&apos;audience
-                  agrégée
-                </td>
-                <td>États-Unis</td>
-              </tr>
-              <tr>
-                <td>Stripe</td>
-                <td>
-                  Paiement des abonnements, facturation, encaissement des
-                  acomptes et cautions
-                </td>
-                <td>États-Unis</td>
-              </tr>
-              <tr>
-                <td>Resend</td>
-                <td>
-                  Acheminement des e-mails : confirmations, rappels, devis,
-                  campagnes
-                </td>
-                <td>États-Unis</td>
-              </tr>
-              <tr>
-                <td>Anthropic</td>
-                <td>
-                  Audits de visibilité, suggestions et propositions de réponse
-                  aux avis, à votre demande
-                </td>
-                <td>États-Unis</td>
-              </tr>
+              {SOUS_TRAITANTS.map((s) => (
+                <tr key={s.nom}>
+                  <td>{s.nom}</td>
+                  <td>{FINALITES[s.nom]}</td>
+                  <td>{s.localisation}</td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
@@ -360,12 +357,11 @@ export default function ConfidentialitePage() {
 
       <LegalSection n="07" title="Transferts hors de l'Union européenne">
         <p>
-          Vercel, Stripe, Resend et Anthropic sont établis aux États-Unis&nbsp;:
-          l&apos;usage de Klarr implique donc un transfert de certaines données
-          hors de l&apos;Union européenne. Ces transferts sont encadrés par les
-          clauses contractuelles types de la Commission européenne, et le cas
-          échéant par le Data Privacy Framework lorsque le sous-traitant y est
-          certifié.
+          {enumererHorsUnion()} sont établis aux États-Unis&nbsp;: l&apos;usage
+          de Klarr implique donc un transfert de certaines données hors de
+          l&apos;Union européenne. Ces transferts sont encadrés par les clauses
+          contractuelles types de la Commission européenne, et le cas échéant
+          par le Data Privacy Framework lorsque le sous-traitant y est certifié.
         </p>
         <p>
           Lorsque vous reliez un compte Google, Facebook, Instagram ou TikTok,
