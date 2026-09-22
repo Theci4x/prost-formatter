@@ -85,12 +85,75 @@ export async function etatSearchConsole(
     return { connecte: true, proprietes, site, requetes, erreur: null };
   } catch (erreur) {
     console.error("[search-console]", erreur);
-    return {
-      ...VIDE,
-      connecte: true,
-      erreur:
-        "Search Console n'a pas répondu. Vérifie que le compte Google relié " +
-        "a bien accès à la propriété.",
-    };
+    return { ...VIDE, connecte: true, erreur: expliquer(erreur) };
   }
+}
+
+/**
+ * Traduire l'échec de Google en une phrase qui dise quoi faire.
+ *
+ * Il n'y avait qu'un message pour tous les cas : « vérifie que le compte
+ * a bien accès à la propriété ». C'était vrai une fois sur trois, et
+ * inutilisable les deux autres — un restaurateur qui lit ça va regarder
+ * ses droits Search Console alors que le problème est ailleurs, et il
+ * n'a aucun moyen de le savoir.
+ *
+ * Google dit ce qui ne va pas, et nos deux fonctions recopient sa
+ * réponse dans le message de l'erreur. Il suffit de la lire.
+ */
+function expliquer(erreur: unknown): string {
+  const texte = erreur instanceof Error ? erreur.message : String(erreur);
+
+  // Le projet Google Cloud n'a pas activé l'API Search Console. C'est une
+  // API distincte de celle des fiches et de celle des lieux : on peut
+  // très bien avoir les deux autres et pas celle-ci.
+  if (
+    /accessNotConfigured|has not been used in project|SERVICE_DISABLED/i.test(
+      texte,
+    )
+  ) {
+    return (
+      "L'API Search Console n'est pas activée dans le projet Google Cloud " +
+      "de Klarr. Ce n'est pas un réglage de votre côté : prévenez-nous à " +
+      "contact@klarr.net."
+    );
+  }
+
+  // Le compte a été relié avant que Klarr demande l'accès à Search
+  // Console. Google n'accorde jamais une autorisation après coup : le
+  // jeton rangé ne porte que ce qui a été accepté le jour du
+  // branchement, et seul un nouveau passage par l'écran de consentement
+  // le remplace.
+  if (
+    /insufficient|invalid_grant|ACCESS_TOKEN_SCOPE|unauthorized|401/i.test(
+      texte,
+    )
+  ) {
+    return (
+      "Le compte Google a été relié avant que Klarr demande l'accès à " +
+      "Search Console. Ouvrez Connexions, déconnectez Google puis " +
+      "reconnectez-le : l'autorisation sera demandée cette fois-ci."
+    );
+  }
+
+  // Le compte est bien autorisé, mais pas sur cette propriété-là.
+  if (/403|forbidden|permission/i.test(texte)) {
+    return (
+      "Le compte Google relié n'a pas accès à cette propriété Search " +
+      "Console. Vérifiez qu'il y figure comme propriétaire ou utilisateur " +
+      "dans les paramètres de la propriété."
+    );
+  }
+
+  if (/404|notFound/i.test(texte)) {
+    return (
+      "Cette propriété n'existe plus dans Search Console. Choisissez-en " +
+      "une autre, ou laissez le champ vide."
+    );
+  }
+
+  return (
+    "Search Console n'a pas répondu. Si cela dure, écrivez-nous à " +
+    "contact@klarr.net."
+  );
 }

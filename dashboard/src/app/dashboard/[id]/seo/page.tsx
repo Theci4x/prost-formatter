@@ -1,6 +1,11 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { addKeyword, removeKeyword, analyzeKeywords } from "./actions";
+import {
+  addKeyword,
+  removeKeyword,
+  analyzeKeywords,
+  type Analyse,
+} from "./actions";
 import { KeywordAnalysis } from "@/components/seo/KeywordAnalysis";
 import { RequetesReelles } from "@/components/seo/RequetesReelles";
 import { etatSearchConsole } from "@/lib/google/requetes-restaurant";
@@ -39,6 +44,28 @@ export default async function SeoPage({
     .order("created_at", { ascending: false });
 
   const keywords = (keywordsData ?? []) as RestaurantKeyword[];
+
+  /**
+   * La dernière analyse, telle qu'elle a été rangée.
+   *
+   * Les trois colonnes vont ensemble : une analyse sans sa date ne dit
+   * pas si elle est encore d'actualité, et sans ses mots-clés l'écran ne
+   * peut pas dire ce qui a bougé depuis. On ne la sert donc que
+   * complète — une ligne à moitié remplie vaut une ligne absente.
+   */
+  const rangee = restaurant as Restaurant & {
+    seo_analyse?: string | null;
+    seo_analyse_le?: string | null;
+    seo_analyse_mots_cles?: string[] | null;
+  };
+  const precedente: Analyse | null =
+    rangee.seo_analyse && rangee.seo_analyse_le
+      ? {
+          analysis: rangee.seo_analyse,
+          analyseLe: rangee.seo_analyse_le,
+          motsCles: rangee.seo_analyse_mots_cles ?? [],
+        }
+      : null;
 
   const mesure = await etatSearchConsole(
     supabase,
@@ -112,7 +139,11 @@ export default async function SeoPage({
         <h2 className="text-sm font-medium text-zinc-700">
           Analyse SEO par Claude
         </h2>
-        <KeywordAnalysis analyzeAction={analyzeKeywords.bind(null, id)} />
+        <KeywordAnalysis
+          analyzeAction={analyzeKeywords.bind(null, id)}
+          precedente={precedente}
+          motsClesActuels={keywords.map((k) => k.keyword)}
+        />
       </div>
     </div>
   );

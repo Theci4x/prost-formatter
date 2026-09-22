@@ -11,6 +11,8 @@ export async function addKeyword(formData: FormData) {
   const keyword = (formData.get("keyword") as string).trim();
   if (!keyword) return;
 
+  await exiger(restaurantId, "gerant");
+
   const supabase = await createClient();
   await supabase
     .from("restaurant_keywords")
@@ -22,6 +24,8 @@ export async function addKeyword(formData: FormData) {
 export async function removeKeyword(formData: FormData) {
   const id = formData.get("id") as string;
   const restaurantId = formData.get("restaurant_id") as string;
+
+  await exiger(restaurantId, "gerant");
 
   const supabase = await createClient();
   await supabase.from("restaurant_keywords").delete().eq("id", id);
@@ -48,11 +52,25 @@ export async function choisirPropriete(formData: FormData): Promise<void> {
   revalidatePath(`/dashboard/${restaurantId}/seo`);
 }
 
-export type AnalyzeResult = { analysis: string } | { error: string };
+export type Analyse = {
+  analysis: string;
+  /** Quand elle a été produite, au format ISO. */
+  analyseLe: string;
+  /** Les mots-clés sur lesquels elle porte, au moment où elle est faite. */
+  motsCles: string[];
+};
+
+export type AnalyzeResult = Analyse | { error: string };
 
 export async function analyzeKeywords(
   restaurantId: string,
 ): Promise<AnalyzeResult> {
+  // Une action serveur s'appelle sans passer par l'écran qui la propose.
+  // Celle-ci interroge un modèle, donc elle coûte : sans cette ligne,
+  // n'importe quel compte relié peut faire dépenser un établissement qui
+  // n'est pas le sien.
+  await exiger(restaurantId, "gerant");
+
   const supabase = await createClient();
 
   const { data: restaurantData } = await supabase
@@ -138,8 +156,25 @@ export async function analyzeKeywords(
     const textBlock = response.content.find(
       (block): block is Anthropic.TextBlock => block.type === "text",
     );
+    const analysis = textBlock?.text ?? "";
 
-    return { analysis: textBlock?.text ?? "" };
+    // Rangée tout de suite, avec les mots-clés sur lesquels elle porte.
+    // Une analyse qui ne vit que dans l'écran se perd au premier
+    // rechargement, et se repaie pour le même texte.
+    const analyseLe = new Date().toISOString();
+    if (analysis) {
+      await supabase
+        .from("restaurants")
+        .update({
+          seo_analyse: analysis,
+          seo_analyse_le: analyseLe,
+          seo_analyse_mots_cles: keywords,
+        })
+        .eq("id", restaurantId);
+      revalidatePath(`/dashboard/${restaurantId}/seo`);
+    }
+
+    return { analysis, analyseLe, motsCles: keywords };
   } catch (err) {
     console.error("[analyzeKeywords]", err);
     return { error: "L'analyse a échoué. Réessaie dans un instant." };
