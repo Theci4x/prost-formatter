@@ -300,6 +300,10 @@ export async function demanderReservation(
       origine: "client",
       client_nom: nom,
       client_email: email,
+      // Lue ici et nulle part ailleurs : les messages qui suivront partent
+      // d'un serveur, parfois le lendemain, sans personne à qui la
+      // redemander (voir la migration 0074).
+      langue,
       client_telephone: telephone,
       occasion: occasion || null,
       message: message || null,
@@ -338,6 +342,7 @@ export async function demanderReservation(
       couverts,
       serviceNom: service.nom,
       type,
+      langue,
       lienAnnulation: `${siteUrl()}/annuler/${annulation}`,
       minimumConsommation:
         type === "privatisation" && espace.minimum_consommation_centimes

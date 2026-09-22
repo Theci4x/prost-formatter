@@ -1,4 +1,7 @@
-import { heureLisible } from "@/lib/site/horaires";
+import type { Langue } from "@/lib/i18n/langues";
+import { COURRIELS } from "@/lib/i18n/courriels";
+import { dateJour } from "@/lib/i18n/dates";
+import { heure as heureTraduite } from "@/lib/i18n/jours";
 
 /**
  * Les messages envoyés autour d'une réservation.
@@ -38,7 +41,22 @@ export type Contexte = {
    * conteste à l'addition.
    */
   minimumConsommation?: string | null;
+  /**
+   * La langue du client, lue au moment où il a rempli le formulaire et
+   * rangée avec la réservation. Pas devinée à l'envoi : le rappel part la
+   * nuit, sans personne au bout du fil à qui la redemander.
+   *
+   * Facultative, et le français par défaut : les alertes au restaurateur
+   * n'en passent pas, et les réservations d'avant la migration 0074 n'en
+   * ont pas.
+   */
+  langue?: Langue;
 };
+
+/** Le dictionnaire du client, ou le français faute de mieux. */
+function mots(c: Contexte) {
+  return COURRIELS[c.langue ?? "fr"] ?? COURRIELS.fr;
+}
 
 export type Message = { sujet: string; texte: string; html: string };
 
@@ -61,21 +79,22 @@ const MARQUE = "#0f1e3d";
 const POLICE =
   "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
 
-function dateLisible(iso: string): string {
-  return new Date(`${iso}T12:00:00`).toLocaleDateString("fr-FR", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  });
+/** « samedi 4 octobre à 20h », « Saturday 4 October at 20:00 », « 10月4日星期六 20:00 ». */
+function quand(c: Contexte): string {
+  const langue = c.langue ?? "fr";
+  const jour = dateJour(c.date, langue);
+  if (!c.heure) return jour;
+  const h = heureTraduite(c.heure, langue);
+  // « à » ne se traduit pas mot à mot : l'anglais dit « at », le chinois
+  // ne met rien du tout entre la date et l'heure.
+  if (langue === "en") return `${jour} at ${h}`;
+  if (langue === "zh") return `${jour} ${h}`;
+  return `${jour} à ${h}`;
 }
 
 /** « samedi 4 octobre à 20h, 4 couverts ». */
 function rappel(c: Contexte): string {
-  const quand = c.heure
-    ? `${dateLisible(c.date)} à ${heureLisible(c.heure)}`
-    : dateLisible(c.date);
-  const combien = `${c.couverts} couvert${c.couverts > 1 ? "s" : ""}`;
-  return `${quand}, ${combien}`;
+  return mots(c).quandEtCombien(quand(c), c.couverts);
 }
 
 /**
@@ -111,7 +130,7 @@ export function lien(libelle: string, url: string): string {
 /** L'engagement pris, rappelé au client. Vide quand il n'y en a pas. */
 function ligneMinimum(c: Contexte): string {
   return c.minimumConsommation
-    ? `Minimum de consommation convenu : <strong>${echapper(c.minimumConsommation)}</strong>. Rien n'a été encaissé : ce montant se règle sur place.`
+    ? mots(c).minimumConvenu(echapper(c.minimumConsommation))
     : "";
 }
 
@@ -128,20 +147,17 @@ function ligneMinimum(c: Contexte): string {
  * une minute de vide où quelqu'un d'autre peut la prendre.
  */
 function ligneAnnulation(c: Contexte): string {
+  const m = mots(c);
   return c.lienAnnulation
-    ? `Un changement ? ${lien("Modifiez ou annulez votre réservation", c.lienAnnulation)} — l'heure, le nombre de convives, ou rendre la table.`
+    ? m.unChangement(lien(m.libelleLienChangement, c.lienAnnulation))
     : "";
 }
 
 /** Le quand et le combien, détachés du texte pour se relire d'un coup d'œil. */
 function encadre(c: Contexte): Bloc {
   const lignes = [
-    c.heure
-      ? `${dateLisible(c.date)} à ${heureLisible(c.heure)}`
-      : dateLisible(c.date),
-    `${c.couverts} couvert${c.couverts > 1 ? "s" : ""}${
-      c.serviceNom ? ` · ${c.serviceNom}` : ""
-    }`,
+    quand(c),
+    mots(c).couvertsEtService(c.couverts, c.serviceNom),
   ];
   if (c.restaurantAdresse) lignes.push(c.restaurantAdresse);
   return { encadre: lignes };
@@ -187,6 +203,8 @@ export function enveloppe(
    * campagne ne peut pas s'en passer.
    */
   pied?: string,
+  /** Le français par défaut : les alertes au restaurateur n'en passent pas. */
+  langue: Langue = "fr",
 ): string {
   const corps = blocs
     .filter((bloc) => bloc !== "")
@@ -209,47 +227,46 @@ export function enveloppe(
     pied
       ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:544px"><tr><td style="padding:18px 32px 0;font-family:${POLICE};font-size:11px;line-height:1.6;color:${ENCRE_DOUCE};text-align:center">${pied}</td></tr></table>`
       : "",
-    `<p style="margin:16px 0 0;font-family:${POLICE};font-size:11px;color:${ENCRE_DOUCE}">Envoyé par Klarr</p>`,
+    `<p style="margin:16px 0 0;font-family:${POLICE};font-size:11px;color:${ENCRE_DOUCE}">${echapper((COURRIELS[langue] ?? COURRIELS.fr).envoyeParKlarr)}</p>`,
     `</td></tr></table>`,
   ].join("");
 }
 
 /** Reçue, mais pas encore confirmée : le restaurant doit se prononcer. */
 export function demandeRecue(c: Contexte): Message {
-  const quoi =
-    c.type === "privatisation"
-      ? "votre demande de privatisation"
-      : "votre demande de réservation";
+  const m = mots(c);
+  const maison = echapper(c.restaurantNom);
   const blocs: Bloc[] = [
-    `Bonjour ${echapper(c.clientNom)},`,
-    `Nous avons bien reçu ${quoi} chez ${echapper(c.restaurantNom)}.`,
+    m.bonjour(echapper(c.clientNom)),
+    c.type === "privatisation"
+      ? m.bienRecuPrivatisation(maison)
+      : m.bienRecuReservation(maison),
     encadre(c),
     ligneMinimum(c),
-    `Elle n'est pas encore confirmée — le restaurant revient vers vous très vite. Vous recevrez un second message dès que ce sera fait.`,
-    ligneAnnulation(c) ||
-      `Si vos plans changent, répondez simplement à cet e-mail.`,
+    m.pasEncoreConfirmee,
+    ligneAnnulation(c) || m.siVosPlansChangent,
   ];
   return {
-    sujet: sujet(`Demande reçue — ${c.restaurantNom}`),
+    sujet: sujet(m.demandeRecueSujet(c.restaurantNom)),
     texte: texteDe(blocs, c),
-    html: enveloppe(blocs, c.restaurantNom),
+    html: enveloppe(blocs, c.restaurantNom, undefined, c.langue),
   };
 }
 
 /** Confirmée : c'est le message que le client gardera. */
 export function reservationConfirmee(c: Contexte): Message {
+  const m = mots(c);
   const blocs: Bloc[] = [
-    `Bonjour ${echapper(c.clientNom)},`,
-    `Votre table est confirmée chez ${echapper(c.restaurantNom)}.`,
+    m.bonjour(echapper(c.clientNom)),
+    m.tableConfirmee(echapper(c.restaurantNom)),
     encadre(c),
     ligneMinimum(c),
-    ligneAnnulation(c) ||
-      `Un empêchement ? Prévenez-nous en répondant à cet e-mail — une table rendue à temps, c'est une table qui resert.`,
+    ligneAnnulation(c) || m.unEmpechement,
   ];
   return {
-    sujet: sujet(`Réservation confirmée — ${c.restaurantNom}`),
+    sujet: sujet(m.confirmeeSujet(c.restaurantNom)),
     texte: texteDe(blocs, c),
-    html: enveloppe(blocs, c.restaurantNom),
+    html: enveloppe(blocs, c.restaurantNom, undefined, c.langue),
   };
 }
 
@@ -263,20 +280,25 @@ export function reservationRefusee(
   c: Contexte,
   motif: "refusee" | "annulee",
 ): Message {
+  const m = mots(c);
+  const maison = echapper(c.restaurantNom);
+  const quandLa = echapper(rappel(c));
   const blocs: Bloc[] = [
-    `Bonjour ${echapper(c.clientNom)},`,
+    m.bonjour(echapper(c.clientNom)),
     motif === "refusee"
-      ? `${echapper(c.restaurantNom)} ne peut malheureusement pas honorer votre demande du <strong>${echapper(rappel(c))}</strong>.`
-      : `${echapper(c.restaurantNom)} doit annuler votre réservation du <strong>${echapper(rappel(c))}</strong>.`,
-    `Rien ne vous est facturé. Si une autre date vous convient, la page de réservation vous montre ce qui reste disponible.`,
-    `Vous pouvez répondre à cet e-mail pour joindre l'établissement.`,
+      ? m.nePeutHonorer(maison, quandLa)
+      : m.doitAnnuler(maison, quandLa),
+    m.rienNestFacture,
+    m.repondezACetEmail,
   ];
   return {
     sujet: sujet(
-      `${motif === "refusee" ? "Demande non retenue" : "Réservation annulée"} — ${c.restaurantNom}`,
+      motif === "refusee"
+        ? m.refuseeSujet(c.restaurantNom)
+        : m.annuleeSujet(c.restaurantNom),
     ),
     texte: texteDe(blocs, c),
-    html: enveloppe(blocs, c.restaurantNom),
+    html: enveloppe(blocs, c.restaurantNom, undefined, c.langue),
   };
 }
 
@@ -290,18 +312,19 @@ export function reservationRefusee(
  * modification, qu'un client peut faire deux fois dans la semaine.
  */
 export function reservationModifiee(c: Contexte): Message {
+  const m = mots(c);
   const blocs: Bloc[] = [
-    `Bonjour ${echapper(c.clientNom)},`,
-    `Votre réservation chez ${echapper(c.restaurantNom)} a bien été modifiée.`,
+    m.bonjour(echapper(c.clientNom)),
+    m.bienModifiee(echapper(c.restaurantNom)),
     encadre(c),
     ligneMinimum(c),
     ligneAnnulation(c),
   ].filter(Boolean) as Bloc[];
 
   return {
-    sujet: sujet(`Réservation modifiée — ${c.restaurantNom}`),
-    texte: texteNu(blocs, c.restaurantNom),
-    html: enveloppe(blocs, c.restaurantNom),
+    sujet: sujet(m.modifieeSujet(c.restaurantNom)),
+    texte: texteNu(blocs, c.restaurantNom, undefined, c.langue),
+    html: enveloppe(blocs, c.restaurantNom, undefined, c.langue),
   };
 }
 
@@ -352,33 +375,34 @@ export function lienDePaiement(
   url: string,
   garantie: { montant: string; caution: boolean; echeance: string | null },
 ): Message {
-  const quoi = garantie.caution
-    ? `Pour la confirmer définitivement, il reste à enregistrer une carte en garantie de <strong>${echapper(garantie.montant)}</strong>. <strong>Rien ne sera prélevé</strong> : elle ne serait débitée qu'en cas de défection.`
-    : `Pour la confirmer définitivement, il reste à régler un acompte de <strong>${echapper(garantie.montant)}</strong>, qui viendra en déduction de l'addition.`;
+  const m = mots(c);
+  const montant = echapper(garantie.montant);
 
   const blocs: Bloc[] = [
-    `Bonjour ${echapper(c.clientNom)},`,
-    `Bonne nouvelle : ${echapper(c.restaurantNom)} a accepté votre demande.`,
+    m.bonjour(echapper(c.clientNom)),
+    m.bonneNouvelle(echapper(c.restaurantNom)),
     encadre(c),
     ligneMinimum(c),
-    quoi,
+    garantie.caution ? m.resteLaCarte(montant) : m.resteLAcompte(montant),
     {
       bouton: {
-        libelle: garantie.caution ? "Enregistrer ma carte" : "Régler l'acompte",
+        libelle: garantie.caution ? m.boutonCarte : m.boutonAcompte,
         url,
       },
     },
     garantie.echeance
-      ? `La salle vous est réservée jusqu'au ${echapper(garantie.echeance)}. Passé ce délai, elle repart à la réservation.`
-      : `La salle vous est réservée le temps de cette formalité.`,
+      ? m.salleReserveeJusqua(echapper(garantie.echeance))
+      : m.salleReservee,
   ];
 
   return {
     sujet: sujet(
-      `${garantie.caution ? "Carte à enregistrer" : "Acompte à régler"} — ${c.restaurantNom}`,
+      garantie.caution
+        ? m.sujetCarte(c.restaurantNom)
+        : m.sujetAcompte(c.restaurantNom),
     ),
     texte: texteDe(blocs, c),
-    html: enveloppe(blocs, c.restaurantNom),
+    html: enveloppe(blocs, c.restaurantNom, undefined, c.langue),
   };
 }
 
@@ -391,17 +415,17 @@ export function lienDePaiement(
  * dire, pendant qu'il reste une soirée pour revendre la table.
  */
 export function rappelReservation(c: Contexte): Message {
+  const m = mots(c);
   const blocs: Bloc[] = [
-    `Bonjour ${echapper(c.clientNom)},`,
-    `Petit rappel : vous êtes attendus chez ${echapper(c.restaurantNom)}.`,
+    m.bonjour(echapper(c.clientNom)),
+    m.petitRappel(echapper(c.restaurantNom)),
     encadre(c),
-    ligneAnnulation(c) ||
-      `Un empêchement ? Répondez à cet e-mail, l'établissement préfère le savoir ce soir que demain à table.`,
+    ligneAnnulation(c) || m.empechementRappel,
   ];
   return {
-    sujet: sujet(`Demain — ${c.restaurantNom}, ${rappel(c)}`),
+    sujet: sujet(m.rappelSujet(c.restaurantNom, rappel(c))),
     texte: texteDe(blocs, c),
-    html: enveloppe(blocs, c.restaurantNom),
+    html: enveloppe(blocs, c.restaurantNom, undefined, c.langue),
   };
 }
 
@@ -434,7 +458,7 @@ export function alerteAnnulationClient(c: Contexte): Message {
  * cliquer, et une adresse cachée y devient une adresse perdue.
  */
 function texteDe(blocs: Bloc[], c: Contexte): string {
-  return texteNu(blocs, c.restaurantNom);
+  return texteNu(blocs, c.restaurantNom, undefined, c.langue);
 }
 
 /** La version texte d'un message, signée du nom qu'on lui donne. */
@@ -442,23 +466,29 @@ export function texteNu(
   blocs: Bloc[],
   signature: string,
   pied?: string,
+  /** Le français par défaut : les campagnes et les alertes n'en passent pas. */
+  langue: Langue = "fr",
 ): string {
+  const m = COURRIELS[langue] ?? COURRIELS.fr;
   const nu = blocs
     .filter((bloc) => bloc !== "")
     .map((bloc) => {
-      if (typeof bloc === "string") return deshtml(bloc);
+      if (typeof bloc === "string") return deshtml(bloc, langue);
       if ("bouton" in bloc)
-        return `${bloc.bouton.libelle} : ${bloc.bouton.url}`;
+        return m.lienTexte(bloc.bouton.libelle, bloc.bouton.url);
       return bloc.encadre.join("\n");
     });
   const corps = `${nu.join("\n\n")}\n\n— ${signature}`;
-  return pied ? `${corps}\n\n—\n${deshtml(pied)}` : corps;
+  return pied ? `${corps}\n\n—\n${deshtml(pied, langue)}` : corps;
 }
 
-function deshtml(html: string): string {
+function deshtml(html: string, langue: Langue = "fr"): string {
+  const m = COURRIELS[langue] ?? COURRIELS.fr;
   return (
     html
-      .replace(/<a href="([^"]*)"[^>]*>([^<]*)<\/a>/g, "$2 : $1")
+      .replace(/<a href="([^"]*)"[^>]*>([^<]*)<\/a>/g, (_, url, libelle) =>
+        m.lienTexte(libelle, url),
+      )
       // Le point de la phrase collé à l'adresse : plusieurs messageries
       // l'avalent dans le lien cliquable, et le lien ne mène nulle part.
       .replace(/(https?:\/\/[^\s]*[^\s.])\.(?=\s|$)/g, "$1")

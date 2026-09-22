@@ -2,6 +2,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { envoyerCourriel } from "@/lib/courriel/envoyer";
 import { rappelReservation, type Contexte } from "@/lib/courriel/messages";
+import { estLangue } from "@/lib/i18n/langues";
 import type { Genre } from "@/lib/courriel/reservation";
 import {
   aRappeler,
@@ -49,7 +50,7 @@ export async function rappelerLesReservations({
   const { data, error } = await supabase
     .from("restaurant_reservations")
     .select(
-      "id, restaurant_id, service_id, date_reservation, heure_arrivee, couverts, type, statut, client_nom, client_email, annulation_token",
+      "id, restaurant_id, service_id, date_reservation, heure_arrivee, couverts, type, statut, client_nom, client_email, annulation_token, langue",
     )
     .eq("date_reservation", jour)
     .eq("statut", "confirmee")
@@ -145,6 +146,7 @@ export async function rappelerLesReservations({
         ? (services.get(reservation.service_id) ?? null)
         : null,
       type: reservation.type,
+      langue: estLangue(reservation.langue) ? reservation.langue : "fr",
       lienAnnulation: reservation.annulation_token
         ? `${siteUrl()}/annuler/${reservation.annulation_token}`
         : null,

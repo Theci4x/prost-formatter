@@ -4,6 +4,7 @@ import { randomBytes, randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
+import { estLangue } from "@/lib/i18n/langues";
 import { slugDisponible, slugifier } from "@/lib/reservations/slug";
 import { chargerFermetures } from "@/lib/reservations/fermetures";
 import { peutGerer, roleSur } from "@/lib/equipe/roles";
@@ -569,6 +570,8 @@ type ReservationComplete = {
   minimum_consommation_centimes: number | null;
   minimum_consommation_ht: boolean | null;
   derniere_relance_le: string | null;
+  /** Colonne récente (0074) : nulle sur les réservations d'avant. */
+  langue?: string | null;
 };
 
 /**
@@ -624,6 +627,10 @@ async function contexteCourriel(reservation: ReservationComplete): Promise<{
       couverts: reservation.couverts,
       serviceNom: (serviceResult.data as { nom: string } | null)?.nom ?? null,
       type: reservation.type,
+      // Celle du client, rangée quand il a réservé. Le restaurateur
+      // confirme parfois le lendemain : c'est bien la langue du
+      // formulaire qu'il faut, pas celle de qui clique.
+      langue: estLangue(reservation.langue) ? reservation.langue : "fr",
       // Le lien d'annulation voyage avec chaque message : c'est celui du
       // dernier e-mail reçu que le client retrouvera le jour venu.
       lienAnnulation: reservation.annulation_token

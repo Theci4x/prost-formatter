@@ -18,6 +18,8 @@ export type ReservationRappelable = {
   client_nom: string | null;
   client_email: string | null;
   annulation_token: string | null;
+  /** Colonne récente (0074) : nulle sur les réservations d'avant. */
+  langue?: string | null;
 };
 
 /** « 2026-09-15 » dans le fuseau du serveur, pas en UTC. */

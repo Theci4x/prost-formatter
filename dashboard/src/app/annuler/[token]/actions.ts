@@ -4,6 +4,12 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { peutAnnuler } from "@/lib/reservations/annulation";
 import { langueVisiteur } from "@/lib/i18n/langue";
 import { ANNULER } from "@/lib/i18n/annuler";
+import { estLangue, type Langue } from "@/lib/i18n/langues";
+
+/** Celle du client, rangée à la réservation. Le français avant la 0074. */
+function langueDe(valeur: string | null | undefined): Langue {
+  return estLangue(valeur) ? valeur : "fr";
+}
 import { prevenirAnnulationClient } from "@/lib/courriel/reservation";
 import {
   alerteModification,
@@ -51,7 +57,7 @@ export async function annulerParLeClient(
   const { data } = await supabase
     .from("restaurant_reservations")
     .select(
-      "id, restaurant_id, service_id, date_reservation, heure_arrivee, couverts, type, statut, client_nom, client_email, acompte_statut, caution_statut",
+      "id, restaurant_id, service_id, date_reservation, heure_arrivee, couverts, type, statut, client_nom, client_email, acompte_statut, caution_statut, langue",
     )
     .eq("annulation_token", token)
     .maybeSingle();
@@ -69,6 +75,8 @@ export async function annulerParLeClient(
     client_email: string | null;
     acompte_statut: string | null;
     caution_statut: string | null;
+    /** Colonne récente (0074) : nulle sur les réservations d'avant. */
+    langue?: string | null;
   } | null;
 
   // Un jeton inconnu ne dit pas s'il a existé : la même phrase pour un
@@ -129,6 +137,7 @@ export async function annulerParLeClient(
       couverts: reservation.couverts,
       serviceNom: service?.nom ?? null,
       type: reservation.type,
+      langue: langueDe(reservation.langue),
     };
     await Promise.all([
       prevenirAnnulationClient({
@@ -201,7 +210,7 @@ export async function modifierParLeClient(
   const { data } = await supabase
     .from("restaurant_reservations")
     .select(
-      "id, restaurant_id, espace_id, service_id, date_reservation, heure_arrivee, couverts, type, statut, client_nom, client_email, acompte_statut, caution_statut",
+      "id, restaurant_id, espace_id, service_id, date_reservation, heure_arrivee, couverts, type, statut, client_nom, client_email, acompte_statut, caution_statut, langue",
     )
     .eq("annulation_token", token)
     .maybeSingle();
@@ -220,6 +229,7 @@ export async function modifierParLeClient(
     client_email: string | null;
     acompte_statut: string | null;
     caution_statut: string | null;
+    langue?: string | null;
   } | null;
   if (!reservation) return { error: a.lienPlusValide, fait: false };
 
@@ -373,6 +383,7 @@ export async function modifierParLeClient(
       couverts,
       serviceNom: service.nom,
       type: reservation.type,
+      langue: langueDe(reservation.langue),
       lienAnnulation: `${siteUrl()}/annuler/${token}`,
     };
 
