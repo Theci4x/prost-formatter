@@ -70,7 +70,25 @@ export type ClesAvis = {
   jeuRate: string;
 
   /** La lettre qui porte le lot. */
-  lettreSujet(maison: string, lot: string): string;
+  /**
+   * Le sujet de la lettre du lot.
+   *
+   * Il disait « Votre lot chez Prost : Un café offert ». Deux problèmes
+   * pour le prix d'un. Aux yeux d'un filtre, « lot » et « gagné » dans le
+   * même message qu'un code en gros et une date limite, c'est la forme
+   * exacte d'une arnaque à la loterie — et ça part en indésirable, où un
+   * lot est un lot perdu. Et pour le client, trois semaines plus tard,
+   * rien là-dedans ne se cherche.
+   *
+   * Le code dans le sujet répare les deux : il rend la lettre
+   * *trouvable* — on tape « Prost » ou son code et elle remonte — et il
+   * donne au message la forme d'un reçu, le genre que les filtres
+   * laissent passer.
+   *
+   * « Vous avez gagné » reste dans le corps : les filtres pèsent le sujet
+   * bien plus lourd, et c'est la phrase qui fait le plaisir de la chose.
+   */
+  lettreSujet(maison: string, lot: string, code: string): string;
   lettreGagne(lot: string): string;
   lettreVotreCode: string;
   /**
@@ -139,7 +157,7 @@ const fr: ClesAvis = {
   lotsEpuises: "Tous les lots sont partis pour cette fois. Merci d’être passé !",
   jeuRate: "Le jeu a eu un raté. Réessaie dans un instant.",
 
-  lettreSujet: (maison, lot) => `Votre lot chez ${maison} : ${lot}`,
+  lettreSujet: (maison, lot, code) => `${maison} — votre code ${code} (${lot})`,
   lettreGagne: (lot) => `Vous avez gagné : ${lot}`,
   lettreVotreCode: "Votre code",
   lettreCodeLigne: (code) => `Votre code\u00a0: ${code}`,
@@ -203,7 +221,7 @@ const en: ClesAvis = {
   lotsEpuises: "All the prizes are gone this time. Thank you for coming!",
   jeuRate: "The game hiccupped. Please try again in a moment.",
 
-  lettreSujet: (maison, lot) => `Your prize at ${maison}: ${lot}`,
+  lettreSujet: (maison, lot, code) => `${maison} — your code ${code} (${lot})`,
   lettreGagne: (lot) => `You have won: ${lot}`,
   lettreVotreCode: "Your code",
   lettreCodeLigne: (code) => `Your code: ${code}`,
@@ -264,7 +282,7 @@ const zh: ClesAvis = {
   lotsEpuises: "这一轮奖品都送完了。感谢光临！",
   jeuRate: "游戏出了点小问题。请稍后再试。",
 
-  lettreSujet: (maison, lot) => `您在${maison}的奖品：${lot}`,
+  lettreSujet: (maison, lot, code) => `${maison} —— 您的兑换码 ${code}（${lot}）`,
   lettreGagne: (lot) => `您赢得了：${lot}`,
   lettreVotreCode: "您的兑换码",
   lettreCodeLigne: (code) => `您的兑换码：${code}`,

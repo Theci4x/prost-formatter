@@ -72,7 +72,7 @@ export function courrielDuLot({
 </div>`;
 
   return {
-    sujet: a.lettreSujet(maison, lot),
+    sujet: a.lettreSujet(maison, lot, code),
     texte,
     html,
   };
