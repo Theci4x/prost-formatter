@@ -19,6 +19,19 @@
  *   pour cinq.
  */
 
+/**
+ * Parties par visiteur et par jour, tous établissements confondus.
+ *
+ * Ici et pas dans l'action qui l'applique : le règlement du jeu l'annonce
+ * au participant, et un règlement qui promet deux parties quand le code en
+ * autorise trois est une pratique commerciale trompeuse. Les deux lisent
+ * donc la même ligne.
+ *
+ * (L'action ne peut de toute façon pas la porter : un fichier « use
+ * server » n'exporte que des fonctions asynchrones.)
+ */
+export const PARTIES_PAR_JOUR = 2;
+
 export type Lot = {
   id: string;
   libelle: string;

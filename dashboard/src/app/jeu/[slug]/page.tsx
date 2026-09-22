@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createServiceClient } from "@/lib/supabase/service";
 import { RouePublique } from "@/components/roue/RouePublique";
@@ -134,6 +135,18 @@ export default async function JeuPage({ params }: { params: Promise<Params> }) {
           <p className="text-base font-medium text-ink">{a.jeuFerme}</p>
           <p className="text-sm text-ink-soft">{a.jeuFermeDetail}</p>
         </div>
+      )}
+
+      {/* Le règlement doit être atteignable depuis le jeu, sinon il
+          n'est pas « accessible » au sens où la loi l'entend — et il ne
+          sert alors qu'à nous rassurer. */}
+      {jeu.actif && (
+        <Link
+          href={`/jeu/${slug}/reglement`}
+          className="text-center text-xs text-zinc-400 underline-offset-2 hover:text-ink hover:underline"
+        >
+          {a.reglementDuJeu}
+        </Link>
       )}
 
       <SignatureKlarr texte={a.signatureJeu} />

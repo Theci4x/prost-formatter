@@ -49,6 +49,9 @@ export type ClesAvis = {
   jeuFerme: string;
   jeuFermeDetail: string;
   signatureJeu: string;
+  /** Le lien vers le règlement, et ce qu'on dit à qui ne lit pas le français. */
+  reglementDuJeu: string;
+  reglementEnFrancais: string;
 
   roueACases(cases: number): string;
   codeParEmail: string;
@@ -135,6 +138,8 @@ const fr: ClesAvis = {
   jeuFerme: "Le jeu est fermé pour le moment.",
   jeuFermeDetail: "Merci d’être passé — revenez tenter votre chance bientôt.",
   signatureJeu: "Jeu propulsé par",
+  reglementDuJeu: "Règlement du jeu",
+  reglementEnFrancais: "",
 
   roueACases: (cases) => `Roue à ${cases} cases`,
   codeParEmail:
@@ -199,6 +204,9 @@ const en: ClesAvis = {
   jeuFerme: "The game is closed for now.",
   jeuFermeDetail: "Thank you for coming — come back and try your luck soon.",
   signatureJeu: "Game powered by",
+  reglementDuJeu: "Game rules",
+  reglementEnFrancais:
+    "These rules are in French: they are the reference document for a game run in France. Ask the restaurant if anything is unclear.",
 
   roueACases: (cases) => `Wheel with ${cases} segments`,
   codeParEmail:
@@ -262,6 +270,9 @@ const zh: ClesAvis = {
   jeuFerme: "游戏暂时关闭。",
   jeuFermeDetail: "感谢光临——欢迎下次再来试试运气。",
   signatureJeu: "游戏技术支持",
+  reglementDuJeu: "游戏规则",
+  reglementEnFrancais:
+    "规则条文为法语：这是在法国举办的游戏，以法语文本为准。如有不明之处，请询问餐厅。",
 
   roueACases: (cases) => `${cases} 格转盘`,
   codeParEmail: "兑换码也会发到您的邮箱。下次光临时出示即可。",

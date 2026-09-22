@@ -10,6 +10,7 @@ import {
   secretEmpreinte,
 } from "@/lib/limites/publiques";
 import {
+  PARTIES_PAR_JOUR,
   codeDeRetrait,
   expireLe,
   peutRejouer,
@@ -35,9 +36,6 @@ import { AVIS } from "@/lib/i18n/avis";
  * cinq — c'est la seule façon honnête de faire tourner une roue à côté
  * d'un lien vers une plateforme d'avis.
  */
-
-/** Deux parties par visiteur et par jour, tous établissements confondus. */
-const PARTIES_PAR_JOUR = 2;
 
 type MaisonJeu = {
   id: string;
