@@ -24,8 +24,8 @@ export default function ConfidentialitePage() {
   return (
     <LegalLayout
       title="Politique de confidentialité"
-      version="2.0"
-      date="20 septembre 2026"
+      version="2.1"
+      date="22 septembre 2026"
       current="confidentialite"
     >
       <LegalSection n="01" title="Responsable du traitement">
@@ -151,10 +151,25 @@ export default function ConfidentialitePage() {
             le journal des envois : à qui, quand, avec quel résultat.
           </li>
           <li>
+            <strong>Jeu (roue de la fortune)</strong> — l&apos;adresse e-mail
+            du participant, la date de sa participation, le lot obtenu, son
+            code de retrait et sa date d&apos;expiration. Le jeu est organisé
+            par le restaurateur, qui en est le responsable de traitement ; son
+            règlement figure sur la page du jeu.
+          </li>
+          <li>
             <strong>Journal des courriels</strong> — trace des confirmations et
             rappels de réservation envoyés, et de leurs échecs.
           </li>
         </ul>
+        <p>
+          Le jeu s&apos;appuie aussi sur une <strong>empreinte technique non
+          nominative</strong> — dérivée de l&apos;adresse IP et du navigateur,
+          conservée sous forme d&apos;empreinte et jamais en clair — qui sert
+          uniquement à faire respecter le nombre de participations par appareil
+          et par jour. Elle ne permet pas d&apos;identifier une personne et ne
+          sert à rien d&apos;autre.
+        </p>
       </LegalSection>
 
       <LegalSection n="04" title="Connexions à des services tiers">
@@ -395,6 +410,13 @@ export default function ConfidentialitePage() {
               <tr>
                 <td>Factures et pièces comptables</td>
                 <td>Dix ans (obligation légale)</td>
+              </tr>
+              <tr>
+                <td>Participations au jeu et codes de retrait</td>
+                <td>
+                  Trois ans après la participation — le temps qu&apos;un lot
+                  contesté puisse être vérifié
+                </td>
               </tr>
               <tr>
                 <td>Compteurs techniques (plafonds anti-abus)</td>

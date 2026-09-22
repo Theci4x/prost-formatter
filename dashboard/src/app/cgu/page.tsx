@@ -15,8 +15,8 @@ export default function CguPage() {
   return (
     <LegalLayout
       title="Conditions générales d'utilisation"
-      version="2.0"
-      date="20 septembre 2026"
+      version="2.1"
+      date="22 septembre 2026"
       current="cgu"
     >
       <LegalSection n="01" title="Objet">
@@ -267,7 +267,47 @@ export default function CguPage() {
         </p>
       </LegalSection>
 
-      <LegalSection n="12" title="Responsabilité">
+      <LegalSection n="12" title="Jeux et loteries proposés à vos clients">
+        <p>
+          Klarr met à votre disposition un module de jeu — la roue de la
+          fortune — que vous pouvez proposer à vos clients. Si vous
+          l&apos;activez, <strong>vous en êtes l&apos;organisateur</strong> :
+          vous en définissez les lots, les chances et la durée, et il vous
+          appartient d&apos;honorer les lots attribués. EDIREF fournit
+          l&apos;outil et n&apos;est ni organisateur, ni garant, ni partie au
+          jeu.
+        </p>
+        <p>
+          Vous vous engagez à ne proposer que des lots que vous pouvez servir,
+          et à honorer tout code présenté pendant sa durée de validité. Un lot
+          annoncé et refusé engage votre seule responsabilité, y compris
+          vis-à-vis de la répression des fraudes.
+        </p>
+        <p>
+          Un règlement est publié automatiquement à partir de vos réglages, à
+          l&apos;adresse de votre jeu, et reste accessible au participant avant
+          qu&apos;il ne joue. Il reflète ce que le service applique réellement
+          — durée de validité, limites de participation, cases gagnantes et
+          perdantes : vous ne pouvez pas en modifier le texte, précisément pour
+          qu&apos;il ne puisse pas contredire le fonctionnement.
+        </p>
+        <p>
+          <strong>Le tirage ne peut pas être conditionné à un avis.</strong> Le
+          service ne connaît ni la note ni le contenu d&apos;un avis, et le
+          résultat est identique que le participant en laisse un ou non. Vous
+          vous interdisez de laisser entendre le contraire à vos clients, sur
+          quelque support que ce soit — un lot subordonné à un avis positif est
+          interdit par les plateformes d&apos;avis et constitue une pratique
+          commerciale trompeuse.
+        </p>
+        <p>
+          Sur les données des participants, vous êtes responsable de traitement
+          et EDIREF agit pour votre compte, dans les conditions de
+          l&apos;article 17.
+        </p>
+      </LegalSection>
+
+      <LegalSection n="13" title="Responsabilité">
         <p>
           Klarr est fourni « en l&apos;état ». Certaines fonctionnalités
           dépendent de services tiers (Google, Meta, TikTok, Yelp, Tripadvisor,
@@ -300,7 +340,7 @@ export default function CguPage() {
         </p>
       </LegalSection>
 
-      <LegalSection n="13" title="Force majeure">
+      <LegalSection n="14" title="Force majeure">
         <p>
           Aucune des parties ne peut voir sa responsabilité engagée si
           l&apos;inexécution de ses obligations résulte d&apos;un cas de force
@@ -318,7 +358,7 @@ export default function CguPage() {
         </p>
       </LegalSection>
 
-      <LegalSection n="14" title="Confidentialité">
+      <LegalSection n="15" title="Confidentialité">
         <p>
           Chaque partie s&apos;engage à tenir confidentielles les informations
           de l&apos;autre dont elle aurait connaissance à l&apos;occasion du
@@ -332,7 +372,7 @@ export default function CguPage() {
         </p>
       </LegalSection>
 
-      <LegalSection n="15" title="Preuve">
+      <LegalSection n="16" title="Preuve">
         <p>
           Les enregistrements conservés par les systèmes d&apos;EDIREF et de ses
           prestataires — journaux de connexion, historique des réservations,
@@ -345,7 +385,7 @@ export default function CguPage() {
         </p>
       </LegalSection>
 
-      <LegalSection n="16" title="Données personnelles">
+      <LegalSection n="17" title="Données personnelles">
         <p>
           Les données que vous nous confiez en tant qu&apos;utilisateur de Klarr
           — votre compte, votre établissement, votre facturation — sont traitées
@@ -365,7 +405,7 @@ export default function CguPage() {
         </p>
       </LegalSection>
 
-      <LegalSection n="17" title="Droit applicable">
+      <LegalSection n="18" title="Droit applicable">
         <p>
           Les présentes CGU sont soumises au droit français. Les parties
           s&apos;efforceront de résoudre à l&apos;amiable tout différend. À
@@ -385,7 +425,7 @@ export default function CguPage() {
         </p>
       </LegalSection>
 
-      <LegalSection n="18" title="Contact">
+      <LegalSection n="19" title="Contact">
         <p>
           Pour toute question relative à ces conditions :{" "}
           <a href="mailto:contact@klarr.net">contact@klarr.net</a>.
