@@ -231,13 +231,31 @@ export async function jouer(
       adresseTotem: `${siteUrl()}/avis/${maison.slug_reservation ?? slug}`,
       langue,
     });
-    await envoyerCourriel({
+    const envoi = await envoyerCourriel({
       destinataire: email,
       repondreA: maison.email_contact ?? undefined,
       sujet: lettre.sujet,
       texte: lettre.texte,
       html: lettre.html,
     });
+
+    // Le résultat était jeté. Un client gagnait, l'écran lui annonçait
+    // « le code part aussi par e-mail », et si le fournisseur refusait —
+    // adresse en faute de frappe, domaine bloqué, panne — la lettre
+    // disparaissait sans laisser de trace. On la range donc à côté de la
+    // partie, comme les réservations le font depuis toujours.
+    //
+    // Et on ne fait surtout pas échouer le tirage pour autant : le lot
+    // est gagné, le code est à l'écran, et c'est lui qui vaut. Un
+    // fournisseur d'e-mails en panne ne doit pas reprendre un café
+    // offert.
+    if (!envoi.envoye) {
+      console.error("[roue/courriel]", email, envoi.erreur);
+      await supabase
+        .from("restaurant_roue_parties")
+        .update({ courriel_erreur: envoi.erreur ?? "inconnue" })
+        .eq("id", partieId);
+    }
   }
 
   return {
