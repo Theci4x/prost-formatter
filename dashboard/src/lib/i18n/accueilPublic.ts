@@ -173,6 +173,16 @@ export type ClesAccueilPublic = {
     cgu: string;
     confidentialite: string;
     suppression: string;
+    /**
+     * L'intitulé lu à voix haute du lien LinkedIn.
+     *
+     * Le texte visible dit « LinkedIn » dans les trois langues — c'est
+     * le nom de la plateforme, il ne se traduit pas, et LinkedIn n'a
+     * plus de version chinoise depuis qu'elle a fermé. Mais « LinkedIn »
+     * seul, annoncé par un lecteur d'écran au milieu de six autres
+     * liens, ne dit pas de qui c'est la page.
+     */
+    linkedin: string;
     copyright: string;
   };
 };
@@ -579,6 +589,7 @@ const fr: ClesAccueilPublic = {
     cgu: "Conditions d'utilisation",
     confidentialite: "Confidentialité",
     suppression: "Suppression des données",
+    linkedin: "Klarr sur LinkedIn",
     copyright: "© 2026 Klarr — édité par EDIREF.",
   },
 };
@@ -933,6 +944,7 @@ const en: ClesAccueilPublic = {
     cgu: "Terms of use",
     confidentialite: "Privacy",
     suppression: "Data deletion",
+    linkedin: "Klarr on LinkedIn",
     copyright: "© 2026 Klarr — published by EDIREF.",
   },
 };
@@ -1265,6 +1277,7 @@ const zh: ClesAccueilPublic = {
     cgu: "使用条款",
     confidentialite: "隐私政策",
     suppression: "数据删除",
+    linkedin: "Klarr 的 LinkedIn 主页",
     copyright: "© 2026 Klarr —— 由 EDIREF 运营。",
   },
 };

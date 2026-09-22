@@ -944,6 +944,24 @@ export default async function Home() {
           <a href="mailto:contact@klarr.net" style={{ color: "inherit" }}>
             contact@klarr.net
           </a>
+          {/* Le lien qui part vers LinkedIn répond au `sameAs` qui en
+              parle : le balisage dit « cette page est la nôtre », le lien
+              le montre. Un moteur qui trouve les deux dans le même sens
+              tranche ; un `sameAs` seul, non — n'importe qui peut écrire
+              n'importe quelle adresse dans son balisage.
+
+              Suivi, donc sans `nofollow` : c'est justement le passage
+              qu'on veut voir emprunté. Trois marques se disputent ce nom,
+              et rien d'autre sur ce site ne dit laquelle est la nôtre. */}
+          <a
+            href="https://www.linkedin.com/company/klarr-restaurants/"
+            target="_blank"
+            rel="noopener"
+            aria-label={t.pied.linkedin}
+            style={{ color: "inherit" }}
+          >
+            LinkedIn
+          </a>
           <span>{t.pied.copyright}</span>
         </div>
       </div>
