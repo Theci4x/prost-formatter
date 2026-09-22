@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { Markdown } from "@/components/texte/Markdown";
 import { DemanderRappel } from "@/components/commis/DemanderRappel";
 
 type Tour = { role: "user" | "assistant"; content: string };
@@ -191,11 +192,26 @@ export function Commis({ connecte = false }: { connecte?: boolean }) {
             key={index}
             className={
               tour.role === "user"
-                ? "ml-auto max-w-[85%] rounded-2xl rounded-br-sm bg-brand-navy px-3.5 py-2.5 text-base text-white"
-                : "mr-auto max-w-[90%] whitespace-pre-wrap rounded-2xl rounded-bl-sm bg-zinc-100 px-3.5 py-2.5 text-base leading-relaxed text-zinc-800"
+                ? "ml-auto max-w-[85%] whitespace-pre-wrap rounded-2xl rounded-br-sm bg-brand-navy px-3.5 py-2.5 text-base text-white"
+                : "mr-auto max-w-[90%] rounded-2xl rounded-bl-sm bg-zinc-100 px-3.5 py-2.5 text-base leading-relaxed text-zinc-800"
             }
           >
-            {tour.content || (enCours && index === tours.length - 1 ? "…" : "")}
+            {/* Le restaurateur écrit du texte ; Claude répond en
+                markdown. Seule la bulle de gauche a donc besoin
+                d'être rendue — celle de droite doit rester
+                exactement ce qui a été tapé.
+
+                Pendant que la réponse arrive, le markdown est
+                incomplet : une liste à moitié écrite, un gras qui
+                n'est pas encore refermé. `marked` s'en accommode et
+                la mise en forme se stabilise au dernier caractère. */}
+            {tour.role === "user" ? (
+              tour.content
+            ) : tour.content ? (
+              <Markdown texte={tour.content} />
+            ) : enCours && index === tours.length - 1 ? (
+              "…"
+            ) : null}
           </div>
         ))}
         {prospect && (envoye || rappel || aMontreDeLInteret) && (

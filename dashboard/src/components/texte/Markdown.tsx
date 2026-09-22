@@ -96,10 +96,17 @@ function enLigne(jetons: Token[] | undefined, texte: string) {
   });
 }
 
+/**
+ * Les titres, dimensionnés par rapport au texte qui les entoure.
+ *
+ * En « em » et non en pas fixe : ce composant sert aussi bien une fiche
+ * d'analyse qu'une bulle de discussion, et un titre de seize pixels dans
+ * un texte de quatorze n'a pas le même effet que dans un texte de seize.
+ */
 const TITRES: Record<number, string> = {
-  1: "mt-6 text-xl font-semibold text-zinc-900 first:mt-0",
-  2: "mt-6 text-base font-semibold text-zinc-900 first:mt-0",
-  3: "mt-5 text-sm font-semibold text-zinc-900 first:mt-0",
+  1: "mt-6 text-[1.4em] font-semibold text-zinc-900 first:mt-0",
+  2: "mt-6 text-[1.15em] font-semibold text-zinc-900 first:mt-0",
+  3: "mt-5 text-[1em] font-semibold text-zinc-900 first:mt-0",
 };
 
 function bloc(jeton: Token, cle: string) {
@@ -117,7 +124,7 @@ function bloc(jeton: Token, cle: string) {
     case "paragraph": {
       const t = jeton as Tokens.Paragraph;
       return (
-        <p key={cle} className="text-sm leading-relaxed text-zinc-700">
+        <p key={cle} className="leading-relaxed">
           {enLigne(t.tokens, t.text)}
         </p>
       );
@@ -129,7 +136,7 @@ function bloc(jeton: Token, cle: string) {
         <Balise
           key={cle}
           start={t.ordered ? Number(t.start) || 1 : undefined}
-          className={`flex flex-col gap-1.5 pl-5 text-sm leading-relaxed text-zinc-700 ${
+          className={`flex flex-col gap-1.5 pl-5 leading-relaxed ${
             t.ordered ? "list-decimal" : "list-disc"
           }`}
         >
@@ -152,7 +159,7 @@ function bloc(jeton: Token, cle: string) {
           key={cle}
           className="overflow-x-auto rounded-lg border border-zinc-200"
         >
-          <table className="w-full border-collapse text-sm">
+          <table className="w-full border-collapse text-[0.95em]">
             <thead className="border-b border-zinc-200 bg-zinc-50 text-left text-xs uppercase tracking-wide text-zinc-500">
               <tr>
                 {t.header.map((cellule, i) => (
@@ -166,9 +173,7 @@ function bloc(jeton: Token, cle: string) {
               {t.rows.map((ligne, i) => (
                 <tr key={i}>
                   {ligne.map((cellule, j) => (
-                    <td key={j} className="text-zinc-700">
-                      {enLigne(cellule.tokens, cellule.text)}
-                    </td>
+                    <td key={j}>{enLigne(cellule.tokens, cellule.text)}</td>
                   ))}
                 </tr>
               ))}
@@ -182,7 +187,7 @@ function bloc(jeton: Token, cle: string) {
       return (
         <blockquote
           key={cle}
-          className="border-l-2 border-brand-orange/40 bg-brand-orange/5 px-4 py-3 text-sm leading-relaxed text-zinc-700"
+          className="border-l-2 border-brand-orange/40 bg-brand-orange/5 px-4 py-3 leading-relaxed"
         >
           <div className="flex flex-col gap-2">
             {t.tokens.map((j, i) => bloc(j, `${cle}-${i}`))}
@@ -195,7 +200,7 @@ function bloc(jeton: Token, cle: string) {
       return (
         <pre
           key={cle}
-          className="overflow-x-auto rounded-lg bg-zinc-900 px-4 py-3 text-xs leading-relaxed text-zinc-100"
+          className="overflow-x-auto rounded-lg bg-zinc-900 px-4 py-3 text-[0.85em] leading-relaxed text-zinc-100"
         >
           <code>{t.text}</code>
         </pre>
@@ -209,7 +214,7 @@ function bloc(jeton: Token, cle: string) {
       const texte = (jeton as Tokens.Text).text ?? jeton.raw;
       if (!texte?.trim()) return null;
       return (
-        <p key={cle} className="text-sm leading-relaxed text-zinc-700">
+        <p key={cle} className="leading-relaxed">
           {texte}
         </p>
       );
@@ -217,6 +222,12 @@ function bloc(jeton: Token, cle: string) {
   }
 }
 
+/**
+ * La taille, la couleur et la graisse viennent du conteneur : ce
+ * composant ne met en forme que la structure. Un appelant écrit donc
+ * « text-sm text-zinc-700 » autour de lui, comme il le ferait autour
+ * d'un paragraphe ordinaire.
+ */
 export function Markdown({ texte }: { texte: string }) {
   const jetons = marked.lexer(texte);
   return (

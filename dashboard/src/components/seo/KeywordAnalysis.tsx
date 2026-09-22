@@ -33,7 +33,7 @@ export function KeywordAnalysis({
         // elle a besoin de la largeur d'une page, pas de celle d'un
         // formulaire. Elle s'arrête quand même à 65 caractères par ligne
         // environ — au-delà, l'œil perd le début de la ligne suivante.
-        <div className="rounded-xl border border-zinc-200 bg-white p-5 sm:p-6">
+        <div className="rounded-xl border border-zinc-200 bg-white p-5 text-sm text-zinc-700 sm:p-6">
           <Markdown texte={result.analysis} />
         </div>
       )}

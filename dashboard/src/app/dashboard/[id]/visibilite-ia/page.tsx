@@ -1,5 +1,6 @@
 import { Fragment } from "react";
 import Link from "next/link";
+import { Markdown } from "@/components/texte/Markdown";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
@@ -960,9 +961,13 @@ function CarteQuestion({
                       Cités à ta place : {check.concurrents.join(", ")}
                     </p>
                   )}
-                  <p className="whitespace-pre-wrap text-sm leading-relaxed">
-                    {check.reponse}
-                  </p>
+                  {/* La réponse telle que le modèle l'a rendue. Elle
+                      arrive en markdown : l'afficher tel quel donnait un
+                      mur de « ## » et de « ** ». Les mots ne changent
+                      pas, seule leur mise en forme apparaît. */}
+                  <div className="text-sm leading-relaxed">
+                    <Markdown texte={check.reponse} />
+                  </div>
                 </div>
               ))}
             </div>
