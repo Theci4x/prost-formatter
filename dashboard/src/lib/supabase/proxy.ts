@@ -29,6 +29,35 @@ export async function updateSession(request: NextRequest) {
   // Ne pas retirer : cet appel revalide le jeton auprès de Supabase et
   // rafraîchit les cookies de session avant qu'ils n'expirent.
   const verdict = await lireSession(supabase);
+
+  /**
+   * Une redirection qui emporte la session avec elle.
+   *
+   * `NextResponse.redirect()` fabrique une réponse neuve : les cookies
+   * posés sur `supabaseResponse` juste au-dessus n'y sont pas. Or
+   * `getUser()` vient peut-être de faire tourner le jeton de
+   * rafraîchissement — Supabase les fait tourner à chaque usage, et ne
+   * rend l'ancien utilisable que quelques secondes.
+   *
+   * Sans ce report, le navigateur repart donc avec l'ancien jeton, déjà
+   * consommé côté Supabase. Le prochain appel reçoit « Invalid Refresh
+   * Token: Already Used » — une vraie erreur d'authentification, pas une
+   * panne de réseau — et le restaurateur se retrouve à l'écran de
+   * connexion sans avoir rien fait.
+   *
+   * C'est ce qui déconnectait tout seul, et la protection contre les
+   * coupures réseau ne pouvait rien pour ça : de son point de vue, la
+   * session était bel et bien perdue.
+   */
+  const rediriger = (chemin: string) => {
+    const url = request.nextUrl.clone();
+    url.pathname = chemin;
+    const reponse = NextResponse.redirect(url);
+    for (const cookie of supabaseResponse.cookies.getAll()) {
+      reponse.cookies.set(cookie);
+    }
+    return reponse;
+  };
   const user = verdict.etat === "connecte" ? verdict.user : null;
 
   const isAuthRoute =
@@ -43,19 +72,19 @@ export async function updateSession(request: NextRequest) {
     verdict.etat === "deconnecte" &&
     request.nextUrl.pathname.startsWith("/dashboard")
   ) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    return NextResponse.redirect(url);
+    return rediriger("/login");
   }
 
   if (verdict.etat === "indecidable") {
     console.warn("[session] Supabase injoignable :", verdict.motif);
   }
 
+  // Celle-ci était la coupable : un restaurateur déjà connecté qui ouvre
+  // « / » ou « /login » — ce que fait l'application installée à chaque
+  // démarrage à froid — se faisait renvoyer vers son tableau de bord en
+  // perdant au passage les cookies tout juste rafraîchis.
   if (user && isAuthRoute) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
-    return NextResponse.redirect(url);
+    return rediriger("/dashboard");
   }
 
   return supabaseResponse;
