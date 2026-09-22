@@ -278,6 +278,33 @@ export default async function Home() {
         </div>
       </div>
 
+      {/* Les outils gratuits, sortis du menu replié.
+          Sur écran large ils sont en tête de la barre, en couleur
+          d'accent. Sur téléphone la barre entière disparaît derrière le
+          bouton « Menu » — et l'entrée la plus utile du site à quelqu'un
+          qui ne nous connaît pas encore devient celle qu'il faut savoir
+          chercher.
+
+          Une rangée à part plutôt qu'une entrée de plus dans la barre :
+          « Outils gratuits » à côté du sélecteur de langue, du menu et
+          du bouton d'essai ne tient pas sur un iPhone SE, et ce qui ne
+          tient pas se replie ou déborde.
+
+          Elle reste dans le menu aussi. Quelqu'un qui ouvre un menu
+          cherche la liste complète, pas ce qui manque ailleurs. */}
+      <div className="px-5 pb-4 sm:hidden">
+        <Link
+          href="/ouvrir-un-restaurant"
+          style={{
+            fontSize: 14,
+            fontWeight: 600,
+            color: "var(--accent-dark)",
+          }}
+        >
+          {t.nav.outils} →
+        </Link>
+      </div>
+
       {/* HERO */}
       <div style={{ position: "relative" }}>
         <HeroBackdrop />
