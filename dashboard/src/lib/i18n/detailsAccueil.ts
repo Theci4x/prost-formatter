@@ -64,8 +64,34 @@ export type DetailsAccueil = {
   ajouterRestaurant: string;
 };
 
+/**
+ * La variation du nombre d'avis sur la semaine, dite en français.
+ *
+ * Elle écrivait « -1 avis cette semaine », ce qui ne veut rien dire : un
+ * nombre d'avis ne peut pas être négatif, et le lecteur bute dessus au
+ * lieu de comprendre. Le chiffre était pourtant juste — Google retire des
+ * avis régulièrement, filtrage anti-spam ou compte supprimé.
+ *
+ * Une baisse se dit donc avec un verbe, pas avec un signe moins. Un gain
+ * garde son « + », qui se lit très bien.
+ *
+ * Zéro n'arrive jamais ici : l'écran affiche alors le total, pas la
+ * variation.
+ */
 const s = (n: number) => (n > 1 ? "s" : "");
-const signe = (n: number) => (n > 0 ? `+${n}` : String(n));
+
+const VARIATION = {
+  fr: (n: number) =>
+    n > 0
+      ? `+${n} avis cette semaine`
+      : `${-n} avis retiré${s(-n)} cette semaine`,
+  en: (n: number) =>
+    n > 0
+      ? `+${n} review${s(n)} this week`
+      : `${-n} review${s(-n)} removed this week`,
+  // « 撤下 » — retiré — porte le sens que « -1 » ne porte pas.
+  zh: (n: number) => (n > 0 ? `本周 +${n} 条评价` : `本周撤下 ${-n} 条评价`),
+};
 
 const fr: DetailsAccueil = {
   rienEnAttente: "Rien en attente",
@@ -87,7 +113,7 @@ const fr: DetailsAccueil = {
   premierReleve: "Premier relevé la nuit prochaine",
   ficheFermee: "Fiche Google fermée — vous attendez des clients",
   note: (note, avis, semaine) =>
-    `${note} ★ · ${avis} avis${semaine ? ` · ${signe(semaine)} cette semaine` : ""}`,
+    `${note} ★ · ${avis} avis${semaine ? ` · ${VARIATION.fr(semaine).replace(" avis", "")}` : ""}`,
   rienDeNouveau: "Rien de nouveau",
   aLire: (n) => `${n} à lire`,
   aucuneProgrammee: "Aucune programmée",
@@ -100,7 +126,7 @@ const fr: DetailsAccueil = {
   demandesAConfirmer: (n) => `demande${s(n)} à confirmer`,
   retoursClientsALire: (n) => `retour${s(n)} client${s(n)} à lire`,
   surGoogleAvis: (n) => `sur Google · ${n} avis`,
-  surGoogleSemaine: (n) => `sur Google · ${signe(n)} avis cette semaine`,
+  surGoogleSemaine: (n) => `sur Google · ${VARIATION.fr(n)}`,
   titreListe: (n) => (n === 1 ? "Votre restaurant" : "Vos restaurants"),
   ajouterRestaurant: "Ajouter un restaurant",
 };
@@ -125,7 +151,7 @@ const en: DetailsAccueil = {
   premierReleve: "First reading tonight",
   ficheFermee: "Google listing closed — you have guests coming",
   note: (note, avis, semaine) =>
-    `${note} ★ · ${avis} review${avis > 1 ? "s" : ""}${semaine ? ` · ${signe(semaine)} this week` : ""}`,
+    `${note} ★ · ${avis} review${s(avis)}${semaine ? ` · ${VARIATION.en(semaine).replace(/ reviews? /, " ")}` : ""}`,
   rienDeNouveau: "Nothing new",
   aLire: (n) => `${n} to read`,
   aucuneProgrammee: "None scheduled",
@@ -138,7 +164,7 @@ const en: DetailsAccueil = {
   demandesAConfirmer: (n) => `request${s(n)} to confirm`,
   retoursClientsALire: (n) => `customer note${s(n)} to read`,
   surGoogleAvis: (n) => `on Google · ${n} review${n > 1 ? "s" : ""}`,
-  surGoogleSemaine: (n) => `on Google · ${signe(n)} reviews this week`,
+  surGoogleSemaine: (n) => `on Google · ${VARIATION.en(n)}`,
   titreListe: (n) => (n === 1 ? "Your restaurant" : "Your restaurants"),
   ajouterRestaurant: "Add a restaurant",
 };
@@ -163,7 +189,9 @@ const zh: DetailsAccueil = {
   premierReleve: "今晚首次采集",
   ficheFermee: "Google 资料显示已关闭——但您还有客人要来",
   note: (note, avis, semaine) =>
-    `${note} ★ · ${avis} 条评价${semaine ? ` · 本周 ${signe(semaine)}` : ""}`,
+    // « 条评价 » est déjà dit juste avant : on le laisse tomber ici,
+    // comme le français abrège « 1 retiré » et l'anglais « 1 removed ».
+    `${note} ★ · ${avis} 条评价${semaine ? ` · ${VARIATION.zh(semaine).replace(" 条评价", " 条")}` : ""}`,
   rienDeNouveau: "没有新内容",
   aLire: (n) => `${n} 条待读`,
   aucuneProgrammee: "没有已排期的",
@@ -176,7 +204,7 @@ const zh: DetailsAccueil = {
   demandesAConfirmer: () => "条订位待确认",
   retoursClientsALire: () => "条客人反馈待读",
   surGoogleAvis: (n) => `Google 上 ${n} 条评价`,
-  surGoogleSemaine: (n) => `Google 上本周 ${signe(n)} 条评价`,
+  surGoogleSemaine: (n) => `Google 上${VARIATION.zh(n)}`,
   titreListe: () => "您的餐厅",
   ajouterRestaurant: "添加餐厅",
 };
