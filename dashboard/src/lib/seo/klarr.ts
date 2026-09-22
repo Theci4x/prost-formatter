@@ -162,13 +162,21 @@ export function balisageAccueil(langue: Langue): object[] {
        * recoupe. C'est précisément ce qui manque à un modèle qui hésite
        * entre « Klarr » et « Klar ».
        *
-       * La liste ne contient que des adresses vérifiées, et elle restera
-       * courte tant que les autres profils n'existent pas : un `sameAs`
-       * qui pointe vers une page qui n'est pas la nôtre dit exactement
-       * le contraire de ce qu'on veut dire — et il y a trois homonymes
-       * à portée de main pour se tromper (Klarr AB, Klaar, Klar).
+       * La liste ne contient que des adresses vérifiées : un `sameAs` qui
+       * pointe vers une page qui n'est pas la nôtre dit exactement le
+       * contraire de ce qu'on veut dire — et il y a trois homonymes à
+       * portée de main pour se tromper (Klarr AB, Klaar, Klar).
+       *
+       * Deux profils tenus par deux maisons différentes valent mieux
+       * qu'un : LinkedIn et Crunchbase ne se recopient pas l'un l'autre,
+       * et Crunchbase est l'une des sources les plus aspirées du web.
+       * Trois écrits qui concordent — le site, l'un, l'autre — c'est ce
+       * qui fait cesser une hésitation entre deux noms voisins.
        */
-      sameAs: ["https://www.linkedin.com/company/klarr-restaurants/"],
+      sameAs: [
+        "https://www.linkedin.com/company/klarr-restaurants/",
+        "https://www.crunchbase.com/organization/klarr",
+      ],
       areaServed: { "@type": "Country", name: "France" },
       knowsAbout: [
         "Réservation en ligne pour restaurants",
