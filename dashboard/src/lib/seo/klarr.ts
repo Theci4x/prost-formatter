@@ -156,11 +156,19 @@ export function balisageAccueil(langue: Langue): object[] {
        * où. Un modèle qui hésite entre deux marques au nom voisin tranche
        * sur ce qu'il trouve d'écrit.
        *
-       * Il manque encore le plus efficace — `sameAs`, les adresses des
-       * profils officiels (LinkedIn, Crunchbase, réseaux). Elles ne sont
-       * pas inventables : un `sameAs` qui pointe vers une page qui n'est
-       * pas la nôtre dit exactement le contraire de ce qu'on veut dire.
+       * Le plus efficace des trois est `sameAs` : l'adresse d'un profil
+       * officiel tenu ailleurs. Une phrase de balisage se contente
+       * d'affirmer ; une page LinkedIn qui décrit la même société se
+       * recoupe. C'est précisément ce qui manque à un modèle qui hésite
+       * entre « Klarr » et « Klar ».
+       *
+       * La liste ne contient que des adresses vérifiées, et elle restera
+       * courte tant que les autres profils n'existent pas : un `sameAs`
+       * qui pointe vers une page qui n'est pas la nôtre dit exactement
+       * le contraire de ce qu'on veut dire — et il y a trois homonymes
+       * à portée de main pour se tromper (Klarr AB, Klaar, Klar).
        */
+      sameAs: ["https://www.linkedin.com/company/klarr-restaurants/"],
       areaServed: { "@type": "Country", name: "France" },
       knowsAbout: [
         "Réservation en ligne pour restaurants",
