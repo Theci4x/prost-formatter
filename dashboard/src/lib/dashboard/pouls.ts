@@ -27,6 +27,29 @@ export type Pouls = {
   aConfirmer: number;
   /** Retours privés (totem, QR) pas encore lus. */
   retoursALire: number;
+  /**
+   * L'état de la fiche Google au dernier relevé, tel que Google le dit.
+   * Null tant qu'aucun relevé n'a eu lieu — la rotation dure une semaine,
+   * un établissement inscrit ce soir n'a donc rien avant demain.
+   */
+  statutGoogle: string | null;
+  /**
+   * Des convives attendus dans les sept jours. C'est la preuve qu'une
+   * maison est ouverte : personne ne réserve une table pour jeudi dans un
+   * restaurant en travaux.
+   */
+  couvertsProches: number;
+  /**
+   * La fiche Google dit « fermé temporairement » alors que des clients
+   * sont attendus cette semaine.
+   *
+   * L'inverse — une fiche fermée pendant des travaux — est normal et ne
+   * regarde personne : le restaurateur l'a posée lui-même. Ce qui coûte
+   * cher, c'est la réouverture : on rouvre la salle, on rouvre le carnet,
+   * et on oublie la fiche pendant trois semaines. Google, lui, ne propose
+   * plus l'établissement à personne pendant ce temps-là.
+   */
+  ficheFermeeAlorsQuOnOuvre: boolean;
   /** Dernier relevé Google : note et nombre d'avis. */
   note: number | null;
   nombreAvis: number | null;
@@ -99,6 +122,7 @@ async function compter(
   table: string,
   egaux: Filtres,
   auMoins?: { colonne: string; valeur: string },
+  auPlus?: { colonne: string; valeur: string },
 ): Promise<number> {
   try {
     let requete = supabase
@@ -108,6 +132,7 @@ async function compter(
       requete = requete.eq(colonne, valeur);
     }
     if (auMoins) requete = requete.gte(auMoins.colonne, auMoins.valeur);
+    if (auPlus) requete = requete.lte(auPlus.colonne, auPlus.valeur);
     const { count, error } = await requete;
     if (error) {
       console.error(`[pouls] ${table}`, error.message);
@@ -128,6 +153,8 @@ export async function chargerPouls(
     site_publie?: boolean | null;
     carte_publique?: boolean | null;
     email_contact?: string | null;
+    /** Colonne récente (0073) : absente sur une base pas encore migrée. */
+    google_statut?: string | null;
   },
   maintenant: Date = new Date(),
 ): Promise<Pouls> {
@@ -136,6 +163,12 @@ export async function chargerPouls(
   const ilYAUneSemaine = new Date(
     maintenant.getTime() - 7 * 86400000,
   ).toISOString();
+  // Sept jours devant, pour savoir si la maison tourne. Une réservation
+  // prise pour dans trois mois ne prouve rien — un restaurant en travaux
+  // en accepte —, une table attendue jeudi prochain, si.
+  const dansUneSemaine = jourDuPouls(
+    new Date(maintenant.getTime() + 7 * 86400000),
+  );
 
   const [
     tablesDuJour,
@@ -154,6 +187,7 @@ export async function chargerPouls(
     contactsTotal,
     contactsJoignables,
     services,
+    couvertsProches,
   ] = await Promise.all([
     supabase
       .from("restaurant_reservations")
@@ -255,6 +289,14 @@ export async function chargerPouls(
       .select("heure_debut")
       .eq("restaurant_id", id)
       .then(({ data }) => (data ?? []) as { heure_debut: string | null }[]),
+    // Les couverts confirmés des sept prochains jours, aujourd'hui compris.
+    compter(
+      supabase,
+      "restaurant_reservations",
+      { restaurant_id: id, statut: "confirmee" },
+      { colonne: "date_reservation", valeur: jour },
+      { colonne: "date_reservation", valeur: dansUneSemaine },
+    ),
   ]);
 
   let couvertsMidi = 0;
@@ -309,6 +351,13 @@ export async function chargerPouls(
     couvertsSoir,
     aConfirmer,
     retoursALire,
+    statutGoogle: restaurant.google_statut ?? null,
+    couvertsProches,
+    // « Fermé définitivement » n'entre pas dans l'anomalie : c'est un état
+    // qu'on ne corrige pas d'un clic, et l'annoncer comme une étourderie
+    // serait déplacé.
+    ficheFermeeAlorsQuOnOuvre:
+      restaurant.google_statut === "CLOSED_TEMPORARILY" && couvertsProches > 0,
     note: dernier?.note != null ? Number(dernier.note) : null,
     nombreAvis: dernier?.nombre_avis ?? null,
     avisCetteSemaine,

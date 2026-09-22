@@ -330,14 +330,22 @@ function groupes(t: ClesAccueil, d: DetailsAccueil, langue: Langue): Groupe[] {
           resume: t.entrees.avis.resume,
           icone: ICONES.avis,
           minimum: "gerant",
+          // L'incohérence passe devant la note. Un restaurateur qui rouvre
+          // après des travaux rouvre sa salle et son carnet, et oublie sa
+          // fiche Google pendant trois semaines — pendant lesquelles
+          // Google ne propose plus la maison à personne. Ce jour-là,
+          // savoir qu'on est à 4,7 étoiles ne sert à rien.
           detail: (p) =>
-            p.note != null
-              ? d.note(
-                  p.note.toFixed(1).replace(".", ","),
-                  p.nombreAvis ?? 0,
-                  p.avisCetteSemaine ?? null,
-                )
-              : d.premierReleve,
+            p.ficheFermeeAlorsQuOnOuvre
+              ? d.ficheFermee
+              : p.note != null
+                ? d.note(
+                    p.note.toFixed(1).replace(".", ","),
+                    p.nombreAvis ?? 0,
+                    p.avisCetteSemaine ?? null,
+                  )
+                : d.premierReleve,
+          attention: (p) => p.ficheFermeeAlorsQuOnOuvre,
         },
         {
           href: "retours",

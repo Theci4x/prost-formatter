@@ -151,9 +151,24 @@ export async function GET(request: Request) {
     // rien : on ne consomme pas son tour.
     if (platforms.some((platform) => platform.configured)) {
       traites += 1;
+      // L'état de la fiche Google voyage avec la rotation : il vient du
+      // même appel que la note, donc il ne coûte rien de plus. On ne
+      // l'écrit que si Google l'a dit — écraser un état connu par un
+      // « null » ferait clignoter l'alerte au gré des pannes.
+      const statut = platforms.find(
+        (platform) => platform.platform === "google",
+      )?.businessStatus;
       const { error: dateError } = await supabase
         .from("restaurants")
-        .update({ reputation_relevee_le: new Date().toISOString() })
+        .update({
+          reputation_relevee_le: new Date().toISOString(),
+          ...(statut
+            ? {
+                google_statut: statut,
+                google_statut_releve_le: new Date().toISOString(),
+              }
+            : {}),
+        })
         .eq("id", restaurant.id);
       if (dateError) {
         // Sans cette date, l'établissement repasserait en tête demain et

@@ -39,6 +39,12 @@ export type DetailsAccueil = {
   avancement(faites: number, total: number): string;
   premierReleve: string;
   note(note: string, avis: number, semaine: number | null): string;
+  /**
+   * Le seul détail de cet écran qui ne rapporte pas un chiffre mais une
+   * incohérence. Il passe devant la note : ce jour-là, savoir qu'on est
+   * à 4,7 étoiles ne sert à rien si Google ne montre plus la maison.
+   */
+  ficheFermee: string;
   rienDeNouveau: string;
   aLire(n: number): string;
   aucuneProgrammee: string;
@@ -79,6 +85,7 @@ const fr: DetailsAccueil = {
   photos: (n, c) => `${n} photo${s(n)}${c ? " · couverture choisie" : ""}`,
   avancement: (f, t) => `${f} sur ${t}`,
   premierReleve: "Premier relevé la nuit prochaine",
+  ficheFermee: "Fiche Google fermée — vous attendez des clients",
   note: (note, avis, semaine) =>
     `${note} ★ · ${avis} avis${semaine ? ` · ${signe(semaine)} cette semaine` : ""}`,
   rienDeNouveau: "Rien de nouveau",
@@ -116,6 +123,7 @@ const en: DetailsAccueil = {
   photos: (n, c) => `${n} photo${s(n)}${c ? " · cover chosen" : ""}`,
   avancement: (f, t) => `${f} of ${t}`,
   premierReleve: "First reading tonight",
+  ficheFermee: "Google listing closed — you have guests coming",
   note: (note, avis, semaine) =>
     `${note} ★ · ${avis} review${avis > 1 ? "s" : ""}${semaine ? ` · ${signe(semaine)} this week` : ""}`,
   rienDeNouveau: "Nothing new",
@@ -153,6 +161,7 @@ const zh: DetailsAccueil = {
   photos: (n, c) => `${n} 张照片${c ? " · 已选封面" : ""}`,
   avancement: (f, t) => `${t} 项已完成 ${f} 项`,
   premierReleve: "今晚首次采集",
+  ficheFermee: "Google 资料显示已关闭——但您还有客人要来",
   note: (note, avis, semaine) =>
     `${note} ★ · ${avis} 条评价${semaine ? ` · 本周 ${signe(semaine)}` : ""}`,
   rienDeNouveau: "没有新内容",

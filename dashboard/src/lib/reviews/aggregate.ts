@@ -9,6 +9,7 @@ import {
   searchPlace,
   getPlaceDetails,
   getPlaceReviews,
+  type StatutGoogle,
 } from "@/lib/google/places";
 
 export type PlatformReviews = {
@@ -26,6 +27,11 @@ export type PlatformReviews = {
   businessUrl?: string | null;
   rating?: number | null;
   reviewCount?: number | null;
+  /**
+   * L'état de la fiche, quand la plateforme le dit. Google seul le rend
+   * aujourd'hui ; d'où l'optionnel plutôt qu'un champ par plateforme.
+   */
+  businessStatus?: StatutGoogle | null;
   reviews: {
     author: string;
     rating: number;
@@ -166,6 +172,7 @@ export async function fetchGooglePlatformReviews(
       businessUrl: `https://www.google.com/maps/place/?q=place_id:${place.id}`,
       rating: details.rating,
       reviewCount: details.userRatingCount,
+      businessStatus: details.businessStatus,
       reviews,
     };
   } catch (err) {

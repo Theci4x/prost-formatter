@@ -15,8 +15,25 @@ export type PlaceSearchResult = {
   formattedAddress: string;
 };
 
+/**
+ * L'état d'un établissement selon Google. Les trois valeurs sont les
+ * siennes, reprises telles quelles : « fermé temporairement » et « fermé
+ * définitivement » n'appellent pas la même réaction, et un booléen nous
+ * obligerait à remigrer le jour où on veut les distinguer.
+ */
+export type StatutGoogle =
+  | "OPERATIONAL"
+  | "CLOSED_TEMPORARILY"
+  | "CLOSED_PERMANENTLY";
+
 export type PlaceDetails = {
   displayName: string;
+  /**
+   * Null quand Google ne le dit pas — ce qui arrive, et ne veut surtout
+   * pas dire « ouvert ». L'appelant doit pouvoir répondre « je ne sais
+   * pas » plutôt que d'affirmer.
+   */
+  businessStatus: StatutGoogle | null;
   /**
    * Le genre de l'établissement, tel que Google le nomme : « Bar à bière »,
    * « Restaurant italien ». C'est avec ça qu'on formule la question posée
@@ -33,6 +50,15 @@ export type PlaceDetails = {
   photoCount: number;
   reviews: { publishTime: string }[];
 };
+
+/** Ce que Google rend et qu'on ne connaît pas ne vaut pas mieux que rien. */
+function statutConnu(valeur: string | undefined): StatutGoogle | null {
+  return valeur === "OPERATIONAL" ||
+    valeur === "CLOSED_TEMPORARILY" ||
+    valeur === "CLOSED_PERMANENTLY"
+    ? valeur
+    : null;
+}
 
 function apiKey() {
   const key = process.env.GOOGLE_PLACES_API_KEY;
@@ -161,6 +187,9 @@ export async function getPlaceDetails(
     "websiteUri",
     "rating",
     "userRatingCount",
+    // Gratuit ici : l'appel demande déjà la note et les avis, donc il est
+    // facturé au palier le plus élevé quoi qu'on ajoute de plus modeste.
+    "businessStatus",
     "currentOpeningHours",
     "photos",
     "reviews",
@@ -188,6 +217,7 @@ export async function getPlaceDetails(
     websiteUri?: string;
     rating?: number;
     userRatingCount?: number;
+    businessStatus?: string;
     currentOpeningHours?: unknown;
     photos?: unknown[];
     reviews?: { publishTime?: string }[];
@@ -195,6 +225,7 @@ export async function getPlaceDetails(
 
   return {
     displayName: data.displayName?.text ?? "",
+    businessStatus: statutConnu(data.businessStatus),
     primaryType: data.primaryTypeDisplayName?.text ?? null,
     formattedAddress: data.formattedAddress ?? "",
     nationalPhoneNumber: data.nationalPhoneNumber ?? null,
