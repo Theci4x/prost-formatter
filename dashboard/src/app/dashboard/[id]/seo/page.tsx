@@ -104,7 +104,11 @@ export default async function SeoPage({
         )}
       </div>
 
-      <div className="flex max-w-lg flex-col gap-3">
+      {/* L'analyse occupe la largeur de la page, là où les mots-clés
+          tiennent dans celle d'un formulaire : elle contient des titres,
+          des listes et des tableaux, et elle était enfermée dans cinq
+          cents pixels au milieu d'un écran vide. */}
+      <div className="flex max-w-4xl flex-col gap-3">
         <h2 className="text-sm font-medium text-zinc-700">
           Analyse SEO par Claude
         </h2>
