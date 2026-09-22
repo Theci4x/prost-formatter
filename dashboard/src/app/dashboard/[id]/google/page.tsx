@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getValidAccessToken } from "@/lib/google/connection";
+import { expliquerBusinessProfile } from "@/lib/google/erreurs";
 import {
   listAccounts,
   listLocations,
@@ -72,8 +73,11 @@ export default async function GoogleConnectionPage({
       }
     } catch (err) {
       console.error("[google/page] fetch locations", err);
-      locationsError =
-        "Impossible de récupérer tes fiches établissement pour le moment (l'API Google Business Profile est peut-être encore en cours d'activation).";
+      // Le message disait « peut-être encore en cours d'activation ».
+      // Deviner à voix haute fait attendre une chose qui n'arrivera
+      // jamais seule : le quota de cette API reste à zéro tant que
+      // Google n'a pas accordé le dossier d'accès.
+      locationsError = expliquerBusinessProfile(err);
     }
   }
 
