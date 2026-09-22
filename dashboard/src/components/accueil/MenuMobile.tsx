@@ -40,7 +40,7 @@ export function MenuMobile({
     // Pas de « relative » ici : le panneau s'aligne sur le bord droit de
     // l'en-tête, pas sur celui du bouton, sinon il pend au milieu de
     // l'écran en laissant une marge inexpliquée à sa droite.
-    <details ref={bloc} className="sm:hidden">
+    <details ref={bloc} className="lg:hidden">
       <summary
         aria-label={libelle}
         className="flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-md border border-black/10 [&::-webkit-details-marker]:hidden"

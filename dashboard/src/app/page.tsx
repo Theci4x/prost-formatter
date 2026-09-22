@@ -87,6 +87,29 @@ const ICONES_BENEFICES = [
   </svg>,
 ];
 
+/**
+ * La pastille des outils gratuits.
+ *
+ * Le lien était de la couleur d'accent, et rien d'autre : au milieu de
+ * cinq entrées de même taille, une nuance de couleur ne se voit pas. Une
+ * pastille, si.
+ *
+ * Teintée et cerclée plutôt que pleine, et arrondie en gélule là où le
+ * bouton d'essai a des angles à huit pixels : deux boutons pleins côte à
+ * côte se disputeraient le regard, et celui qui doit gagner est celui qui
+ * fait souscrire. Celle-ci se remarque sans réclamer le premier rôle.
+ */
+const PASTILLE_OUTILS = {
+  fontSize: 14,
+  fontWeight: 600,
+  color: "var(--accent-dark)",
+  background: "var(--accent-soft)",
+  border: "1px solid color-mix(in oklch, var(--accent) 35%, white)",
+  borderRadius: 999,
+  padding: "6px 14px",
+  whiteSpace: "nowrap",
+} as const;
+
 export default async function Home() {
   const supabase = await createClient();
   const {
@@ -183,36 +206,47 @@ export default async function Home() {
             Klarr
           </span>
         </div>
-        <div className="hidden gap-9 sm:flex" style={{ alignItems: "center" }}>
+        <div
+          className="hidden gap-8 lg:flex"
+          style={{ alignItems: "center" }}
+        >
           {/* En tête, et pas dans le pied de page : quatre outils
               gratuits enterrés sous toute la page ne servent à personne,
               et c'est précisément ce que le visiteur cherche avant de
               savoir s'il nous fait confiance. */}
-          <Link
-            href="/ouvrir-un-restaurant"
-            style={{
-              fontSize: 14,
-              fontWeight: 600,
-              color: "var(--accent-dark)",
-            }}
-          >
+          <Link href="/ouvrir-un-restaurant" style={PASTILLE_OUTILS}>
             {t.nav.outils}
           </Link>
           <a
             href="#benefices"
-            style={{ fontSize: 14, fontWeight: 500, color: "var(--ink-soft)" }}
+            style={{
+              fontSize: 14,
+              fontWeight: 500,
+              color: "var(--ink-soft)",
+              whiteSpace: "nowrap",
+            }}
           >
             {t.nav.fonctionnement}
           </a>
           <a
             href="#test-presence"
-            style={{ fontSize: 14, fontWeight: 500, color: "var(--ink-soft)" }}
+            style={{
+              fontSize: 14,
+              fontWeight: 500,
+              color: "var(--ink-soft)",
+              whiteSpace: "nowrap",
+            }}
           >
             {t.nav.test}
           </a>
           <a
             href="#tarifs"
-            style={{ fontSize: 14, fontWeight: 500, color: "var(--ink-soft)" }}
+            style={{
+              fontSize: 14,
+              fontWeight: 500,
+              color: "var(--ink-soft)",
+              whiteSpace: "nowrap",
+            }}
           >
             {t.nav.tarifs}
           </a>
@@ -222,13 +256,23 @@ export default async function Home() {
               recherche. */}
           <Link
             href="/blog"
-            style={{ fontSize: 14, fontWeight: 500, color: "var(--ink-soft)" }}
+            style={{
+              fontSize: 14,
+              fontWeight: 500,
+              color: "var(--ink-soft)",
+              whiteSpace: "nowrap",
+            }}
           >
             {t.nav.journal}
           </Link>
           <Link
             href="/login"
-            style={{ fontSize: 14, fontWeight: 500, color: "var(--ink-soft)" }}
+            style={{
+              fontSize: 14,
+              fontWeight: 500,
+              color: "var(--ink-soft)",
+              whiteSpace: "nowrap",
+            }}
           >
             {t.nav.connexion}
           </Link>
@@ -292,14 +336,10 @@ export default async function Home() {
 
           Elle reste dans le menu aussi. Quelqu'un qui ouvre un menu
           cherche la liste complète, pas ce qui manque ailleurs. */}
-      <div className="px-5 pb-4 sm:hidden">
+      <div className="px-5 pb-4 lg:hidden">
         <Link
           href="/ouvrir-un-restaurant"
-          style={{
-            fontSize: 14,
-            fontWeight: 600,
-            color: "var(--accent-dark)",
-          }}
+          style={{ ...PASTILLE_OUTILS, display: "inline-block" }}
         >
           {t.nav.outils} →
         </Link>
