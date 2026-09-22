@@ -36,7 +36,20 @@ export function questions(langue: Langue): Question[] {
 const EDIREF = {
   "@type": "Organization",
   name: "EDIREF",
+  url: "https://www.ediref.com",
   foundingDate: "2008",
+  /**
+   * Le numéro d'immatriculation, tel qu'il figure aux mentions légales.
+   *
+   * C'est le seul point de cette fiche qu'aucune autre société au monde
+   * ne peut revendiquer. Le reste — un nom, un secteur — se ressemble
+   * d'une entreprise à l'autre ; un SIREN, non.
+   */
+  identifier: {
+    "@type": "PropertyValue",
+    propertyID: "SIREN",
+    value: "503428369",
+  },
   description:
     "Société parisienne de création de sites web et de référencement. RCS Paris 503 428 369.",
   address: {
@@ -116,13 +129,38 @@ export function balisageAccueil(langue: Langue): object[] {
       description,
       parentOrganization: EDIREF,
       address: EDIREF.address,
+      /**
+       * Le secteur et le pays, écrits noir sur blanc.
+       *
+       * Un audit de visibilité a montré que Google AI Overviews répondait
+       * à des questions sur Klarr en citant « Klar », une application
+       * mexicaine sans rapport. Ce n'est pas un problème d'autorité mais
+       * d'identité : rien dans le balisage ne disait de quoi on parle ni
+       * où. Un modèle qui hésite entre deux marques au nom voisin tranche
+       * sur ce qu'il trouve d'écrit.
+       *
+       * Il manque encore le plus efficace — `sameAs`, les adresses des
+       * profils officiels (LinkedIn, Crunchbase, réseaux). Elles ne sont
+       * pas inventables : un `sameAs` qui pointe vers une page qui n'est
+       * pas la nôtre dit exactement le contraire de ce qu'on veut dire.
+       */
+      areaServed: { "@type": "Country", name: "France" },
+      knowsAbout: [
+        "Réservation en ligne pour restaurants",
+        "Visibilité des restaurants sur Google",
+        "Gestion de salle et plan de table",
+      ],
     },
     {
       "@context": "https://schema.org",
       "@type": "SoftwareApplication",
       name: "Klarr",
       applicationCategory: "BusinessApplication",
+      // Plus précis que « application professionnelle », qui décrit aussi
+      // bien un logiciel de paie qu'une banque en ligne.
+      applicationSubCategory: "Logiciel de réservation pour restaurants",
       operatingSystem: "Web",
+      inLanguage: langue,
       url,
       description,
       publisher: EDIREF,

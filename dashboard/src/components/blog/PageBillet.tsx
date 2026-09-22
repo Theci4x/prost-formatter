@@ -107,6 +107,23 @@ export async function PageBillet({
             inLanguage: langue,
             image: `${site}${couverture}`,
             mainEntityOfPage: `${site}${racine}/${billet.slug}`,
+            /**
+             * L'auteur manquait, et c'est le signal que Google appelle
+             * E-E-A-T : qui parle, et de quel droit.
+             *
+             * L'organisation, pas une personne. Les articles ne portent
+             * aucune signature à l'écran, et un balisage qui nomme un
+             * auteur que la page n'affiche pas contredit ce qu'il
+             * accompagne — c'est ce qu'on s'était déjà refusé en
+             * renonçant à faire de Thomas Bavoil le fondateur de Klarr.
+             * Le jour où un nom signera vraiment ces textes, il aura sa
+             * place ici et dans la page.
+             */
+            author: {
+              "@type": "Organization",
+              name: "Klarr",
+              url: site,
+            },
             publisher: {
               "@type": "Organization",
               name: "Klarr",
