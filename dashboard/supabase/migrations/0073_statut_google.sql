@@ -20,10 +20,9 @@ alter table restaurants
   add column if not exists google_statut text,
   add column if not exists google_statut_releve_le timestamptz;
 
-comment on column restaurants.google_statut is
-  'Statut de la fiche Google, tel que Places le rend : OPERATIONAL, '
-  'CLOSED_TEMPORARILY, CLOSED_PERMANENTLY. Null si jamais relevé.';
+-- Une seule chaîne par commentaire, sans continuation : ce fichier se
+-- colle dans l'éditeur SQL de Supabase, et deux littéraux à recoller
+-- dépendent d'un retour à la ligne qu'un copier-coller peut avaler.
+comment on column restaurants.google_statut is 'Statut de la fiche Google, tel que Places le rend : OPERATIONAL, CLOSED_TEMPORARILY, CLOSED_PERMANENTLY. Null si jamais relevé.';
 
-comment on column restaurants.google_statut_releve_le is
-  'Quand ce statut a été relevé. Sert à ne pas alerter sur une lecture '
-  'trop vieille pour être crue.';
+comment on column restaurants.google_statut_releve_le is 'Quand ce statut a été relevé. Sert à ne pas alerter sur une lecture trop vieille pour être crue.';
