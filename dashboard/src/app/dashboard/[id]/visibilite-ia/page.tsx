@@ -560,7 +560,7 @@ export default async function VisibiliteIaPage({
             <div key={intention} className="flex flex-col gap-2">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <div className="flex flex-col gap-0.5">
-                  <h3 className="text-sm font-semibold text-ink">
+                  <h3 className="text-lg font-semibold text-ink">
                     {LIBELLE_INTENTION[intention]}
                   </h3>
                   <p className="text-xs leading-relaxed text-ink-soft">
@@ -614,7 +614,7 @@ function Titre({
   children: React.ReactNode;
 }) {
   return (
-    <h2 className="flex items-baseline gap-3 text-sm font-semibold text-ink">
+    <h2 className="flex items-baseline gap-3 font-serif text-2xl text-ink">
       <span className="font-mono text-xs text-brand-orange">{numero}</span>
       {children}
     </h2>

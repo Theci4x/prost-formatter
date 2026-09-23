@@ -55,8 +55,14 @@ export function PartDeVoix({
       <div className="flex min-w-0 flex-col gap-3">
         {joursMesures >= 2 ? (
           <>
-            <div className="hidden sm:block">
+            {/* Trois géométries : le SVG s'étire avec l'écran, et un
+                texte prévu pour 760 px, étiré sur 1 500, devient une
+                affiche — les étiquettes doublaient de taille. */}
+            <div className="hidden sm:block xl:hidden">
               <Courbe series={series} largeur={760} hauteur={248} etiquettes />
+            </div>
+            <div className="hidden xl:block">
+              <Courbe series={series} largeur={1320} hauteur={300} etiquettes />
             </div>
             <div className="sm:hidden">
               <Courbe
