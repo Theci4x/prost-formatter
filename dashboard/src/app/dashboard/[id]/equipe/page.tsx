@@ -52,13 +52,13 @@ export default async function EquipePage({
         title={`Équipe — ${restaurant.nom}`}
       />
 
-      <p className="max-w-2xl text-sm text-zinc-500">
+      <p className="max-w-4xl text-sm text-zinc-500">
         Chacun se connecte avec son propre compte. Un serveur voit les
         réservations et l&apos;écran de salle ; il ne voit ni ta fiche Google,
         ni tes réseaux, ni ton abonnement.
       </p>
 
-      <ul className="flex max-w-2xl flex-col gap-3">
+      <ul className="flex flex-col gap-3">
         <li className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-zinc-200/70 bg-white p-4 shadow-sm">
           <span className="flex flex-col">
             <span className="font-medium text-zinc-900">Toi</span>
@@ -109,11 +109,11 @@ export default async function EquipePage({
       </ul>
 
       {patron ? (
-        <div className="max-w-2xl">
+        <div>
           <MembreForm restaurantId={id} />
         </div>
       ) : (
-        <p className="max-w-2xl text-sm text-zinc-500">
+        <p className="max-w-4xl text-sm text-zinc-500">
           Seul le propriétaire de l&apos;établissement peut ajouter ou retirer
           quelqu&apos;un.
         </p>

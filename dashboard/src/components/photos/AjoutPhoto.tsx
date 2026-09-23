@@ -73,7 +73,7 @@ export function AjoutPhoto({ restaurantId }: { restaurantId: string }) {
   return (
     <form
       action={envoyer}
-      className="flex max-w-xl flex-wrap items-center gap-3 rounded-2xl border border-zinc-200/70 bg-white p-4 shadow-sm"
+      className="flex flex-wrap items-center gap-3 rounded-2xl border border-zinc-200/70 bg-white p-4 shadow-sm"
     >
       <input type="hidden" name="restaurant_id" value={restaurantId} />
       <input

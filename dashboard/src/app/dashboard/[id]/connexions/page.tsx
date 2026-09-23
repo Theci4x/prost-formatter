@@ -255,13 +255,13 @@ export default async function ConnexionsPage({
       />
 
       {connected && (
-        <p className="max-w-md rounded-md bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+        <p className="rounded-md bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
           Compte connecté avec succès.
         </p>
       )}
 
       {stripeError && (
-        <p className="max-w-2xl rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
+        <p className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
           La connexion Stripe n&apos;a pas abouti.{" "}
           <Link
             href={`/dashboard/${id}/paiements`}
@@ -273,7 +273,7 @@ export default async function ConnexionsPage({
         </p>
       )}
 
-      <p className="max-w-2xl text-sm text-zinc-500">
+      <p className="max-w-4xl text-sm text-zinc-500">
         Relie tes comptes à Klarr pour qu&apos;il puisse lire tes avis, tes
         publications et tes statistiques. Tu restes propriétaire de tes comptes
         : la connexion se retire quand tu veux, depuis « Gérer ».

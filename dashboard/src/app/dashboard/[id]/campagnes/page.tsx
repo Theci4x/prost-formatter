@@ -70,7 +70,7 @@ export default async function CampagnesPage({
         backHref="/dashboard"
       />
 
-      <p className="max-w-2xl text-sm text-zinc-600">
+      <p className="max-w-4xl text-sm text-zinc-600">
         Un message à ceux qui ont accepté d&apos;en recevoir. Écrivez-le quand
         vous avez le temps, choisissez le jour, Klarr l&apos;envoie le matin
         venu. Chaque message porte un lien de désinscription — c&apos;est la
@@ -80,7 +80,7 @@ export default async function CampagnesPage({
       {/* L'heure d'envoi est approximative, et il vaut mieux le dire
           avant qu'après : c'est la même limite que pour les publications
           Google, et elle tient au forfait, pas à une panne. */}
-      <p className="max-w-2xl rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-xs leading-relaxed text-zinc-600">
+      <p className="rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-xs leading-relaxed text-zinc-600">
         La file est traitée une fois par jour, en milieu de matinée. Une
         campagne programmée part donc <strong>le matin du jour choisi</strong>,
         pas à l&apos;heure près.
@@ -102,7 +102,7 @@ export default async function CampagnesPage({
             Aucune campagne pour l&apos;instant.
           </p>
         ) : (
-          <ul className="flex max-w-2xl flex-col gap-3">
+          <ul className="flex flex-col gap-3">
             {campagnes.map((campagne) => (
               <li key={campagne.id}>
                 <Link

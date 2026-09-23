@@ -54,7 +54,7 @@ export default async function PhotosPage({
 
       <AjoutPhoto restaurantId={id} />
 
-      <p className="max-w-2xl text-sm text-zinc-500">
+      <p className="max-w-4xl text-sm text-zinc-500">
         Une de ces photos ouvre ton site vitrine, en grand. C&apos;est elle
         qu&apos;on voit avant de lire quoi que ce soit : choisis la salle pleine
         plutôt que le plat isolé.
@@ -63,7 +63,7 @@ export default async function PhotosPage({
       {photos.length === 0 ? (
         <p className="text-sm text-zinc-500">Aucune photo pour le moment.</p>
       ) : (
-        <ul className="grid max-w-3xl grid-cols-2 gap-4 sm:grid-cols-3">
+        <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
           {photos.map((photo) => (
             <li key={photo.id} className="flex flex-col gap-2">
               <div className="group relative aspect-square overflow-hidden rounded-xl border border-zinc-200/70 shadow-sm">

@@ -75,7 +75,7 @@ export default async function ClientsPage({
         backHref="/dashboard"
       />
 
-      <p className="max-w-2xl text-sm text-zinc-600">
+      <p className="max-w-4xl text-sm text-zinc-600">
         Reconstitué à partir du carnet : une personne, quelle que soit le nombre
         de fois qu&apos;elle a réservé. Les venues comptent les tables honorées,
         pas les demandes annulées.
@@ -95,7 +95,7 @@ export default async function ClientsPage({
       </div>
 
       {total > 0 && joignables === 0 && (
-        <p className="max-w-2xl rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-relaxed text-amber-900">
+        <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-relaxed text-amber-900">
           <strong>Personne n&apos;a encore accepté vos e-mails.</strong> La case
           est proposée, décochée, sur votre page de réservation — c&apos;est la
           loi : on ne peut pas déduire d&apos;une table réservée l&apos;envie de

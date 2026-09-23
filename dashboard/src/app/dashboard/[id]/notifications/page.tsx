@@ -60,7 +60,7 @@ export default async function NotificationsPage({
   const appareils = (data ?? []) as Appareil[];
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-8 px-6 py-8">
+    <div className="flex w-full flex-col gap-8 px-6 py-8">
       <PageHeader
         icon={<Cloche />}
         title={`Notifications — ${(restaurant as { nom: string }).nom}`}

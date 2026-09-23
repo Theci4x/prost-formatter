@@ -110,7 +110,7 @@ export default async function MenuPage({
     <div className="flex flex-1 flex-col gap-6 px-6 py-8">
       <PageHeader icon={dashboardIcons.menu} title={c.titre(restaurant.nom)} />
 
-      <p className="max-w-2xl text-sm text-zinc-500">{c.chapo}</p>
+      <p className="max-w-4xl text-sm text-zinc-500">{c.chapo}</p>
 
       {/* La déclaration des allergènes n'est pas un confort : pour un plat
           non préemballé, l'information doit être écrite et lisible sans que

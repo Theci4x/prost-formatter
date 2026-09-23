@@ -105,13 +105,13 @@ export default async function PostsPage({
         backHref={`/dashboard/${id}/google`}
       />
 
-      <p className="max-w-2xl text-sm text-zinc-600">
+      <p className="max-w-4xl text-sm text-zinc-600">
         Une publication vit une semaine sur ta fiche Google, puis disparaît.
         L&apos;intérêt est d&apos;en avoir toujours une : écris-les à
         l&apos;avance, Klarr les publie le jour venu.
       </p>
 
-      <div className="flex max-w-2xl flex-col gap-4">
+      <div className="flex flex-col gap-4">
         <FormulairePost
           restaurantId={id}
           photos={photos}

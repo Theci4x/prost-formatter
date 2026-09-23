@@ -69,17 +69,17 @@ export default async function PaiementsPage({
       />
 
       {query.stripe_connecte && (
-        <p className="max-w-2xl rounded-md bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+        <p className="rounded-md bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
           Ton compte Stripe est relié.
         </p>
       )}
       {query.stripe_error && (
-        <p className="max-w-2xl rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
+        <p className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
           {MOTIFS[query.stripe_error] ?? "La connexion a échoué."}
         </p>
       )}
 
-      <div className="flex max-w-2xl flex-col gap-2">
+      <div className="flex flex-col gap-2">
         <p className="text-sm text-zinc-600">
           Relie <span className="font-medium">ton</span> compte Stripe pour
           demander un acompte sur une privatisation, prendre une empreinte de
@@ -94,7 +94,7 @@ export default async function PaiementsPage({
       </div>
 
       {connexion ? (
-        <div className="flex max-w-2xl flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm">
+        <div className="flex flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <span className="flex flex-col">
               <span className="font-medium text-zinc-900">
@@ -138,7 +138,7 @@ export default async function PaiementsPage({
           </div>
         </div>
       ) : (
-        <div className="flex max-w-2xl flex-col items-start gap-4 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm">
+        <div className="flex flex-col items-start gap-4 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm">
           <p className="text-sm text-zinc-500">
             Tu peux relier un compte Stripe existant, ou en créer un pendant la
             connexion si tu n&apos;en as pas encore.

@@ -90,7 +90,7 @@ export default async function PanneauPage({
         <h1 className="text-xl font-semibold text-zinc-900">
           Panneau à imprimer
         </h1>
-        <p className="max-w-xl text-sm text-zinc-500">
+        <p className="max-w-4xl text-sm text-zinc-500">
           Ouvre d&apos;abord ta page de réservation : c&apos;est son adresse qui
           sert au jeu comme aux avis.{" "}
           <Link
@@ -121,7 +121,7 @@ export default async function PanneauPage({
         <h1 className="text-xl font-semibold text-zinc-900">
           Panneau à imprimer
         </h1>
-        <p className="max-w-xl text-sm text-zinc-500">
+        <p className="max-w-4xl text-sm text-zinc-500">
           Imprime en A5, ou en A4 puis plie en deux. Vérifie les deux QR avec
           ton propre téléphone avant d&apos;en faire cinquante : un carton
           imprimé de travers se paie en papier.

@@ -72,7 +72,7 @@ export default async function DashboardPage() {
   );
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-4 py-8 sm:px-6">
+    <div className="mx-auto flex w-full max-w-[1800px] flex-1 flex-col gap-6 px-4 py-8 sm:px-6 lg:px-10">
       {/* Le même sélecteur que sur le site public, et plus une seconde
           implémentation. Celle d'ici affichait trois petites pastilles
           grises dont deux ressemblaient à des boutons désactivés — au
@@ -106,7 +106,7 @@ export default async function DashboardPage() {
       )}
 
       {restaurants.length === 0 ? (
-        <div className="flex max-w-md flex-col items-center gap-4 rounded-2xl border border-dashed border-zinc-300 bg-white px-6 py-16 text-center shadow-sm">
+        <div className="flex flex-col items-center gap-4 rounded-2xl border border-dashed border-zinc-300 bg-white px-6 py-16 text-center shadow-sm">
           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-brand-orange-soft to-white text-brand-navy shadow-sm">
             {dashboardIcons.menu}
           </div>

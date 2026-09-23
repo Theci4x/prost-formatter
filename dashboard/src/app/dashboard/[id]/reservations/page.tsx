@@ -693,7 +693,7 @@ export default async function ReservationsPage({
       />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="max-w-xl text-sm text-zinc-500">{r.chapo}</p>
+        <p className="max-w-4xl text-sm text-zinc-500">{r.chapo}</p>
         <div className="flex flex-wrap items-center gap-2">
           <Link
             href={`/dashboard/${id}/service`}

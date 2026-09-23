@@ -199,7 +199,7 @@ export default async function ConfigurationReservationsPage({
         backHref={`/dashboard/${id}/reservations`}
       />
 
-      <p className="max-w-2xl text-sm text-zinc-500">{cfg.chapo}</p>
+      <p className="max-w-4xl text-sm text-zinc-500">{cfg.chapo}</p>
 
       <section className="flex flex-col gap-4">
         <div className="flex flex-col gap-1">

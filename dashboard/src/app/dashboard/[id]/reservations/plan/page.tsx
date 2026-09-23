@@ -57,7 +57,7 @@ export default async function PlanPage({
           ← Réservations
         </Link>
         <h1 className="text-2xl font-semibold text-zinc-900">Plan de salle</h1>
-        <p className="max-w-2xl text-sm text-zinc-500">
+        <p className="max-w-4xl text-sm text-zinc-500">
           Dessine ta salle comme elle est — ta salle du bas, ton premier étage,
           ta terrasse. Pose tes tables où tu veux, à la bonne taille, tournées
           comme il faut, et ajoute le bar, l&apos;entrée ou un poteau pour

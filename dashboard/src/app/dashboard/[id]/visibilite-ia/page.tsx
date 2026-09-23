@@ -350,7 +350,7 @@ export default async function VisibiliteIaPage({
             <summary className="cursor-pointer select-none hover:text-white">
               Comment lire ce score
             </summary>
-            <p className="mt-2 max-w-2xl leading-relaxed">
+            <p className="mt-2 max-w-4xl leading-relaxed">
               Pour chaque intention, on compte la part des réponses où tu es
               cité. Le score les pondère : « on me réserve » compte pour la
               moitié, « on me compare » pour trois dixièmes, « on me découvre »
@@ -590,7 +590,7 @@ export default async function VisibiliteIaPage({
         })}
       </section>
 
-      <p className="max-w-3xl text-xs leading-relaxed text-zinc-400">
+      <p className="max-w-4xl text-xs leading-relaxed text-zinc-400">
         Assistants interrogés aujourd&apos;hui :{" "}
         {actifs.length > 0 ? actifs.join(", ") : "aucun"}. Les autres
         s&apos;activeront automatiquement dès que leur clé d&apos;API sera
@@ -723,7 +723,7 @@ function Demarrage({ pretes }: { pretes: number }) {
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/60">
             Score de visibilité IA
           </p>
-          <p className="mt-2 max-w-xl text-sm leading-relaxed text-white/80">
+          <p className="mt-2 max-w-4xl text-sm leading-relaxed text-white/80">
             De plus en plus de clients demandent à une IA où aller manger. Cette
             page mesure si ton restaurant fait partie des réponses — et te dit
             quoi faire pour y entrer.

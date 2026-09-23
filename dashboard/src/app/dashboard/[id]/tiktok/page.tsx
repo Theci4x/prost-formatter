@@ -82,30 +82,30 @@ export default async function TikTokPage({
       />
 
       {connected && (
-        <p className="max-w-md rounded-md bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+        <p className="rounded-md bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
           Compte TikTok connecté avec succès.
         </p>
       )}
       {error && (
-        <p className="max-w-md rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
+        <p className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
           La connexion a échoué. Réessaie.
         </p>
       )}
 
       {!connection ? (
-        <div className="flex max-w-sm flex-col gap-4 rounded-md border border-zinc-200 p-4">
+        <div className="flex flex-col gap-4 rounded-md border border-zinc-200 p-4">
           <p className="text-sm text-zinc-500">
             Aucun compte TikTok connecté pour ce restaurant.
           </p>
           <a
             href={`/api/tiktok/authorize?restaurant_id=${id}`}
-            className="rounded-md bg-brand-navy px-4 py-2 text-center text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover"
+            className="w-fit rounded-md bg-brand-navy px-4 py-2 text-center text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover"
           >
             Connecter TikTok
           </a>
         </div>
       ) : (
-        <div className="flex max-w-md flex-col gap-4 rounded-md border border-zinc-200 p-4">
+        <div className="flex flex-col gap-4 rounded-md border border-zinc-200 p-4">
           <div className="flex items-center justify-between">
             <p className="text-sm font-medium text-zinc-900">
               {displayName ?? "Compte TikTok"}

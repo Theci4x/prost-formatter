@@ -87,7 +87,7 @@ export default async function VitrinePage({
         backHref="/dashboard"
       />
 
-      <p className="max-w-2xl text-sm text-zinc-500">
+      <p className="max-w-4xl text-sm text-zinc-500">
         Ton site, engendré de ce que tu as déjà rempli : tes photos, ta carte,
         tes horaires, ton adresse, ta note Google. Rien de plus à saisir, rien à
         mettre en page. C&apos;est l&apos;adresse à donner à Google, à ta fiche
@@ -96,7 +96,7 @@ export default async function VitrinePage({
         pas.
       </p>
 
-      <section className="flex max-w-2xl flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm">
+      <section className="flex flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm">
         {!slug ? (
           <>
             <p className="text-sm font-medium text-zinc-900">
@@ -159,7 +159,7 @@ export default async function VitrinePage({
           grand, le nom dessus. Depuis que la vitrine s'ouvre en plein écran,
           c'est la décision qui compte le plus, et elle se prenait dans un
           coin de l'écran Photos, au survol d'une vignette. */}
-      <section className="flex max-w-2xl flex-col gap-4">
+      <section className="flex flex-col gap-4">
         <div className="flex flex-col gap-1">
           <h2 className="text-base font-semibold text-zinc-900">
             Photo de couverture
@@ -218,7 +218,7 @@ export default async function VitrinePage({
       </section>
 
       {slug && manques.length > 0 && (
-        <section className="flex max-w-2xl flex-col gap-3">
+        <section className="flex flex-col gap-3">
           <h2 className="text-base font-semibold text-zinc-900">
             Ce qui manque encore
           </h2>

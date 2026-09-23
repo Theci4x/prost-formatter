@@ -69,7 +69,7 @@ export default async function CampagnePage({
         backHref={`/dashboard/${id}/campagnes`}
       />
 
-      <div className="flex max-w-2xl flex-col gap-1">
+      <div className="flex flex-col gap-1">
         <span className="text-sm text-zinc-600">
           {LIBELLE_STATUT[campagne.statut]} ·{" "}
           {LIBELLE_SEGMENT[campagne.segment]}
@@ -115,7 +115,7 @@ export default async function CampagnePage({
               arriver dans une boîte. */}
           <EssaiCampagne restaurantId={id} campagneId={campagne.id} />
 
-          <div className="flex max-w-2xl flex-col gap-3 rounded-2xl border border-zinc-200 bg-white p-5">
+          <div className="flex flex-col gap-3 rounded-2xl border border-zinc-200 bg-white p-5">
             <span className="text-sm font-medium text-zinc-700">
               {campagne.statut === "programmee"
                 ? `Programmée pour le ${jourLisible(campagne.envoyer_le)}`
@@ -178,7 +178,7 @@ export default async function CampagnePage({
       {campagne.statut === "echec" && (
         <form
           action={relancerCampagne}
-          className="flex max-w-2xl flex-col gap-3 rounded-2xl border border-red-200 bg-red-50 p-5"
+          className="flex flex-col gap-3 rounded-2xl border border-red-200 bg-red-50 p-5"
         >
           <input type="hidden" name="restaurant_id" value={id} />
           <input type="hidden" name="campagne_id" value={campagne.id} />

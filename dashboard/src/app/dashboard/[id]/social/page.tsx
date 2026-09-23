@@ -68,19 +68,19 @@ export default async function SocialPage({
       />
 
       {connected && (
-        <p className="max-w-md rounded-md bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+        <p className="rounded-md bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
           Compte Facebook connecté avec succès.
         </p>
       )}
       {!connection ? (
-        <div className="flex max-w-sm flex-col gap-4 rounded-md border border-zinc-200 p-4">
+        <div className="flex flex-col gap-4 rounded-md border border-zinc-200 p-4">
           <p className="text-sm text-zinc-500">
             Aucune page Facebook/Instagram connectée pour ce restaurant.
           </p>
           <FacebookConnectButton restaurantId={id} />
         </div>
       ) : (
-        <div className="flex max-w-md flex-col gap-4 rounded-md border border-zinc-200 p-4">
+        <div className="flex flex-col gap-4 rounded-md border border-zinc-200 p-4">
           <div className="flex items-center justify-between">
             <p className="text-sm font-medium text-zinc-900">
               {connection.facebook_page_name ?? "Page Facebook"}

@@ -73,7 +73,7 @@ export function FormulaireCampagne({
   return (
     <form
       action={action}
-      className="flex max-w-2xl flex-col gap-4 rounded-2xl border border-zinc-200 bg-white p-5"
+      className="flex flex-col gap-4 rounded-2xl border border-zinc-200 bg-white p-5"
     >
       <input type="hidden" name="restaurant_id" value={restaurantId} />
       {campagneId && (

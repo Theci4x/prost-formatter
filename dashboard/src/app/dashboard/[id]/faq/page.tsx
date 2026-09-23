@@ -73,14 +73,14 @@ export default async function FaqPage({
         title={`Questions fréquentes — ${restaurant.nom}`}
       />
 
-      <p className="max-w-2xl text-sm text-zinc-600">
+      <p className="max-w-4xl text-sm text-zinc-600">
         Ces réponses s&apos;affichent sur ta page publique et sont lues par
         Google et les assistants, qui les reprennent presque mot pour mot quand
         on leur demande si tu as une terrasse ou si tu acceptes les chiens.
         Accessoirement, elles épargnent autant d&apos;appels en plein service.
       </p>
 
-      <div className="flex max-w-2xl flex-col gap-4">
+      <div className="flex flex-col gap-4">
         {/* L'état d'abord : c'est la phrase qui dit s'il reste à faire,
             et elle dit ce que coûte le fait de ne pas le faire. */}
         <p

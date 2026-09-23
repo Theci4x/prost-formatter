@@ -64,7 +64,7 @@ export default async function RetoursPage({
         title={`Retours clients — ${restaurant.nom}`}
       />
 
-      <div className="flex max-w-2xl flex-col gap-3">
+      <div className="flex flex-col gap-3">
         <p className="text-sm text-zinc-600">
           Ce que des clients ont préféré vous dire en privé plutôt qu&apos;en
           public. Personne n&apos;a été trié : la page leur proposait
@@ -96,7 +96,7 @@ export default async function RetoursPage({
         )}
       </div>
 
-      <div className="flex max-w-2xl flex-col gap-3">
+      <div className="flex flex-col gap-3">
         {retours.length === 0 ? (
           <p className="text-sm text-zinc-500">
             Aucun retour pour l&apos;instant.

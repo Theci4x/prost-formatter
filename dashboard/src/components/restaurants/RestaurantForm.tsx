@@ -48,7 +48,7 @@ export function RestaurantForm({
   });
 
   return (
-    <form action={formAction} className="flex w-full max-w-lg flex-col gap-4">
+    <form action={formAction} className="flex w-full max-w-4xl flex-col gap-4">
       {restaurant && <input type="hidden" name="id" value={restaurant.id} />}
 
       <div className="flex flex-col gap-1.5">

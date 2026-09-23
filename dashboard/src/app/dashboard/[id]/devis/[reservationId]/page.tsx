@@ -198,7 +198,7 @@ export default async function DevisPage({
   const fige = devis.statut === "accepte";
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-6 py-8">
+    <div className="flex w-full flex-col gap-8 px-6 py-8">
       <PageHeader
         icon={<Facture />}
         title={`Devis ${devis.numero}`}
@@ -275,7 +275,7 @@ export default async function DevisPage({
           or c'est ici qu'on est quand un client rappelle pour dire qu'il
           n'a rien reçu, ou qu'on veut le lui passer par WhatsApp. */}
       {attendLeClient && reservation.paiement_token && (
-        <div className="flex max-w-3xl flex-col gap-2 rounded-2xl bg-brand-orange-soft p-5">
+        <div className="flex flex-col gap-2 rounded-2xl bg-brand-orange-soft p-5">
           <span className="text-sm font-medium text-brand-navy">
             {libelleReglement}
           </span>
@@ -342,7 +342,7 @@ export default async function DevisPage({
       {/* Constaté à la main, donc défaisable à la main. Un acompte réglé
           par carte, lui, se rembourse depuis Stripe. */}
       {reservation.acompte_hors_ligne && (
-        <p className="flex max-w-3xl flex-wrap items-center gap-3 rounded-2xl bg-emerald-50 px-5 py-4 text-sm text-emerald-800">
+        <p className="flex flex-wrap items-center gap-3 rounded-2xl bg-emerald-50 px-5 py-4 text-sm text-emerald-800">
           <span className="font-medium">{libelleReglement}</span>
           <BoutonAction
             action={constaterAcompteHorsLigne}

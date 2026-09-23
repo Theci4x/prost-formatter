@@ -112,7 +112,7 @@ export default async function RouePage({
         backHref="/dashboard"
       />
 
-      <p className="max-w-2xl text-sm text-zinc-500">
+      <p className="max-w-4xl text-sm text-zinc-500">
         Un panneau sur la table, avec son propre QR code : le client scanne,
         tourne la roue, et son lot part par e-mail pour la visite suivante —
         c&apos;est une raison de revenir autant qu&apos;un cadeau. Le totem des
@@ -121,7 +121,7 @@ export default async function RouePage({
 
       {/* Ce que le restaurateur doit savoir avant d'allumer. Il prend le
           risque sur sa fiche : il doit le lire, une fois, en clair. */}
-      <div className="flex max-w-2xl flex-col gap-2 rounded-2xl border border-amber-200 bg-amber-50 p-5">
+      <div className="flex flex-col gap-2 rounded-2xl border border-amber-200 bg-amber-50 p-5">
         <p className="text-sm font-semibold text-amber-900">
           À lire avant d&apos;allumer
         </p>

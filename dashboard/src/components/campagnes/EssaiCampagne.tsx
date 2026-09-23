@@ -29,7 +29,7 @@ export function EssaiCampagne({
   return (
     <form
       action={action}
-      className="flex max-w-2xl flex-col gap-3 rounded-2xl border border-zinc-200 bg-white p-5"
+      className="flex flex-col gap-3 rounded-2xl border border-zinc-200 bg-white p-5"
     >
       <input type="hidden" name="restaurant_id" value={restaurantId} />
       <input type="hidden" name="campagne_id" value={campagneId} />

@@ -28,7 +28,7 @@ export default function ErreurDashboard({
       <h1 className="font-serif text-2xl text-ink">
         Cette page n&apos;a pas pu s&apos;afficher.
       </h1>
-      <p className="max-w-xl text-sm text-zinc-600">
+      <p className="max-w-4xl text-sm text-zinc-600">
         Rien n&apos;est perdu : tes réservations et ta carte sont en base, et
         cet écran ne les a pas touchées. Réessaie — si ça recommence,
         envoie-nous le code ci-dessous, c&apos;est lui qui nous mène directement

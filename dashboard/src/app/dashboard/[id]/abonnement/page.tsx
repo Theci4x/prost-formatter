@@ -94,7 +94,7 @@ export default async function AbonnementPage({
   const facture = clientStripe ? await factureEnAttente(clientStripe) : null;
 
   return (
-    <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 px-6 py-8">
+    <div className="flex w-full flex-1 flex-col gap-6 px-6 py-8">
       <PageHeader
         icon={dashboardIcons.abonnement}
         title={a.titre(restaurant.nom)}

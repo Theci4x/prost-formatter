@@ -31,7 +31,7 @@ export default async function RetirerPage({
   if (!restaurant) notFound();
 
   return (
-    <div className="mx-auto flex w-full max-w-md flex-1 flex-col gap-8 px-6 py-8">
+    <div className="flex w-full flex-1 flex-col gap-8 px-6 py-8">
       <PageHeader
         icon={dashboardIcons.roue}
         title="Retirer un lot"

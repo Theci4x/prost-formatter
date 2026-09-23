@@ -55,13 +55,13 @@ export default async function AvisPage({
         title={`Avis — ${restaurant.nom}`}
       />
 
-      <p className="max-w-2xl text-sm text-zinc-600">
+      <p className="max-w-4xl text-sm text-zinc-600">
         Klarr peut rédiger une réponse pour chaque avis. La publication directe
         sur Google arrivera avec l&apos;accès à son API ; en attendant, la
         réponse se copie en un clic.
       </p>
 
-      <div className="grid max-w-5xl grid-cols-1 gap-4 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <PlatformReviewsCard data={google} restaurantId={id} />
         <PlatformReviewsCard data={yelp} restaurantId={id} />
         <PlatformReviewsCard

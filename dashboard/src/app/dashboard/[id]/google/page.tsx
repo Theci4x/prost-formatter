@@ -90,30 +90,30 @@ export default async function GoogleConnectionPage({
       />
 
       {connected && (
-        <p className="max-w-md rounded-md bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+        <p className="rounded-md bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
           Compte Google connecté avec succès.
         </p>
       )}
       {error && (
-        <p className="max-w-md rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
+        <p className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
           La connexion à Google a échoué. Réessaie.
         </p>
       )}
 
       {!connection ? (
-        <div className="flex max-w-sm flex-col gap-4 rounded-md border border-zinc-200 p-4">
+        <div className="flex flex-col gap-4 rounded-md border border-zinc-200 p-4">
           <p className="text-sm text-zinc-500">
             Aucun compte Google connecté pour ce restaurant.
           </p>
           <a
             href={`/api/google/authorize?restaurant_id=${id}`}
-            className="rounded-md bg-brand-navy px-4 py-2 text-center text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover"
+            className="w-fit rounded-md bg-brand-navy px-4 py-2 text-center text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover"
           >
             Connecter mon compte Google Business Profile
           </a>
         </div>
       ) : connection.location_name ? (
-        <div className="flex max-w-sm flex-col gap-4 rounded-md border border-zinc-200 p-4">
+        <div className="flex flex-col gap-4 rounded-md border border-zinc-200 p-4">
           <p className="text-sm text-zinc-700">
             Connecté en tant que{" "}
             <span className="font-medium">{connection.google_email}</span>
@@ -147,7 +147,7 @@ export default async function GoogleConnectionPage({
           </div>
         </div>
       ) : (
-        <div className="flex max-w-md flex-col gap-4 rounded-md border border-zinc-200 p-4">
+        <div className="flex flex-col gap-4 rounded-md border border-zinc-200 p-4">
           <p className="text-sm text-zinc-700">
             Connecté en tant que{" "}
             <span className="font-medium">{connection.google_email}</span>

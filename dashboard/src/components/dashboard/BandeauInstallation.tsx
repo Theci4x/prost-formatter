@@ -119,7 +119,7 @@ export function BandeauInstallation() {
 
   return (
     <div className="border-b border-line bg-brand-orange-soft">
-      <div className="relative mx-auto flex w-full max-w-6xl flex-col gap-3 px-4 py-3 pr-12 sm:px-6 sm:pr-12">
+      <div className="relative mx-auto flex w-full max-w-[1800px] flex-col gap-3 px-4 py-3 pr-12 sm:px-6 sm:pr-12 lg:px-10">
         {/* Le « × » se pose dans le coin plutôt que dans la rangée : au
             téléphone, trois éléments sur une ligne réduisent le texte à
             une colonne de trois mots. */}

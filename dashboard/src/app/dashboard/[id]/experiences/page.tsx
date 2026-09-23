@@ -74,7 +74,7 @@ export default async function ExperiencesPage({
         title={`Expériences — ${restaurant.nom}`}
       />
 
-      <p className="max-w-2xl text-sm text-zinc-500">
+      <p className="max-w-4xl text-sm text-zinc-500">
         Un cours, un atelier, une dégustation : une séance à places limitées qui
         revient selon le rythme que tu choisis. Elle apparaît sur ta page de
         réservation, et le client paie sur ton compte Stripe — sans commission.
