@@ -131,6 +131,13 @@ const ICONES = {
       <path d="M12 17h.01" />
     </Icone>
   ),
+  cadeau: (
+    <Icone>
+      <rect x="3" y="8" width="18" height="4" rx="1" />
+      <path d="M5 12v8h14v-8M12 8v12" />
+      <path d="M12 8c-1.5-3-5-3.5-5-1.2C7 8 9 8 12 8zM12 8c1.5-3 5-3.5 5-1.2C17 8 15 8 12 8z" />
+    </Icone>
+  ),
   experiences: (
     <Icone>
       <path d="M3 9a2 2 0 0 0 0 6v3h18v-3a2 2 0 0 0 0-6V6H3z" />
@@ -324,6 +331,13 @@ function groupes(t: ClesAccueil, d: DetailsAccueil, langue: Langue): Groupe[] {
           label: t.entrees.experiences.label,
           resume: t.entrees.experiences.resume,
           icone: ICONES.experiences,
+          minimum: "gerant",
+        },
+        {
+          href: "bons-cadeaux",
+          label: t.entrees.bonsCadeaux.label,
+          resume: t.entrees.bonsCadeaux.resume,
+          icone: ICONES.cadeau,
           minimum: "gerant",
         },
       ],

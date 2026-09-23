@@ -162,10 +162,11 @@ export default async function NotificationsPage({
           </p>
         </section>
 
-        {/* Le seul autre message que Klarr envoie de lui-même : le
-            bilan du mois, par e-mail. Il se règle sur sa propre page. */}
+        {/* Les messages que Klarr envoie de lui-même par e-mail : le
+            bilan du mois, à toi, et la demande d'avis du lendemain, à
+            tes clients. Chacun se règle sur sa propre page. */}
         <section className="flex flex-col gap-3">
-          <TitreSection>Par e-mail, une fois par mois</TitreSection>
+          <TitreSection>Par e-mail</TitreSection>
           <Link
             href={`/dashboard/${id}/rapport`}
             className="group flex items-start gap-4 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm transition-[border-color,transform,box-shadow] hover:-translate-y-px hover:border-ink hover:shadow-md"
@@ -183,6 +184,26 @@ export default async function NotificationsPage({
               <span className="text-sm text-zinc-500">
                 Le 1er du mois : couverts, note Google, nouveaux clients, et ce
                 qui t&apos;attend. Aperçu, envoi d&apos;essai et désinscription.
+              </span>
+            </span>
+          </Link>
+          <Link
+            href={`/dashboard/${id}/apres-visite`}
+            className="group flex items-start gap-4 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm transition-[border-color,transform,box-shadow] hover:-translate-y-px hover:border-ink hover:shadow-md"
+          >
+            <span className="flex flex-col gap-0.5">
+              <span className="flex items-center gap-2 font-semibold text-ink">
+                La demande d&apos;avis, le lendemain
+                <span
+                  aria-hidden="true"
+                  className="text-zinc-400 transition-transform group-hover:translate-x-0.5 group-hover:text-ink"
+                >
+                  →
+                </span>
+              </span>
+              <span className="text-sm text-zinc-500">
+                À tes clients venus la veille : un merci, un lien vers Google et
+                un lien pour t&apos;écrire. Aperçu et réglage.
               </span>
             </span>
           </Link>

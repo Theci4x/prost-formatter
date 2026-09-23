@@ -80,6 +80,22 @@ export type ClesCourriels = {
   rappelSujet(maison: string, quand: string): string;
   petitRappel(maison: string): string;
   empechementRappel: string;
+
+  /**
+   * Le lendemain de la visite. Le même message pour tout le monde : un
+   * lien vers Google et un lien pour écrire à la maison, côte à côte,
+   * sans demander d'abord si le repas a plu. Trier avant d'inviter,
+   * c'est ce que Google interdit.
+   */
+  avisSujet(maison: string): string;
+  avisMerci(maison: string): string;
+  avisDemande: string;
+  avisBouton: string;
+  /** Le lien arrive déjà bâti : c'est le HTML de l'ancre. */
+  avisPrive(lienHtml: string): string;
+  avisLibellePrive: string;
+  avisPourquoi(maison: string): string;
+  avisNePlusRecevoir: string;
 };
 
 const s = (n: number) => (n > 1 ? "s" : "");
@@ -146,6 +162,19 @@ const fr: ClesCourriels = {
   petitRappel: (maison) => `Petit rappel : vous êtes attendus chez ${maison}.`,
   empechementRappel:
     "Un empêchement ? Répondez à cet e-mail, l'établissement préfère le savoir ce soir que demain à table.",
+
+  avisSujet: (maison) => `Merci pour votre visite chez ${maison}`,
+  avisMerci: (maison) =>
+    `Merci d'être venus hier chez ${maison}. Nous espérons que vous avez passé un bon moment.`,
+  avisDemande:
+    "Si vous avez une minute, un avis sur Google nous aide énormément : c'est souvent comme ça que de nouveaux clients nous trouvent.",
+  avisBouton: "Laisser un avis sur Google",
+  avisPrive: (lienHtml) =>
+    `Quelque chose n'était pas à la hauteur ? ${lienHtml} : votre message arrive chez nous, et nous le lisons.`,
+  avisLibellePrive: "Dites-le-nous directement",
+  avisPourquoi: (maison) =>
+    `Vous recevez ce message parce que vous avez réservé chez ${maison}.`,
+  avisNePlusRecevoir: "Ne plus recevoir ces messages",
 };
 
 const en: ClesCourriels = {
@@ -206,6 +235,19 @@ const en: ClesCourriels = {
   petitRappel: (maison) => `A quick reminder: you are expected at ${maison}.`,
   empechementRappel:
     "Something came up? Reply to this e-mail — the restaurant would rather know tonight than tomorrow at the table.",
+
+  avisSujet: (maison) => `Thank you for visiting ${maison}`,
+  avisMerci: (maison) =>
+    `Thank you for coming to ${maison} yesterday. We hope you had a lovely time.`,
+  avisDemande:
+    "If you have a minute, a review on Google helps us enormously: it's often how new guests find us.",
+  avisBouton: "Leave a review on Google",
+  avisPrive: (lienHtml) =>
+    `Something wasn't right? ${lienHtml} — your message comes straight to us, and we read it.`,
+  avisLibellePrive: "Tell us directly",
+  avisPourquoi: (maison) =>
+    `You are receiving this message because you booked at ${maison}.`,
+  avisNePlusRecevoir: "Stop receiving these messages",
 };
 
 const zh: ClesCourriels = {
@@ -263,6 +305,17 @@ const zh: ClesCourriels = {
   petitRappel: (maison) => `温馨提醒：${maison}等着您。`,
   empechementRappel:
     "临时有事？回复这封邮件——餐厅宁愿今晚知道，也不愿明天在餐桌前才知道。",
+
+  avisSujet: (maison) => `感谢您光临${maison}`,
+  avisMerci: (maison) => `感谢您昨天光临${maison}，希望您度过了愉快的时光。`,
+  avisDemande:
+    "如果您有一分钟，在 Google 上留下评价会对我们帮助很大：新客人常常就是这样找到我们的。",
+  avisBouton: "在 Google 上留下评价",
+  avisPrive: (lienHtml) =>
+    `有哪里做得不够好？${lienHtml}——您的留言会直接送到我们这里，我们会认真阅读。`,
+  avisLibellePrive: "直接告诉我们",
+  avisPourquoi: (maison) => `您收到这封邮件，是因为您曾在${maison}订位。`,
+  avisNePlusRecevoir: "不再接收此类邮件",
 };
 
 export const COURRIELS: Record<Langue, ClesCourriels> = { fr, en, zh };

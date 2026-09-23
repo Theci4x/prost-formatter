@@ -10,6 +10,7 @@ import {
   annoncerResiliation,
 } from "@/lib/notifications/abonnes";
 import { cautionEnregistree } from "@/lib/stripe/caution";
+import { validerBon } from "@/lib/bons/serveur";
 import {
   prevenirAcompteRegle,
   prevenirCautionDeposee,
@@ -191,6 +192,10 @@ async function enregistrerAcompte(session: Stripe.Checkout.Session) {
     .eq("paiement_token", token)
     .eq("statut", "attendue");
   if (erreurSeance) console.error("[stripe webhook] séance", erreurSeance);
+
+  // Ou un bon cadeau. Même garde : il ne passe « valide » qu'une fois, et
+  // c'est ce passage-là qui envoie le bon et prévient la maison.
+  await validerBon(supabase, token, paymentIntentId);
 }
 
 /**

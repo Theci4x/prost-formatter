@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { createServiceClient } from "@/lib/supabase/service";
@@ -27,6 +28,8 @@ import { formatCreneau, type Espace, type Service } from "@/types/reservation";
 import { heureLisible } from "@/lib/site/horaires";
 import { SignatureKlarr } from "@/components/brand/SignatureKlarr";
 import { ChoixLangueSite } from "@/components/landing/ChoixLangueSite";
+import { chargerMaisonCadeau } from "@/lib/bons/maison";
+import { BONS } from "@/lib/i18n/bons";
 import { langueVisiteur } from "@/lib/i18n/langue";
 import { RESERVER } from "@/lib/i18n/reserver";
 import type { Langue } from "@/lib/i18n/langues";
@@ -207,6 +210,9 @@ export default async function ReserverPage({
   // présenteraient un soir où personne ne les attend.
   const acces = await chargerAcces(restaurant.id, createServiceClient());
   if (!acces.ouvert.reservations) notFound();
+  // Les bons cadeaux se vendent sur une page à part ; on n'y renvoie que
+  // si la maison les vend vraiment.
+  const cadeau = await chargerMaisonCadeau(slug);
 
   // La langue du visiteur : son témoin s'il en a un, sinon ce que dit son
   // navigateur. Un touriste chinois qui scanne un QR sur la table n'a pas
@@ -431,6 +437,14 @@ export default async function ReserverPage({
             <p className="text-base text-zinc-500">{restaurant.adresse}</p>
           )}
           <p className="text-base text-zinc-500">{r.chapo}</p>
+          {cadeau?.ouvert && (
+            <Link
+              href={`/cadeau/${slug}`}
+              className="w-fit text-base font-semibold text-brand-orange-dark hover:underline"
+            >
+              {BONS[langue].lienOffrir} →
+            </Link>
+          )}
         </div>
 
         <ResumeEtablissement

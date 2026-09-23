@@ -157,11 +157,11 @@ const fr: ClesAnnuler = {
   }),
   recoitLesActualites: (maison) => ({
     avant: "",
-    apres: ` reçoit les actualités et offres de ${maison}. Un clic suffit pour arrêter.`,
+    apres: ` reçoit les messages de ${maison} : actualités, offres, demande d’avis après une visite. Un clic suffit pour arrêter.`,
   }),
   cestFait: (maison) => ({
     avant: "C’est fait. ",
-    apres: ` ne recevra plus les actualités de ${maison}.`,
+    apres: ` ne recevra plus les messages de ${maison}.`,
   }),
   courrielsDeService:
     "Les e-mails liés à vos réservations — confirmation, rappel, annulation — continuent de partir : ce ne sont pas des messages commerciaux, et vous en avez besoin.",
@@ -236,11 +236,11 @@ const en: ClesAnnuler = {
   }),
   recoitLesActualites: (maison) => ({
     avant: "",
-    apres: ` receives news and offers from ${maison}. One click is enough to stop.`,
+    apres: ` receives messages from ${maison}: news, offers, a review request after a visit. One click is enough to stop.`,
   }),
   cestFait: (maison) => ({
     avant: "Done. ",
-    apres: ` will no longer receive ${maison}'s news.`,
+    apres: ` will no longer receive messages from ${maison}.`,
   }),
   courrielsDeService:
     "E-mails about your bookings — confirmation, reminder, cancellation — keep coming: they are not marketing, and you need them.",
@@ -307,7 +307,7 @@ const zh: ClesAnnuler = {
   }),
   recoitLesActualites: (maison) => ({
     avant: "",
-    apres: ` 正在接收${maison}的消息与优惠。点一下即可停止。`,
+    apres: ` 正在接收${maison}的消息：动态、优惠，以及用餐后的评价邀请。点一下即可停止。`,
   }),
   cestFait: (maison) => ({
     avant: "已完成。",

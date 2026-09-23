@@ -177,12 +177,22 @@ export default async function AvisPage({
         </p>
         {/* L'autre moitié de la réputation : ce que les clients disent en
             privé, avant d'écrire en public. */}
-        <Link
-          href={`/dashboard/${id}/retours`}
-          className="rounded-lg border border-zinc-200 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
-        >
-          Retours clients privés
-        </Link>
+        <div className="flex flex-wrap gap-3">
+          {/* Plus d'avis, pas seulement mieux répondus : la demande du
+              lendemain, qui vit à côté du carnet. */}
+          <Link
+            href={`/dashboard/${id}/apres-visite`}
+            className="rounded-lg border border-zinc-200 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
+          >
+            Demander un avis le lendemain
+          </Link>
+          <Link
+            href={`/dashboard/${id}/retours`}
+            className="rounded-lg border border-zinc-200 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
+          >
+            Retours clients privés
+          </Link>
+        </div>
       </div>
 
       {plateformes.length > 0 && (

@@ -258,6 +258,8 @@ export const MODULE_DE_LA_SECTION: Record<string, Module | Module[]> = {
   clients: "reservations",
   campagnes: "reservations",
   experiences: "reservations",
+  "bons-cadeaux": "reservations",
+  "apres-visite": "reservations",
   paiements: "reservations",
 };
 

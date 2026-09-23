@@ -43,6 +43,10 @@ export async function rattraperCourriels({
     .from("reservation_courriels")
     .select("id, reservation_id, genre, destinataire, envoye_le, tentatives")
     .not("erreur", "is", null)
+    // La demande d'avis du lendemain ne se rattrape pas : repartie deux
+    // jours plus tard, elle remercie d'une visite « d'hier » qui n'en est
+    // plus une. Elle occuperait aussi des places dans le lot pour rien.
+    .neq("genre", "avis")
     .gte("envoye_le", depuis)
     .lt("tentatives", TENTATIVES_MAX)
     .order("envoye_le")
