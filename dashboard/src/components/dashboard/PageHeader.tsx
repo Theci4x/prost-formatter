@@ -287,4 +287,21 @@ export const dashboardIcons = {
       <line x1="6" y1="14" x2="10" y2="14" />
     </svg>
   ),
+  equipe: (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="9" cy="8" r="3.5" />
+      <path d="M2.5 20a6.5 6.5 0 0 1 13 0" />
+      <path d="M16 4.6a3.5 3.5 0 0 1 0 6.8" />
+      <path d="M18.5 14.2A6.5 6.5 0 0 1 21.5 20" />
+    </svg>
+  ),
 };

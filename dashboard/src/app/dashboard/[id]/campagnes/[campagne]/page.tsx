@@ -65,14 +65,21 @@ export default async function CampagnePage({
   const aujourdhui = new Date().toISOString().slice(0, 10);
 
   return (
-    <div className="flex flex-1 flex-col gap-6 px-6 py-8">
-      <PageHeader
-        icon={dashboardIcons.avis}
-        title={campagne.objet}
-        backHref={`/dashboard/${id}/campagnes`}
-      />
+    <div className="flex flex-1 flex-col gap-8 px-6 py-8">
+      <div className="flex flex-col gap-3">
+        <PageHeader
+          icon={dashboardIcons.avis}
+          title={campagne.objet}
+          backHref={`/dashboard/${id}/campagnes`}
+        />
+        <p className="max-w-4xl text-sm text-zinc-600">
+          {modifiable
+            ? "Relis le message, envoie-toi un essai, puis choisis le jour : la campagne part le matin venu, et seuls les clients qui ont accepté de recevoir tes nouvelles la reçoivent."
+            : "Cette campagne est partie : le texte reste tel qu'il a été envoyé, pour que le journal corresponde à ce que tes clients ont reçu."}
+        </p>
+      </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
+      <div className="grid grid-cols-3 gap-3 sm:gap-4">
         <Compteur
           valeur={LIBELLE_STATUT[campagne.statut]}
           libelle={
@@ -101,7 +108,7 @@ export default async function CampagnePage({
       </div>
 
       {campagne.derniere_erreur && (
-        <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <p className="rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">
           {campagne.derniere_erreur}
         </p>
       )}
@@ -126,13 +133,13 @@ export default async function CampagnePage({
           {/* L'essai avant la programmation, dans cet ordre : personne
               n'envoie à cinq cents personnes un message qu'il n'a pas vu
               arriver dans une boîte. */}
-          <div className="grid items-start gap-6 xl:grid-cols-2">
-            <section className="flex flex-col gap-3">
+          <div className="grid items-start gap-8 xl:grid-cols-2">
+            <section className="flex flex-col gap-4">
               <TitreSection>1. S&apos;envoyer un essai</TitreSection>
               <EssaiCampagne restaurantId={id} campagneId={campagne.id} />
             </section>
 
-            <section className="flex flex-col gap-3">
+            <section className="flex flex-col gap-4">
               <TitreSection>2. Programmer l&apos;envoi</TitreSection>
               <div className="flex flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm">
                 <span className="text-sm font-semibold text-ink">
@@ -146,14 +153,14 @@ export default async function CampagnePage({
                 >
                   <input type="hidden" name="restaurant_id" value={id} />
                   <input type="hidden" name="campagne_id" value={campagne.id} />
-                  <label className="flex flex-col gap-1 text-sm text-zinc-600">
+                  <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
                     Le jour
                     <input
                       type="date"
                       name="envoyer_le"
                       min={aujourdhui}
                       defaultValue={campagne.envoyer_le ?? aujourdhui}
-                      className="rounded-lg border border-zinc-200 bg-zinc-50 px-3.5 py-2.5 text-sm outline-none focus:border-brand-navy focus:bg-white"
+                      className="rounded-lg border border-zinc-200 bg-zinc-50 px-3.5 py-2.5 text-sm font-normal outline-none transition-colors focus:border-brand-navy focus:bg-white"
                     />
                   </label>
                   <button
@@ -166,7 +173,7 @@ export default async function CampagnePage({
                   </button>
                 </form>
 
-                <div className="flex flex-wrap items-center gap-4">
+                <div className="flex flex-wrap items-center gap-4 border-t border-zinc-100 pt-4">
                   {campagne.statut === "programmee" && (
                     <form action={deprogrammerCampagne}>
                       <input type="hidden" name="restaurant_id" value={id} />
@@ -177,7 +184,7 @@ export default async function CampagnePage({
                       />
                       <button
                         type="submit"
-                        className="text-xs font-medium text-zinc-500 underline underline-offset-2 hover:text-zinc-800"
+                        className="rounded-lg border border-zinc-200 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
                       >
                         Annuler la programmation
                       </button>
@@ -192,7 +199,7 @@ export default async function CampagnePage({
                     />
                     <button
                       type="submit"
-                      className="text-xs font-medium text-zinc-500 underline underline-offset-2 hover:text-red-600"
+                      className="text-sm font-medium text-zinc-500 transition-colors hover:text-red-600"
                     >
                       Supprimer
                     </button>
@@ -207,7 +214,7 @@ export default async function CampagnePage({
       {campagne.statut === "echec" && (
         <form
           action={relancerCampagne}
-          className="flex flex-col gap-3 rounded-2xl border border-red-200 bg-red-50 p-5"
+          className="flex flex-col gap-3 rounded-2xl border border-red-200 bg-red-50 p-6"
         >
           <input type="hidden" name="restaurant_id" value={id} />
           <input type="hidden" name="campagne_id" value={campagne.id} />
@@ -220,7 +227,7 @@ export default async function CampagnePage({
           </p>
           <button
             type="submit"
-            className="w-fit rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover"
+            className="w-fit rounded-lg bg-brand-navy px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover"
           >
             Relancer
           </button>

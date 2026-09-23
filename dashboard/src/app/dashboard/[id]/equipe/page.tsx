@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
-import { Compteur } from "@/components/dashboard/Compteur";
+import { Compteur, TitreSection } from "@/components/dashboard/Compteur";
 import { MembreForm } from "@/components/equipe/MembreForm";
 import {
   DESCRIPTIONS_ROLE,
@@ -51,17 +51,18 @@ export default async function EquipePage({
   const service = membres.filter((m) => m.role === "service").length;
 
   return (
-    <div className="flex flex-1 flex-col gap-6 px-6 py-8">
-      <PageHeader
-        icon={dashboardIcons.connexions}
-        title={`Équipe — ${restaurant.nom}`}
-      />
-
-      <p className="max-w-4xl text-sm text-zinc-500">
-        Chacun se connecte avec son propre compte. Un serveur voit les
-        réservations et l&apos;écran de salle ; il ne voit ni ta fiche Google,
-        ni tes réseaux, ni ton abonnement.
-      </p>
+    <div className="flex flex-1 flex-col gap-8 px-6 py-8">
+      <div className="flex flex-col gap-3">
+        <PageHeader
+          icon={dashboardIcons.equipe}
+          title={`Équipe — ${restaurant.nom}`}
+        />
+        <p className="max-w-4xl text-sm text-zinc-600">
+          Chacun se connecte avec son propre compte. Un serveur voit les
+          réservations et l&apos;écran de salle ; il ne voit ni ta fiche Google,
+          ni tes réseaux, ni ton abonnement.
+        </p>
+      </div>
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <Compteur
@@ -80,9 +81,13 @@ export default async function EquipePage({
         />
       </div>
 
-      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
-        <section className="flex flex-col gap-3">
-          <h2 className="font-serif text-2xl text-ink">Ton équipe</h2>
+      <div className="grid items-start gap-8 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+        <section className="flex flex-col gap-4">
+          <TitreSection
+            aside={`${membres.length + 1} personne${membres.length + 1 > 1 ? "s" : ""}`}
+          >
+            Ton équipe
+          </TitreSection>
           <ul className="grid gap-3 md:grid-cols-2">
             <li className="flex flex-col gap-3 rounded-2xl border border-brand-orange/40 bg-white p-5 shadow-sm">
               <div className="flex items-center justify-between gap-3">
@@ -92,7 +97,7 @@ export default async function EquipePage({
                 </span>
                 <PastilleRole role={role ?? "service"} />
               </div>
-              <span className="text-sm text-zinc-500">
+              <span className="text-sm text-zinc-600">
                 {DESCRIPTIONS_ROLE[role ?? "service"]}
               </span>
             </li>
@@ -111,7 +116,7 @@ export default async function EquipePage({
                   </span>
                   <PastilleRole role={membre.role} />
                 </div>
-                <span className="text-sm text-zinc-500">
+                <span className="text-sm text-zinc-600">
                   {DESCRIPTIONS_ROLE[membre.role]}
                 </span>
                 <div className="mt-auto flex items-center justify-between gap-3 border-t border-zinc-100 pt-3">
@@ -141,7 +146,7 @@ export default async function EquipePage({
                       <input type="hidden" name="restaurant_id" value={id} />
                       <button
                         type="submit"
-                        className="rounded-lg px-2 py-1 text-xs font-medium text-zinc-400 transition-colors hover:bg-red-50 hover:text-red-600"
+                        className="rounded-lg px-2 py-1 text-sm font-medium text-zinc-500 transition-colors hover:bg-red-50 hover:text-red-600"
                       >
                         Retirer
                       </button>
@@ -153,15 +158,13 @@ export default async function EquipePage({
           </ul>
         </section>
 
-        <div className="flex flex-col gap-6">
-          <section className="flex flex-col gap-3">
-            <h2 className="font-serif text-2xl text-ink">
-              Ajouter quelqu&apos;un
-            </h2>
+        <div className="flex flex-col gap-8">
+          <section className="flex flex-col gap-4">
+            <TitreSection>Ajouter quelqu&apos;un</TitreSection>
             {patron ? (
               <MembreForm restaurantId={id} />
             ) : (
-              <p className="rounded-2xl border border-dashed border-zinc-300 bg-white px-6 py-8 text-sm text-zinc-500">
+              <p className="rounded-2xl border border-dashed border-zinc-300 bg-white/60 px-6 py-8 text-sm text-zinc-600">
                 Seul le propriétaire de l&apos;établissement peut ajouter ou
                 retirer quelqu&apos;un.
               </p>
@@ -170,8 +173,8 @@ export default async function EquipePage({
 
           {/* Qui voit quoi, d'un coup d'œil : la question qu'on se pose
               avant de donner un accès. */}
-          <section className="flex flex-col gap-3">
-            <h2 className="font-serif text-2xl text-ink">Qui voit quoi</h2>
+          <section className="flex flex-col gap-4">
+            <TitreSection>Qui voit quoi</TitreSection>
             <div className="overflow-x-auto rounded-2xl border border-zinc-200/70 bg-white shadow-sm">
               <table className="w-full text-sm">
                 <thead>
@@ -216,7 +219,7 @@ export default async function EquipePage({
 
       <Link
         href="/dashboard"
-        className="text-sm text-zinc-500 hover:text-zinc-900"
+        className="w-fit text-sm font-semibold text-brand-orange-dark hover:underline"
       >
         ← Mes restaurants
       </Link>

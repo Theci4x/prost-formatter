@@ -203,7 +203,7 @@ export function EditeurDevis({
         {modifiable && prestations.length > 0 && (
           <div className="flex flex-col gap-2 rounded-xl border border-line bg-brand-cream p-3">
             <span className="text-xs font-semibold uppercase tracking-[0.06em] text-ink-soft">
-              Vos prestations
+              Tes prestations
             </span>
             <div className="flex flex-wrap gap-2">
               {prestations.map((prestation) => (
@@ -367,7 +367,7 @@ export function EditeurDevis({
               <span className="inline-block align-middle">
                 <Etoile />
               </span>{" "}
-              enregistre une ligne dans vos prestations, pour la reprendre au
+              enregistre une ligne dans tes prestations, pour la reprendre au
               prochain devis.
             </span>
           </div>
@@ -446,7 +446,7 @@ export function EditeurDevis({
         </div>
 
         <label className="flex flex-col gap-1 text-sm font-medium text-ink">
-          Votre mot d&apos;accompagnement
+          Ton mot d&apos;accompagnement
           <textarea
             name="message"
             defaultValue={messageInitial}
@@ -465,7 +465,7 @@ export function EditeurDevis({
             et sert tous ses devis — mais il se fige sur celui-ci à
             l'envoi, pour qu'un devis signé reste ce qu'il était. */}
         <label className="flex flex-col gap-1 text-sm font-medium text-ink">
-          Vos mentions légales et conditions
+          Tes mentions légales et conditions
           <textarea
             name="mentions"
             defaultValue={mentionsInitiales}
@@ -477,8 +477,8 @@ export function EditeurDevis({
             className={`${champ} w-full text-xs leading-relaxed`}
           />
           <span className="text-xs font-normal text-ink-soft">
-            Communes à tous vos devis : vous ne les écrivez qu&apos;une fois.
-            Elles s&apos;impriment en pied de document.
+            Communes à tous tes devis : tu ne les écris qu&apos;une fois. Elles
+            s&apos;impriment en pied de document.
           </span>
         </label>
       </section>

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader } from "@/components/dashboard/PageHeader";
+import { Compteur } from "@/components/dashboard/Compteur";
 import { EditeurDevis } from "@/components/devis/EditeurDevis";
 import { FeuilleDevis } from "@/components/devis/FeuilleDevis";
 import { BoutonImprimer } from "@/components/devis/BoutonImprimer";
@@ -20,10 +21,25 @@ import { libelleCaution, type StatutCaution } from "@/lib/reservations/caution";
 import { exiger } from "@/lib/equipe/roles";
 import {
   LIBELLE_STATUT,
+  calculer,
+  estExpire,
   formatEuros,
   type StatutDevis,
 } from "@/lib/devis/calcul";
 import { siteUrl } from "@/lib/site-url";
+
+/** Hors du rendu : l'heure du jour n'a rien à faire dans le corps d'un composant. */
+function perime(valideJusquau: string): boolean {
+  return estExpire(valideJusquau, new Date());
+}
+
+/** « 12 oct. » : une date de tuile, sans l'année. */
+function jourCourt(iso: string): string {
+  return new Date(`${iso.slice(0, 10)}T12:00:00`).toLocaleDateString("fr-FR", {
+    day: "numeric",
+    month: "short",
+  });
+}
 
 export const metadata: Metadata = {
   title: "Devis",
@@ -196,18 +212,67 @@ export default async function DevisPage({
       reservation.caution_debitee_centimes,
     );
   const fige = devis.statut === "accepte";
+  const totaux = calculer(
+    lignes.map((ligne) => ({
+      libelle: ligne.libelle,
+      quantite: Number(ligne.quantite),
+      prixUnitaireCentimes: ligne.prix_unitaire_centimes,
+      tauxTva: Number(ligne.tva_taux),
+    })),
+  );
+  // Un devis encore ouvert dont la date est passée ne peut plus être
+  // accepté : c'est la case à regarder avant de relancer le client.
+  const expire =
+    (devis.statut === "brouillon" || devis.statut === "envoye") &&
+    perime(devis.valide_jusquau);
 
   return (
-    <div className="flex w-full flex-col gap-8 px-6 py-8">
-      <PageHeader
-        icon={<Facture />}
-        title={`Devis ${devis.numero}`}
-        backHref={`/dashboard/${id}/reservations`}
-      />
+    <div className="flex w-full flex-1 flex-col gap-8 px-6 py-8">
+      <div className="flex flex-col gap-3 print:hidden">
+        <PageHeader
+          icon={<Facture />}
+          title={`Devis ${devis.numero}`}
+          backHref={`/dashboard/${id}/reservations`}
+        />
+        <p className="max-w-4xl text-sm text-zinc-600">
+          Compose les lignes, relis le document tel que le client le verra, puis
+          envoie-le : il l&apos;accepte en ligne, et l&apos;acompte se réclame
+          dans la foulée. Une fois accepté, le devis ne bouge plus.
+        </p>
+      </div>
 
-      <div className="flex flex-col gap-2 rounded-2xl border border-line bg-paper p-5">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4 print:hidden">
+        <Compteur
+          valeur={lignes.length > 0 ? formatEuros(totaux.ttcCentimes) : "—"}
+          libelle={
+            lignes.length > 0
+              ? `TTC, dont ${formatEuros(totaux.tvaCentimes)} de TVA`
+              : "aucune ligne pour l'instant"
+          }
+          accent={lignes.length === 0}
+        />
+        <Compteur
+          valeur={lignes.length}
+          libelle={`ligne${lignes.length > 1 ? "s" : ""} au devis`}
+        />
+        <Compteur
+          valeur={
+            devis.acompte_centimes ? formatEuros(devis.acompte_centimes) : "—"
+          }
+          libelle={
+            devis.acompte_centimes ? "d'acompte demandé" : "sans acompte"
+          }
+        />
+        <Compteur
+          valeur={jourCourt(devis.valide_jusquau)}
+          libelle={expire ? "validité dépassée" : "fin de validité"}
+          accent={expire}
+        />
+      </div>
+
+      <div className="flex flex-col gap-2 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm print:hidden">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <span className="text-[15px] font-semibold text-ink">
+          <span className="text-base font-semibold text-ink">
             {reservation.client_nom ?? "Client"} — {reservation.couverts}{" "}
             couvert
             {reservation.couverts > 1 ? "s" : ""} le{" "}
@@ -224,17 +289,17 @@ export default async function DevisPage({
               devis.statut === "accepte"
                 ? "bg-green-50 text-green-700"
                 : devis.statut === "refuse"
-                  ? "bg-zinc-100 text-ink-soft"
+                  ? "bg-zinc-100 text-zinc-600"
                   : devis.statut === "envoye"
                     ? "bg-blue-50 text-blue-700"
-                    : "bg-brand-sand text-ink-soft"
+                    : "bg-brand-sand text-zinc-600"
             }`}
           >
             {LIBELLE_STATUT[devis.statut]}
           </span>
         </div>
 
-        <p className="text-sm text-ink-soft">
+        <p className="text-sm text-zinc-600">
           {reservation.client_email ?? "Aucune adresse e-mail"}
         </p>
 
@@ -253,7 +318,7 @@ export default async function DevisPage({
           </p>
         )}
         {devis.statut === "refuse" && (
-          <p className="text-sm text-ink-soft">
+          <p className="text-sm text-zinc-600">
             Refusé{devis.refus_motif ? ` : « ${devis.refus_motif} »` : "."}
           </p>
         )}
@@ -262,7 +327,7 @@ export default async function DevisPage({
             WhatsApp, reste joignable par le canal du restaurateur. */}
         {devis.statut !== "brouillon" && (
           <div className="mt-2 flex flex-col gap-1">
-            <span className="text-xs font-semibold uppercase tracking-[0.08em] text-ink-soft">
+            <span className="text-sm font-medium text-zinc-700">
               Lien du devis
             </span>
             <LienAcompte lien={lien} langue={langue} />
@@ -275,11 +340,11 @@ export default async function DevisPage({
           or c'est ici qu'on est quand un client rappelle pour dire qu'il
           n'a rien reçu, ou qu'on veut le lui passer par WhatsApp. */}
       {attendLeClient && reservation.paiement_token && (
-        <div className="flex flex-col gap-2 rounded-2xl bg-brand-orange-soft p-5">
+        <div className="flex flex-col gap-2 rounded-2xl border border-brand-orange/60 bg-brand-orange-soft p-6 print:hidden">
           <span className="text-sm font-medium text-brand-navy">
             {libelleReglement}
           </span>
-          <span className="text-xs text-zinc-600">
+          <span className="text-sm text-zinc-600">
             {reservation.caution_statut === "attendue"
               ? r.lienCaution
               : r.lienAcompte}
@@ -297,10 +362,10 @@ export default async function DevisPage({
               }}
               libelle="Relancer par e-mail"
               enCours="Envoi…"
-              className="rounded-md border border-brand-navy/30 bg-white px-3 py-1.5 text-xs font-medium text-brand-navy hover:border-brand-navy"
+              className="rounded-lg border border-zinc-200 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
             />
             {reservation.derniere_relance_le && (
-              <span className="text-xs text-zinc-500">
+              <span className="text-sm text-zinc-500">
                 Relancé le{" "}
                 {new Date(reservation.derniere_relance_le).toLocaleDateString(
                   "fr-FR",
@@ -320,7 +385,7 @@ export default async function DevisPage({
                 }}
                 libelle="Déjà encaissé (virement, espèces)"
                 enCours="Enregistrement…"
-                className="text-xs font-medium text-brand-navy underline-offset-2 hover:underline"
+                className="text-sm font-semibold text-brand-navy underline-offset-2 hover:underline"
               />
             )}
             {reservation.caution_statut === "attendue" && (
@@ -332,7 +397,7 @@ export default async function DevisPage({
                 }}
                 libelle="Ne pas demander de caution"
                 enCours="Levée…"
-                className="text-xs font-medium text-brand-navy underline-offset-2 hover:underline"
+                className="text-sm font-semibold text-brand-navy underline-offset-2 hover:underline"
               />
             )}
           </div>
@@ -342,7 +407,7 @@ export default async function DevisPage({
       {/* Constaté à la main, donc défaisable à la main. Un acompte réglé
           par carte, lui, se rembourse depuis Stripe. */}
       {reservation.acompte_hors_ligne && (
-        <p className="flex flex-wrap items-center gap-3 rounded-2xl bg-emerald-50 px-5 py-4 text-sm text-emerald-800">
+        <p className="flex flex-wrap items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-800 print:hidden">
           <span className="font-medium">{libelleReglement}</span>
           <BoutonAction
             action={constaterAcompteHorsLigne}
@@ -353,15 +418,15 @@ export default async function DevisPage({
             }}
             libelle="Retirer ce constat"
             enCours="Retrait…"
-            className="text-xs text-emerald-700 underline-offset-2 hover:underline"
+            className="text-sm font-medium text-emerald-700 underline-offset-2 hover:underline"
           />
         </p>
       )}
 
       {fige && (
-        <p className="rounded-2xl border border-line bg-brand-orange-soft p-4 text-sm leading-relaxed text-ink">
+        <p className="rounded-2xl border border-brand-orange/60 bg-brand-orange-soft px-5 py-4 text-sm leading-relaxed text-ink print:hidden">
           Ce devis a été accepté : son contenu est figé. Ce que le client a
-          accepté ne doit plus pouvoir changer — établissez-en un nouveau si la
+          accepté ne doit plus pouvoir changer — établis-en un nouveau si la
           prestation évolue.
         </p>
       )}
@@ -370,8 +435,7 @@ export default async function DevisPage({
           écrit devenir la feuille que le client recevra, sans descendre
           d'un écran à chaque ligne. */}
       <div className="grid items-start gap-8 2xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] print:block">
-        <section className="flex min-w-0 flex-col gap-3 print:hidden">
-          <h2 className="font-serif text-2xl text-ink">Les lignes</h2>
+        <section className="flex min-w-0 flex-col gap-4 print:hidden">
           <EditeurDevis
             devisId={devis.id}
             restaurantId={id}
@@ -414,7 +478,7 @@ export default async function DevisPage({
             <div className="flex flex-wrap items-center justify-between gap-3 print:hidden">
               <div className="flex flex-col">
                 <h2 className="font-serif text-2xl text-ink">Le document</h2>
-                <p className="text-sm text-ink-soft">
+                <p className="text-sm text-zinc-600">
                   Tel que le client le verra, au dernier enregistrement.
                 </p>
               </div>
@@ -452,7 +516,7 @@ export default async function DevisPage({
 
       <Link
         href={`/dashboard/${id}/reservations`}
-        className="w-fit text-sm text-ink-soft hover:text-ink print:hidden"
+        className="w-fit text-sm font-semibold text-brand-orange-dark hover:underline print:hidden"
       >
         ← Retour au carnet
       </Link>

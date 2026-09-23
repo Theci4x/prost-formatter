@@ -44,13 +44,13 @@ export function EssaiCampagne({
             type="email"
             required
             placeholder="vous@votre-restaurant.fr"
-            className="rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-brand-navy"
+            className="rounded-lg border border-zinc-200 bg-zinc-50 px-3.5 py-2.5 text-sm outline-none transition-colors focus:border-brand-navy focus:bg-white"
           />
         </label>
         <button
           type="submit"
           disabled={pending}
-          className="rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:border-zinc-400 disabled:opacity-50"
+          className="rounded-lg border border-zinc-200 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy disabled:opacity-50"
         >
           {pending ? "Envoi…" : "Envoyer l'essai"}
         </button>
