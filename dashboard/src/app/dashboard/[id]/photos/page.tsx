@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { definirCouverture, removePhoto } from "./actions";
@@ -14,10 +15,13 @@ import { couvertureDe } from "@/lib/vitrine/couverture";
 
 export default async function PhotosPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ filtre?: string }>;
 }) {
   const { id } = await params;
+  const { filtre } = await searchParams;
   await exiger(id, "gerant");
   await exigerModule(id, "visibilite");
 
@@ -63,21 +67,62 @@ export default async function PhotosPage({
 
   const couverture = couvertureDe(photos, couvertureId);
   const sansLegende = photos.filter((p) => !p.legende?.trim()).length;
+  const deSalle = photos.filter((p) => p.espace_id).length;
+
+  // Les filtres : « sans légende » pour finir ce qui reste à écrire, et une
+  // entrée par salle pour retrouver ce qu'on montre de la terrasse.
+  const sallesAvecPhotos = [...nomEspace.entries()].filter(([espaceId]) =>
+    photos.some((p) => p.espace_id === espaceId),
+  );
+  const filtres = [
+    { cle: "", libelle: `Toutes · ${photos.length}` },
+    ...(sansLegende > 0
+      ? [{ cle: "sans-legende", libelle: `Sans légende · ${sansLegende}` }]
+      : []),
+    ...sallesAvecPhotos.map(([espaceId, nom]) => ({
+      cle: `salle-${espaceId}`,
+      libelle: `${nom} · ${photos.filter((p) => p.espace_id === espaceId).length}`,
+    })),
+  ];
+  const actif = filtres.some((f) => f.cle === filtre) ? (filtre ?? "") : "";
+  const affichees = photos.filter((photo) =>
+    actif === "sans-legende"
+      ? !photo.legende?.trim()
+      : actif.startsWith("salle-")
+        ? photo.espace_id === actif.slice("salle-".length)
+        : true,
+  );
 
   return (
-    <div className="flex flex-1 flex-col gap-6 px-6 py-8">
+    <div className="flex flex-1 flex-col gap-8 px-6 py-8">
       <PageHeader
         icon={dashboardIcons.photos}
         title={`Photos — ${restaurant.nom}`}
       />
 
-      <div className="grid grid-cols-3 gap-3 sm:gap-4">
-        <Compteur valeur={photos.length} libelle="photos" />
-        <Compteur valeur={photos.length - sansLegende} libelle="avec légende" />
+      <p className="max-w-4xl text-sm text-zinc-600">
+        Tes photos illustrent ton site vitrine et ta page de réservation. Une
+        légende dit ce qu&apos;on voit — « la terrasse l&apos;été », « le
+        tartare » : elle aide tes clients, et Google comprend mieux ce que
+        montre l&apos;image.
+      </p>
+
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <Compteur
-          valeur={sansLegende}
-          libelle="sans légende"
-          accent={sansLegende > 0}
+          valeur={photos.length}
+          libelle={`photo${photos.length > 1 ? "s" : ""}`}
+        />
+        <Compteur valeur={photos.length - sansLegende} libelle="avec légende" />
+        <Link href={`/dashboard/${id}/photos?filtre=sans-legende#photos`}>
+          <Compteur
+            valeur={sansLegende}
+            libelle="sans légende"
+            accent={sansLegende > 0}
+          />
+        </Link>
+        <Compteur
+          valeur={deSalle}
+          libelle={`photo${deSalle > 1 ? "s" : ""} de salle, montrée${deSalle > 1 ? "s" : ""} à la réservation`}
         />
       </div>
 
@@ -92,8 +137,8 @@ export default async function PhotosPage({
             <p className="text-xs text-zinc-500">
               {couverture.photo
                 ? couverture.choisie
-                  ? "Choisie par vous."
-                  : "La première de vos photos, faute de choix."
+                  ? "Choisie par toi."
+                  : "La première de tes photos, faute de choix."
                 : "Aucune pour l'instant."}
             </p>
           </div>
@@ -117,10 +162,10 @@ export default async function PhotosPage({
             </div>
           )}
           <p className="text-sm text-zinc-500">
-            Elle ouvre votre site, en plein écran, avant qu&apos;on lise quoi
-            que ce soit : choisissez la salle pleine ou la façade plutôt que le
-            plat isolé. Pour en changer, « Mettre en couverture » sous
-            n&apos;importe quelle photo.
+            Elle ouvre ton site, en plein écran, avant qu&apos;on lise quoi que
+            ce soit : choisis la salle pleine ou la façade plutôt que le plat
+            isolé. Pour en changer, « Mettre en couverture » sous n&apos;importe
+            quelle photo.
           </p>
         </div>
 
@@ -130,16 +175,36 @@ export default async function PhotosPage({
         </div>
       </section>
 
-      <section className="flex flex-col gap-3">
-        <h2 className="font-serif text-2xl text-ink">Toutes vos photos</h2>
+      <section id="photos" className="flex scroll-mt-8 flex-col gap-4">
+        <div className="flex flex-wrap items-baseline justify-between gap-3">
+          <h2 className="font-serif text-2xl text-ink">Toutes tes photos</h2>
+          {filtres.length > 1 && (
+            <nav className="flex flex-wrap gap-2">
+              {filtres.map((f) => (
+                <Link
+                  key={f.cle || "toutes"}
+                  href={`/dashboard/${id}/photos${f.cle ? `?filtre=${f.cle}` : ""}#photos`}
+                  scroll={false}
+                  className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
+                    actif === f.cle
+                      ? "border-brand-navy bg-brand-navy text-white"
+                      : "border-zinc-200 bg-white text-zinc-700 hover:border-ink hover:text-ink"
+                  }`}
+                >
+                  {f.libelle}
+                </Link>
+              ))}
+            </nav>
+          )}
+        </div>
         {photos.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-zinc-300 bg-white px-6 py-12 text-center text-sm text-zinc-500">
-            Aucune photo pour le moment. La première que vous ajoutez ouvrira
-            votre site.
+            Aucune photo pour le moment. La première que tu ajoutes ouvrira ton
+            site.
           </div>
         ) : (
           <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
-            {photos.map((photo) => {
+            {affichees.map((photo) => {
               const estCouverture = photo.id === couverture.photo?.id;
               const salle = photo.espace_id
                 ? nomEspace.get(photo.espace_id)
@@ -191,7 +256,7 @@ export default async function PhotosPage({
                     <div className="mt-auto flex items-center justify-between gap-2">
                       {estCouverture && couverture.choisie ? (
                         <span className="text-xs text-zinc-400">
-                          Ouvre votre site
+                          Ouvre ton site
                         </span>
                       ) : (
                         <form action={definirCouverture}>

@@ -114,7 +114,7 @@ export function AjoutPhoto({ restaurantId }: { restaurantId: string }) {
         </span>
         <span className="text-xs text-zinc-500">
           {choisi
-            ? "Ajoutez une légende si vous voulez, puis « Ajouter la photo »."
+            ? "Ajoute une légende si tu veux, puis « Ajouter la photo »."
             : "Une photo de téléphone est réduite toute seule avant l'envoi."}
         </span>
       </label>
