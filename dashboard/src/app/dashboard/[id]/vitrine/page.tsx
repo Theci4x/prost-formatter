@@ -3,6 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
+import { Compteur } from "@/components/dashboard/Compteur";
+import { BoutonCopier } from "@/components/dashboard/BoutonCopier";
 import { basculerVitrine } from "@/app/dashboard/actions";
 import { exiger } from "@/lib/equipe/roles";
 import { exigerModule } from "@/lib/abonnement/acces";
@@ -32,11 +34,13 @@ export default async function VitrinePage({
       .eq("restaurant_id", id)
       .order("ordre")
       .order("created_at"),
+    // Le compte seul, sans rapatrier les plats : le compteur et la liste
+    // n'ont besoin que de savoir combien.
     supabase
       .from("restaurant_menu_items")
-      .select("id")
+      .select("id", { count: "exact", head: true })
       .eq("restaurant_id", id)
-      .limit(1),
+      .eq("actif", true),
   ]);
 
   const restaurant = restaurantResult.data as
@@ -76,7 +80,7 @@ export default async function VitrinePage({
     },
     {
       texte: "La carte",
-      fait: (platsResult.data ?? []).length > 0,
+      fait: (platsResult.count ?? 0) > 0,
       ou: `/dashboard/${id}/menu`,
     },
     {
@@ -96,17 +100,18 @@ export default async function VitrinePage({
     },
   ];
   const faits = elements.filter((e) => e.fait).length;
+  const nombrePlats = platsResult.count ?? 0;
   const adresse = slug ? `${site}/restaurant/${slug}` : null;
 
   return (
-    <div className="flex flex-1 flex-col gap-6 px-6 py-8">
+    <div className="flex flex-1 flex-col gap-8 px-6 py-8">
       <PageHeader
-        icon={dashboardIcons.edit}
+        icon={dashboardIcons.vitrine}
         title={`Site vitrine — ${restaurant.nom}`}
         backHref="/dashboard"
       />
 
-      <p className="max-w-4xl text-sm text-zinc-500">
+      <p className="max-w-4xl text-sm text-zinc-600">
         Ton site, engendré de ce que tu as déjà rempli : tes photos, ta carte,
         tes horaires, ton adresse, ta note Google. Rien de plus à saisir, rien à
         mettre en page. C&apos;est l&apos;adresse à donner à Google, à ta fiche
@@ -114,6 +119,33 @@ export default async function VitrinePage({
         qu&apos;un audit de visibilité reproche à un restaurant qui n&apos;en a
         pas.
       </p>
+
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+        <Compteur
+          valeur={publiee ? "En ligne" : "Hors ligne"}
+          libelle={
+            publiee ? "ton site est ouvert" : "ton site n'est pas publié"
+          }
+          accent={!publiee}
+        />
+        <Compteur
+          valeur={`${faits}/${elements.length}`}
+          libelle="éléments du site remplis"
+          accent={faits < elements.length}
+        />
+        <Link href={`/dashboard/${id}/photos`} className="block">
+          <Compteur
+            valeur={photos.length}
+            libelle={`photo${photos.length > 1 ? "s" : ""} sur le site`}
+          />
+        </Link>
+        <Link href={`/dashboard/${id}/menu`} className="block">
+          <Compteur
+            valeur={nombrePlats}
+            libelle={`plat${nombrePlats > 1 ? "s" : ""} à la carte`}
+          />
+        </Link>
+      </div>
 
       <div className="grid items-start gap-6 xl:grid-cols-[26rem_minmax(0,1fr)]">
         <div className="flex flex-col gap-6">
@@ -157,14 +189,25 @@ export default async function VitrinePage({
                   </span>
                 </div>
                 {publiee ? (
-                  <a
-                    href={`/restaurant/${slug}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-fit break-all text-sm font-semibold text-brand-orange-dark hover:underline"
-                  >
-                    {adresse} ↗
-                  </a>
+                  <div className="flex flex-col gap-3">
+                    <a
+                      href={`/restaurant/${slug}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-fit break-all text-sm font-semibold text-brand-orange-dark hover:underline"
+                    >
+                      {adresse} ↗
+                    </a>
+                    {/* L'adresse sert ailleurs qu'ici : on la copie pour la
+                        coller sur la fiche Google, la bio Instagram, la
+                        page Facebook. */}
+                    <div className="flex flex-wrap items-center gap-2">
+                      <BoutonCopier texte={adresse!} />
+                      <span className="text-xs text-zinc-500">
+                        À coller sur ta fiche Google et ton Instagram.
+                      </span>
+                    </div>
+                  </div>
                 ) : (
                   <span className="break-all text-sm text-zinc-500">
                     Il recevra l&apos;adresse {adresse}
@@ -181,7 +224,7 @@ export default async function VitrinePage({
                     type="submit"
                     className={
                       publiee
-                        ? "rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
+                        ? "rounded-lg border border-zinc-200 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
                         : "rounded-lg bg-brand-navy px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover"
                     }
                   >
