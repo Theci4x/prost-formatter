@@ -62,10 +62,13 @@ export function GalerieRestaurant({
   photos,
   nom,
   langue,
+  hauteur = "h-56 sm:h-[400px]",
 }: {
   photos: RestaurantPhoto[];
   nom: string;
   langue: Langue;
+  /** La mosaïque est en position absolue : sa hauteur se donne. */
+  hauteur?: string;
 }) {
   const r = RESERVER[langue];
   const [ouverte, setOuverte] = useState(false);
@@ -100,7 +103,7 @@ export function GalerieRestaurant({
           absolue (next/image `fill`), elles ne poussent donc aucune hauteur
           d'elles-mêmes et la mosaïque s'écraserait en un trait. */}
       <div
-        className={`grid h-56 gap-2 sm:h-[400px] ${
+        className={`grid gap-2 ${hauteur} ${
           cote.length === 2
             ? "sm:grid-cols-2 sm:grid-rows-2"
             : cote.length === 1

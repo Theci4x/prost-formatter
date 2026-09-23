@@ -1,17 +1,13 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import Link from "next/link";
-import Image from "next/image";
 import { createServiceClient } from "@/lib/supabase/service";
-import { GalerieRestaurant } from "@/components/reservations/GalerieRestaurant";
-import { CouvertureVitrine } from "@/components/reservations/CouvertureVitrine";
-import { BandePhotos } from "@/components/reservations/BandePhotos";
-import { SignatureKlarr } from "@/components/brand/SignatureKlarr";
-import { langueVisiteur, type Langue } from "@/lib/i18n/langue";
+import { langueVisiteur } from "@/lib/i18n/langue";
 import { VITRINE } from "@/lib/i18n/vitrine";
-import { montantLisible } from "@/lib/i18n/nombres";
-import { ChoixLangueSite } from "@/components/landing/ChoixLangueSite";
 import { DonneesStructurees } from "@/components/seo/DonneesStructurees";
+import {
+  PageVitrine,
+  type DonneesVitrine,
+} from "@/components/vitrine/PageVitrine";
 import {
   restaurantSchema,
   faqSchema,
@@ -19,16 +15,9 @@ import {
 } from "@/lib/seo/donnees-structurees";
 import { reseauxPublics } from "@/lib/seo/reseaux";
 import { fluxInstagram } from "@/lib/vitrine/instagram";
-import { FluxInstagram } from "@/components/reservations/FluxInstagram";
-import { QuestionsFrequentes } from "@/components/seo/QuestionsFrequentes";
 import { cartePubliee } from "@/lib/menu/publication";
-import { carteOrganisee, formatPrix } from "@/lib/menu/carte";
-import {
-  plagesHoraires,
-  intitulePlage,
-  heuresPlage,
-  horairesRenseignes,
-} from "@/lib/site/horaires";
+import { carteOrganisee } from "@/lib/menu/carte";
+import { plagesHoraires } from "@/lib/site/horaires";
 import { siteUrl } from "@/lib/site-url";
 import { chargerAcces } from "@/lib/abonnement/acces";
 import type { RestaurantPhoto } from "@/types/photo";
@@ -147,47 +136,6 @@ export async function generateMetadata({
   };
 }
 
-/**
- * Ce que l'établissement demandera en garantie, dit avant la demande.
- * Rien si aucune garantie n'est réclamée : une ligne « aucun acompte » ne
- * rassure pas, elle fait penser qu'il y en a parfois un.
- */
-function garantieLisible(espace: Espace, langue: Langue): string | null {
-  const v = VITRINE[langue];
-  const seuil = espace.garantie_seuil_couverts ?? null;
-
-  if (espace.acompte_centimes) {
-    return v.acompte(
-      montantLisible(espace.acompte_centimes, langue),
-      espace.acompte_mode === "par_couvert",
-      seuil,
-    );
-  }
-  if (espace.caution_centimes) {
-    return v.caution(
-      montantLisible(espace.caution_centimes, langue),
-      espace.caution_mode === "par_couvert",
-      seuil,
-    );
-  }
-  return null;
-}
-
-function Section({
-  titre,
-  children,
-}: {
-  titre: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className="flex flex-col gap-4">
-      <h2 className="text-lg font-semibold text-zinc-900">{titre}</h2>
-      {children}
-    </section>
-  );
-}
-
 export default async function VitrinePage({
   params,
 }: {
@@ -215,7 +163,6 @@ export default async function VitrinePage({
   // `next.config.ts`). Un choix explicite, lui, passe toujours devant :
   // le témoin est lu en premier.
   const langue = await langueVisiteur();
-  const v = VITRINE[langue];
 
   const supabase = createServiceClient();
   const [
@@ -314,342 +261,72 @@ export default async function VitrinePage({
   // Trois plats suffisent à donner envie ; la carte entière a sa page.
   const apercuCarte = carteOrganisee(carte.items).slice(0, 1);
 
+  const donnees: DonneesVitrine = {
+    slug,
+    langue,
+    restaurant: {
+      nom: restaurant.nom,
+      adresse: restaurant.adresse,
+      telephone: restaurant.telephone,
+      description: restaurant.description,
+      logo_url: restaurant.logo_url,
+      mentions_legales: restaurant.mentions_legales,
+      site_web: restaurant.site_web,
+      horaires: restaurant.horaires ?? {},
+      type_cuisine: restaurant.type_cuisine,
+    },
+    couverture,
+    galerie,
+    note:
+      reputation?.note && reputation.nombre_avis
+        ? { valeur: Number(reputation.note), avis: reputation.nombre_avis }
+        : null,
+    cartePubliee: carte.publiee,
+    plats: apercuCarte[0]?.plats ?? [],
+    instagram,
+    plages,
+    privatisables,
+    photosParEspace,
+    questions,
+  };
+
   return (
-    <div className="flex min-h-screen flex-col bg-brand-cream">
-      <header className="border-b border-zinc-200/70 bg-white/90 px-6 py-4">
-        <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-4">
-          <span className="flex items-center gap-3">
-            {restaurant.logo_url && (
-              <span className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg">
-                <Image
-                  src={restaurant.logo_url}
-                  alt=""
-                  fill
-                  sizes="40px"
-                  className="object-contain"
-                />
-              </span>
-            )}
-            <span className="font-serif text-2xl text-ink">
-              {restaurant.nom}
-            </span>
-          </span>
-          <nav className="flex items-center gap-3 text-sm">
-            {carte.publiee && (
-              <Link
-                href={`/carte/${slug}`}
-                className="font-medium text-zinc-600 hover:text-zinc-900"
-              >
-                {v.laCarte}
-              </Link>
-            )}
-            <Link
-              href={`/reserver/${slug}`}
-              className="rounded-lg bg-ink px-4 py-2 font-semibold text-white transition-colors hover:bg-brand-navy"
-            >
-              {v.reserver}
-            </Link>
-            <ChoixLangueSite courante={langue} />
-          </nav>
-        </div>
-      </header>
-
-      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-10 px-6 py-10">
-        {/* Ce que Google et les moteurs de réponse lisent pour savoir qu'il
-            s'agit d'un restaurant, où il est, quand il ouvre et à quel
-            prix. C'est très exactement ce qui manquait aux établissements
-            dont l'audit met le pilier Visibilité IA à zéro. */}
-        <DonneesStructurees
-          donnees={restaurantSchema({
-            etablissement: {
-              nom: restaurant.nom,
-              adresse: restaurant.adresse,
-              description: restaurant.description,
-              logoUrl: restaurant.logo_url,
-              telephone: restaurant.telephone,
-              typeCuisine: restaurant.type_cuisine,
-            },
-            // On n'atteint cette page que par le slug de réservation :
-            // la page est donc ouverte, et la table se retient en ligne.
-            accepteReservations: true,
-            services,
-            espaces,
-            carte: carte.items,
-            url: `${siteUrl()}/restaurant/${slug}`,
-            urlCarte: carte.publiee ? `${siteUrl()}/carte/${slug}` : null,
-            note: reputation?.note ? Number(reputation.note) : null,
-            nombreAvis: reputation?.nombre_avis ?? null,
-            reseaux,
-          })}
-        />
-
-        {/* Un second bloc plutôt qu'une propriété du premier : une
-            FAQPage est une page à part entière aux yeux de schema.org,
-            et l'imbriquer dans le Restaurant la rendrait invisible. */}
-        <DonneesStructurees
-          donnees={faqSchema({
-            questions,
-            url: `${siteUrl()}/restaurant/${slug}`,
-          })}
-        />
-
-        {couverture && (
-          <CouvertureVitrine
-            url={couverture.url}
-            nom={restaurant.nom}
-            legende={couverture.legende ?? null}
-            adresse={restaurant.adresse}
-          />
-        )}
-
-        <div className="flex flex-col gap-3">
-          {/* Sans couverture, le titre reprend sa place : une page sans
-              photo ne doit pas se retrouver sans nom. */}
-          {!couverture && (
-            <>
-              <h1 className="font-serif text-4xl text-ink sm:text-5xl">
-                {restaurant.nom}
-              </h1>
-              {restaurant.adresse && (
-                <p className="text-zinc-500">{restaurant.adresse}</p>
-              )}
-            </>
-          )}
-          {reputation?.note && reputation.nombre_avis ? (
-            <p className="text-base text-zinc-600">
-              {v.noteSurGoogle(
-                Number(reputation.note).toFixed(1),
-                reputation.nombre_avis,
-              )}
-            </p>
-          ) : null}
-          {restaurant.description && (
-            <p className="max-w-2xl whitespace-pre-line leading-relaxed text-zinc-700">
-              {restaurant.description}
-            </p>
-          )}
-          <div className="mt-2 flex flex-wrap gap-3">
-            <Link
-              href={`/reserver/${slug}`}
-              className="rounded-lg bg-ink px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy"
-            >
-              {v.reserverUneTable}
-            </Link>
-            {carte.publiee && (
-              <Link
-                href={`/carte/${slug}`}
-                className="rounded-lg border border-line bg-paper px-5 py-2.5 text-sm font-semibold text-ink transition-colors hover:border-ink"
-              >
-                {v.voirLaCarte}
-              </Link>
-            )}
-          </div>
-        </div>
-
-        {/* La galerie vient après l'appel à réserver : la couverture
-            annonce, le texte et le bouton convertissent, les autres
-            photos illustrent. Placée avant, elle repoussait l'action
-            principale sous un écran de vignettes. */}
-        <GalerieRestaurant
-          photos={galerie}
-          nom={restaurant.nom}
-          langue={langue}
-        />
-
-        {apercuCarte.length > 0 && (
-          <Section titre={v.apercuDeLaCarte}>
-            <ul className="flex flex-col divide-y divide-zinc-200/70 rounded-2xl border border-zinc-200/70 bg-white px-5 shadow-sm">
-              {apercuCarte[0].plats.slice(0, 3).map((plat) => (
-                <li
-                  key={plat.id}
-                  className="flex items-baseline justify-between gap-4 py-3"
-                >
-                  <span className="flex min-w-0 flex-col">
-                    <span className="font-medium text-zinc-900">
-                      {plat.nom}
-                    </span>
-                    {plat.description && (
-                      <span className="text-base text-zinc-500">
-                        {plat.description}
-                      </span>
-                    )}
-                  </span>
-                  {plat.prix_centimes !== null && (
-                    <span className="shrink-0 text-base text-zinc-600">
-                      {formatPrix(plat.prix_centimes)}
-                    </span>
-                  )}
-                </li>
-              ))}
-            </ul>
-            <Link
-              href={`/carte/${slug}`}
-              className="w-fit text-sm font-medium text-brand-orange hover:underline"
-            >
-              {v.voirTouteLaCarte}
-            </Link>
-          </Section>
-        )}
-
-        {instagram && (
-          <FluxInstagram
-            pseudo={instagram.pseudo}
-            medias={instagram.medias}
-            langue={langue}
-          />
-        )}
-
-        <Section titre={v.infosPratiques}>
-          <div className="grid gap-5 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm sm:grid-cols-2">
-            <div className="flex flex-col gap-2">
-              <span className="text-base font-medium text-zinc-900">
-                {v.nousTrouver}
-              </span>
-              {restaurant.adresse ? (
-                <>
-                  <span className="text-base text-zinc-600">
-                    {restaurant.adresse}
-                  </span>
-                  {/* Un lien vers Maps plutôt qu'une carte intégrée : une
-                      carte chargée sur chaque visite coûte du temps de
-                      chargement à tout le monde pour servir les quelques-uns
-                      qui cherchent l'itinéraire. */}
-                  <a
-                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${restaurant.nom} ${restaurant.adresse}`)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-fit text-sm font-medium text-brand-orange hover:underline"
-                  >
-                    {v.itineraire}
-                  </a>
-                </>
-              ) : (
-                <span className="text-base text-zinc-400">
-                  {v.adresseNonRenseignee}
-                </span>
-              )}
-              {restaurant.telephone && (
-                <a
-                  href={`tel:${restaurant.telephone.replace(/\s/g, "")}`}
-                  className="w-fit text-sm font-medium text-brand-orange hover:underline"
-                >
-                  {restaurant.telephone}
-                </a>
-              )}
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <span className="text-base font-medium text-zinc-900">
-                {v.horaires}
-              </span>
-              {horairesRenseignes(restaurant.horaires ?? {}) ? (
-                <ul className="flex flex-col gap-1 text-sm">
-                  {plages.map((plage) => (
-                    <li
-                      key={plage.debut}
-                      className="flex justify-between gap-4"
-                    >
-                      <span className="text-zinc-600">
-                        {intitulePlage(plage, langue)}
-                      </span>
-                      <span
-                        className={
-                          plage.ouverture ? "text-zinc-900" : "text-zinc-400"
-                        }
-                      >
-                        {heuresPlage(plage, langue)}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <span className="text-base text-zinc-400">
-                  {v.horairesNonRenseignes}
-                </span>
-              )}
-            </div>
-          </div>
-        </Section>
-
-        {privatisables.length > 0 && (
-          <Section titre={v.privatiserUnEspace}>
-            <p className="text-base text-zinc-600">{v.privatisationChapo}</p>
-
-            {/* Une salle qu'on privatise se choisit sur photo. La lister en
-                une ligne de noms, comme avant, revenait à demander au client
-                de réserver une pièce qu'il n'a jamais vue. */}
-            <ul className="flex flex-col gap-4">
-              {privatisables.map((espace) => (
-                <li
-                  key={espace.id}
-                  className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm"
-                >
-                  <div className="flex flex-wrap items-baseline justify-between gap-2">
-                    <span className="font-medium text-zinc-900">
-                      {espace.nom}
-                    </span>
-                    <span className="text-base text-zinc-500">
-                      {espace.privatisation_minimum
-                        ? v.deAJusqua(
-                            espace.privatisation_minimum,
-                            espace.capacite,
-                          )
-                        : v.jusqua(espace.capacite)}
-                    </span>
-                  </div>
-
-                  {espace.description && (
-                    <p className="mt-1 text-sm leading-relaxed text-zinc-600">
-                      {espace.description}
-                    </p>
-                  )}
-
-                  <BandePhotos
-                    photos={photosParEspace.get(espace.id) ?? []}
-                    espaceNom={espace.nom}
-                    restaurantNom={restaurant.nom}
-                    hauteur="h-40 w-56"
-                  />
-
-                  {/* La garantie est annoncée avant la demande. Un groupe
-                      qui l'apprend au moment de payer se sent piégé ; celui
-                      qui la lit ici sait à quoi s'en tenir, et le
-                      restaurateur ne perd plus son temps avec ceux que ça
-                      rebute. */}
-                  {garantieLisible(espace, langue) && (
-                    <p className="mt-3 text-sm text-zinc-500">
-                      {garantieLisible(espace, langue)}
-                    </p>
-                  )}
-
-                  <Link
-                    href={`/reserver/${slug}?espace=${espace.id}`}
-                    className="mt-3 inline-block rounded-md border border-zinc-300 px-4 py-2 text-base font-medium text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
-                  >
-                    {v.demander(espace.nom)}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </Section>
-        )}
-      </main>
-
-      <footer className="border-t border-zinc-200/70 px-6 py-6">
-        {restaurant.mentions_legales && (
-          <div className="mx-auto mb-5 max-w-3xl">
-            <p className="whitespace-pre-line text-xs leading-relaxed text-zinc-500">
-              {restaurant.mentions_legales}
-            </p>
-          </div>
-        )}
-        <QuestionsFrequentes questions={questions} langue={langue} />
-
-        <SignatureKlarr
-          texte={v.propulseePar}
-          className="mx-auto max-w-3xl"
-        />
-      </footer>
-    </div>
+    <>
+      {/* Ce que Google et les moteurs de réponse lisent pour savoir qu'il
+          s'agit d'un restaurant, où il est, quand il ouvre et à quel
+          prix. C'est très exactement ce qui manquait aux établissements
+          dont l'audit met le pilier Visibilité IA à zéro. */}
+      <DonneesStructurees
+        donnees={restaurantSchema({
+          etablissement: {
+            nom: restaurant.nom,
+            adresse: restaurant.adresse,
+            description: restaurant.description,
+            logoUrl: restaurant.logo_url,
+            telephone: restaurant.telephone,
+            typeCuisine: restaurant.type_cuisine,
+          },
+          accepteReservations: true,
+          services,
+          espaces,
+          carte: carte.items,
+          url: `${siteUrl()}/restaurant/${slug}`,
+          urlCarte: carte.publiee ? `${siteUrl()}/carte/${slug}` : null,
+          note: reputation?.note ? Number(reputation.note) : null,
+          nombreAvis: reputation?.nombre_avis ?? null,
+          reseaux,
+        })}
+      />
+      {/* Un second bloc plutôt qu'une propriété du premier : une FAQPage
+          est une page à part entière aux yeux de schema.org, et
+          l'imbriquer dans le Restaurant la rendrait invisible. */}
+      <DonneesStructurees
+        donnees={faqSchema({
+          questions,
+          url: `${siteUrl()}/restaurant/${slug}`,
+        })}
+      />
+      <PageVitrine d={donnees} />
+    </>
   );
 }

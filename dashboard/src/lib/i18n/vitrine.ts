@@ -16,9 +16,15 @@ import type { Langue } from "@/lib/i18n/langue";
  */
 
 export type ClesVitrine = {
-  /** L'en-tête. */
+  /** L'en-tête, et les ancres de la page. */
   laCarte: string;
   reserver: string;
+  photos: string;
+  infos: string;
+  /** Le mot court de la barre ; la section garde son titre long. */
+  privatiser: string;
+  /** L'intitulé au-dessus du texte de présentation. */
+  aPropos: string;
 
   /**
    * La note Google. Une seule chaîne, et pas un bout de phrase autour
@@ -71,9 +77,12 @@ export type ClesVitrine = {
 const fr: ClesVitrine = {
   laCarte: "La carte",
   reserver: "Réserver",
+  photos: "Photos",
+  infos: "Infos",
+  privatiser: "Privatiser",
+  aPropos: "La maison",
 
-  noteSurGoogle: (note, avis) =>
-    `${note} sur Google · ${avis} avis`,
+  noteSurGoogle: (note, avis) => `${note} sur Google · ${avis} avis`,
   reserverUneTable: "Réserver une table",
   voirLaCarte: "Voir la carte",
 
@@ -114,14 +123,17 @@ const fr: ClesVitrine = {
   titreSeul: (nom) => `${nom} — restaurant`,
   descriptionAvecAdresse: (nom, adresse) =>
     `${nom}, ${adresse}. Carte, horaires et réservation en ligne.`,
-  descriptionSeule: (nom) =>
-    `${nom}. Carte, horaires et réservation en ligne.`,
+  descriptionSeule: (nom) => `${nom}. Carte, horaires et réservation en ligne.`,
   localeOg: "fr_FR",
 };
 
 const en: ClesVitrine = {
   laCarte: "Menu",
   reserver: "Book",
+  photos: "Photos",
+  infos: "Info",
+  privatiser: "Private hire",
+  aPropos: "The house",
 
   noteSurGoogle: (note, avis) =>
     `${note} on Google · ${avis} review${avis > 1 ? "s" : ""}`,
@@ -142,8 +154,7 @@ const en: ClesVitrine = {
   privatiserUnEspace: "Book a private space",
   privatisationChapo:
     "Birthday, team dinner, offsite: the space is yours alone for the whole service.",
-  deAJusqua: (minimum, capacite) =>
-    `From ${minimum} to ${capacite} guests`,
+  deAJusqua: (minimum, capacite) => `From ${minimum} to ${capacite} guests`,
   jusqua: (capacite) => `Up to ${capacite} guests`,
   demander: (nom) => `Enquire about ${nom}`,
   acompte: (montant, parPersonne, seuil) =>
@@ -173,6 +184,10 @@ const en: ClesVitrine = {
 const zh: ClesVitrine = {
   laCarte: "菜单",
   reserver: "订座",
+  photos: "照片",
+  infos: "信息",
+  privatiser: "包场",
+  aPropos: "关于本店",
 
   noteSurGoogle: (note, avis) => `Google 评分 ${note} · ${avis} 条评价`,
   reserverUneTable: "订一张桌",
