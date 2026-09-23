@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState, useTransition } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import { enregistrerPlan } from "@/app/dashboard/[id]/reservations/plan/actions";
 import {
   aimanter,
@@ -34,6 +41,11 @@ import {
 type Selection = { genre: "table" | "repere"; id: string } | null;
 
 const ZOOMS = [0.4, 0.55, 0.7, 0.85, 1, 1.25];
+/** Les bornes du zoom ajusté : lisible sur un téléphone, pas démesuré sur un grand écran. */
+const ZOOM_MIN = 0.3;
+const ZOOM_MAX = 1.25;
+/** La marge intérieure du cadre (p-2), à retirer de la largeur disponible. */
+const MARGE_CADRE = 16;
 
 function copie(brouillon: Brouillon): Brouillon {
   return {
@@ -67,6 +79,24 @@ export function EditeurPlan({
   const [enregistre, setEnregistre] = useState<Brouillon>(initial);
   const [selection, setSelection] = useState<Selection>(null);
   const [zoom, setZoom] = useState(0.7);
+  // Tant qu'on n'a pas choisi un zoom soi-même, le plan occupe toute la
+  // largeur disponible — et la suit quand la fenêtre change de taille.
+  const [ajuste, setAjuste] = useState(true);
+  const conteneur = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const boite = conteneur.current;
+    if (!boite || !ajuste) return;
+    const recalculer = () => {
+      const largeur = boite.clientWidth - MARGE_CADRE;
+      if (largeur <= 0) return;
+      const ideal = largeur / PLAN_LARGEUR;
+      setZoom(Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, ideal)));
+    };
+    recalculer();
+    const observateur = new ResizeObserver(recalculer);
+    observateur.observe(boite);
+    return () => observateur.disconnect();
+  }, [ajuste]);
   const [message, setMessage] = useState<string | null>(null);
   const [erreurs, setErreurs] = useState<string[]>([]);
   const [enCours, startTransition] = useTransition();
@@ -308,10 +338,16 @@ export function EditeurPlan({
           type="button"
           aria-label="Dézoomer"
           className={outil}
-          disabled={zoom <= ZOOMS[0]}
-          onClick={() =>
-            setZoom((z) => ZOOMS[Math.max(ZOOMS.indexOf(z) - 1, 0)])
-          }
+          disabled={zoom <= ZOOMS[0] + 0.001}
+          onClick={() => {
+            setAjuste(false);
+            // Le zoom ajusté tombe entre deux paliers : on repart du palier
+            // juste en dessous, pas de la position dans la liste.
+            setZoom(
+              (z) =>
+                [...ZOOMS].reverse().find((p) => p < z - 0.001) ?? ZOOMS[0],
+            );
+          }}
         >
           −
         </button>
@@ -322,14 +358,24 @@ export function EditeurPlan({
           type="button"
           aria-label="Zoomer"
           className={outil}
-          disabled={zoom >= ZOOMS[ZOOMS.length - 1]}
-          onClick={() =>
+          disabled={zoom >= ZOOMS[ZOOMS.length - 1] - 0.001}
+          onClick={() => {
+            setAjuste(false);
             setZoom(
-              (z) => ZOOMS[Math.min(ZOOMS.indexOf(z) + 1, ZOOMS.length - 1)],
-            )
-          }
+              (z) =>
+                ZOOMS.find((p) => p > z + 0.001) ?? ZOOMS[ZOOMS.length - 1],
+            );
+          }}
         >
           +
+        </button>
+        <button
+          type="button"
+          className={outil}
+          disabled={ajuste}
+          onClick={() => setAjuste(true)}
+        >
+          Ajuster à la largeur
         </button>
 
         <span className="mx-1 h-5 w-px bg-zinc-200" aria-hidden="true" />
@@ -439,7 +485,10 @@ export function EditeurPlan({
         </div>
 
         {/* Le plan */}
-        <div className="min-w-0 flex-1 overflow-auto rounded-xl border border-zinc-200 bg-zinc-50 p-2">
+        <div
+          ref={conteneur}
+          className="min-w-0 flex-1 overflow-auto rounded-xl border border-zinc-200 bg-zinc-50 p-2"
+        >
           <div
             ref={cadre}
             onPointerDown={(event) => {
