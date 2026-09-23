@@ -31,7 +31,7 @@ export function ReviewReplyDraft({
   }
 
   return (
-    <div className="mt-2 flex flex-col gap-2">
+    <div className="flex flex-col gap-3">
       <form action={action}>
         <input type="hidden" name="restaurant_id" value={restaurantId} />
         <input type="hidden" name="author" value={author} />
@@ -40,7 +40,7 @@ export function ReviewReplyDraft({
         <button
           type="submit"
           disabled={pending}
-          className="rounded-md border border-zinc-200 px-3 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy disabled:opacity-50"
+          className="inline-flex items-center gap-2 rounded-lg border border-zinc-200 px-3.5 py-2 text-sm font-semibold text-ink transition-colors hover:border-brand-navy hover:text-brand-navy disabled:opacity-50"
         >
           {pending
             ? "Rédaction…"
@@ -63,13 +63,13 @@ export function ReviewReplyDraft({
             ref={textareaRef}
             defaultValue={state.draft}
             rows={7}
-            className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm leading-relaxed outline-none focus:border-zinc-500"
+            className="w-full rounded-lg border border-zinc-200 bg-zinc-50 px-3.5 py-3 text-sm leading-relaxed outline-none focus:border-brand-navy focus:bg-white"
           />
           <div className="flex flex-wrap items-center gap-3">
             <button
               type="button"
               onClick={copy}
-              className="rounded-md bg-brand-navy px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-brand-navy-hover"
+              className="rounded-lg bg-brand-navy px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover"
             >
               {copied ? "Copié !" : "Copier"}
             </button>
@@ -78,7 +78,7 @@ export function ReviewReplyDraft({
                 href={reviewUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs font-medium text-brand-orange hover:underline"
+                className="text-sm font-semibold text-brand-orange-dark hover:underline"
               >
                 Ouvrir l&apos;avis pour coller la réponse →
               </a>

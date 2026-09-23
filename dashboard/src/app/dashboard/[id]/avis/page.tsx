@@ -5,7 +5,11 @@ import {
   fetchTripadvisorPlatformReviews,
   fetchGooglePlatformReviews,
 } from "@/lib/reviews/aggregate";
-import { PlatformReviewsCard } from "@/components/reviews/PlatformReviewsCard";
+import {
+  CarteAvis,
+  TuilePlateforme,
+  type AvisAffiche,
+} from "@/components/reviews/PlatformReviewsCard";
 import { ConfirmationTripadvisor } from "@/components/reviews/ConfirmationTripadvisor";
 import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
 import type { Restaurant } from "@/types/restaurant";
@@ -48,6 +52,19 @@ export default async function AvisPage({
     ),
   ]);
 
+  // Toutes plateformes confondues, du plus récent au plus ancien : c'est
+  // l'ordre dans lequel on répond. Sans date, en dernier.
+  const avis: AvisAffiche[] = [google, yelp, tripadvisor]
+    .filter((p) => p.found)
+    .flatMap((p) =>
+      p.reviews.map((r) => ({
+        ...r,
+        platform: p.platform,
+        ficheUrl: p.businessUrl ?? null,
+      })),
+    )
+    .sort((a, b) => (b.publishedAt ?? "").localeCompare(a.publishedAt ?? ""));
+
   return (
     <div className="flex flex-1 flex-col gap-6 px-6 py-8">
       <PageHeader
@@ -61,12 +78,11 @@ export default async function AvisPage({
         réponse se copie en un clic.
       </p>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        <PlatformReviewsCard data={google} restaurantId={id} />
-        <PlatformReviewsCard data={yelp} restaurantId={id} />
-        <PlatformReviewsCard
+      <div className="grid gap-4 md:grid-cols-3">
+        <TuilePlateforme data={google} />
+        <TuilePlateforme data={yelp} />
+        <TuilePlateforme
           data={tripadvisor}
-          restaurantId={id}
           pied={
             tripadvisor.configured ? (
               <ConfirmationTripadvisor
@@ -79,6 +95,30 @@ export default async function AvisPage({
           }
         />
       </div>
+
+      <section className="flex flex-col gap-4">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+          <h2 className="font-serif text-2xl text-ink">Derniers avis</h2>
+          {avis.length > 0 && (
+            <p className="text-xs text-zinc-500">
+              Les plateformes n&apos;en transmettent que quelques-uns — les
+              plus récents ou les plus pertinents selon elles.
+            </p>
+          )}
+        </div>
+        {avis.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-zinc-300 bg-white px-6 py-12 text-center text-sm text-zinc-500">
+            Aucun avis à afficher pour l&apos;instant — la raison est indiquée
+            sur chaque plateforme, au-dessus.
+          </div>
+        ) : (
+          <ul className="grid gap-4 lg:grid-cols-2">
+            {avis.map((a, i) => (
+              <CarteAvis key={`${a.platform}-${i}`} avis={a} restaurantId={id} />
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
   );
 }
