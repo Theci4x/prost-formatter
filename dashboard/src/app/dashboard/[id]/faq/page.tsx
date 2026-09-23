@@ -65,20 +65,40 @@ export default async function FaqPage({
   const posees = questions.map((q) => q.question);
   const restantes = questionsARepondre(fiche, posees);
   const etat = completude(fiche, posees);
+  const publique = restaurant as Restaurant & { site_publie?: boolean | null };
+  // Les réponses se lisent sur le site vitrine : le lien n'a de sens que
+  // s'il est en ligne.
+  const surLeSite =
+    publique.site_publie && restaurant.slug_reservation
+      ? `/restaurant/${restaurant.slug_reservation}`
+      : null;
 
   return (
-    <div className="flex flex-1 flex-col gap-6 px-6 py-8">
+    <div className="flex flex-1 flex-col gap-8 px-6 py-8">
       <PageHeader
         icon={dashboardIcons.visibiliteIa}
         title={`Questions fréquentes — ${restaurant.nom}`}
       />
 
-      <p className="max-w-4xl text-sm text-zinc-600">
-        Ces réponses s&apos;affichent sur ta page publique et sont lues par
-        Google et les assistants, qui les reprennent presque mot pour mot quand
-        on leur demande si tu as une terrasse ou si tu acceptes les chiens.
-        Accessoirement, elles épargnent autant d&apos;appels en plein service.
-      </p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="max-w-4xl text-sm text-zinc-600">
+          Ces réponses s&apos;affichent sur ta page publique et sont lues par
+          Google et les assistants, qui les reprennent presque mot pour mot
+          quand on leur demande si tu as une terrasse ou si tu acceptes les
+          chiens. Accessoirement, elles épargnent autant d&apos;appels en plein
+          service.
+        </p>
+        {surLeSite && (
+          <a
+            href={surLeSite}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="rounded-lg border border-zinc-200 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
+          >
+            Voir sur mon site ↗
+          </a>
+        )}
+      </div>
 
       {/* L'état d'abord : c'est la phrase qui dit s'il reste à faire,
           et elle dit ce que coûte le fait de ne pas le faire. */}
@@ -127,7 +147,7 @@ export default async function FaqPage({
         </div>
       </section>
 
-      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
+      <div className="grid items-start gap-8 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
         <div className="flex min-w-0 flex-col gap-6">
           <ReponsesRapides restaurantId={id} questions={restantes} />
 
