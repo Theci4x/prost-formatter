@@ -30,6 +30,7 @@ export type ClesAccueil = {
     | "retours"
     | "roue"
     | "seo"
+    | "presence"
     | "posts"
     | "visibiliteIa"
     | "notifications"
@@ -103,6 +104,10 @@ const fr: ClesAccueil = {
     seo: {
       label: "Référencement",
       resume: "Ce que Google sait de toi, et ce qui lui manque.",
+    },
+    presence: {
+      label: "Présence en ligne",
+      resume: "Ta fiche sur Apple, Bing, TripAdvisor et les autres.",
     },
     posts: {
       label: "Publications Google",
@@ -190,6 +195,10 @@ const en: ClesAccueil = {
       label: "Search",
       resume: "What Google knows about you, and what it is missing.",
     },
+    presence: {
+      label: "Online presence",
+      resume: "Your listing on Apple, Bing, TripAdvisor and the rest.",
+    },
     posts: {
       label: "Google posts",
       resume: "Write your posts ahead, Klarr publishes them.",
@@ -269,6 +278,10 @@ const zh: ClesAccueil = {
     seo: {
       label: "搜索排名",
       resume: "Google 对您的了解，以及还缺什么。",
+    },
+    presence: {
+      label: "网络曝光",
+      resume: "您在 Apple、Bing、TripAdvisor 等平台上的信息。",
     },
     posts: {
       label: "Google 动态",

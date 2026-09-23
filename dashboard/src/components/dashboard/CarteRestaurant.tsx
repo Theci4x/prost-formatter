@@ -154,6 +154,13 @@ const ICONES = {
       <path d="M21 21l-4.3-4.3" />
     </Icone>
   ),
+  presence: (
+    <Icone>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M3 12h18" />
+      <path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18z" />
+    </Icone>
+  ),
   posts: (
     <Icone>
       <path d="M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0 1 18 0z" />
@@ -361,6 +368,13 @@ function groupes(t: ClesAccueil, d: DetailsAccueil, langue: Langue): Groupe[] {
           label: t.entrees.seo.label,
           resume: t.entrees.seo.resume,
           icone: ICONES.seo,
+          minimum: "gerant",
+        },
+        {
+          href: "presence",
+          label: t.entrees.presence.label,
+          resume: t.entrees.presence.resume,
+          icone: ICONES.presence,
           minimum: "gerant",
         },
         // Masquée tant que Google n'a pas ouvert la publication : elle

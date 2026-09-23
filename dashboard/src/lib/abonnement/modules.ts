@@ -244,6 +244,7 @@ export const MODULE_DE_LA_SECTION: Record<string, Module | Module[]> = {
   avis: "visibilite",
   retours: "visibilite",
   seo: "visibilite",
+  presence: "visibilite",
   faq: ["visibilite", "reservations"],
   "visibilite-ia": "visibilite",
   google: "visibilite",
