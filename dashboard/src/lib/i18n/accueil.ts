@@ -118,7 +118,7 @@ const fr: ClesAccueil = {
     },
     connexions: {
       label: "Connexions",
-      resume: "Google, Facebook, Instagram, TikTok.",
+      resume: "Google, Facebook, Instagram, Stripe.",
     },
     paiements: {
       label: "Paiements",
@@ -204,7 +204,7 @@ const en: ClesAccueil = {
     },
     connexions: {
       label: "Connections",
-      resume: "Google, Facebook, Instagram, TikTok.",
+      resume: "Google, Facebook, Instagram, Stripe.",
     },
     paiements: {
       label: "Payments",
@@ -281,7 +281,7 @@ const zh: ClesAccueil = {
     notifications: { label: "通知", resume: "在手机上收到提醒。" },
     connexions: {
       label: "账号连接",
-      resume: "Google、Facebook、Instagram、TikTok。",
+      resume: "Google、Facebook、Instagram、Stripe。",
     },
     paiements: { label: "收款", resume: "订金、押金、Stripe 账户。" },
     equipe: { label: "团队", resume: "谁能访问什么。" },

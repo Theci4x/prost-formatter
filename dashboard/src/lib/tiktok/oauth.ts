@@ -14,14 +14,19 @@ const SCOPES = ["user.info.basic", "user.info.stats", "video.list"].join(",");
 
 /**
  * TikTok exige une revue de l'application avant de délivrer ces scopes en
- * production. Tant qu'elle n'est pas passée, les clés sont absentes et
- * chaque « Connecter » finirait sur une erreur TikTok : on masque plutôt
- * l'entrée partout. Poser les clés la fait réapparaître, sans toucher au
- * code.
+ * production. Tant qu'elle n'est pas passée, chaque « Connecter » finirait
+ * sur une erreur TikTok : on masque plutôt l'entrée partout — carte des
+ * connexions, écran TikTok, routes d'autorisation.
+ *
+ * Les clés seules ne suffisent pas : elles servent déjà au mode bac à
+ * sable, pendant la revue. L'ouverture se décide à part, en posant
+ * TIKTOK_ACTIF=1 le jour où TikTok valide l'application — sans toucher
+ * au code.
  */
 export function tiktokDisponible(): boolean {
-  return Boolean(
-    process.env.TIKTOK_CLIENT_KEY && process.env.TIKTOK_CLIENT_SECRET,
+  return (
+    process.env.TIKTOK_ACTIF === "1" &&
+    Boolean(process.env.TIKTOK_CLIENT_KEY && process.env.TIKTOK_CLIENT_SECRET)
   );
 }
 
