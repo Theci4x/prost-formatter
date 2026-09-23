@@ -243,11 +243,18 @@ export async function getPlaceDetails(
     reviews?: AvisBrut[];
   };
 
-  // Une note portée par des centaines d'avis et aucun avis rendu : ce n'est
-  // pas « rien à dire », c'est Google qui retient quelque chose. On ne peut
-  // pas le deviner d'ici ; on le note, avec ce que la réponse contenait,
-  // pour que la cause se lise dans le journal au lieu de se supposer.
-  if ((data.userRatingCount ?? 0) > 0 && !data.reviews?.length) {
+  // Une note portée par des centaines d'avis et aucun avis rendu : c'est
+  // Google qui retient quelque chose. Une cause est connue — relevée le 23
+  // septembre 2026 sur Prost, contre-vérifiée sur un restaurant ouvert : une
+  // fiche « fermée temporairement » garde sa note mais perd ses avis, ses
+  // photos et ses horaires dans l'API, alors que Maps les montre encore.
+  // Celle-là ne se signale pas. Toute autre se note, avec ce que la réponse
+  // contenait, pour que la cause se lise au lieu de se supposer.
+  if (
+    (data.userRatingCount ?? 0) > 0 &&
+    !data.reviews?.length &&
+    data.businessStatus !== "CLOSED_TEMPORARILY"
+  ) {
     console.warn("[places] note sans avis", {
       placeId,
       nombreDeNotes: data.userRatingCount,

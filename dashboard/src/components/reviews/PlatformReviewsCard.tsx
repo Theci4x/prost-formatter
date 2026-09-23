@@ -48,9 +48,16 @@ export function PlatformReviewsCard({
           à côté de « 1 228 avis » se lisait comme une panne de Klarr. */}
       {data.found && data.reviews.length === 0 && (
         <p className="text-sm text-zinc-500">
-          {(data.reviewCount ?? 0) > 0
-            ? `${label} affiche ${data.reviewCount} avis mais n'en transmet aucun pour le moment. Ils restent lisibles directement sur la fiche.`
-            : `Aucun avis sur ${label} pour le moment.`}
+          {data.businessStatus === "CLOSED_TEMPORARILY"
+            ? // Vérifié le 23 septembre 2026 : une fiche marquée « fermée
+              // temporairement » garde sa note, mais Google cesse d'en
+              // transmettre les avis, les photos et les horaires. Un
+              // restaurant ouvert, lu au même moment par la même clé, les
+              // reçoit. Ça revient seul à la réouverture.
+              `Votre fiche ${label} est marquée « fermée temporairement ». Tant que c'est le cas, ${label} ne transmet plus vos avis — ils reviendront d'eux-mêmes à la réouverture, et restent lisibles sur la fiche en attendant.`
+            : (data.reviewCount ?? 0) > 0
+              ? `${label} affiche ${data.reviewCount} avis mais n'en transmet aucun pour le moment. Ils restent lisibles directement sur la fiche.`
+              : `Aucun avis sur ${label} pour le moment.`}
         </p>
       )}
 
