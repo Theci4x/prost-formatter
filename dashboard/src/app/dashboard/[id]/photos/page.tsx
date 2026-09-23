@@ -102,21 +102,21 @@ export default async function PhotosPage({
                     Couverture
                   </span>
                 ) : (
-                  !photo.espace_id && (
-                    <form
-                      action={definirCouverture}
-                      className="absolute bottom-2 left-2 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100"
+                  // La photo d'une salle aussi : celle du speakeasy peut être
+                  // la meilleure de toutes, et c'est le restaurateur qui sait.
+                  <form
+                    action={definirCouverture}
+                    className="absolute bottom-2 left-2 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100"
+                  >
+                    <input type="hidden" name="restaurant_id" value={id} />
+                    <input type="hidden" name="photo_id" value={photo.id} />
+                    <button
+                      type="submit"
+                      className="rounded-full bg-white/90 px-2.5 py-1 text-xs font-medium text-zinc-800 hover:bg-white"
                     >
-                      <input type="hidden" name="restaurant_id" value={id} />
-                      <input type="hidden" name="photo_id" value={photo.id} />
-                      <button
-                        type="submit"
-                        className="rounded-full bg-white/90 px-2.5 py-1 text-xs font-medium text-zinc-800 hover:bg-white"
-                      >
-                        Mettre en couverture
-                      </button>
-                    </form>
-                  )
+                      Mettre en couverture
+                    </button>
+                  </form>
                 )}
               </div>
               <LegendePhoto

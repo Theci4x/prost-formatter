@@ -4,6 +4,7 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { langueVisiteur } from "@/lib/i18n/langue";
 import { VITRINE } from "@/lib/i18n/vitrine";
 import { DonneesStructurees } from "@/components/seo/DonneesStructurees";
+import { couvertureDe } from "@/lib/vitrine/couverture";
 import {
   PageVitrine,
   type DonneesVitrine,
@@ -222,15 +223,10 @@ export default async function VitrinePage({
 
   const photosEtablissement = photos.filter((photo) => !photo.espace_id);
 
-  // La couverture choisie par le restaurateur ; à défaut, la première
-  // photo de l'établissement — mieux vaut une image que pas d'image, et
-  // la page reste correcte tant qu'aucun choix n'a été fait.
-  const couverture =
-    photosEtablissement.find(
-      (photo) => photo.id === restaurant.photo_couverture_id,
-    ) ??
-    photosEtablissement[0] ??
-    null;
+  const { photo: couverture } = couvertureDe(
+    photos,
+    restaurant.photo_couverture_id,
+  );
 
   const galerie = (
     photosEtablissement.length > 0 ? photosEtablissement : photos
