@@ -22,6 +22,8 @@ export type ClesReservations = {
   titre(restaurant: string): string;
   chapo: string;
   liens: Record<"service" | "plan" | "experiences" | "configuration", string>;
+  /** La feuille de service du jour, à imprimer ou en PDF. */
+  feuilleDuJour: string;
 
   statuts: Record<
     "demande" | "confirmee" | "refusee" | "annulee" | "expiree",
@@ -165,6 +167,7 @@ const fr: ClesReservations = {
   titre: (r) => `Réservations — ${r}`,
   chapo:
     "Les demandes arrivent ici. Tant qu'elles ne sont pas tranchées, elles bloquent le créneau — jusqu'à l'expiration de leur option.",
+  feuilleDuJour: "Feuille du jour (PDF)",
   liens: {
     service: "Écran de service",
     plan: "Plan de salle",
@@ -311,6 +314,7 @@ const en: ClesReservations = {
   titre: (r) => `Bookings — ${r}`,
   chapo:
     "Requests land here. Until you decide on them, they hold the slot — up until their option expires.",
+  feuilleDuJour: "Today's sheet (PDF)",
   liens: {
     service: "Service screen",
     plan: "Floor plan",
@@ -363,7 +367,8 @@ const en: ClesReservations = {
     annulation: "Cancelling…",
   },
   aTraiter: "To handle",
-  compteurATraiter: (n) => (n === 1 ? "request to handle" : "requests to handle"),
+  compteurATraiter: (n) =>
+    n === 1 ? "request to handle" : "requests to handle",
   compteurGaranties: (n) =>
     n === 1 ? "deposit or hold to settle" : "deposits or holds to settle",
   compteurCouvertsDuJour: (n) =>
@@ -455,6 +460,7 @@ const zh: ClesReservations = {
   titre: (r) => `订位 — ${r}`,
   chapo:
     "订位申请都会到这里。在您做出决定之前，它们会一直占住该时段，直到保留期到期为止。",
+  feuilleDuJour: "今日服务单（PDF）",
   liens: {
     service: "现场服务屏",
     plan: "餐厅平面图",

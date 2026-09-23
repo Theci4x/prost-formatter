@@ -168,12 +168,10 @@ export function Statistiques({
   const nomEspace = new Map(espaces.map((e) => [e.id, e.nom]));
 
   return (
-    <section id="statistiques" className="flex flex-col gap-4">
+    <section id="statistiques" className="flex scroll-mt-8 flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-col gap-0.5">
-          <h2 className="font-serif text-2xl text-ink">
-            {r.statistiques}
-          </h2>
+          <h2 className="font-serif text-2xl text-ink">{r.statistiques}</h2>
           {/* Fenêtre passée, dite explicitement : sans cette ligne, un carnet
               bien rempli pour le mois prochain ferait croire à un bug. */}
           <p className="text-sm text-zinc-500">{r.fenetre(jours)}</p>

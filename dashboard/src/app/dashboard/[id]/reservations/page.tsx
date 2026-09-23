@@ -133,6 +133,9 @@ function delaiRestant(
   return r.optionJours(Math.round(heures / 24));
 }
 
+const BOUTON_SECONDAIRE =
+  "rounded-lg border border-zinc-200 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy";
+
 function Ligne({
   demande,
   restaurantId,
@@ -701,29 +704,38 @@ export default async function ReservationsPage({
       />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="max-w-4xl text-sm text-zinc-500">{r.chapo}</p>
+        <p className="max-w-4xl text-sm text-zinc-600">{r.chapo}</p>
         <div className="flex flex-wrap items-center gap-2">
           <Link
             href={`/dashboard/${id}/service`}
-            className="rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover"
+            className="rounded-lg bg-brand-navy px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover"
           >
             {r.liens.service}
           </Link>
+          {/* La feuille à imprimer, d'ici aussi : c'est souvent depuis le
+              carnet qu'on prépare la journée, avant de passer au service. */}
+          <Link
+            href={`/dashboard/${id}/service/imprimer?jour=${aujourdhui}&auto=1`}
+            prefetch={false}
+            className={BOUTON_SECONDAIRE}
+          >
+            {r.feuilleDuJour}
+          </Link>
           <Link
             href={`/dashboard/${id}/reservations/plan`}
-            className="rounded-md border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
+            className={BOUTON_SECONDAIRE}
           >
             {r.liens.plan}
           </Link>
           <Link
             href={`/dashboard/${id}/experiences`}
-            className="rounded-md border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
+            className={BOUTON_SECONDAIRE}
           >
             {r.liens.experiences}
           </Link>
           <Link
             href={`/dashboard/${id}/reservations/configuration`}
-            className="rounded-md border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
+            className={BOUTON_SECONDAIRE}
           >
             {r.liens.configuration}
           </Link>
@@ -733,22 +745,51 @@ export default async function ReservationsPage({
       {/* Ce qui attend, puis ce qui vient : les deux premiers se
           traitent, les deux autres se regardent. */}
       <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
-        <Compteur
-          valeur={aTraiter.length}
-          libelle={r.compteurATraiter(aTraiter.length)}
-          accent={aTraiter.length > 0}
-        />
-        <Compteur
-          valeur={garantiesARegler}
-          libelle={r.compteurGaranties(garantiesARegler)}
-          accent={garantiesARegler > 0}
-        />
-        <Compteur
-          valeur={couvertsDuJour}
-          libelle={r.compteurCouvertsDuJour(couvertsDuJour)}
-        />
-        <Compteur valeur={aVenir} libelle={r.compteurAVenir(aVenir)} />
+        <a href="#a-traiter" className="block">
+          <Compteur
+            valeur={aTraiter.length}
+            libelle={r.compteurATraiter(aTraiter.length)}
+            accent={aTraiter.length > 0}
+          />
+        </a>
+        <a href="#garanties" className="block">
+          <Compteur
+            valeur={garantiesARegler}
+            libelle={r.compteurGaranties(garantiesARegler)}
+            accent={garantiesARegler > 0}
+          />
+        </a>
+        <Link href={`/dashboard/${id}/service`} className="block">
+          <Compteur
+            valeur={couvertsDuJour}
+            libelle={r.compteurCouvertsDuJour(couvertsDuJour)}
+          />
+        </Link>
+        <a href="#calendrier" className="block">
+          <Compteur valeur={aVenir} libelle={r.compteurAVenir(aVenir)} />
+        </a>
       </div>
+
+      {/* Le sommaire : le carnet est long, et chaque section se rejoint
+          d'un clic plutôt qu'en faisant défiler les demandes. */}
+      <nav className="flex flex-wrap gap-2">
+        {[
+          { ancre: "a-traiter", titre: r.aTraiter },
+          ...(garanties.length > 0
+            ? [{ ancre: "garanties", titre: r.garanties }]
+            : []),
+          { ancre: "calendrier", titre: r.calendrier },
+          { ancre: "statistiques", titre: r.statistiques },
+        ].map((entree) => (
+          <a
+            key={entree.ancre}
+            href={`#${entree.ancre}`}
+            className="rounded-full border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:border-ink hover:text-ink"
+          >
+            {entree.titre}
+          </a>
+        ))}
+      </nav>
 
       <SaisieReservation
         restaurantId={id}
@@ -766,7 +807,7 @@ export default async function ReservationsPage({
           garanties.length > 0 ? "2xl:grid-cols-2" : ""
         }`}
       >
-        <section className="flex flex-col gap-4">
+        <section id="a-traiter" className="flex scroll-mt-8 flex-col gap-4">
           <h2 className="flex items-center font-serif text-2xl text-ink">
             {r.aTraiter}
             {aTraiter.length > 0 && (
@@ -813,7 +854,7 @@ export default async function ReservationsPage({
         </section>
 
         {garanties.length > 0 && (
-          <section className="flex flex-col gap-4">
+          <section id="garanties" className="flex scroll-mt-8 flex-col gap-4">
             <div className="flex flex-col gap-1">
               <h2 className="flex items-center font-serif text-2xl text-ink">
                 {r.garanties}
@@ -853,7 +894,10 @@ export default async function ReservationsPage({
         )}
       </div>
 
-      <section className="grid gap-8 lg:grid-cols-[360px_1fr] xl:grid-cols-[420px_1fr]">
+      <section
+        id="calendrier"
+        className="grid scroll-mt-8 gap-8 lg:grid-cols-[360px_1fr] xl:grid-cols-[420px_1fr]"
+      >
         <div className="flex flex-col gap-4">
           <h2 className="flex items-center font-serif text-2xl text-ink">
             {r.calendrier}
