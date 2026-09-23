@@ -197,6 +197,13 @@ export type ClesAccueilPublic = {
     alerte: {
       surtitre: string;
       aujourdhui: string;
+      /**
+       * La ligne orange de la carte : ce que le patron n'aurait pas vu
+       * sans Klarr. Un avis moyen tombé dans la nuit, resté sans réponse —
+       * le genre de chose qui arrive à une maison qui tourne, pas à une
+       * maison fermée.
+       */
+      signal: string;
     };
   };
   pied: {
@@ -642,6 +649,7 @@ const fr: ClesAccueilPublic = {
     alerte: {
       surtitre: "Votre tableau de bord · ce matin",
       aujourdhui: "Aujourd'hui",
+      signal: "Un avis 2 ★ posté cette nuit — toujours sans réponse",
     },
   },
   pied: {
@@ -1025,6 +1033,7 @@ const en: ClesAccueilPublic = {
     alerte: {
       surtitre: "Your dashboard · this morning",
       aujourdhui: "Today",
+      signal: "A 2★ review came in overnight — still unanswered",
     },
   },
   pied: {
@@ -1386,6 +1395,7 @@ const zh: ClesAccueilPublic = {
     alerte: {
       surtitre: "您的仪表盘 · 今晨",
       aujourdhui: "今天",
+      signal: "昨晚新增一条 2★ 评价——尚未回复",
     },
   },
   pied: {

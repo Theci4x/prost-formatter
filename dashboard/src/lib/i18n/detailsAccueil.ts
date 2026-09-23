@@ -111,7 +111,7 @@ const fr: DetailsAccueil = {
   photos: (n, c) => `${n} photo${s(n)}${c ? " · couverture choisie" : ""}`,
   avancement: (f, t) => `${f} sur ${t}`,
   premierReleve: "Premier relevé la nuit prochaine",
-  ficheFermee: "Fiche Google fermée — vous attendez des clients",
+  ficheFermee: "Google vous affiche « fermé » alors que des clients ont réservé",
   note: (note, avis, semaine) =>
     `${note} ★ · ${avis} avis${semaine ? ` · ${VARIATION.fr(semaine).replace(" avis", "")}` : ""}`,
   rienDeNouveau: "Rien de nouveau",
@@ -149,7 +149,7 @@ const en: DetailsAccueil = {
   photos: (n, c) => `${n} photo${s(n)}${c ? " · cover chosen" : ""}`,
   avancement: (f, t) => `${f} of ${t}`,
   premierReleve: "First reading tonight",
-  ficheFermee: "Google listing closed — you have guests coming",
+  ficheFermee: "Google shows you as “closed” while guests have booked",
   note: (note, avis, semaine) =>
     `${note} ★ · ${avis} review${s(avis)}${semaine ? ` · ${VARIATION.en(semaine).replace(/ reviews? /, " ")}` : ""}`,
   rienDeNouveau: "Nothing new",
@@ -187,7 +187,7 @@ const zh: DetailsAccueil = {
   photos: (n, c) => `${n} 张照片${c ? " · 已选封面" : ""}`,
   avancement: (f, t) => `${t} 项已完成 ${f} 项`,
   premierReleve: "今晚首次采集",
-  ficheFermee: "Google 资料显示已关闭——但您还有客人要来",
+  ficheFermee: "Google 显示您「已关闭」，但已有客人订位",
   note: (note, avis, semaine) =>
     // « 条评价 » est déjà dit juste avant : on le laisse tomber ici,
     // comme le français abrège « 1 retiré » et l'anglais « 1 removed ».

@@ -8,9 +8,11 @@ import { MAISON, MATIN } from "@/lib/demo/maison";
  * La carte du matin, avec ce qui cloche.
  *
  * Quatre chiffres qu'on lit en ouvrant le téléphone — et une ligne
- * orange qui dit ce que personne n'aurait vu : la fiche Google est encore
- * marquée fermée alors que cinquante-huit couverts arrivent ce soir. Les
- * libellés sont ceux du vrai tableau de bord, dans ses trois langues.
+ * orange qui dit ce que personne n'aurait vu : un avis à deux étoiles est
+ * tombé dans la nuit et attend une réponse. Les libellés des chiffres sont
+ * ceux du vrai tableau de bord, dans ses trois langues ; la ligne orange,
+ * elle, est écrite pour la démonstration — la vraie alerte « fiche fermée »
+ * ne parle à personne qui envisage de s'abonner.
  */
 export function MaquetteAlerte({
   t,
@@ -107,7 +109,7 @@ export function MaquetteAlerte({
           <span className="klarr-etape absolute inline-flex h-full w-full rounded-full bg-brand-orange/60" />
           <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-brand-orange" />
         </span>
-        <span className="font-medium">{d.ficheFermee}</span>
+        <span className="font-medium">{t.signal}</span>
       </div>
     </div>
   );
