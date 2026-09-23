@@ -36,6 +36,9 @@ export type ClesBons = {
   indisponibleTexte(maison: string): string;
   /** Le lien posé sur la page de réservation. */
   lienOffrir: string;
+  /** L'entrée du menu de la vitrine, et le « à partir de » des montants. */
+  navCadeau: string;
+  aPartirDe(somme: string): string;
   /** Ce qui précède « Klarr », en pied de page. */
   signature: string;
 
@@ -104,6 +107,8 @@ const fr: ClesBons = {
   mention: (maison) =>
     `Paiement sécurisé par Stripe, encaissé directement par ${maison}.`,
   lienOffrir: "Offrir un bon cadeau",
+  navCadeau: "Bon cadeau",
+  aPartirDe: (somme) => `À partir de ${somme}`,
   signature: "Bons cadeaux propulsés par",
   indisponibleTitre: "Bon cadeau indisponible",
   indisponibleTexte: (maison) =>
@@ -180,6 +185,8 @@ const en: ClesBons = {
   mention: (maison) =>
     `Secure payment by Stripe, received directly by ${maison}.`,
   lienOffrir: "Give a gift card",
+  navCadeau: "Gift card",
+  aPartirDe: (somme) => `From ${somme}`,
   signature: "Gift cards powered by",
   indisponibleTitre: "Gift card unavailable",
   indisponibleTexte: (maison) =>
@@ -253,6 +260,8 @@ const zh: ClesBons = {
   enCours: "请稍候……",
   mention: (maison) => `由 Stripe 安全支付，款项直接进入${maison}的账户。`,
   lienOffrir: "赠送礼品卡",
+  navCadeau: "礼品卡",
+  aPartirDe: (somme) => `${somme} 起`,
   signature: "礼品卡技术支持",
   indisponibleTitre: "暂无礼品卡",
   indisponibleTexte: (maison) =>

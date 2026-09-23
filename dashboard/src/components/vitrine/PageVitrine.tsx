@@ -7,6 +7,8 @@ import { QuestionsFrequentes } from "@/components/seo/QuestionsFrequentes";
 import { SignatureKlarr } from "@/components/brand/SignatureKlarr";
 import { ChoixLangueSite } from "@/components/landing/ChoixLangueSite";
 import { VITRINE } from "@/lib/i18n/vitrine";
+import { BONS } from "@/lib/i18n/bons";
+import { prixBon } from "@/lib/bons/regles";
 import { montantLisible } from "@/lib/i18n/nombres";
 import type { Langue } from "@/lib/i18n/langue";
 import { formatPrix } from "@/lib/menu/carte";
@@ -70,6 +72,11 @@ export type DonneesVitrine = {
   privatisables: Espace[];
   photosParEspace: Map<string, RestaurantPhoto[]>;
   questions: QuestionFrequente[];
+  /**
+   * Les bons cadeaux, quand la maison les vend vraiment (réglage activé,
+   * compte Stripe relié). Absent, la section et l'entrée du menu aussi.
+   */
+  cadeau?: { montants: number[]; validite: number } | null;
 };
 
 /** « Bistrot · Lyon 2e » : le genre, puis ce qui suit la dernière virgule. */
@@ -126,6 +133,7 @@ const CONTENEUR = "mx-auto w-full max-w-6xl px-6";
 export function PageVitrine({ d }: { d: DonneesVitrine }) {
   const { restaurant, langue, slug } = d;
   const v = VITRINE[langue];
+  const b = BONS[langue];
   const noteTexte = d.note
     ? v.noteSurGoogle(d.note.valeur.toFixed(1), d.note.avis)
     : null;
@@ -137,6 +145,7 @@ export function PageVitrine({ d }: { d: DonneesVitrine }) {
     d.privatisables.length > 0
       ? { href: "#privatiser", libelle: v.privatiser }
       : null,
+    d.cadeau ? { href: "#cadeau", libelle: b.navCadeau } : null,
   ].filter((a): a is { href: string; libelle: string } => a !== null);
 
   return (
@@ -403,6 +412,44 @@ export function PageVitrine({ d }: { d: DonneesVitrine }) {
                 );
               })}
             </ul>
+          </section>
+        )}
+
+        {/* Le bon cadeau : juste avant les infos pratiques, là où l'on
+            se décide à venir — ou à faire venir quelqu'un. */}
+        {d.cadeau && (
+          <section
+            id="cadeau"
+            className={`${CONTENEUR} scroll-mt-20 py-16 sm:py-24`}
+          >
+            <div className="relative flex flex-col gap-8 overflow-hidden rounded-3xl border border-line bg-paper p-8 sm:p-12 lg:flex-row lg:items-center lg:justify-between">
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute -right-20 -top-24 h-72 w-72 rounded-full bg-brand-orange/15 blur-3xl"
+              />
+              <div className="relative flex max-w-xl flex-col gap-4">
+                <Titre enfant={b.titre(restaurant.nom)} sur={b.surtitre} />
+                <p className="text-base leading-relaxed text-ink-soft">
+                  {b.chapo(d.cadeau.validite)}
+                </p>
+                <ul className="flex flex-wrap gap-2">
+                  {d.cadeau.montants.map((centimes) => (
+                    <li
+                      key={centimes}
+                      className="rounded-full border border-line bg-brand-cream px-4 py-1.5 text-sm font-semibold text-ink"
+                    >
+                      {prixBon(centimes, langue)}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <Link
+                href={`/cadeau/${slug}`}
+                className="relative w-fit shrink-0 rounded-full bg-ink px-7 py-3.5 text-base font-semibold text-white transition-colors hover:bg-brand-navy"
+              >
+                {b.lienOffrir}
+              </Link>
+            </div>
           </section>
         )}
 

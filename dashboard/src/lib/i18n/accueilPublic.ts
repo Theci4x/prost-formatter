@@ -114,6 +114,32 @@ export type ClesAccueilPublic = {
         aFaire: string;
       };
     };
+    cadeaux: {
+      titre: string;
+      texte: string;
+      points: string[];
+      maquette: {
+        surtitre: string;
+        bon: string;
+        valeur: string;
+        code: string;
+        pour: string;
+        de: string;
+        valable: string;
+        vendu: string;
+      };
+    };
+    lendemain: {
+      titre: string;
+      texte: string;
+      maquette: {
+        surtitre: string;
+        objet: string;
+        merci: string;
+        bouton: string;
+        prive: string;
+      };
+    };
     import: {
       titre: string;
       texte: string;
@@ -429,7 +455,7 @@ const fr: ClesAccueilPublic = {
     surtitre: "Nouveau sur Klarr",
     titre: "Ce qui vient d'arriver.",
     chapo:
-      "Vos fiches au-delà de Google, une réponse à chaque avis, un bilan chaque mois — et, si vous venez d'un autre outil, vos clients repris en quelques minutes.",
+      "Vos fiches au-delà de Google, des bons cadeaux vendus en ligne, plus d'avis et une réponse à chacun, un bilan chaque mois — et, si vous venez d'un autre outil, vos clients repris en quelques minutes.",
     presence: {
       titre: "Des informations justes, partout où l'on vous cherche",
       texte:
@@ -477,6 +503,39 @@ const fr: ClesAccueilPublic = {
         aFaire: "À faire ce mois-ci : 2 avis sans réponse",
       },
     },
+    cadeaux: {
+      titre: "Des bons cadeaux vendus en ligne, payés sur votre compte",
+      texte:
+        "Une page à votre nom où l'on offre un repas chez vous, en quelques clics. Le paiement arrive sur votre compte Stripe, sans commission, et le bénéficiaire reçoit son bon par e-mail.",
+      points: [
+        "Vos montants, votre durée de validité, un mot sur la page",
+        "Un code à taper en caisse, utilisable en une ou plusieurs fois",
+        "Des bons offerts pour un geste ou un concours, en un clic",
+      ],
+      maquette: {
+        surtitre: "Bon cadeau · vendu hier soir",
+        bon: "Bon cadeau",
+        valeur: "Valeur",
+        code: "Code",
+        pour: "Pour Julien",
+        de: "De la part de Claire",
+        valable: "Valable jusqu'au 23 septembre 2027",
+        vendu: "80 € encaissés sur votre compte Stripe",
+      },
+    },
+    lendemain: {
+      titre: "Un avis demandé le lendemain de la visite",
+      texte:
+        "Chaque client reçoit un merci et une invitation à laisser un avis sur Google, avec juste dessous un lien pour vous écrire directement. Le même message pour tous : Google interdit de n'inviter que les contents.",
+      maquette: {
+        surtitre: "E-mail · le lendemain, 11 h",
+        objet: "Merci pour votre visite",
+        merci:
+          "Merci d'être venus hier. Si vous avez une minute, un avis sur Google nous aide énormément.",
+        bouton: "Laisser un avis sur Google",
+        prive: "Quelque chose n'allait pas ? Dites-le-nous directement",
+      },
+    },
     import: {
       titre: "Vous venez de TheFork ou de Zenchef ?",
       texte:
@@ -504,6 +563,7 @@ const fr: ClesAccueilPublic = {
       "Les allergènes déclarés une fois, affichés sous chaque plat et tenus à jour tout seuls",
       "Les questions qu'on vous pose au téléphone, répondues une fois et reprises par Google et les IA",
       "Le bilan du mois dans votre boîte, le 1er au matin",
+      "Des bons cadeaux vendus en ligne, payés sur votre compte",
       "Vous restez autonome, sans dépendre de personne",
     ],
     non: [
@@ -514,6 +574,7 @@ const fr: ClesAccueilPublic = {
       "Un classeur allergènes à refaire à la main à chaque changement de carte",
       "Les mêmes questions, posées une par une au téléphone en plein service",
       "Aucune vue d'ensemble, à moins de tout rouvrir un par un",
+      "Des bons cadeaux papier, suivis dans un carnet à souches",
       "Une agence à payer, ou des heures perdues chaque semaine",
     ],
     comparatif: "Voir le comparatif avec TheFork, Zenchef et Guestonline",
@@ -622,6 +683,8 @@ const fr: ClesAccueilPublic = {
           "Photos de vos espaces, vues avant de réserver",
           "Votre fichier client, et des e-mails à lui envoyer",
           "Vos clients et vos réservations repris de TheFork ou Zenchef",
+          "Des bons cadeaux vendus en ligne, sans commission",
+          "Une demande d'avis envoyée le lendemain de la visite",
         ],
       },
     ],
@@ -701,7 +764,12 @@ const fr: ClesAccueilPublic = {
       {
         question: "Klarr répond-il aux avis ?",
         reponse:
-          "Klarr propose une réponse à chaque avis, rédigée dans la langue du client et signée au nom de l'établissement. Vous la relisez, la modifiez si besoin, puis la publiez sur la plateforme. Klarr garde la trace des avis déjà répondus, pour qu'aucun ne reste sans réponse.",
+          "Klarr propose une réponse à chaque avis, rédigée dans la langue du client et signée au nom de l'établissement. Vous la relisez, la modifiez si besoin, puis la publiez sur la plateforme. Klarr garde la trace des avis déjà répondus, pour qu'aucun ne reste sans réponse. Et pour en recevoir davantage, Klarr envoie à chaque client, le lendemain de sa visite, un e-mail de remerciement qui l'invite à laisser un avis sur Google, avec un lien pour écrire directement à la maison : le même message pour tous, comme Google l'exige.",
+      },
+      {
+        question: "Peut-on vendre des bons cadeaux avec Klarr ?",
+        reponse:
+          "Oui. Le restaurant dispose d'une page à son nom où l'on achète un bon cadeau en ligne : montants choisis par la maison ou montant libre, un mot pour le bénéficiaire, envoi par e-mail. Le paiement est encaissé directement sur le compte Stripe du restaurant, sans commission Klarr. Le bon porte un code que l'équipe saisit en caisse, et il s'utilise en une ou plusieurs fois jusqu'à sa date de validité.",
       },
       {
         question: "Klarr est-il sans engagement ?",
@@ -903,7 +971,7 @@ const en: ClesAccueilPublic = {
     surtitre: "New in Klarr",
     titre: "Just arrived.",
     chapo:
-      "Your listings beyond Google, a reply to every review, a report every month — and, if you're coming from another tool, your guests brought over in minutes.",
+      "Your listings beyond Google, gift cards sold online, more reviews and a reply to each one, a report every month — and, if you're coming from another tool, your guests brought over in minutes.",
     presence: {
       titre: "Your restaurant, correct wherever people look",
       texte:
@@ -951,6 +1019,39 @@ const en: ClesAccueilPublic = {
         aFaire: "To do this month: 2 reviews without a reply",
       },
     },
+    cadeaux: {
+      titre: "Gift cards sold online, paid into your account",
+      texte:
+        "A page in your name where people treat someone to a meal at your place in a few clicks. Payment goes to your Stripe account with no commission, and the recipient gets their card by email.",
+      points: [
+        "Your amounts, your validity period, a note on the page",
+        "A code to enter at the till, usable in one or several visits",
+        "Complimentary cards for a gesture or a contest, in one click",
+      ],
+      maquette: {
+        surtitre: "Gift card · sold last night",
+        bon: "Gift card",
+        valeur: "Value",
+        code: "Code",
+        pour: "For Julien",
+        de: "From Claire",
+        valable: "Valid until 23 September 2027",
+        vendu: "€80 paid into your Stripe account",
+      },
+    },
+    lendemain: {
+      titre: "A review requested the day after the visit",
+      texte:
+        "Every guest gets a thank-you and an invitation to leave a Google review, with a link just below to write to you directly. The same message for everyone: Google forbids inviting only happy guests.",
+      maquette: {
+        surtitre: "Email · next day, 11 am",
+        objet: "Thank you for your visit",
+        merci:
+          "Thank you for coming yesterday. If you have a minute, a Google review helps us enormously.",
+        bouton: "Leave a review on Google",
+        prive: "Something wasn't right? Tell us directly",
+      },
+    },
     import: {
       titre: "Coming from TheFork or Zenchef?",
       texte:
@@ -978,6 +1079,7 @@ const en: ClesAccueilPublic = {
       "Allergens declared once, shown under every dish and kept current on their own",
       "The questions you get by phone, answered once and picked up by Google and AI assistants",
       "The month's report in your inbox, on the morning of the 1st",
+      "Gift cards sold online, paid into your account",
       "You stay independent, with nobody to depend on",
     ],
     non: [
@@ -988,6 +1090,7 @@ const en: ClesAccueilPublic = {
       "An allergen binder to redo by hand every time the menu changes",
       "The same questions, asked one at a time by phone in the middle of service",
       "No overview, unless you reopen everything one by one",
+      "Paper gift vouchers, tracked in a stub book",
       "An agency to pay, or hours lost every week",
     ],
     comparatif: "See the comparison with TheFork, Zenchef and Guestonline",
@@ -1096,6 +1199,8 @@ const en: ClesAccueilPublic = {
           "Photos of your spaces, seen before booking",
           "Your customer list, and emails to send it",
           "Your guests and bookings brought over from TheFork or Zenchef",
+          "Gift cards sold online, with no commission",
+          "A review request sent the day after the visit",
         ],
       },
     ],
@@ -1173,7 +1278,12 @@ const en: ClesAccueilPublic = {
       {
         question: "Does Klarr reply to reviews?",
         reponse:
-          "Klarr suggests a reply to every review, written in the guest's language and signed in your restaurant's name. You read it, edit it if needed, then post it on the platform. Klarr keeps track of which reviews already have a reply, so none is left unanswered.",
+          "Klarr suggests a reply to every review, written in the guest's language and signed in your restaurant's name. You read it, edit it if needed, then post it on the platform. Klarr keeps track of which reviews already have a reply, so none is left unanswered. And to get more of them, Klarr emails every guest the day after their visit with a thank-you and an invitation to leave a Google review, plus a link to write to the restaurant directly: the same message for everyone, as Google requires.",
+      },
+      {
+        question: "Can you sell gift cards with Klarr?",
+        reponse:
+          "Yes. The restaurant gets a page in its name where people buy a gift card online: amounts set by the restaurant or a custom amount, a note for the recipient, delivery by email. Payment goes straight to the restaurant's Stripe account, with no Klarr commission. The card carries a code the team enters at the till, and it can be used in one or several visits until it expires.",
       },
       {
         question: "Is Klarr contract-free?",
@@ -1362,7 +1472,7 @@ const zh: ClesAccueilPublic = {
     surtitre: "Klarr 新功能",
     titre: "刚刚上线。",
     chapo:
-      "Google 之外的商家资料、每条评价都有回复、每月一份总结——如果您从别的工具转过来，几分钟就能把顾客迁过来。",
+      "Google 之外的商家资料、在线销售的礼品卡、更多评价且每条都有回复、每月一份总结——如果您从别的工具转过来，几分钟就能把顾客迁过来。",
     presence: {
       titre: "顾客在哪儿找您，信息就在哪儿准确",
       texte:
@@ -1410,6 +1520,39 @@ const zh: ClesAccueilPublic = {
         aFaire: "本月待办：2 条评价尚未回复",
       },
     },
+    cadeaux: {
+      titre: "在线销售礼品卡，款项直接进入您的账户",
+      texte:
+        "一个以您名义的页面，顾客点几下就能请人来您店里吃饭。款项进入您的 Stripe 账户，没有佣金，收礼人通过邮件收到礼品卡。",
+      points: [
+        "金额、有效期、页面上的一句话，都由您决定",
+        "结账时输入兑换码，可一次或分多次使用",
+        "一键赠送礼品卡，用于答谢或抽奖活动",
+      ],
+      maquette: {
+        surtitre: "礼品卡 · 昨晚售出",
+        bon: "礼品卡",
+        valeur: "面值",
+        code: "兑换码",
+        pour: "送给 Julien",
+        de: "来自 Claire",
+        valable: "有效期至 2027 年 9 月 23 日",
+        vendu: "€80 已进入您的 Stripe 账户",
+      },
+    },
+    lendemain: {
+      titre: "用餐次日，邀请顾客留下评价",
+      texte:
+        "每位顾客都会收到一封感谢邮件，邀请其在 Google 上留下评价，下方附有直接联系您的链接。所有人收到同样的邮件：Google 禁止只邀请满意的顾客。",
+      maquette: {
+        surtitre: "邮件 · 次日 11 点",
+        objet: "感谢您的光临",
+        merci:
+          "感谢您昨天光临。如果您有一分钟，在 Google 上留下评价会对我们帮助很大。",
+        bouton: "在 Google 上留下评价",
+        prive: "有哪里做得不够好？直接告诉我们",
+      },
+    },
     import: {
       titre: "您在用 TheFork 或 Zenchef？",
       texte:
@@ -1437,6 +1580,7 @@ const zh: ClesAccueilPublic = {
       "过敏原只需申报一次，自动显示在每道菜下方，并始终保持最新",
       "客人常问的问题，回答一次，之后由 Google 和 AI 直接引用",
       "每月 1 日早上，月度总结直接发到邮箱",
+      "在线销售礼品卡，款项直接进入您的账户",
       "您保持自主，不依赖任何人",
     ],
     non: [
@@ -1447,6 +1591,7 @@ const zh: ClesAccueilPublic = {
       "换一次菜单，过敏原清单就得手工重做一遍",
       "同样的问题，在出餐高峰一通一通打电话来问",
       "没有全局概览，除非把每个工具逐一打开",
+      "纸质礼品券，靠存根本手工记账",
       "要么花钱请代运营，要么每周搭进大量时间",
     ],
     comparatif: "查看与 TheFork、Zenchef、Guestonline 的对比",
@@ -1548,6 +1693,8 @@ const zh: ClesAccueilPublic = {
           "空间照片，订位前就能看到",
           "顾客档案，以及发给他们的邮件",
           "从 TheFork 或 Zenchef 迁入顾客和预订",
+          "在线销售礼品卡，零佣金",
+          "用餐次日自动发送评价邀请",
         ],
       },
     ],
@@ -1623,7 +1770,12 @@ const zh: ClesAccueilPublic = {
       {
         question: "Klarr 会回复评价吗？",
         reponse:
-          "Klarr 为每条评价拟好回复，使用顾客的语言，并以餐厅的名义署名。您读一遍、按需修改，再发布到对应平台。Klarr 会记录哪些评价已回复，确保没有一条被遗漏。",
+          "Klarr 为每条评价拟好回复，使用顾客的语言，并以餐厅的名义署名。您读一遍、按需修改，再发布到对应平台。Klarr 会记录哪些评价已回复，确保没有一条被遗漏。为了获得更多评价，Klarr 会在顾客用餐次日发送感谢邮件，邀请其在 Google 上留下评价，并附上直接联系餐厅的链接：按 Google 的要求，所有人收到同样的邮件。",
+      },
+      {
+        question: "可以用 Klarr 销售礼品卡吗？",
+        reponse:
+          "可以。餐厅拥有一个以自己名义的页面，顾客可在线购买礼品卡：金额由餐厅设定，也可自定义，可给收礼人留言，并通过邮件发送。款项直接进入餐厅的 Stripe 账户，Klarr 不收取佣金。礼品卡带有兑换码，结账时由店员输入，在有效期内可一次或分多次使用。",
       },
       {
         question: "Klarr 需要签约吗？",

@@ -21,6 +21,7 @@ import { carteOrganisee } from "@/lib/menu/carte";
 import { plagesHoraires } from "@/lib/site/horaires";
 import { siteUrl } from "@/lib/site-url";
 import { chargerAcces } from "@/lib/abonnement/acces";
+import { chargerMaisonCadeau } from "@/lib/bons/maison";
 import type { RestaurantPhoto } from "@/types/photo";
 import type { Espace, Service } from "@/types/reservation";
 import type { Horaires } from "@/types/restaurant";
@@ -175,6 +176,7 @@ export default async function VitrinePage({
     reseaux,
     instagram,
     faqResult,
+    cadeau,
   ] = await Promise.all([
     supabase
       .from("restaurant_photos")
@@ -209,6 +211,7 @@ export default async function VitrinePage({
       .eq("restaurant_id", restaurant.id)
       .order("ordre")
       .order("created_at"),
+    chargerMaisonCadeau(slug),
   ]);
 
   const photos = (photosResult.data ?? []) as RestaurantPhoto[];
@@ -284,6 +287,9 @@ export default async function VitrinePage({
     privatisables,
     photosParEspace,
     questions,
+    cadeau: cadeau?.ouvert
+      ? { montants: cadeau.montants, validite: cadeau.validite }
+      : null,
   };
 
   return (

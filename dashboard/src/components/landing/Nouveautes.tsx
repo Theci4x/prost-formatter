@@ -14,11 +14,11 @@ import {
 /**
  * « Nouveau sur Klarr ».
  *
- * Quatre choses arrivées d'un coup, montrées comme le reste de la page :
- * chacune avec son écran, sur la maison fictive. La présence en ligne
- * prend toute la largeur — c'est celle qui répond à « et ailleurs que
- * sur Google ? », la question que pose tout restaurateur qui compare
- * avec les agences. Les trois autres tiennent sur une rangée.
+ * Ce qui est arrivé ces dernières semaines, montré comme le reste de la
+ * page : chaque nouveauté avec son écran, sur la maison fictive. Deux
+ * prennent toute la largeur — la présence en ligne, qui répond à « et
+ * ailleurs que sur Google ? », et les bons cadeaux, qui rapportent de
+ * l'argent dès les fêtes. Les autres vont deux par deux.
  *
  * Les écrans ne promettent rien de plus que le produit : pas de bouton
  * « synchroniser » sur la présence, une réponse « proposée » et un
@@ -30,6 +30,9 @@ const LOCALE: Record<Langue, string> = {
   en: "en-GB",
   zh: "zh-CN",
 };
+
+/** Le code du bon d'exemple : même alphabet que les vrais, sans 0, O, 1, I, L. */
+const CODE_BON = "K7PM-3QWX";
 
 const CADRE =
   "flex flex-col overflow-hidden rounded-2xl border border-line bg-paper shadow-[0_30px_70px_-40px_oklch(20%_0.02_60/40%)]";
@@ -322,6 +325,146 @@ function MaquetteImport({
   );
 }
 
+function MaquetteCadeau({
+  t,
+  exemple,
+  langue,
+}: {
+  t: ClesAccueilPublic["nouveautes"]["cadeaux"]["maquette"];
+  exemple: string;
+  langue: Langue;
+}) {
+  const valeur = new Intl.NumberFormat(LOCALE[langue], {
+    style: "currency",
+    currency: "EUR",
+    maximumFractionDigits: 0,
+  }).format(80);
+  return (
+    <div aria-label={`${exemple} — ${t.surtitre}`} className={CADRE}>
+      <EnTete surtitre={t.surtitre} exemple={exemple} />
+      <div className="relative m-5 flex flex-col gap-5 overflow-hidden rounded-2xl border border-line bg-[var(--bg-alt)] p-6">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-brand-orange/20 blur-2xl"
+        />
+        <div className="relative flex flex-col gap-0.5">
+          <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-brand-orange-dark">
+            {t.bon}
+          </span>
+          <span className="font-serif text-3xl leading-tight text-ink">
+            {MAISON.nom}
+          </span>
+        </div>
+        <div className="relative flex flex-wrap items-end justify-between gap-3 border-y border-dashed border-line py-4">
+          <span className="flex flex-col gap-1">
+            <span className="text-[11px] uppercase tracking-[0.12em] text-ink-soft">
+              {t.valeur}
+            </span>
+            <span className="font-serif text-4xl leading-none text-ink">
+              {valeur}
+            </span>
+          </span>
+          <span className="flex flex-col items-end gap-1">
+            <span className="text-[11px] uppercase tracking-[0.12em] text-ink-soft">
+              {t.code}
+            </span>
+            <span className="font-mono text-lg font-bold tracking-[0.16em] text-brand-navy">
+              {CODE_BON}
+            </span>
+          </span>
+        </div>
+        <div className="relative flex flex-col gap-1 text-sm">
+          <span className="font-semibold text-ink">{t.pour}</span>
+          <span className="text-ink-soft">{t.de}</span>
+          <span className="text-xs text-ink-soft">{t.valable}</span>
+        </div>
+      </div>
+      <Signal>{t.vendu}</Signal>
+    </div>
+  );
+}
+
+function MaquetteLendemain({
+  t,
+  exemple,
+}: {
+  t: ClesAccueilPublic["nouveautes"]["lendemain"]["maquette"];
+  exemple: string;
+}) {
+  return (
+    <div aria-label={`${exemple} — ${t.surtitre}`} className={CADRE}>
+      <EnTete surtitre={t.surtitre} exemple={exemple} />
+      <div className="flex flex-col gap-3 px-5 pb-5 pt-4">
+        <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-brand-navy">
+          {MAISON.nom}
+        </span>
+        <span className="font-serif text-2xl leading-tight text-ink">
+          {t.objet}
+        </span>
+        <p className="m-0 text-[13.5px] leading-relaxed text-ink">{t.merci}</p>
+        {/* Dessinés, pas cliquables : c'est un e-mail qu'on montre. */}
+        <span
+          aria-hidden="true"
+          className="w-fit rounded-lg bg-brand-navy px-4 py-2.5 text-[13px] font-semibold text-white"
+        >
+          {t.bouton}
+        </span>
+        <span className="text-[13px] text-ink underline underline-offset-2">
+          {t.prive}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/** Une nouveauté en pleine largeur : le texte d'un côté, l'écran de l'autre. */
+function GrandeCarte({
+  titre,
+  texte,
+  points,
+  ecran,
+  inverse = false,
+}: {
+  titre: string;
+  texte: string;
+  points: string[];
+  ecran: React.ReactNode;
+  inverse?: boolean;
+}) {
+  return (
+    <Reveal>
+      <div className="grid items-center gap-8 rounded-3xl border border-line bg-[var(--bg-alt)] p-5 sm:p-10 lg:grid-cols-12 lg:gap-14 lg:p-12">
+        <div
+          className={`flex flex-col gap-5 lg:col-span-5 ${
+            inverse ? "lg:order-2" : ""
+          }`}
+        >
+          <h3 className="m-0 text-2xl font-bold leading-tight sm:text-[1.7rem]">
+            {titre}
+          </h3>
+          <p className="m-0 text-[15px] leading-[1.7] text-ink-soft sm:text-base">
+            {texte}
+          </p>
+          <ul className="m-0 flex list-none flex-col gap-3 p-0">
+            {points.map((point) => (
+              <li
+                key={point}
+                className="flex gap-2.5 text-[15px] leading-snug text-ink"
+              >
+                <Coche />
+                {point}
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className={`min-w-0 lg:col-span-7 ${inverse ? "lg:order-1" : ""}`}>
+          {ecran}
+        </div>
+      </div>
+    </Reveal>
+  );
+}
+
 export function Nouveautes({
   t,
   exemple,
@@ -336,6 +479,11 @@ export function Nouveautes({
       titre: t.avis.titre,
       texte: t.avis.texte,
       ecran: <MaquetteAvis t={t.avis.maquette} exemple={exemple} />,
+    },
+    {
+      titre: t.lendemain.titre,
+      texte: t.lendemain.texte,
+      ecran: <MaquetteLendemain t={t.lendemain.maquette} exemple={exemple} />,
     },
     {
       titre: t.bilan.titre,
@@ -376,34 +524,30 @@ export function Nouveautes({
           </div>
         </Reveal>
 
-        <Reveal>
-          <div className="grid items-center gap-8 rounded-3xl border border-line bg-[var(--bg-alt)] p-5 sm:p-10 lg:grid-cols-12 lg:gap-14 lg:p-12">
-            <div className="flex flex-col gap-5 lg:col-span-5">
-              <h3 className="m-0 text-2xl font-bold leading-tight sm:text-[1.7rem]">
-                {t.presence.titre}
-              </h3>
-              <p className="m-0 text-[15px] leading-[1.7] text-ink-soft sm:text-base">
-                {t.presence.texte}
-              </p>
-              <ul className="m-0 flex list-none flex-col gap-3 p-0">
-                {t.presence.points.map((point) => (
-                  <li
-                    key={point}
-                    className="flex gap-2.5 text-[15px] leading-snug text-ink"
-                  >
-                    <Coche />
-                    {point}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="min-w-0 lg:col-span-7">
-              <MaquettePresence t={t.presence.maquette} exemple={exemple} />
-            </div>
-          </div>
-        </Reveal>
+        <GrandeCarte
+          titre={t.presence.titre}
+          texte={t.presence.texte}
+          points={t.presence.points}
+          ecran={<MaquettePresence t={t.presence.maquette} exemple={exemple} />}
+        />
 
-        <div className="grid gap-6 lg:grid-cols-3">
+        <GrandeCarte
+          inverse
+          titre={t.cadeaux.titre}
+          texte={t.cadeaux.texte}
+          points={t.cadeaux.points}
+          ecran={
+            <MaquetteCadeau
+              t={t.cadeaux.maquette}
+              exemple={exemple}
+              langue={langue}
+            />
+          }
+        />
+
+        {/* Deux par rangée : quatre cartes sur trois colonnes laissaient
+            la dernière seule sur sa ligne. */}
+        <div className="grid gap-6 md:grid-cols-2">
           {cartes.map((carte) => (
             <Reveal key={carte.titre}>
               <div className="flex h-full flex-col gap-6 rounded-3xl border border-line bg-[var(--bg-alt)] p-5 sm:p-6">
