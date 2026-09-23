@@ -33,7 +33,7 @@ export function LegendePhoto({
   }
 
   return (
-    <form action={envoyer} className="flex w-full min-w-0 flex-col gap-1">
+    <form action={envoyer} className="flex w-full min-w-0 items-center gap-2">
       <input type="hidden" name="id" value={photoId} />
       <input type="hidden" name="restaurant_id" value={restaurantId} />
       <label className="sr-only" htmlFor={`legende-${photoId}`}>
@@ -46,14 +46,18 @@ export function LegendePhoto({
         placeholder={placeholder}
         maxLength={80}
         onChange={() => setEnregistre(false)}
-        className="w-full rounded-md border border-zinc-300 px-2 py-1 text-xs outline-none focus:border-brand-navy"
+        className="min-w-0 flex-1 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm outline-none transition-colors focus:border-brand-navy focus:bg-white"
       />
       <button
         type="submit"
         disabled={enCours}
-        className="text-xs font-medium text-zinc-500 hover:text-brand-navy disabled:opacity-50"
+        className={`shrink-0 rounded-lg border px-3 py-2 text-xs font-semibold transition-colors disabled:opacity-50 ${
+          enregistre
+            ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+            : "border-zinc-200 text-zinc-600 hover:border-brand-navy hover:text-brand-navy"
+        }`}
       >
-        {enCours ? "…" : enregistre ? "Enregistré" : "Enregistrer la légende"}
+        {enCours ? "…" : enregistre ? "Enregistré" : "OK"}
       </button>
     </form>
   );

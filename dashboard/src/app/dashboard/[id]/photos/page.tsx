@@ -9,6 +9,7 @@ import type { Restaurant } from "@/types/restaurant";
 import type { RestaurantPhoto } from "@/types/photo";
 import { exiger } from "@/lib/equipe/roles";
 import { exigerModule } from "@/lib/abonnement/acces";
+import { couvertureDe } from "@/lib/vitrine/couverture";
 
 export default async function PhotosPage({
   params,
@@ -32,11 +33,22 @@ export default async function PhotosPage({
     notFound();
   }
 
-  const { data: photosData } = await supabase
-    .from("restaurant_photos")
-    .select("*")
-    .eq("restaurant_id", id)
-    .order("created_at", { ascending: false });
+  const [{ data: photosData }, { data: espacesData }] = await Promise.all([
+    supabase
+      .from("restaurant_photos")
+      .select("*")
+      .eq("restaurant_id", id)
+      .order("created_at", { ascending: false }),
+    // Pour dire de quelle salle est une photo : « La cave » sur la
+    // vignette vaut mieux qu'une photo anonyme parmi d'autres.
+    supabase.from("restaurant_espaces").select("id, nom").eq("restaurant_id", id),
+  ]);
+  const nomEspace = new Map(
+    ((espacesData ?? []) as { id: string; nom: string }[]).map((e) => [
+      e.id,
+      e.nom,
+    ]),
+  );
 
   const photos = (photosData ?? []) as RestaurantPhoto[];
   // Colonne récente : lue avec un défaut, pour qu'un déploiement en
@@ -45,6 +57,9 @@ export default async function PhotosPage({
     (restaurant as Restaurant & { photo_couverture_id?: string | null })
       .photo_couverture_id ?? null;
 
+  const couverture = couvertureDe(photos, couvertureId);
+  const sansLegende = photos.filter((p) => !p.legende?.trim()).length;
+
   return (
     <div className="flex flex-1 flex-col gap-6 px-6 py-8">
       <PageHeader
@@ -52,83 +67,206 @@ export default async function PhotosPage({
         title={`Photos — ${restaurant.nom}`}
       />
 
-      <AjoutPhoto restaurantId={id} />
+      <div className="grid grid-cols-3 gap-3 sm:gap-4">
+        <Compteur valeur={photos.length} libelle="photos" />
+        <Compteur
+          valeur={photos.length - sansLegende}
+          libelle="avec légende"
+        />
+        <Compteur
+          valeur={sansLegende}
+          libelle="sans légende"
+          accent={sansLegende > 0}
+        />
+      </div>
 
-      <p className="max-w-4xl text-sm text-zinc-500">
-        Une de ces photos ouvre ton site vitrine, en grand. C&apos;est elle
-        qu&apos;on voit avant de lire quoi que ce soit : choisis la salle pleine
-        plutôt que le plat isolé.
-      </p>
-
-      {photos.length === 0 ? (
-        <p className="text-sm text-zinc-500">Aucune photo pour le moment.</p>
-      ) : (
-        <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
-          {photos.map((photo) => (
-            <li key={photo.id} className="flex flex-col gap-2">
-              <div className="group relative aspect-square overflow-hidden rounded-xl border border-zinc-200/70 shadow-sm">
-                <Image
-                  src={photo.url}
-                  alt=""
-                  fill
-                  sizes="(max-width: 640px) 50vw, 240px"
-                  className="object-cover"
-                />
-                <form
-                  action={removePhoto}
-                  className="absolute right-2 top-2 opacity-0 transition-opacity group-hover:opacity-100"
-                >
-                  <input type="hidden" name="id" value={photo.id} />
-                  <input type="hidden" name="restaurant_id" value={id} />
-                  <input
-                    type="hidden"
-                    name="storage_path"
-                    value={photo.storage_path}
-                  />
-                  <button
-                    type="submit"
-                    aria-label="Supprimer la photo"
-                    className="rounded-full bg-black/60 px-2 py-1 text-xs font-medium text-white hover:bg-black/80"
-                  >
-                    Supprimer
-                  </button>
-                </form>
-
-                {/* La couverture porte son insigne en permanence, pas au
-                    survol : sur un écran tactile il n'y a pas de survol,
-                    et c'est l'information qu'on vient chercher. */}
-                {photo.id === couvertureId ? (
-                  <span className="absolute bottom-2 left-2 rounded-full bg-brand-navy px-2.5 py-1 text-xs font-medium text-white">
-                    Couverture
-                  </span>
-                ) : (
-                  // La photo d'une salle aussi : celle du speakeasy peut être
-                  // la meilleure de toutes, et c'est le restaurateur qui sait.
-                  <form
-                    action={definirCouverture}
-                    className="absolute bottom-2 left-2 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100"
-                  >
-                    <input type="hidden" name="restaurant_id" value={id} />
-                    <input type="hidden" name="photo_id" value={photo.id} />
-                    <button
-                      type="submit"
-                      className="rounded-full bg-white/90 px-2.5 py-1 text-xs font-medium text-zinc-800 hover:bg-white"
-                    >
-                      Mettre en couverture
-                    </button>
-                  </form>
-                )}
-              </div>
-              <LegendePhoto
-                photoId={photo.id}
-                restaurantId={id}
-                legende={photo.legende ?? null}
-                placeholder="La terrasse, l'été"
+      {/* La couverture en tête, comme le site la montre : c'est la
+          décision de cet écran qui compte le plus. */}
+      <section className="grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+            <h2 className="font-serif text-2xl text-ink">
+              Photo de couverture
+            </h2>
+            <p className="text-xs text-zinc-500">
+              {couverture.photo
+                ? couverture.choisie
+                  ? "Choisie par vous."
+                  : "La première de vos photos, faute de choix."
+                : "Aucune pour l'instant."}
+            </p>
+          </div>
+          {couverture.photo ? (
+            <div className="relative aspect-[21/9] overflow-hidden rounded-2xl border border-zinc-200/70 shadow-sm">
+              <Image
+                src={couverture.photo.url}
+                alt={couverture.photo.legende ?? ""}
+                fill
+                sizes="(max-width: 1280px) 100vw, 60vw"
+                className="object-cover"
               />
-            </li>
-          ))}
-        </ul>
-      )}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-transparent" />
+              <span className="absolute bottom-5 left-6 font-serif text-4xl text-white sm:text-5xl">
+                {restaurant.nom}
+              </span>
+            </div>
+          ) : (
+            <div className="flex aspect-[21/9] items-center justify-center rounded-2xl border border-dashed border-zinc-300 bg-white font-serif text-3xl text-zinc-300">
+              {restaurant.nom}
+            </div>
+          )}
+          <p className="text-sm text-zinc-500">
+            Elle ouvre votre site, en plein écran, avant qu&apos;on lise quoi
+            que ce soit : choisissez la salle pleine ou la façade plutôt que
+            le plat isolé. Pour en changer, « Mettre en couverture » sous
+            n&apos;importe quelle photo.
+          </p>
+        </div>
+
+        <div className="flex flex-col gap-3">
+          <h2 className="font-serif text-2xl text-ink">Ajouter une photo</h2>
+          <AjoutPhoto restaurantId={id} />
+        </div>
+      </section>
+
+      <section className="flex flex-col gap-3">
+        <h2 className="font-serif text-2xl text-ink">Toutes vos photos</h2>
+        {photos.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-zinc-300 bg-white px-6 py-12 text-center text-sm text-zinc-500">
+            Aucune photo pour le moment. La première que vous ajoutez ouvrira
+            votre site.
+          </div>
+        ) : (
+          <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+            {photos.map((photo) => {
+              const estCouverture = photo.id === couverture.photo?.id;
+              const salle = photo.espace_id
+                ? nomEspace.get(photo.espace_id)
+                : null;
+              return (
+                <li
+                  key={photo.id}
+                  className={`flex flex-col overflow-hidden rounded-2xl border bg-white shadow-sm ${
+                    estCouverture
+                      ? "border-brand-orange ring-2 ring-brand-orange/30"
+                      : "border-zinc-200/70"
+                  }`}
+                >
+                  <div className="relative aspect-[4/3] bg-zinc-100">
+                    <Image
+                      src={photo.url}
+                      alt={photo.legende ?? ""}
+                      fill
+                      sizes="(max-width: 640px) 100vw, (max-width: 1280px) 33vw, 20vw"
+                      className="object-cover"
+                    />
+                    <span className="absolute left-3 top-3 flex flex-wrap gap-1.5">
+                      {/* La couverture porte son insigne en permanence,
+                          pas au survol : sur un écran tactile il n'y a pas
+                          de survol, et c'est l'information qu'on vient
+                          chercher. */}
+                      {estCouverture && (
+                        <span className="rounded-full bg-brand-orange px-2.5 py-1 text-xs font-semibold text-white shadow-sm">
+                          Couverture
+                        </span>
+                      )}
+                      {salle && (
+                        <span className="rounded-full bg-black/55 px-2.5 py-1 text-xs font-medium text-white backdrop-blur">
+                          {salle}
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                  <div className="flex flex-1 flex-col gap-3 p-4">
+                    <LegendePhoto
+                      photoId={photo.id}
+                      restaurantId={id}
+                      legende={photo.legende ?? null}
+                      placeholder="Ajouter une légende…"
+                    />
+                    {/* Les actions visibles sans survol : sur un
+                        téléphone, un bouton qui n'apparaît qu'au survol
+                        n'existe pas. */}
+                    <div className="mt-auto flex items-center justify-between gap-2">
+                      {estCouverture && couverture.choisie ? (
+                        <span className="text-xs text-zinc-400">
+                          Ouvre votre site
+                        </span>
+                      ) : (
+                        <form action={definirCouverture}>
+                          <input
+                            type="hidden"
+                            name="restaurant_id"
+                            value={id}
+                          />
+                          <input
+                            type="hidden"
+                            name="photo_id"
+                            value={photo.id}
+                          />
+                          <button
+                            type="submit"
+                            className="text-xs font-semibold text-brand-orange-dark hover:underline"
+                          >
+                            Mettre en couverture
+                          </button>
+                        </form>
+                      )}
+                      <form action={removePhoto}>
+                        <input type="hidden" name="id" value={photo.id} />
+                        <input
+                          type="hidden"
+                          name="restaurant_id"
+                          value={id}
+                        />
+                        <input
+                          type="hidden"
+                          name="storage_path"
+                          value={photo.storage_path}
+                        />
+                        <button
+                          type="submit"
+                          aria-label="Supprimer la photo"
+                          className="rounded-lg px-2 py-1 text-xs font-medium text-zinc-400 transition-colors hover:bg-red-50 hover:text-red-600"
+                        >
+                          Supprimer
+                        </button>
+                      </form>
+                    </div>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
+    </div>
+  );
+}
+
+function Compteur({
+  valeur,
+  libelle,
+  accent = false,
+}: {
+  valeur: number;
+  libelle: string;
+  accent?: boolean;
+}) {
+  return (
+    <div
+      className={`flex flex-col gap-1 rounded-2xl border px-4 py-4 sm:px-6 sm:py-5 ${
+        accent
+          ? "border-brand-orange/60 bg-brand-orange-soft"
+          : "border-zinc-200/70 bg-white shadow-sm"
+      }`}
+    >
+      <span className="font-serif text-3xl leading-none text-ink sm:text-5xl">
+        {valeur}
+      </span>
+      <span className="text-xs leading-snug text-zinc-600 sm:text-sm">
+        {libelle}
+      </span>
     </div>
   );
 }
