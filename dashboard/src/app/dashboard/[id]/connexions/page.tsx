@@ -13,6 +13,8 @@ type Platform = {
   name: string;
   // Ce que la connexion débloque, en langage de restaurateur.
   purpose: string;
+  /** Le détail, en deux ou trois mots par ligne. */
+  debloque: string[];
   icon: React.ReactNode;
   color: string;
   tint: string;
@@ -38,36 +40,64 @@ function StatusDot({ connected }: { connected: boolean }) {
 
 function PlatformCard({ platform }: { platform: Platform }) {
   return (
-    <li className="flex flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm">
-      <div className="flex items-start gap-3">
+    <li
+      className={`flex flex-col gap-5 rounded-2xl border bg-white p-6 shadow-sm ${
+        platform.connected ? "border-emerald-200" : "border-zinc-200/70"
+      }`}
+    >
+      <div className="flex items-start justify-between gap-3">
         <div
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
+          className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl [&_svg]:h-7 [&_svg]:w-7"
           style={{ color: platform.color, backgroundColor: platform.tint }}
         >
           {platform.icon}
         </div>
-        <div className="flex min-w-0 flex-col gap-0.5">
-          <span className="font-medium text-zinc-900">{platform.name}</span>
-          <span className="text-sm text-zinc-500">{platform.purpose}</span>
-        </div>
+        <span
+          className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${
+            platform.connected
+              ? "bg-emerald-50 text-emerald-700"
+              : "bg-zinc-100 text-zinc-500"
+          }`}
+        >
+          <StatusDot connected={platform.connected} />
+          {platform.connected ? "Connecté" : "Non connecté"}
+        </span>
       </div>
 
-      <div className="flex items-center gap-2 text-sm">
-        <StatusDot connected={platform.connected} />
-        {platform.connected ? (
-          <span className="min-w-0 truncate text-zinc-700">
-            {platform.detail ?? "Connecté"}
-          </span>
-        ) : (
-          <span className="text-zinc-400">Non connecté</span>
-        )}
+      <div className="flex flex-col gap-1">
+        <span className="font-serif text-2xl text-ink">{platform.name}</span>
+        <span className="text-sm text-zinc-500">{platform.purpose}</span>
       </div>
 
-      <div className="mt-auto">
+      {/* Le compte réellement relié : c'est ce qui permet de voir qu'on a
+          connecté la page d'un autre établissement. */}
+      {platform.connected && (
+        <span className="truncate rounded-lg bg-zinc-50 px-3 py-2 text-sm text-ink">
+          {platform.detail ?? "Connecté"}
+        </span>
+      )}
+
+      <ul className="flex flex-col gap-1.5 text-sm text-zinc-600">
+        {platform.debloque.map((ligne) => (
+          <li key={ligne} className="flex items-start gap-2">
+            <span
+              aria-hidden="true"
+              className={`mt-0.5 font-bold ${
+                platform.connected ? "text-emerald-600" : "text-zinc-300"
+              }`}
+            >
+              ✓
+            </span>
+            {ligne}
+          </li>
+        ))}
+      </ul>
+
+      <div className="mt-auto pt-1">
         {platform.connected ? (
           <Link
             href={platform.managePath}
-            className="block w-full rounded-md border border-zinc-200 px-4 py-2 text-center text-sm font-medium text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
+            className="block w-full rounded-lg border border-zinc-200 px-4 py-2.5 text-center text-sm font-semibold text-ink transition-colors hover:border-brand-navy hover:text-brand-navy"
           >
             Gérer
           </Link>
@@ -76,7 +106,7 @@ function PlatformCard({ platform }: { platform: Platform }) {
         ) : (
           <a
             href={platform.connectHref}
-            className="block w-full rounded-md bg-brand-navy px-4 py-2 text-center text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover"
+            className="block w-full rounded-lg bg-brand-navy px-4 py-2.5 text-center text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover"
           >
             Connecter
           </a>
@@ -159,6 +189,11 @@ export default async function ConnexionsPage({
       key: "google",
       name: "Google",
       purpose: "Ta fiche établissement, tes avis, tes horaires.",
+      debloque: [
+        "Ta note et tes avis",
+        "Ta fiche et tes horaires",
+        "Tes recherches Google (Search Console)",
+      ],
       icon: platformIcons.google,
       color: "#1a73e8",
       tint: "#e8f0fe",
@@ -171,6 +206,7 @@ export default async function ConnexionsPage({
       key: "facebook",
       name: "Facebook",
       purpose: "Ta page, tes publications, tes abonnés.",
+      debloque: ["Ta page et ses publications", "Tes abonnés"],
       icon: platformIcons.facebook,
       color: "#1877f2",
       tint: "#e7f0fe",
@@ -191,6 +227,7 @@ export default async function ConnexionsPage({
       // Instagram n'a pas de connexion propre : Meta le rattache au compte
       // professionnel lié à la page Facebook.
       purpose: "Se connecte en même temps que ta page Facebook.",
+      debloque: ["Ton flux sur ton site vitrine", "Tes publications"],
       icon: platformIcons.instagram,
       color: "#c13584",
       tint: "#fce8f3",
@@ -211,6 +248,11 @@ export default async function ConnexionsPage({
       key: "stripe",
       name: "Stripe",
       purpose: "Acomptes, cautions et expériences payées d'avance.",
+      debloque: [
+        "Acomptes sur les privatisations",
+        "Empreintes de carte",
+        "Expériences payées d'avance",
+      ],
       icon: platformIcons.stripe,
       color: "#635bff",
       tint: "#eeedff",
@@ -233,6 +275,7 @@ export default async function ConnexionsPage({
       key: "tiktok",
       name: "TikTok",
       purpose: "Ton compte, tes vidéos, tes vues.",
+      debloque: ["Tes vidéos et tes vues"],
       icon: platformIcons.tiktok,
       color: "#111827",
       tint: "#f1f2f4",
@@ -255,13 +298,13 @@ export default async function ConnexionsPage({
       />
 
       {connected && (
-        <p className="rounded-md bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+        <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
           Compte connecté avec succès.
         </p>
       )}
 
       {stripeError && (
-        <p className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
+        <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           La connexion Stripe n&apos;a pas abouti.{" "}
           <Link
             href={`/dashboard/${id}/paiements`}
@@ -279,12 +322,59 @@ export default async function ConnexionsPage({
         : la connexion se retire quand tu veux, depuis « Gérer ».
       </p>
 
-      <p className="text-sm font-medium text-zinc-700">
-        {connectedCount} compte{connectedCount > 1 ? "s" : ""} connecté
-        {connectedCount > 1 ? "s" : ""} sur {platforms.length}
-      </p>
+      {/* L'avancement en grand, et ce qui reste en une ligne : c'est la
+          seule question qu'on se pose en ouvrant cet écran. */}
+      <section
+        className={`flex flex-col gap-4 rounded-2xl border p-6 sm:flex-row sm:items-center sm:gap-8 ${
+          connectedCount === platforms.length
+            ? "border-emerald-200 bg-emerald-50/70"
+            : "border-zinc-200/70 bg-white shadow-sm"
+        }`}
+      >
+        <span className="flex shrink-0 items-baseline gap-1.5">
+          <span className="font-serif text-6xl leading-none text-ink">
+            {connectedCount}
+          </span>
+          <span className="font-serif text-2xl text-zinc-500">
+            / {platforms.length}
+          </span>
+        </span>
+        <div className="flex min-w-0 flex-1 flex-col gap-3">
+          <p className="text-sm leading-relaxed text-ink sm:text-base">
+            {connectedCount === platforms.length ? (
+              "Tous tes comptes sont reliés."
+            ) : (
+              <>
+                compte{connectedCount > 1 ? "s" : ""} relié
+                {connectedCount > 1 ? "s" : ""}. Il reste :{" "}
+                <strong className="font-semibold">
+                  {platforms
+                    .filter((p) => !p.connected)
+                    .map((p) => p.name)
+                    .join(", ")}
+                </strong>
+                .
+              </>
+            )}
+          </p>
+          <div className="h-2 overflow-hidden rounded-full bg-zinc-100">
+            <div
+              className="h-full rounded-full bg-emerald-500"
+              style={{
+                width: `${(connectedCount / platforms.length) * 100}%`,
+              }}
+            />
+          </div>
+        </div>
+      </section>
 
-      <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+      <ul
+        className={`grid gap-4 sm:grid-cols-2 ${
+          platforms.length > 4
+            ? "xl:grid-cols-3 2xl:grid-cols-5"
+            : "xl:grid-cols-4"
+        }`}
+      >
         {platforms.map((platform) => (
           <PlatformCard key={platform.key} platform={platform} />
         ))}
