@@ -72,6 +72,23 @@ export async function updateSession(request: NextRequest) {
     verdict.etat === "deconnecte" &&
     request.nextUrl.pathname.startsWith("/dashboard")
   ) {
+    // Chaque renvoi à l'écran de connexion laisse une ligne dans les
+    // journaux, avec sa cause. « Je suis encore déconnecté » ne se
+    // diagnostique pas à l'aveugle : sans cookie de session, c'est le
+    // téléphone qui a tout oublié ; avec, c'est Supabase qui a refusé le
+    // jeton, et le motif dit pourquoi. Rien de secret ici — ni jeton, ni
+    // adresse, seulement le nom des cookies et la réponse de Supabase.
+    const cookiesSession = request.cookies
+      .getAll()
+      .filter((c) => c.name.startsWith("sb-") && c.name.includes("auth-token"))
+      .map((c) => c.name);
+    console.warn("[session] renvoyé à la connexion", {
+      chemin: request.nextUrl.pathname,
+      motif: verdict.motif ?? "aucune erreur (pas de session)",
+      cookies: cookiesSession.length > 0 ? cookiesSession : "aucun",
+      appli: request.headers.get("sec-fetch-dest") ?? null,
+      navigateur: (request.headers.get("user-agent") ?? "").slice(0, 120),
+    });
     return rediriger("/login");
   }
 

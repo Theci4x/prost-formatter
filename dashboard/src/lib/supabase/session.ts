@@ -26,7 +26,16 @@ import {
 
 export type Verdict =
   | { etat: "connecte"; user: User }
-  | { etat: "deconnecte" }
+  | {
+      etat: "deconnecte";
+      /**
+       * Ce que Supabase a répondu, quand il a répondu quelque chose. C'est
+       * ce qui distingue une session jamais ouverte (« Auth session
+       * missing ») d'un jeton déjà consommé (« Already Used ») — deux
+       * causes qui ne se corrigent pas du tout au même endroit.
+       */
+      motif?: string;
+    }
   /** On n'a pas pu savoir. Surtout ne rien casser sur cette base. */
   | { etat: "indecidable"; motif: string };
 
@@ -47,7 +56,10 @@ export function verdictDe(
 
   // Tout le reste — session absente, jeton expiré, jeton refusé — est une
   // vraie déconnexion.
-  return { etat: "deconnecte" };
+  return {
+    etat: "deconnecte",
+    motif: [erreur.code, erreur.message].filter(Boolean).join(" — "),
+  };
 }
 
 /**
