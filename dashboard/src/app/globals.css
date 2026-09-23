@@ -420,3 +420,58 @@ body {
     opacity: 0.6;
   }
 }
+
+/* ── L'attente de l'analyse SEO ─────────────────────────────────────────
+   Une analyse prend une vingtaine de secondes. Trois mouvements, tous
+   lents : une rangée d'icônes de cuisine et de recherche qui défile
+   (deux copies, -50 % boucle sans saut), un balayage clair sur la forme
+   du texte à venir, et l'étape en cours qui respire. Rien ne rebondit,
+   rien ne clignote : c'est un outil, pas un jeu. */
+@keyframes klarr-defile {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+@keyframes klarr-balaie {
+  from {
+    transform: translateX(-60%);
+  }
+  to {
+    transform: translateX(160%);
+  }
+}
+@keyframes klarr-etape {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 0.85;
+  }
+}
+.klarr-defile {
+  animation: klarr-defile 22s linear infinite;
+}
+.klarr-balaie {
+  animation: klarr-balaie 2.4s ease-in-out infinite;
+}
+.klarr-etape {
+  animation: klarr-etape 1.8s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  /* Sans mouvement, la rangée reste lisible et le balayage disparaît :
+     l'étape en cours est déjà nommée en toutes lettres. */
+  .klarr-defile,
+  .klarr-balaie,
+  .klarr-etape {
+    animation: none;
+  }
+  .klarr-balaie {
+    opacity: 0;
+  }
+}

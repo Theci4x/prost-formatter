@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { Markdown } from "@/components/texte/Markdown";
+import { Patience } from "@/components/seo/Patience";
 import { ceQuiABouge } from "@/lib/seo/mots-cles";
 import type { Analyse, AnalyzeResult } from "@/app/dashboard/[id]/seo/actions";
 
@@ -42,79 +43,87 @@ export function KeywordAnalysis({
   const bouge = analyse ? ceQuiABouge(analyse.motsCles, motsClesActuels) : null;
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+    <section className="flex flex-col gap-4" aria-labelledby="analyse-titre">
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+        <div className="flex flex-col gap-0.5">
+          <h2 id="analyse-titre" className="text-sm font-medium text-ink">
+            Analyse SEO par Klarr Tool
+          </h2>
+          <p className="text-xs text-ink-soft">
+            {analyse && !enCours
+              ? `Analysée le ${quand(analyse.analyseLe)}`
+              : "Un audit local complet, écrit pour votre établissement."}
+          </p>
+        </div>
+
         <button
           type="button"
           onClick={lancer}
           disabled={enCours}
-          className="inline-flex items-center gap-2 self-start rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex items-center gap-2 rounded-lg bg-brand-navy px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-brand-navy-hover disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {enCours && (
+          {enCours ? (
             <span
               aria-hidden="true"
-              className="size-3.5 animate-spin rounded-full border-2 border-zinc-300 border-t-brand-orange"
+              className="size-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white"
             />
+          ) : (
+            <Etincelle />
           )}
           {enCours
             ? "Analyse en cours…"
             : analyse
               ? "Relancer l'analyse"
-              : "Analyser avec Klarr"}
+              : "Lancer l'analyse"}
         </button>
-
-        {analyse && !enCours && (
-          <span className="text-xs text-zinc-500">
-            Analysée le {quand(analyse.analyseLe)}
-          </span>
-        )}
       </div>
 
       {/* Ce qui justifie une relance, quand quelque chose le justifie. */}
-      {bouge && !enCours && <p className="text-xs text-amber-800">{bouge}</p>}
+      {bouge && !enCours && (
+        <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+          {bouge}
+        </p>
+      )}
 
-      {erreur && <p className="text-sm text-red-600">{erreur}</p>}
+      {erreur && (
+        <p className="text-sm text-red-600" role="alert">
+          {erreur}
+        </p>
+      )}
 
       {enCours ? (
         <Patience aUneAnalyse={Boolean(analyse)} />
+      ) : analyse?.analysis ? (
+        <div className="rounded-xl border border-line bg-paper p-5 text-sm text-zinc-700 sm:p-7">
+          <Markdown texte={analyse.analysis} />
+        </div>
       ) : (
-        analyse?.analysis && (
-          <div className="rounded-xl border border-zinc-200 bg-white p-5 text-sm text-zinc-700 sm:p-6">
-            <Markdown texte={analyse.analysis} />
-          </div>
-        )
+        <div className="rounded-xl border border-dashed border-line bg-paper/60 px-6 py-8 text-sm leading-relaxed text-ink-soft">
+          Aucune analyse pour le moment. Elle s&apos;appuie sur votre nom, votre
+          adresse, vos mots-clés ciblés et — quand Search Console est relié —
+          sur ce que les gens tapent vraiment. Ajoutez vos mots-clés
+          d&apos;abord : l&apos;analyse en sera meilleure.
+        </div>
       )}
-    </div>
+    </section>
   );
 }
 
-/**
- * L'attente, pendant que le modèle écrit.
- *
- * Une analyse prend une vingtaine de secondes : un bouton grisé tout seul
- * laisse croire à une panne. On montre la forme du texte à venir — des
- * titres, des paragraphes — plutôt qu'un tourniquet au milieu du vide.
- *
- * Et on dit ce qui advient de l'ancienne. Quelqu'un qui relance a le
- * texte précédent sous les yeux ; le faire disparaître sans un mot donne
- * l'impression de l'avoir perdu.
- */
-function Patience({ aUneAnalyse }: { aUneAnalyse: boolean }) {
+function Etincelle() {
   return (
-    <div className="flex flex-col gap-4 rounded-xl border border-zinc-200 bg-white p-5 sm:p-6">
-      <div className="flex animate-pulse flex-col gap-3">
-        <div className="h-3.5 w-2/5 rounded bg-zinc-200" />
-        <div className="h-2.5 w-full rounded bg-zinc-100" />
-        <div className="h-2.5 w-11/12 rounded bg-zinc-100" />
-        <div className="h-2.5 w-4/5 rounded bg-zinc-100" />
-        <div className="mt-2 h-3.5 w-1/3 rounded bg-zinc-200" />
-        <div className="h-2.5 w-full rounded bg-zinc-100" />
-        <div className="h-2.5 w-3/4 rounded bg-zinc-100" />
-      </div>
-      <p className="text-xs text-zinc-500">
-        Une analyse prend une vingtaine de secondes.
-        {aUneAnalyse ? " La précédente reste affichée si celle-ci échoue." : ""}
-      </p>
-    </div>
+    <svg
+      aria-hidden="true"
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6z" />
+      <path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z" />
+    </svg>
   );
 }
