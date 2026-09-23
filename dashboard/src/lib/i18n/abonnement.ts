@@ -67,6 +67,16 @@ export type ClesAbonnement = {
   passerAuPack: string;
 
   pied: string;
+
+  /** L'en-tête : le chapo et les trois compteurs. */
+  chapo: string;
+  compteurModules: string;
+  compteurEssai: string;
+  compteurSansEssai: string;
+  compteurProchain: string;
+  compteurSansPrelevement: string;
+  inclus: string;
+  plusAvantageux: string;
 };
 
 const s = (n: number) => (n > 1 ? "s" : "");
@@ -117,6 +127,15 @@ const fr: ClesAbonnement = {
     "Ton abonnement passe au pack, qui ouvre les deux modules pour moins cher que les deux pris séparément. Tu ne paies aujourd'hui que la différence au prorata des jours restants, et ta date de renouvellement ne change pas.",
   passerAuPack: "Passer au pack",
   pied: "Les deux modules s'achètent séparément : tu peux prendre la visibilité sans les réservations, ou l'inverse. Un abonnement vaut pour cet établissement — un second restaurant a son propre carnet, sa propre fiche Google et sa propre clientèle, donc ses propres abonnements. Aucune commission par couvert, jamais.",
+  chapo:
+    "Deux modules, qui s'achètent séparément ou ensemble. Ce qui est payé, ce qui est en essai, et la prochaine date de prélèvement.",
+  compteurModules: "modules payés",
+  compteurEssai: "jours d'essai restants",
+  compteurSansEssai: "pas d'essai en cours",
+  compteurProchain: "prochain prélèvement",
+  compteurSansPrelevement: "aucun prélèvement prévu",
+  inclus: "Ce qui est inclus",
+  plusAvantageux: "Le plus avantageux",
 };
 
 const en: ClesAbonnement = {
@@ -165,6 +184,15 @@ const en: ClesAbonnement = {
     "Your subscription moves to the bundle, which opens both modules for less than the two bought separately. Today you only pay the pro-rata difference for the remaining days, and your renewal date does not change.",
   passerAuPack: "Move to the bundle",
   pied: "The two modules are bought separately: you can take visibility without bookings, or the other way round. A subscription covers this establishment — a second restaurant has its own booking system, its own Google listing and its own customers, so its own subscriptions. No commission per cover, ever.",
+  chapo:
+    "Two modules, bought separately or together. What is paid, what is on trial, and the next payment date.",
+  compteurModules: "modules paid",
+  compteurEssai: "trial days left",
+  compteurSansEssai: "no trial running",
+  compteurProchain: "next payment",
+  compteurSansPrelevement: "no payment scheduled",
+  inclus: "What's included",
+  plusAvantageux: "Best value",
 };
 
 const zh: ClesAbonnement = {
@@ -211,6 +239,15 @@ const zh: ClesAbonnement = {
     "您的订阅会改为套餐，同时开通两个模块，比分开买便宜。今天只需按剩余天数补差价，续费日期不变。",
   passerAuPack: "改为套餐",
   pied: "两个模块可以分开买：您可以只要曝光模块而不要订位，反过来也行。一份订阅只对应一家店——第二家店有自己的订位簿、自己的 Google 商家资料和自己的客人，因此也要有自己的订阅。永远不按人头抽成。",
+  chapo:
+    "两个模块，可以分开买，也可以一起买。已付费的、试用中的，以及下一次扣款日期。",
+  compteurModules: "个模块已付费",
+  compteurEssai: "天试用剩余",
+  compteurSansEssai: "没有进行中的试用",
+  compteurProchain: "下一次扣款",
+  compteurSansPrelevement: "没有计划中的扣款",
+  inclus: "包含内容",
+  plusAvantageux: "最划算",
 };
 
 export const ABONNEMENT: Record<Langue, ClesAbonnement> = { fr, en, zh };

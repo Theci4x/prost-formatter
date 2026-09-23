@@ -4,6 +4,8 @@ import { ABONNEMENT } from "@/lib/i18n/abonnement";
 import { dateBreve } from "@/lib/i18n/dates";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
+import { Compteur } from "@/components/dashboard/Compteur";
+import { ACCUEIL, type ClesAccueil } from "@/lib/i18n/accueil";
 import type { Restaurant } from "@/types/restaurant";
 import type { RestaurantSubscription } from "@/types/subscription";
 import { exiger } from "@/lib/equipe/roles";
@@ -23,6 +25,33 @@ import {
   abonnementOuvrant,
   type Module,
 } from "@/lib/abonnement/modules";
+
+/**
+ * Ce que chaque module ouvre, pour la liste de sa carte. Les libellés
+ * sont ceux de l'accueil du tableau de bord : on reconnaît les cases
+ * qu'on voit tous les jours.
+ */
+const INCLUS: Record<Module, (keyof ClesAccueil["entrees"])[]> = {
+  visibilite: [
+    "vitrine",
+    "carte",
+    "photos",
+    "avis",
+    "retours",
+    "seo",
+    "visibiliteIa",
+    "faq",
+  ],
+  reservations: [
+    "reservations",
+    "service",
+    "clients",
+    "experiences",
+    "paiements",
+    "carte",
+    "faq",
+  ],
+};
 
 export default async function AbonnementPage({
   params,
@@ -93,12 +122,31 @@ export default async function AbonnementPage({
     .find(Boolean);
   const facture = clientStripe ? await factureEnAttente(clientStripe) : null;
 
+  // Les trois chiffres que l'on vient chercher ici : ce qui est payé,
+  // combien de jours d'essai il reste, et quand part le prochain débit.
+  const essai = essaiLePlusLong(acces);
+  const prochain = payes
+    .map((cle) => abonnements.get(cle))
+    .filter(
+      (abonnement) =>
+        abonnement?.current_period_end && !abonnement.cancel_at_period_end,
+    )
+    .map((abonnement) => abonnement!.current_period_end!)
+    .sort()[0];
+  const entrees = ACCUEIL[langue].entrees;
+  // Le pack se range à côté des deux modules quand il a quelque chose à
+  // proposer : trois cartes côte à côte se comparent d'un regard.
+  const offrePack = aucunAbonnement || (basculePossible && manquant);
+
   return (
-    <div className="flex w-full flex-1 flex-col gap-6 px-6 py-8">
-      <PageHeader
-        icon={dashboardIcons.abonnement}
-        title={a.titre(restaurant.nom)}
-      />
+    <div className="flex w-full flex-1 flex-col gap-8 px-6 py-8">
+      <div className="flex flex-col gap-3">
+        <PageHeader
+          icon={dashboardIcons.abonnement}
+          title={a.titre(restaurant.nom)}
+        />
+        <p className="max-w-4xl text-sm text-zinc-600">{a.chapo}</p>
+      </div>
 
       {/* Ce que Stripe a répondu quand la souscription n'a pas pu
           s'ouvrir. Le message est le sien, en anglais et technique — mais
@@ -141,7 +189,7 @@ export default async function AbonnementPage({
             href={facture.url}
             target="_blank"
             rel="noreferrer"
-            className="w-fit rounded-md bg-amber-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-amber-800"
+            className="w-fit rounded-lg bg-amber-900 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-amber-800"
           >
             {facture.authentification ? a.confirmerPaiement : a.regler}
           </a>
@@ -161,19 +209,39 @@ export default async function AbonnementPage({
         </p>
       )}
 
+      <div className="grid grid-cols-3 gap-3 sm:gap-4">
+        <Compteur
+          valeur={`${payes.length}/${MODULES.length}`}
+          libelle={a.compteurModules}
+        />
+        <Compteur
+          valeur={essai ? essai.joursRestants : "—"}
+          libelle={essai ? a.compteurEssai : a.compteurSansEssai}
+          accent={Boolean(essai && essai.joursRestants <= 5)}
+        />
+        <Compteur
+          valeur={prochain ? dateBreve(prochain, langue) : "—"}
+          libelle={prochain ? a.compteurProchain : a.compteurSansPrelevement}
+        />
+      </div>
+
       {/* Les deux essais ne finissent pas le même jour : le bandeau
           annonce le plus long — la date à laquelle tout se referme — et
           chaque carte porte le sien. */}
-      {acces.enEssai && essaiLePlusLong(acces) && (
+      {acces.enEssai && essai && (
         <p className="rounded-2xl border border-brand-orange/30 bg-brand-orange-soft px-5 py-4 text-sm text-brand-navy">
           <span className="font-medium">
-            {a.essaiBandeau(essaiLePlusLong(acces)!.joursRestants)}
+            {a.essaiBandeau(essai.joursRestants)}
           </span>{" "}
           {a.essaiChapo}
         </p>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div
+        className={`grid items-stretch gap-4 lg:grid-cols-2 ${
+          offrePack ? "2xl:grid-cols-3" : ""
+        }`}
+      >
         {MODULES.map((cle) => {
           const abonnement = abonnements.get(cle);
           const paye = abonnement
@@ -184,21 +252,39 @@ export default async function AbonnementPage({
           return (
             <div
               key={cle}
-              className={`flex flex-col gap-5 rounded-2xl border p-8 shadow-sm ${
-                paye
-                  ? "border-emerald-200/70 bg-white"
-                  : "border-zinc-200/70 bg-white"
+              className={`flex flex-col gap-6 rounded-2xl border bg-white p-6 shadow-sm sm:p-8 ${
+                paye ? "border-emerald-300/70" : "border-zinc-200/70"
               }`}
             >
-              <div className="flex flex-col gap-1">
-                <span className="font-serif text-3xl text-ink">
-                  {LIBELLE_MODULE[cle]}
-                </span>
-                <span className="text-xl font-semibold text-brand-navy">
+              <div className="flex flex-col gap-2">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="font-serif text-3xl text-ink">
+                    {LIBELLE_MODULE[cle]}
+                  </span>
+                  {abonnement ? (
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                        paye
+                          ? "bg-emerald-50 text-emerald-800"
+                          : "bg-orange-50 text-orange-700"
+                      }`}
+                    >
+                      {a.statuts[abonnement.status as keyof typeof a.statuts] ??
+                        abonnement.status}
+                    </span>
+                  ) : (
+                    acces.essai[cle] && (
+                      <span className="rounded-full bg-brand-orange-soft px-3 py-1 text-xs font-semibold text-brand-navy">
+                        {a.statuts.trialing}
+                      </span>
+                    )
+                  )}
+                </div>
+                <span className="text-2xl font-semibold text-brand-navy">
                   {PRIX_MODULE[cle]}{" "}
                   {/* Le HT pour comparer, le TTC pour ne pas être surpris
                       au débit : c'est le second qui est prélevé. */}
-                  <span className="font-normal text-zinc-500">
+                  <span className="text-base font-normal text-zinc-500">
                     ({PRIX_MODULE_TTC[cle]})
                   </span>
                 </span>
@@ -207,30 +293,40 @@ export default async function AbonnementPage({
                     {a.essaiEnCours(acces.essai[cle]!.joursRestants)}
                   </span>
                 )}
-                <span className="text-sm leading-relaxed text-zinc-500">
+                <span className="text-sm leading-relaxed text-zinc-600">
                   {RESUME_MODULE[cle]}
                 </span>
               </div>
 
-              {abonnement ? (
-                <div className="flex flex-col gap-1">
-                  <p className="text-sm text-zinc-900">
-                    {a.statutLabel}{" "}
-                    <span
-                      className={paye ? "text-emerald-700" : "text-orange-600"}
+              <div className="flex flex-col gap-2">
+                <span className="text-xs font-semibold uppercase tracking-[0.08em] text-zinc-500">
+                  {a.inclus}
+                </span>
+                <ul className="grid gap-x-4 gap-y-1.5 sm:grid-cols-2">
+                  {INCLUS[cle].map((entree) => (
+                    <li
+                      key={entree}
+                      className="flex items-center gap-2 text-sm text-ink"
                     >
-                      {a.statuts[abonnement.status as keyof typeof a.statuts] ??
-                        abonnement.status}
-                    </span>
-                    {/* Résilié à échéance : le statut reste « actif » chez
-                        Stripe, et il l'est — mais ne pas le dire ferait
-                        croire à une reconduction. */}
-                    {abonnement.cancel_at_period_end && (
-                      <span className="text-orange-600">
-                        {a.resiliationDemandee}
+                      <span aria-hidden="true" className="text-emerald-600">
+                        ✓
                       </span>
-                    )}
-                  </p>
+                      {entrees[entree].label}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {abonnement ? (
+                <div className="flex flex-col gap-1 border-t border-zinc-100 pt-4">
+                  {/* Résilié à échéance : le statut reste « actif » chez
+                      Stripe, et il l'est — mais ne pas le dire ferait
+                      croire à une reconduction. */}
+                  {abonnement.cancel_at_period_end && (
+                    <p className="text-sm font-medium text-orange-600">
+                      {a.resiliationDemandee.replace(/^\s*—\s*/, "")}
+                    </p>
+                  )}
                   {abonnement.current_period_end && (
                     <p className="text-sm text-zinc-500">
                       {abonnement.cancel_at_period_end
@@ -245,7 +341,7 @@ export default async function AbonnementPage({
                   )}
                 </div>
               ) : (
-                <p className="text-sm text-zinc-500">
+                <p className="border-t border-zinc-100 pt-4 text-sm text-zinc-500">
                   {ouvert ? a.ouvertPendantEssai : a.moduleFerme}
                 </p>
               )}
@@ -267,66 +363,76 @@ export default async function AbonnementPage({
             </div>
           );
         })}
+
+        {/* Le pack ne se propose qu'à qui ne paie encore rien. Le proposer
+            à un restaurateur déjà abonné à un module l'enverrait vers un
+            second abonnement au lieu d'une bascule : deux prélèvements pour
+            une chose payée en double. Ce cas-là se règle au portail Stripe,
+            ou par un message. */}
+        {aucunAbonnement && (
+          <div className="relative flex flex-col gap-6 rounded-2xl border-2 border-brand-navy bg-brand-orange-soft p-6 shadow-sm sm:p-8 lg:col-span-2 2xl:col-span-1">
+            <span className="w-fit rounded-full bg-brand-navy px-3 py-1 text-xs font-semibold text-white">
+              {a.plusAvantageux}
+            </span>
+            <div className="flex flex-col gap-2">
+              <span className="font-serif text-3xl text-ink">
+                {LIBELLE_PACK}
+              </span>
+              <span className="text-2xl font-semibold text-brand-navy">
+                {PRIX_PACK}{" "}
+                <span className="text-base font-normal text-zinc-500">
+                  ({PRIX_PACK_TTC})
+                </span>
+              </span>
+              <span className="text-sm leading-relaxed text-zinc-700">
+                {RESUME_PACK}
+              </span>
+            </div>
+            <a
+              href={`/api/stripe/checkout?restaurant_id=${id}&module=pack`}
+              className="mt-auto w-fit rounded-lg bg-brand-navy px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-navy-hover"
+            >
+              {a.prendreLesDeux}
+            </a>
+          </div>
+        )}
+
+        {/* Ajouter le second module, c'est passer au pack — jamais souscrire
+            une seconde fois. On le dit avec les chiffres, parce que c'est là
+            que le restaurateur comprend qu'on ne cherche pas à lui vendre
+            deux abonnements. */}
+        {basculePossible && manquant && (
+          <div className="flex flex-col gap-6 rounded-2xl border-2 border-brand-navy bg-brand-orange-soft p-6 shadow-sm sm:p-8 lg:col-span-2 2xl:col-span-1">
+            <span className="w-fit rounded-full bg-brand-navy px-3 py-1 text-xs font-semibold text-white">
+              {a.plusAvantageux}
+            </span>
+            <div className="flex flex-col gap-2">
+              <span className="font-serif text-3xl text-ink">
+                {a.ajouterModule(LIBELLE_MODULE[manquant])}
+              </span>
+              <span className="text-2xl font-semibold text-brand-navy">
+                {PRIX_PACK}{" "}
+                <span className="text-base font-normal text-zinc-500">
+                  ({PRIX_PACK_TTC})
+                </span>
+              </span>
+              <span className="text-sm leading-relaxed text-zinc-700">
+                {a.packExplication}
+              </span>
+            </div>
+            <a
+              href={`/api/stripe/pack?restaurant_id=${id}`}
+              className="mt-auto w-fit rounded-lg bg-brand-navy px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-navy-hover"
+            >
+              {a.passerAuPack}
+            </a>
+          </div>
+        )}
       </div>
 
-      {/* Le pack ne se propose qu'à qui ne paie encore rien. Le proposer
-          à un restaurateur déjà abonné à un module l'enverrait vers un
-          second abonnement au lieu d'une bascule : deux prélèvements pour
-          une chose payée en double. Ce cas-là se règle au portail Stripe,
-          ou par un message. */}
-      {aucunAbonnement && (
-        <div className="flex flex-wrap items-center gap-x-8 gap-y-4 rounded-2xl border border-brand-navy/20 bg-brand-orange-soft p-8 shadow-sm">
-          <div className="flex min-w-0 flex-1 basis-64 flex-col gap-1">
-            <span className="font-serif text-3xl text-ink">{LIBELLE_PACK}</span>
-            <span className="text-xl font-semibold text-brand-navy">
-              {PRIX_PACK}{" "}
-              <span className="font-normal text-zinc-500">
-                ({PRIX_PACK_TTC})
-              </span>
-            </span>
-            <span className="text-sm leading-relaxed text-zinc-600">
-              {RESUME_PACK}
-            </span>
-          </div>
-          <a
-            href={`/api/stripe/checkout?restaurant_id=${id}&module=pack`}
-            className="w-fit rounded-lg bg-brand-navy px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-navy-hover"
-          >
-            {a.prendreLesDeux}
-          </a>
-        </div>
-      )}
-
-      {/* Ajouter le second module, c'est passer au pack — jamais souscrire
-          une seconde fois. On le dit avec les chiffres, parce que c'est là
-          que le restaurateur comprend qu'on ne cherche pas à lui vendre
-          deux abonnements. */}
-      {basculePossible && manquant && (
-        <div className="flex flex-wrap items-center gap-x-8 gap-y-4 rounded-2xl border border-brand-navy/20 bg-brand-orange-soft p-8 shadow-sm">
-          <div className="flex min-w-0 flex-1 basis-64 flex-col gap-1">
-            <span className="font-serif text-3xl text-ink">
-              {a.ajouterModule(LIBELLE_MODULE[manquant])}
-            </span>
-            <span className="text-xl font-semibold text-brand-navy">
-              {PRIX_PACK}{" "}
-              <span className="font-normal text-zinc-500">
-                ({PRIX_PACK_TTC})
-              </span>
-            </span>
-            <span className="text-sm leading-relaxed text-zinc-600">
-              {a.packExplication}
-            </span>
-          </div>
-          <a
-            href={`/api/stripe/pack?restaurant_id=${id}`}
-            className="w-fit rounded-lg bg-brand-navy px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-navy-hover"
-          >
-            {a.passerAuPack}
-          </a>
-        </div>
-      )}
-
-      <p className="text-sm text-zinc-500">{a.pied}</p>
+      <p className="max-w-4xl text-sm leading-relaxed text-zinc-500">
+        {a.pied}
+      </p>
     </div>
   );
 }
