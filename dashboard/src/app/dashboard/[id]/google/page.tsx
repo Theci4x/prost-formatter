@@ -11,10 +11,50 @@ import {
 } from "@/lib/google/business";
 import { disconnectGoogle, selectGoogleLocation } from "./actions";
 import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
+import { Compteur, TitreSection } from "@/components/dashboard/Compteur";
 import type { Restaurant } from "@/types/restaurant";
 import type { GoogleBusinessConnection } from "@/types/google";
 import { exiger } from "@/lib/equipe/roles";
 import { exigerModule } from "@/lib/abonnement/acces";
+
+/**
+ * Ce que Klarr fait de la fiche une fois reliée : sans ces liens, la page
+ * ressemble à un réglage qu'on coche et qu'on oublie, alors que trois
+ * écrans en dépendent.
+ */
+function destinations(publications: boolean) {
+  return [
+    {
+      href: "avis",
+      titre: "Avis",
+      texte:
+        "Ta note Google et tes derniers avis, à côté des autres plateformes.",
+    },
+    {
+      href: "seo",
+      titre: "SEO",
+      texte:
+        "Les recherches Google qui mènent à tes pages, lues dans Search Console.",
+    },
+    ...(publications
+      ? [
+          {
+            href: "posts",
+            titre: "Publications Google",
+            texte:
+              "Tes actualités et offres, publiées sur ta fiche depuis Klarr.",
+          },
+        ]
+      : [
+          {
+            href: "visibilite-ia",
+            titre: "Visibilité IA",
+            texte:
+              "Une fiche Google complète est l'une des sources que lisent les assistants.",
+          },
+        ]),
+  ];
+}
 
 export default async function GoogleConnectionPage({
   params,
@@ -83,21 +123,69 @@ export default async function GoogleConnectionPage({
     }
   }
 
+  // La fiche : choisie, à choisir parmi celles trouvées, ou inaccessible —
+  // un « 0 fiche trouvée » quand c'est Google qui refuse l'accès ferait
+  // chercher une fiche qui existe bel et bien.
+  const fiche = connection?.location_name
+    ? { valeur: "Choisie", libelle: "fiche établissement", accent: false }
+    : !connection
+      ? { valeur: "—", libelle: "fiche établissement", accent: false }
+      : locationsError
+        ? {
+            valeur: "—",
+            libelle: "fiche inaccessible pour l'instant",
+            accent: true,
+          }
+        : {
+            valeur: String(locations.length),
+            libelle: `fiche${locations.length > 1 ? "s" : ""} trouvée${locations.length > 1 ? "s" : ""}, à choisir`,
+            accent: true,
+          };
+
   return (
-    <div className="flex flex-1 flex-col gap-6 px-6 py-8">
-      <PageHeader
-        icon={dashboardIcons.google}
-        title={`Google Business Profile — ${restaurant.nom}`}
-        backHref={`/dashboard/${id}/connexions`}
-      />
+    <div className="flex flex-1 flex-col gap-8 px-6 py-8">
+      <div className="flex flex-col gap-3">
+        <PageHeader
+          icon={dashboardIcons.google}
+          title={`Google Business Profile — ${restaurant.nom}`}
+          backHref={`/dashboard/${id}/connexions`}
+        />
+        <p className="max-w-4xl text-sm text-zinc-600">
+          Ta fiche Google est souvent la première chose qu&apos;un client voit
+          de toi. Relie le compte qui la gère : Klarr y lit ta note, tes avis et
+          les recherches qui t&apos;amènent des clients, sans que tu aies à
+          recopier quoi que ce soit.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-3 gap-3 sm:gap-4">
+        <Compteur
+          valeur={connection ? "Relié" : "—"}
+          libelle={connection ? "compte Google" : "compte Google à relier"}
+          accent={!connection}
+        />
+        <Compteur
+          valeur={fiche.valeur}
+          libelle={fiche.libelle}
+          accent={fiche.accent}
+        />
+        <Compteur
+          valeur={publicationsGoogleOuvertes() ? "Ouvertes" : "Bientôt"}
+          libelle={
+            publicationsGoogleOuvertes()
+              ? "publications Google"
+              : "publications, dès l'accord de Google"
+          }
+        />
+      </div>
 
       {connected && (
-        <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+        <p className="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-800">
           Compte Google connecté avec succès.
         </p>
       )}
       {error && (
-        <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <p className="rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">
           La connexion à Google a échoué. Réessaie.
         </p>
       )}
@@ -142,7 +230,7 @@ export default async function GoogleConnectionPage({
               via {connection.google_email}
             </span>
           </div>
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+          <div className="flex flex-wrap items-center gap-3">
             <Link
               href={`/dashboard/${id}/avis`}
               className="rounded-lg bg-brand-navy px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover"
@@ -154,7 +242,7 @@ export default async function GoogleConnectionPage({
             {publicationsGoogleOuvertes() && (
               <Link
                 href={`/dashboard/${id}/posts`}
-                className="text-sm font-semibold text-brand-orange-dark hover:underline"
+                className="rounded-lg border border-zinc-200 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
               >
                 Publications Google
               </Link>
@@ -167,7 +255,7 @@ export default async function GoogleConnectionPage({
               <input type="hidden" name="location_title" value="" />
               <button
                 type="submit"
-                className="text-sm font-medium text-zinc-600 hover:text-zinc-900"
+                className="rounded-lg border border-zinc-200 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
               >
                 Changer de fiche
               </button>
@@ -199,7 +287,9 @@ export default async function GoogleConnectionPage({
           </div>
 
           {locationsError && (
-            <p className="text-sm text-red-600">{locationsError}</p>
+            <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm leading-relaxed text-red-700">
+              {locationsError}
+            </p>
           )}
 
           {locations.length > 0 && (
@@ -225,7 +315,7 @@ export default async function GoogleConnectionPage({
                     />
                     <button
                       type="submit"
-                      className="flex h-full w-full flex-col items-start gap-1 rounded-xl border border-zinc-200 px-4 py-3 text-left transition-colors hover:border-brand-orange hover:bg-brand-orange-soft"
+                      className="flex h-full w-full flex-col items-start gap-1 rounded-xl border border-zinc-200 bg-white px-4 py-3 text-left transition-colors hover:border-brand-orange hover:bg-brand-orange-soft"
                     >
                       <span className="text-[15px] font-semibold text-ink">
                         {location.title}
@@ -253,6 +343,32 @@ export default async function GoogleConnectionPage({
           </form>
         </div>
       )}
+
+      <section className="flex flex-col gap-4">
+        <TitreSection>Ce que Klarr en fait</TitreSection>
+        <div className="grid gap-3 sm:grid-cols-3 sm:gap-4">
+          {destinations(publicationsGoogleOuvertes()).map((destination) => (
+            <Link
+              key={destination.href}
+              href={`/dashboard/${id}/${destination.href}`}
+              className="group flex flex-col gap-1 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm transition-[border-color,transform,box-shadow] hover:-translate-y-px hover:border-ink hover:shadow-md"
+            >
+              <span className="flex items-center justify-between gap-2 text-base font-semibold text-ink">
+                {destination.titre}
+                <span
+                  aria-hidden="true"
+                  className="text-zinc-400 transition-transform group-hover:translate-x-0.5 group-hover:text-ink"
+                >
+                  →
+                </span>
+              </span>
+              <span className="text-sm leading-relaxed text-zinc-600">
+                {destination.texte}
+              </span>
+            </Link>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }
