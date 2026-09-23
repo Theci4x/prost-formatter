@@ -60,6 +60,29 @@ export const translations = {
       actionsVide:
         "Rien d'urgent : tout ce que nous regardons est déjà en place.",
       avecKlarr: "Avec Klarr",
+      courriel: {
+        surtitre: "Test de présence en ligne",
+        bonjour: (prenom: string) => `Bonjour ${prenom},`,
+        intro: (etablissement: string) =>
+          `Voici le résultat du test de ${etablissement}, tel qu'il s'est affiché après votre demande. Gardez-le : il se relit à tête reposée, et se montre à un associé.`,
+        scoreDe: "Score de présence en ligne",
+        iaTitre: "Ce qu'une IA répond aujourd'hui",
+        iaSousTitre: "à un client qui cherche un restaurant comme le vôtre",
+        citeRang: (rang: number) => `Vous êtes cité en position ${rang}.`,
+        cite: "Vous êtes cité dans la réponse.",
+        nonCite: "Vous n'apparaissez pas dans la réponse.",
+        aVotrePlace: "L'IA cite à votre place",
+        sansNous:
+          "Ces points se corrigent seuls, sans nous — et c'est le mieux à faire. Si vous préférez les traiter depuis un seul écran, Klarr est gratuit pendant trente jours, sans carte bancaire.",
+        bouton: "Essayer Klarr gratuitement",
+        sousBouton: "Trente jours offerts · sans carte bancaire",
+        ensemble:
+          "Et si vous voulez qu'on regarde ces résultats ensemble, répondez simplement à ce message.",
+        signature: "L'équipe Klarr",
+        sujet: (etablissement: string, score: number) =>
+          `Votre test de présence en ligne — ${etablissement} : ${score}/100`,
+        pied: "Vous recevez ce message parce que vous avez demandé ce test sur klarr.net. Il ne sera suivi d'aucun autre sans votre accord.",
+      },
       impacts: {
         fort: "Impact fort",
         moyen: "Impact moyen",
@@ -232,6 +255,29 @@ export const translations = {
       actionsTitre: "Where to start",
       actionsVide: "Nothing urgent: everything we look at is already in place.",
       avecKlarr: "With Klarr",
+      courriel: {
+        surtitre: "Online presence check",
+        bonjour: (prenom: string) => `Hello ${prenom},`,
+        intro: (etablissement: string) =>
+          `Here is the result of the check for ${etablissement}, as it appeared after your request. Keep it: it reads better later, and it is worth showing a partner.`,
+        scoreDe: "Online presence score",
+        iaTitre: "What an AI answers today",
+        iaSousTitre: "to a guest looking for a restaurant like yours",
+        citeRang: (rang: number) => `You are cited in position ${rang}.`,
+        cite: "You are cited in the answer.",
+        nonCite: "You do not appear in the answer.",
+        aVotrePlace: "The AI names instead",
+        sansNous:
+          "These points can be fixed on your own, without us — and that is the best thing to do. If you would rather handle them from one screen, Klarr is free for thirty days, no card required.",
+        bouton: "Try Klarr for free",
+        sousBouton: "Thirty days free · no card required",
+        ensemble:
+          "And if you would like to go through these results together, simply reply to this message.",
+        signature: "The Klarr team",
+        sujet: (etablissement: string, score: number) =>
+          `Your online presence check — ${etablissement}: ${score}/100`,
+        pied: "You are receiving this message because you requested this check on klarr.net. No other message will follow without your consent.",
+      },
       impacts: {
         fort: "High impact",
         moyen: "Medium impact",
@@ -400,6 +446,28 @@ export const translations = {
       actionsTitre: "从哪里开始",
       actionsVide: "没有紧急事项：我们检查的各项都已就位。",
       avecKlarr: "使用 Klarr",
+      courriel: {
+        surtitre: "在线形象测评",
+        bonjour: (prenom: string) => `${prenom}，您好：`,
+        intro: (etablissement: string) =>
+          `这是 ${etablissement} 的测评结果，与您提交后页面上显示的一致。请保留：稍后再读更清楚，也可以给合伙人看。`,
+        scoreDe: "在线形象得分",
+        iaTitre: "AI 今天是这样回答的",
+        iaSousTitre: "当顾客在找一家像您这样的餐厅时",
+        citeRang: (rang: number) => `您在回答中排第 ${rang} 位。`,
+        cite: "您出现在回答中。",
+        nonCite: "您没有出现在回答中。",
+        aVotrePlace: "AI 推荐的是",
+        sansNous:
+          "这些问题您完全可以自己解决，不需要我们——这也是最好的做法。如果您更愿意在一个界面里处理，Klarr 前三十天免费，无需绑定银行卡。",
+        bouton: "免费试用 Klarr",
+        sousBouton: "免费三十天 · 无需银行卡",
+        ensemble: "如果您想和我们一起看看这些结果，直接回复这封邮件即可。",
+        signature: "Klarr 团队",
+        sujet: (etablissement: string, score: number) =>
+          `您的在线形象测评 — ${etablissement}：${score}/100`,
+        pied: "您收到这封邮件，是因为您在 klarr.net 上申请了这项测评。未经您同意，不会再有其他邮件。",
+      },
       impacts: {
         fort: "影响大",
         moyen: "影响中等",
