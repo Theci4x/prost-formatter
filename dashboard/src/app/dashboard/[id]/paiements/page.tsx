@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
-import { Compteur } from "@/components/dashboard/Compteur";
+import { Compteur, TitreSection } from "@/components/dashboard/Compteur";
 import { diagnostic, relireCompte } from "@/lib/stripe/connect";
 import { deconnecterStripe } from "./actions";
 import type { Restaurant } from "@/types/restaurant";
@@ -100,32 +100,44 @@ export default async function PaiementsPage({
   const pret = Boolean(etat?.paiementsActifs);
 
   return (
-    <div className="flex flex-1 flex-col gap-6 px-6 py-8">
-      <PageHeader
-        icon={dashboardIcons.abonnement}
-        title={`Paiements — ${restaurant.nom}`}
-      />
+    <div className="flex flex-1 flex-col gap-8 px-6 py-8">
+      <div className="flex flex-col gap-3">
+        <PageHeader
+          icon={dashboardIcons.abonnement}
+          title={`Paiements — ${restaurant.nom}`}
+        />
+        <p className="max-w-4xl text-sm text-zinc-600">
+          Relie <span className="font-medium">ton</span> compte Stripe pour
+          demander un acompte sur une privatisation, prendre une empreinte de
+          carte en garantie, ou faire payer une expérience à l&apos;avance.
+          L&apos;argent va directement chez toi : Klarr ne le touche jamais et
+          ne prélève aucune commission.
+        </p>
+      </div>
 
       {query.stripe_connecte && (
-        <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+        <p className="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-800">
           Ton compte Stripe est relié.
         </p>
       )}
       {query.stripe_error && (
-        <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <p className="rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">
           {MOTIFS[query.stripe_error] ?? "La connexion a échoué."}
         </p>
       )}
 
-      <p className="max-w-4xl text-sm text-zinc-600">
-        Relie <span className="font-medium">ton</span> compte Stripe pour
-        demander un acompte sur une privatisation, prendre une empreinte de
-        carte en garantie, ou faire payer une expérience à l&apos;avance.
-        L&apos;argent va directement chez toi : Klarr ne le touche jamais et ne
-        prélève aucune commission.
-      </p>
-
-      <div className="grid grid-cols-3 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+        <Compteur
+          valeur={!connexion ? "—" : pret ? "Prêt" : "À finir"}
+          libelle={
+            !connexion
+              ? "compte Stripe à relier"
+              : pret
+                ? "compte Stripe, prêt à encaisser"
+                : "dossier Stripe à terminer"
+          }
+          accent={!pret}
+        />
         <Compteur
           valeur={euros.format(encaisse / 100)}
           libelle="d'acomptes encaissés"
@@ -134,118 +146,126 @@ export default async function PaiementsPage({
           valeur={String(empreintes)}
           libelle={`empreinte${empreintes > 1 ? "s" : ""} de carte en cours`}
         />
-        <Compteur
-          valeur={String(enAttente)}
-          libelle={`paiement${enAttente > 1 ? "s" : ""} en attente du client`}
-          accent={enAttente > 0}
-        />
+        {/* Les paiements attendus se suivent dans le carnet, réservation
+            par réservation : la tuile y mène. */}
+        <Link
+          href={`/dashboard/${id}/reservations#garanties`}
+          className="block [&>div]:h-full"
+        >
+          <Compteur
+            valeur={String(enAttente)}
+            libelle={`paiement${enAttente > 1 ? "s" : ""} en attente du client`}
+            accent={enAttente > 0}
+          />
+        </Link>
       </div>
 
       <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
         {/* Le compte : relié ou non, prêt ou non. C'est la seule chose à
             régler ici ; le reste se passe chez Stripe. */}
-        {connexion ? (
-          <section
-            className={`flex flex-col gap-5 rounded-2xl border p-6 shadow-sm ${
-              pret
-                ? "border-emerald-200 bg-emerald-50/60"
-                : "border-brand-orange/50 bg-brand-orange-soft"
-            }`}
-          >
-            <div className="flex flex-wrap items-start justify-between gap-3">
+        <section className="flex flex-col gap-4">
+          <TitreSection>Ton compte Stripe</TitreSection>
+          {connexion ? (
+            <div
+              className={`flex flex-col gap-5 rounded-2xl border p-6 shadow-sm ${
+                pret
+                  ? "border-emerald-200 bg-emerald-50/60"
+                  : "border-brand-orange/50 bg-brand-orange-soft"
+              }`}
+            >
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <span
+                    aria-hidden="true"
+                    className={`h-3 w-3 rounded-full ${
+                      pret ? "bg-emerald-500" : "bg-brand-orange"
+                    }`}
+                  />
+                  <span className="font-serif text-3xl text-ink">
+                    {pret ? "Prêt à encaisser" : "Pas encore prêt"}
+                  </span>
+                </div>
+                <span className="rounded-full bg-white/80 px-3 py-1 text-xs font-semibold text-zinc-600">
+                  Stripe
+                </span>
+              </div>
+              <div className="flex flex-col gap-0.5">
+                <span className="font-semibold text-ink">
+                  {connexion.nom_affiche ?? "Compte Stripe relié"}
+                </span>
+                <span className="font-mono text-xs text-zinc-500">
+                  {connexion.stripe_account_id}
+                </span>
+              </div>
+              {aFaire && (
+                <p className="rounded-xl bg-white/70 px-4 py-3 text-sm leading-relaxed text-ink">
+                  {aFaire}
+                </p>
+              )}
+              <div className="flex flex-wrap items-center gap-4">
+                <a
+                  href="https://dashboard.stripe.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-lg bg-brand-navy px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover"
+                >
+                  Ouvrir mon tableau de bord Stripe ↗
+                </a>
+                <form action={deconnecterStripe}>
+                  <input type="hidden" name="restaurant_id" value={id} />
+                  <button
+                    type="submit"
+                    className="text-sm font-medium text-zinc-500 hover:text-red-600"
+                  >
+                    Retirer la connexion
+                  </button>
+                </form>
+              </div>
+              <p className="text-xs leading-relaxed text-zinc-500">
+                Tes virements, tes remboursements et tes litiges restent dans
+                ton tableau de bord Stripe, comme aujourd&apos;hui.
+              </p>
+            </div>
+          ) : (
+            <div className="flex flex-col items-start gap-5 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm">
               <div className="flex items-center gap-3">
                 <span
                   aria-hidden="true"
-                  className={`h-3 w-3 rounded-full ${
-                    pret ? "bg-emerald-500" : "bg-brand-orange"
-                  }`}
+                  className="h-3 w-3 rounded-full bg-zinc-300"
                 />
                 <span className="font-serif text-3xl text-ink">
-                  {pret ? "Prêt à encaisser" : "Pas encore prêt"}
+                  Aucun compte relié
                 </span>
               </div>
-              <span className="rounded-full bg-white/80 px-3 py-1 text-xs font-semibold text-zinc-600">
-                Stripe
-              </span>
-            </div>
-            <div className="flex flex-col gap-0.5">
-              <span className="font-semibold text-ink">
-                {connexion.nom_affiche ?? "Compte Stripe relié"}
-              </span>
-              <span className="font-mono text-xs text-zinc-500">
-                {connexion.stripe_account_id}
-              </span>
-            </div>
-            {aFaire && (
-              <p className="rounded-xl bg-white/70 px-4 py-3 text-sm leading-relaxed text-ink">
-                {aFaire}
+              <p className="text-sm leading-relaxed text-zinc-600">
+                Tu peux relier un compte Stripe existant, ou en créer un pendant
+                la connexion si tu n&apos;en as pas encore. Stripe demandera une
+                pièce d&apos;identité et ton RIB.
               </p>
-            )}
-            <div className="flex flex-wrap items-center gap-4">
               <a
-                href="https://dashboard.stripe.com"
-                target="_blank"
-                rel="noopener noreferrer"
+                href={`/api/stripe/connect/authorize?restaurant_id=${id}`}
                 className="rounded-lg bg-brand-navy px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover"
               >
-                Ouvrir mon tableau de bord Stripe ↗
+                Connecter mon compte Stripe
               </a>
-              <form action={deconnecterStripe}>
-                <input type="hidden" name="restaurant_id" value={id} />
-                <button
-                  type="submit"
-                  className="text-sm font-medium text-zinc-500 hover:text-red-600"
-                >
-                  Retirer la connexion
-                </button>
-              </form>
             </div>
-            <p className="text-xs leading-relaxed text-zinc-500">
-              Tes virements, tes remboursements et tes litiges restent dans ton
-              tableau de bord Stripe, comme aujourd&apos;hui.
-            </p>
-          </section>
-        ) : (
-          <section className="flex flex-col items-start gap-5 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm">
-            <div className="flex items-center gap-3">
-              <span
-                aria-hidden="true"
-                className="h-3 w-3 rounded-full bg-zinc-300"
-              />
-              <span className="font-serif text-3xl text-ink">
-                Aucun compte relié
-              </span>
-            </div>
-            <p className="text-sm leading-relaxed text-zinc-600">
-              Tu peux relier un compte Stripe existant, ou en créer un pendant
-              la connexion si tu n&apos;en as pas encore. Stripe demandera une
-              pièce d&apos;identité et ton RIB.
-            </p>
-            <a
-              href={`/api/stripe/connect/authorize?restaurant_id=${id}`}
-              className="rounded-lg bg-brand-navy px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover"
-            >
-              Connecter mon compte Stripe
-            </a>
-          </section>
-        )}
+          )}
+        </section>
 
         {/* Ce que le compte permet, et où ça se règle : sans ça, relier
             Stripe reste une case cochée qui ne sert à rien. */}
-        <section className="flex flex-col gap-3">
-          <h2 className="font-serif text-2xl text-ink">
-            Ce que tu peux encaisser
-          </h2>
+        <section className="flex flex-col gap-4">
+          <TitreSection>Ce que tu peux encaisser</TitreSection>
           <ul className="grid gap-3 md:grid-cols-3 xl:grid-cols-1 2xl:grid-cols-3">
             {USAGES.map((usage) => (
               <li
                 key={usage.titre}
                 className="flex flex-col gap-2 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm"
               >
-                <span className="text-[15px] font-semibold text-ink">
+                <span className="text-base font-semibold text-ink">
                   {usage.titre}
                 </span>
-                <span className="text-sm leading-relaxed text-zinc-500">
+                <span className="text-sm leading-relaxed text-zinc-600">
                   {usage.texte}
                 </span>
                 <Link
@@ -262,7 +282,7 @@ export default async function PaiementsPage({
 
       <Link
         href={`/dashboard/${id}/connexions`}
-        className="text-sm text-zinc-500 hover:text-zinc-900"
+        className="w-fit text-sm font-semibold text-brand-orange-dark hover:underline"
       >
         ← Toutes mes connexions
       </Link>
