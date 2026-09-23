@@ -34,7 +34,7 @@ export function FormulaireQuestion({
   );
 
   return (
-    <div className="flex flex-col gap-3 rounded-2xl border border-zinc-200 bg-white p-5">
+    <div className="flex flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm">
       {restantes.length > 0 && (
         <div className="flex flex-col gap-2">
           <p className="text-xs font-medium text-zinc-500">
@@ -49,7 +49,7 @@ export function FormulaireQuestion({
                   setQuestion(suggestion);
                   reponseRef.current?.focus();
                 }}
-                className="rounded-full border border-zinc-200 px-3 py-1 text-xs text-zinc-600 transition-colors hover:border-brand-navy hover:text-brand-navy"
+                className="rounded-full border border-zinc-200 px-3 py-1.5 text-xs text-zinc-600 transition-colors hover:border-brand-navy hover:text-brand-navy"
               >
                 {suggestion}
               </button>
@@ -68,7 +68,7 @@ export function FormulaireQuestion({
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
             placeholder="Avez-vous une terrasse ?"
-            className="rounded-md border border-zinc-300 px-3 py-2 text-sm font-normal outline-none focus:border-brand-navy"
+            className="rounded-lg border border-zinc-200 bg-zinc-50 px-3.5 py-2.5 text-sm font-normal outline-none transition-colors focus:border-brand-navy focus:bg-white"
           />
         </label>
 
@@ -79,7 +79,7 @@ export function FormulaireQuestion({
             name="reponse"
             rows={2}
             placeholder="Oui, une terrasse de vingt couverts, chauffée jusqu'en novembre."
-            className="rounded-md border border-zinc-300 px-3 py-2 text-sm font-normal outline-none focus:border-brand-navy"
+            className="rounded-lg border border-zinc-200 bg-zinc-50 px-3.5 py-2.5 text-sm font-normal outline-none transition-colors focus:border-brand-navy focus:bg-white"
           />
           <span className="text-xs font-normal text-zinc-500">
             Une ou deux phrases. C&apos;est ce texte que les assistants
@@ -91,7 +91,7 @@ export function FormulaireQuestion({
           <button
             type="submit"
             disabled={pending}
-            className="w-fit rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover disabled:opacity-50"
+            className="w-fit rounded-lg bg-brand-navy px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover disabled:opacity-50"
           >
             {pending ? "Enregistrement…" : "Ajouter"}
           </button>

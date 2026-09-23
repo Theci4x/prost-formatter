@@ -80,70 +80,109 @@ export default async function FaqPage({
         Accessoirement, elles épargnent autant d&apos;appels en plein service.
       </p>
 
-      <div className="flex flex-col gap-4">
-        {/* L'état d'abord : c'est la phrase qui dit s'il reste à faire,
-            et elle dit ce que coûte le fait de ne pas le faire. */}
-        <p
-          className={`rounded-2xl border px-4 py-3 text-sm ${
-            etat.complet
-              ? "border-emerald-200 bg-emerald-50 text-emerald-900"
-              : "border-amber-200 bg-amber-50 text-amber-900"
-          }`}
-        >
-          {etat.complet ? (
-            <>
-              Ta page répond aux {etat.attendues} questions qu&apos;on pose le
-              plus. C&apos;est autant d&apos;appels que tu ne prendras pas en
-              plein service.
-            </>
-          ) : (
-            <>
-              Ta page répond à <strong>{etat.repondues}</strong> question
-              {etat.repondues > 1 ? "s" : ""} sur {etat.attendues}. Pour les{" "}
-              {etat.attendues - etat.repondues} autres, les clients appellent —
-              ou vont voir ailleurs.
-            </>
-          )}
-        </p>
-
-        <ReponsesRapides restaurantId={id} questions={restantes} />
-
-        <FormulaireQuestion
-          restaurantId={id}
-          suggestions={SUGGESTIONS.map((s) => s.question)}
-          dejaPosees={posees}
-        />
-
-        {questions.length === 0 ? (
-          <p className="text-sm text-zinc-500">
-            Aucune question pour l&apos;instant. Commence par les deux ou trois
-            qu&apos;on te pose au téléphone toutes les semaines.
+      {/* L'état d'abord : c'est la phrase qui dit s'il reste à faire,
+          et elle dit ce que coûte le fait de ne pas le faire. */}
+      <section
+        className={`flex flex-col gap-4 rounded-2xl border p-6 sm:flex-row sm:items-center sm:gap-8 ${
+          etat.complet
+            ? "border-emerald-200 bg-emerald-50/70"
+            : "border-brand-orange/50 bg-brand-orange-soft"
+        }`}
+      >
+        <span className="flex shrink-0 items-baseline gap-1.5">
+          <span className="font-serif text-6xl leading-none text-ink">
+            {etat.repondues}
+          </span>
+          <span className="font-serif text-2xl text-zinc-500">
+            / {etat.attendues}
+          </span>
+        </span>
+        <div className="flex min-w-0 flex-1 flex-col gap-3">
+          <p className="text-sm leading-relaxed text-ink sm:text-base">
+            {etat.complet ? (
+              <>
+                Ta page répond aux {etat.attendues} questions qu&apos;on pose le
+                plus. C&apos;est autant d&apos;appels que tu ne prendras pas en
+                plein service.
+              </>
+            ) : (
+              <>
+                Ta page répond à <strong>{etat.repondues}</strong> question
+                {etat.repondues > 1 ? "s" : ""} sur {etat.attendues}. Pour les{" "}
+                {etat.attendues - etat.repondues} autres, les clients appellent
+                — ou vont voir ailleurs.
+              </>
+            )}
           </p>
-        ) : (
-          <ul className="flex flex-col gap-3">
-            {questions.map((q) => (
-              <li
-                key={q.id}
-                className="flex flex-col gap-2 rounded-2xl border border-zinc-200 bg-white p-4"
-              >
-                <p className="text-sm font-medium text-zinc-900">
-                  {q.question}
-                </p>
-                <p className="text-sm text-zinc-600">{q.reponse}</p>
-                <form action={supprimerQuestion} className="w-fit">
-                  <input type="hidden" name="restaurant_id" value={id} />
-                  <input type="hidden" name="question_id" value={q.id} />
-                  <button
-                    type="submit"
-                    className="text-xs font-medium text-zinc-500 underline underline-offset-2 hover:text-red-600"
-                  >
-                    Supprimer
-                  </button>
-                </form>
-              </li>
-            ))}
-          </ul>
-        )}
+          <div className="h-2 overflow-hidden rounded-full bg-white/80">
+            <div
+              className={`h-full rounded-full ${
+                etat.complet ? "bg-emerald-500" : "bg-brand-orange"
+              }`}
+              style={{
+                width: `${etat.attendues ? (etat.repondues / etat.attendues) * 100 : 100}%`,
+              }}
+            />
+          </div>
+        </div>
+      </section>
+
+      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
+        <div className="flex min-w-0 flex-col gap-6">
+          <ReponsesRapides restaurantId={id} questions={restantes} />
+
+          <section className="flex flex-col gap-3">
+            <h2 className="font-serif text-2xl text-ink">Une autre question</h2>
+            <FormulaireQuestion
+              restaurantId={id}
+              suggestions={SUGGESTIONS.map((s) => s.question)}
+              dejaPosees={posees}
+            />
+          </section>
+        </div>
+
+        {/* Les réponses telles que la page les montre : on relit ce que
+            le client lira, pas une liste de champs. */}
+        <section className="flex min-w-0 flex-col gap-3 xl:sticky xl:top-24">
+          <div className="flex items-baseline justify-between gap-4">
+            <h2 className="font-serif text-2xl text-ink">Sur ta page</h2>
+            <span className="text-xs text-zinc-500">
+              {questions.length} question{questions.length > 1 ? "s" : ""}
+            </span>
+          </div>
+          {questions.length === 0 ? (
+            <p className="rounded-2xl border border-dashed border-zinc-300 bg-white px-6 py-10 text-center text-sm text-zinc-500">
+              Aucune question pour l&apos;instant. Commence par les deux ou
+              trois qu&apos;on te pose au téléphone toutes les semaines.
+            </p>
+          ) : (
+            <ul className="flex flex-col divide-y divide-zinc-100 overflow-hidden rounded-2xl border border-zinc-200/70 bg-white shadow-sm">
+              {questions.map((q) => (
+                <li key={q.id} className="flex flex-col gap-1.5 px-6 py-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <p className="text-[15px] font-semibold text-ink">
+                      {q.question}
+                    </p>
+                    <form action={supprimerQuestion} className="shrink-0">
+                      <input type="hidden" name="restaurant_id" value={id} />
+                      <input type="hidden" name="question_id" value={q.id} />
+                      <button
+                        type="submit"
+                        aria-label={`Supprimer « ${q.question} »`}
+                        className="rounded-lg px-2 py-1 text-xs font-medium text-zinc-400 transition-colors hover:bg-red-50 hover:text-red-600"
+                      >
+                        Supprimer
+                      </button>
+                    </form>
+                  </div>
+                  <p className="text-sm leading-relaxed text-zinc-600">
+                    {q.reponse}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
       </div>
     </div>
   );

@@ -24,21 +24,22 @@ export function ReponsesRapides({
   if (questions.length === 0) return null;
 
   return (
-    <div className="flex flex-col gap-4 rounded-2xl border border-zinc-200 bg-white p-5">
+    <div className="flex flex-col gap-5 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm">
       <div className="flex flex-col gap-1">
-        <h2 className="text-sm font-semibold text-zinc-900">
-          Réponds en un appui
-        </h2>
+        <h2 className="font-serif text-2xl text-ink">Réponds en un appui</h2>
         <p className="text-sm text-zinc-600">
           Choisis la phrase qui correspond à ta maison. Tu pourras la retoucher
           ensuite — c&apos;est un point de départ, pas un texte imposé.
         </p>
       </div>
 
-      <ul className="flex flex-col gap-4">
+      <ul className="grid gap-3 lg:grid-cols-2">
         {questions.map((suggestion) => (
-          <li key={suggestion.question} className="flex flex-col gap-2">
-            <p className="text-sm font-medium text-zinc-800">
+          <li
+            key={suggestion.question}
+            className="flex flex-col gap-3 rounded-xl border border-zinc-100 bg-brand-cream/50 p-4"
+          >
+            <p className="text-[15px] font-semibold text-ink">
               {suggestion.question}
             </p>
             <div className="flex flex-wrap gap-2">
@@ -57,7 +58,7 @@ export function ReponsesRapides({
                   <input type="hidden" name="reponse" value={reponse} />
                   <button
                     type="submit"
-                    className="rounded-full border border-zinc-200 px-3 py-1.5 text-left text-xs text-zinc-700 transition-colors hover:border-brand-navy hover:bg-brand-cream hover:text-brand-navy"
+                    className="rounded-full border border-zinc-200 bg-white px-3.5 py-2 text-left text-sm text-zinc-700 transition-colors hover:border-brand-orange hover:bg-brand-orange-soft hover:text-ink"
                   >
                     {reponse}
                   </button>
