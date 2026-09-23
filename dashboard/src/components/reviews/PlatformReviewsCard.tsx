@@ -200,14 +200,19 @@ function quand(iso: string | null): string | null {
 export function CarteAvis({
   avis,
   restaurantId,
+  cle,
+  enregistree,
 }: {
   avis: AvisAffiche;
   restaurantId: string;
+  /** L'identifiant de l'avis pour les réponses ; voir `cleAvis`. */
+  cle: string;
+  enregistree: { reponse: string; reponduLe: string } | null;
 }) {
   const initiale = avis.author.trim().charAt(0).toUpperCase() || "?";
   // Une note basse se voit avant d'être lue : c'est à elle qu'on répond
   // en premier.
-  const basse = avis.rating > 0 && avis.rating <= 3;
+  const basse = avis.rating > 0 && avis.rating <= 3 && !enregistree;
   const date = quand(avis.publishedAt);
 
   return (
@@ -255,6 +260,9 @@ export function CarteAvis({
       <div className="border-t border-zinc-100 pt-4">
         <ReviewReplyDraft
           restaurantId={restaurantId}
+          cle={cle}
+          plateforme={LIBELLE_PLATEFORME[avis.platform]}
+          enregistree={enregistree}
           author={avis.author}
           rating={avis.rating}
           text={avis.text}

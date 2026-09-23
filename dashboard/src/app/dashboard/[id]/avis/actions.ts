@@ -18,15 +18,38 @@ export type DraftState = {
   version: number;
 };
 
+/** La réponse est publique et signée : on la cadre une fois, ici. */
+const CONSIGNES_REPONSE =
+  "Tu écris la réponse publique d'un restaurant à un avis client, publiée " +
+  "sous l'avis sur la plateforme indiquée.\n\n" +
+  "- Réponds dans la langue de l'avis : un avis en anglais reçoit une " +
+  "réponse en anglais, un avis en espagnol une réponse en espagnol. En " +
+  "français, vouvoie le client.\n" +
+  "- Parle au nom de l'équipe, à la première personne du pluriel.\n" +
+  "- Trois à cinq phrases. Remercie, reprends un détail précis de l'avis " +
+  "pour montrer qu'il a été lu.\n" +
+  "- Sur un avis négatif ou mitigé, reconnais le problème sans te " +
+  "justifier longuement et propose de poursuivre en privé par téléphone ou " +
+  "par e-mail, sans inventer de coordonnées.\n" +
+  "- Sans commentaire écrit, deux phrases de remerciement suffisent.\n" +
+  "- N'invente aucun fait sur le restaurant, ne promets aucun geste " +
+  "commercial, ne cite aucun prix.\n" +
+  "- Termine par une signature au nom de l'équipe du restaurant, " +
+  "correctement accordée et dans la langue de la réponse : « L'équipe du " +
+  "Comptoir » pour Le Comptoir, « The Comptoir team » en anglais.\n\n" +
+  "Réponds uniquement par le texte de la réponse, sans guillemets ni " +
+  "commentaire.";
+
 export async function draftReply(
   prevState: DraftState,
   formData: FormData,
 ): Promise<DraftState> {
   const version = prevState.version + 1;
   const restaurantId = formData.get("restaurant_id") as string;
-  const author = (formData.get("author") as string) ?? "";
+  const author = String(formData.get("author") ?? "").trim();
   const rating = Number(formData.get("rating") ?? 0);
-  const text = (formData.get("text") as string) ?? "";
+  const text = String(formData.get("text") ?? "").trim();
+  const plateforme = String(formData.get("plateforme") ?? "").trim();
 
   if (!process.env.ANTHROPIC_API_KEY) {
     return {
@@ -43,44 +66,84 @@ export async function draftReply(
   // au nom d'un établissement qui n'est pas le sien.
   const { data } = await supabase
     .from("restaurants")
-    .select("nom")
+    .select("nom, type_cuisine")
     .eq("id", restaurantId)
     .maybeSingle();
 
-  const restaurant = data as { nom: string } | null;
+  const restaurant = data as {
+    nom: string;
+    type_cuisine: string | null;
+  } | null;
   if (!restaurant) {
     return { draft: null, error: "Restaurant introuvable.", version };
   }
 
   try {
     const client = new Anthropic();
-    const response = await client.messages.create({
+    // Une réponse courte : peu d'effort suffit. La réflexion, active par
+    // défaut sur ce modèle, prend sur `max_tokens` : 600 risquait de
+    // couper avant la réponse. Le repli côté serveur prend le relais si
+    // le modèle décline, plutôt que de laisser le restaurateur sans rien.
+    const requete = {
       model: "claude-opus-5",
-      max_tokens: 600,
-      system:
-        "Tu écris la réponse publique d'un restaurateur à un avis client. " +
-        "Ton chaleureux et professionnel, en français, à la première " +
-        "personne du pluriel. Trois à cinq phrases maximum. Remercie, " +
-        "reprends un détail précis de l'avis pour montrer qu'il a été lu, " +
-        "et sur un avis négatif reconnais le problème et propose de " +
-        "poursuivre en privé. N'invente aucun fait, ne promets pas de geste " +
-        "commercial. Réponds uniquement par le texte de la réponse.",
+      max_tokens: 4000,
+      output_config: { effort: "low" as const },
+      system: CONSIGNES_REPONSE,
       messages: [
         {
-          role: "user",
+          role: "user" as const,
           content:
-            `Restaurant : "${restaurant.nom}".\n` +
-            `Avis de ${author || "un client"}, noté ${rating}/5 :\n\n${text}`,
+            `Restaurant : ${restaurant.nom}` +
+            (restaurant.type_cuisine ? ` (${restaurant.type_cuisine})` : "") +
+            `\nPlateforme : ${plateforme || "non précisée"}` +
+            `\n\nAvis de ${author || "un client"}, noté ${rating}/5 :\n\n` +
+            (text || "(note sans commentaire écrit)"),
         },
       ],
-    });
+    };
+    // Le repli est une fonction bêta : si l'API la refusait un jour, la
+    // rédaction ne doit pas tomber avec elle. On relance alors sans.
+    const response = await client.beta.messages
+      .create({
+        ...requete,
+        betas: ["server-side-fallback-2026-07-01"],
+        fallbacks: "default",
+      })
+      .catch((erreur: unknown) => {
+        if (erreur instanceof Anthropic.BadRequestError) {
+          console.error(
+            "[draftReply] repli refusé, appel simple",
+            erreur.message,
+          );
+          return client.beta.messages.create(requete);
+        }
+        throw erreur;
+      });
+
+    if (response.stop_reason === "refusal") {
+      return {
+        draft: null,
+        error:
+          "Klarr n'a pas pu proposer de réponse à cet avis. Écris-la toi-même, ou réessaie.",
+        version,
+      };
+    }
 
     const draft = response.content
-      .filter((block): block is Anthropic.TextBlock => block.type === "text")
+      .filter(
+        (block): block is Anthropic.Beta.BetaTextBlock => block.type === "text",
+      )
       .map((block) => block.text)
       .join("\n")
       .trim();
 
+    if (!draft) {
+      return {
+        draft: null,
+        error: "La rédaction n'a rien donné. Réessaie dans un instant.",
+        version,
+      };
+    }
     return { draft, error: null, version };
   } catch (err) {
     console.error("[draftReply]", err);
@@ -90,6 +153,58 @@ export async function draftReply(
       version,
     };
   }
+}
+
+/**
+ * Le restaurateur a publié la réponse sur la plateforme : on le retient.
+ *
+ * C'est ce qui sort l'avis de la liste « sans réponse ». Le texte est
+ * gardé tel qu'il l'a publié, retouches comprises, pour qu'il le
+ * retrouve — et, le jour où Klarr publiera lui-même, pour que
+ * l'historique soit déjà là.
+ */
+export async function marquerRepondu(formData: FormData): Promise<void> {
+  const restaurantId = String(formData.get("restaurant_id") ?? "");
+  const cle = String(formData.get("cle") ?? "").slice(0, 300);
+  const reponse = String(formData.get("reponse") ?? "").trim();
+  if (!restaurantId || !cle || !reponse) return;
+
+  await exiger(restaurantId, "gerant");
+
+  const note = Number(formData.get("note") ?? 0);
+  const supabase = await createClient();
+  const { error } = await supabase.from("restaurant_avis_reponses").upsert({
+    restaurant_id: restaurantId,
+    cle,
+    plateforme: String(formData.get("plateforme") ?? "").slice(0, 40),
+    auteur: String(formData.get("auteur") ?? "").slice(0, 200) || null,
+    note: note >= 1 && note <= 5 ? Math.round(note) : null,
+    reponse,
+    source: "manuel",
+    repondu_le: new Date().toISOString(),
+  });
+  if (error) console.error("[avis/marquerRepondu]", error.message);
+
+  revalidatePath(`/dashboard/${restaurantId}/avis`);
+}
+
+/** Défaire « répondu » : l'avis revient dans la liste à traiter. */
+export async function annulerReponse(formData: FormData): Promise<void> {
+  const restaurantId = String(formData.get("restaurant_id") ?? "");
+  const cle = String(formData.get("cle") ?? "");
+  if (!restaurantId || !cle) return;
+
+  await exiger(restaurantId, "gerant");
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("restaurant_avis_reponses")
+    .delete()
+    .eq("restaurant_id", restaurantId)
+    .eq("cle", cle);
+  if (error) console.error("[avis/annulerReponse]", error.message);
+
+  revalidatePath(`/dashboard/${restaurantId}/avis`);
 }
 
 /**

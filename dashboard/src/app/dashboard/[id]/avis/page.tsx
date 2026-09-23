@@ -15,8 +15,10 @@ import {
 import { tripadvisorDuReleve } from "@/lib/reviews/releve";
 import { FRAICHEUR_DEMANDE } from "@/lib/reviews/fraicheur";
 import { ConfirmationTripadvisor } from "@/components/reviews/ConfirmationTripadvisor";
+import { RepondreAvisLibre } from "@/components/reviews/RepondreAvisLibre";
+import { chargerReponses, cleAvis } from "@/lib/reviews/reponses";
 import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
-import { Compteur } from "@/components/dashboard/Compteur";
+import { Compteur, TitreSection } from "@/components/dashboard/Compteur";
 import type { Restaurant } from "@/types/restaurant";
 import { exiger } from "@/lib/equipe/roles";
 import { exigerModule } from "@/lib/abonnement/acces";
@@ -56,18 +58,21 @@ export default async function AvisPage({
   };
   const epingleTripadvisor = suivi.tripadvisor_location_id;
 
-  const [google, yelp, releveTripadvisor, direct] = await Promise.all([
-    fetchGooglePlatformReviews(restaurant.nom, location),
-    fetchYelpPlatformReviews(restaurant.nom, location),
-    tripadvisorDuReleve(supabase, suivi),
-    chargerTripadvisor
-      ? fetchTripadvisorPlatformReviews(restaurant.nom, location, {
-          epingle: epingleTripadvisor,
-          devine: suivi.tripadvisor_location_devine ?? null,
-          fraicheur: FRAICHEUR_DEMANDE,
-        })
-      : Promise.resolve(null),
-  ]);
+  const [google, yelp, releveTripadvisor, direct, suiviReponses] =
+    await Promise.all([
+      fetchGooglePlatformReviews(restaurant.nom, location),
+      fetchYelpPlatformReviews(restaurant.nom, location),
+      tripadvisorDuReleve(supabase, suivi),
+      chargerTripadvisor
+        ? fetchTripadvisorPlatformReviews(restaurant.nom, location, {
+            epingle: epingleTripadvisor,
+            devine: suivi.tripadvisor_location_devine ?? null,
+            fraicheur: FRAICHEUR_DEMANDE,
+          })
+        : Promise.resolve(null),
+      chargerReponses(supabase, id),
+    ]);
+  const { reponses, tableAbsente } = suiviReponses;
   // Chargé à la demande, l'appel direct l'emporte : il porte les avis, le
   // lien vers la fiche et le nom retenu. Sinon, le relevé suffit.
   const tripadvisor = direct?.found ? direct : releveTripadvisor;
@@ -99,7 +104,11 @@ export default async function AvisPage({
       ? notees.reduce((t, p) => t + p.rating! * (p.reviewCount ?? 0), 0) /
         totalAvis
       : null;
-  const bas = avis.filter((a) => a.rating > 0 && a.rating <= 3);
+  const repondu = (a: AvisAffiche) => reponses.has(cleAvis(a));
+  // « À traiter » : les notes basses encore sans réponse. Une fois
+  // répondu, l'avis n'a plus à attirer l'œil.
+  const bas = avis.filter((a) => a.rating > 0 && a.rating <= 3 && !repondu(a));
+  const sansReponse = avis.filter((a) => !repondu(a));
 
   // Les filtres de la liste : les avis à traiter d'abord, et une entrée
   // par plateforme qui a transmis quelque chose.
@@ -107,6 +116,14 @@ export default async function AvisPage({
     { cle: "", libelle: `Tous · ${avis.length}` },
     ...(bas.length > 0
       ? [{ cle: "a-traiter", libelle: `À traiter · ${bas.length}` }]
+      : []),
+    ...(sansReponse.length > 0 && sansReponse.length < avis.length
+      ? [
+          {
+            cle: "sans-reponse",
+            libelle: `Sans réponse · ${sansReponse.length}`,
+          },
+        ]
       : []),
     ...plateformes
       .filter((p) => avis.some((a) => a.platform === p.platform))
@@ -120,10 +137,12 @@ export default async function AvisPage({
     : "";
   const affiches = avis.filter((a) =>
     actif === "a-traiter"
-      ? a.rating > 0 && a.rating <= 3
-      : actif
-        ? a.platform === actif
-        : true,
+      ? a.rating > 0 && a.rating <= 3 && !repondu(a)
+      : actif === "sans-reponse"
+        ? !repondu(a)
+        : actif
+          ? a.platform === actif
+          : true,
   );
   const lienFiltre = (cle: string) => {
     const params = new URLSearchParams();
@@ -140,11 +159,21 @@ export default async function AvisPage({
         title={`Avis — ${restaurant.nom}`}
       />
 
+      {tableAbsente && (
+        <p className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm leading-relaxed text-amber-900">
+          <strong>Migration à passer :</strong> le suivi des réponses
+          (supabase/migrations/0081_avis_reponses.sql) n&apos;est pas encore en
+          place. Tu peux déjà rédiger et copier tes réponses ; « J&apos;ai
+          publié » s&apos;enregistrera une fois la migration passée.
+        </p>
+      )}
+
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="max-w-4xl text-sm text-zinc-600">
-          Klarr peut rédiger une réponse pour chaque avis. La publication
-          directe sur Google arrivera avec l&apos;accès à son API ; en
-          attendant, la réponse se copie en un clic.
+          Klarr rédige une réponse pour chaque avis, dans la langue du client.
+          En attendant que Google ouvre la publication directe, copie-la,
+          colle-la sous l&apos;avis, puis coche « J&apos;ai publié » :
+          l&apos;avis sort de la liste à traiter.
         </p>
         {/* L'autre moitié de la réputation : ce que les clients disent en
             privé, avant d'écrire en public. */}
@@ -157,7 +186,7 @@ export default async function AvisPage({
       </div>
 
       {plateformes.length > 0 && (
-        <div className="grid grid-cols-3 gap-3 sm:gap-4">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
           <Compteur
             valeur={
               moyenne != null ? moyenne.toFixed(1).replace(".", ",") : "—"
@@ -172,11 +201,18 @@ export default async function AvisPage({
             valeur={totalAvis.toLocaleString("fr-FR")}
             libelle={`avis au total`}
           />
-          <a href="#avis" className="block">
+          <a href="#avis" className="block [&>div]:h-full">
             <Compteur
               valeur={bas.length}
-              libelle={`avis de 3 étoiles ou moins à traiter`}
+              libelle={`avis de 3 étoiles ou moins sans réponse`}
               accent={bas.length > 0}
+            />
+          </a>
+          <a href="#avis" className="block [&>div]:h-full">
+            <Compteur
+              valeur={`${avis.length - sansReponse.length}/${avis.length}`}
+              libelle="derniers avis avec une réponse"
+              accent={sansReponse.length > 0}
             />
           </a>
         </div>
@@ -267,16 +303,28 @@ export default async function AvisPage({
             sur chaque plateforme, au-dessus.
           </div>
         ) : (
-          <ul className="grid gap-4 lg:grid-cols-2">
+          <ul className="grid items-start gap-4 lg:grid-cols-2">
             {affiches.map((a, i) => (
               <CarteAvis
                 key={`${a.platform}-${i}`}
                 avis={a}
                 restaurantId={id}
+                cle={cleAvis(a)}
+                enregistree={reponses.get(cleAvis(a)) ?? null}
               />
             ))}
           </ul>
         )}
+      </section>
+
+      <section id="autre-avis" className="flex scroll-mt-8 flex-col gap-4">
+        <TitreSection>Répondre à un autre avis</TitreSection>
+        <p className="max-w-4xl text-sm text-zinc-600">
+          Google ne transmet que cinq avis, pas forcément les plus récents. Pour
+          les autres — ou ceux de TheFork et d&apos;ailleurs — colle l&apos;avis
+          ici : Klarr propose la réponse, tu la copies.
+        </p>
+        <RepondreAvisLibre restaurantId={id} />
       </section>
     </div>
   );
