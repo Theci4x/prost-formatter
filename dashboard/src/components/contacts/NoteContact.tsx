@@ -18,7 +18,7 @@ export function NoteContact({
   note: string | null;
 }) {
   return (
-    <form action={noterContact} className="flex items-center gap-1.5">
+    <form action={noterContact} className="flex w-full items-center gap-2">
       <input type="hidden" name="restaurant_id" value={restaurantId} />
       <input type="hidden" name="contact_id" value={contactId} />
       <input
@@ -27,13 +27,13 @@ export function NoteContact({
         placeholder="Allergies, habitudes…"
         maxLength={500}
         aria-label="Note interne"
-        className="w-48 rounded-md border border-transparent bg-zinc-50 px-2 py-1 text-xs outline-none transition-colors hover:border-zinc-200 focus:border-brand-navy focus:bg-white"
+        className="min-w-0 flex-1 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm outline-none transition-colors placeholder:text-zinc-400 hover:border-zinc-300 focus:border-brand-navy focus:bg-white"
       />
       <button
         type="submit"
-        className="text-xs font-medium text-zinc-400 transition-colors hover:text-brand-navy"
+        className="shrink-0 rounded-lg border border-zinc-200 px-3 py-2 text-xs font-semibold text-zinc-600 transition-colors hover:border-brand-navy hover:text-brand-navy"
       >
-        OK
+        Enregistrer
       </button>
     </form>
   );

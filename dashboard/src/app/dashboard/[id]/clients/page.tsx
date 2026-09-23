@@ -84,7 +84,7 @@ export default async function ClientsPage({
       {/* Le chiffre qui compte n'est pas le total, c'est l'écart. Un
           fichier de huit cents personnes dont vingt acceptent les e-mails
           ne vaut pas huit cents. */}
-      <div className="flex flex-wrap gap-3">
+      <div className="grid grid-cols-3 gap-3 sm:gap-4">
         <Compteur valeur={total} libelle="clients au fichier" />
         <Compteur
           valeur={joignables}
@@ -95,7 +95,7 @@ export default async function ClientsPage({
       </div>
 
       {total > 0 && joignables === 0 && (
-        <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-relaxed text-amber-900">
+        <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900">
           <strong>Personne n&apos;a encore accepté vos e-mails.</strong> La case
           est proposée, décochée, sur votre page de réservation — c&apos;est la
           loi : on ne peut pas déduire d&apos;une table réservée l&apos;envie de
@@ -104,52 +104,8 @@ export default async function ClientsPage({
         </p>
       )}
 
-      <form className="flex flex-wrap items-end gap-3" action="">
-        <input type="hidden" name="tri" value={triChoisi} />
-        <label className="flex flex-col gap-1 text-sm font-medium text-zinc-700">
-          Chercher
-          <input
-            name="q"
-            defaultValue={q}
-            placeholder="Un nom, une adresse"
-            className="min-w-64 rounded-md border border-zinc-300 px-3 py-2 text-sm font-normal outline-none focus:border-brand-navy"
-          />
-        </label>
-        <button
-          type="submit"
-          className="rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover"
-        >
-          Chercher
-        </button>
-        {q && (
-          <Link
-            href={lien({ q: "", page: "" })}
-            className="text-sm text-zinc-500 underline underline-offset-2"
-          >
-            Effacer
-          </Link>
-        )}
-
-        <span className="ml-auto flex items-center gap-2 text-sm text-zinc-500">
-          {TRIS.map((t) => (
-            <Link
-              key={t.cle}
-              href={lien({ tri: t.cle, page: "" })}
-              aria-current={t.cle === triChoisi ? "true" : undefined}
-              className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                t.cle === triChoisi
-                  ? "bg-brand-navy text-white"
-                  : "text-zinc-600 hover:bg-zinc-100"
-              }`}
-            >
-              {t.libelle}
-            </Link>
-          ))}
-        </span>
-      </form>
-
       {sansHistorique && (
-        <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-relaxed text-amber-900">
+        <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900">
           <strong>L&apos;historique des venues n&apos;a pas pu être
           calculé.</strong>{" "}
           Voici vos clients tels qu&apos;ils sont enregistrés ; le nombre de
@@ -157,101 +113,174 @@ export default async function ClientsPage({
         </p>
       )}
 
-      {fiches.length === 0 ? (
-        <p className="text-sm text-zinc-500">
-          {q
-            ? `Personne ne correspond à « ${q} ».`
-            : total > 0
-              ? "La liste n'a pas pu être lue. Rechargez la page dans un instant."
-              : "Le fichier est vide : il se remplira à la première réservation."}
-        </p>
-      ) : (
-        <>
-          {/* Quatre colonnes ne tiennent pas sur un téléphone, et un
-              tableau qui défile de côté cache précisément ce qu'on est
-              venu voir — le consentement — sans rien laisser paraître.
-              En dessous de `sm`, elles se replient donc sous le nom. */}
-          <div>
+      {/* La recherche, le tri et la liste dans une seule carte : c'est un
+          seul outil, et il se lit comme tel. */}
+      <section className="flex flex-col overflow-hidden rounded-2xl border border-zinc-200/70 bg-white shadow-sm">
+        <form
+          className="flex flex-wrap items-center gap-3 border-b border-zinc-100 px-5 py-4"
+          action=""
+        >
+          <input type="hidden" name="tri" value={triChoisi} />
+          <label className="relative flex min-w-0 flex-1 basis-72 items-center sm:max-w-md">
+            <span className="sr-only">Chercher</span>
+            <svg
+              aria-hidden="true"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              className="pointer-events-none absolute left-3 text-zinc-400"
+            >
+              <circle cx="11" cy="11" r="7" />
+              <path d="m20 20-3.5-3.5" />
+            </svg>
+            <input
+              name="q"
+              defaultValue={q}
+              placeholder="Chercher un nom, une adresse"
+              className="w-full rounded-lg border border-zinc-200 bg-zinc-50 py-2.5 pl-9 pr-3 text-sm outline-none transition-colors focus:border-brand-navy focus:bg-white"
+            />
+          </label>
+          <button
+            type="submit"
+            className="rounded-lg bg-brand-navy px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover"
+          >
+            Chercher
+          </button>
+          {q && (
+            <Link
+              href={lien({ q: "", page: "" })}
+              className="text-sm text-zinc-500 underline underline-offset-2"
+            >
+              Effacer
+            </Link>
+          )}
+
+          <span className="ml-auto flex items-center gap-1 rounded-full bg-zinc-100 p-1">
+            {TRIS.map((t) => (
+              <Link
+                key={t.cle}
+                href={lien({ tri: t.cle, page: "" })}
+                aria-current={t.cle === triChoisi ? "true" : undefined}
+                className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+                  t.cle === triChoisi
+                    ? "bg-white text-ink shadow-sm"
+                    : "text-zinc-500 hover:text-ink"
+                }`}
+              >
+                {t.libelle}
+              </Link>
+            ))}
+          </span>
+        </form>
+
+        {fiches.length === 0 ? (
+          <p className="px-5 py-16 text-center text-sm text-zinc-500">
+            {q
+              ? `Personne ne correspond à « ${q} ».`
+              : total > 0
+                ? "La liste n'a pas pu être lue. Rechargez la page dans un instant."
+                : "Le fichier est vide : il se remplira à la première réservation."}
+          </p>
+        ) : (
+          <>
+            {/* Cinq colonnes ne tiennent pas sur un téléphone, et un
+                tableau qui défile de côté cache précisément ce qu'on est
+                venu voir — le consentement — sans rien laisser paraître.
+                En dessous de `md`, elles se replient donc sous le nom. */}
             <table className="w-full border-separate border-spacing-0 text-sm">
               <thead>
-                <tr className="text-left text-xs uppercase tracking-wide text-zinc-500">
-                  <th className="border-b border-zinc-200 py-2 pr-4">Client</th>
-                  <th className="hidden border-b border-zinc-200 py-2 pr-4 sm:table-cell">
+                <tr className="bg-zinc-50/80 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-zinc-500">
+                  <th className="border-b border-zinc-100 px-5 py-3">Client</th>
+                  <th className="hidden border-b border-zinc-100 px-4 py-3 md:table-cell">
                     Venues
                   </th>
-                  <th className="hidden border-b border-zinc-200 py-2 pr-4 sm:table-cell">
-                    Dernière
+                  <th className="hidden border-b border-zinc-100 px-4 py-3 md:table-cell">
+                    Dernière venue
                   </th>
-                  <th className="hidden border-b border-zinc-200 py-2 pr-4 sm:table-cell">
+                  <th className="hidden border-b border-zinc-100 px-4 py-3 md:table-cell">
                     E-mails
                   </th>
-                  <th className="hidden border-b border-zinc-200 py-2 sm:table-cell">
-                    Note
+                  <th className="hidden w-[32%] border-b border-zinc-100 px-5 py-3 md:table-cell">
+                    Note interne
                   </th>
                 </tr>
               </thead>
               <tbody>
                 {fiches.map((fiche) => (
-                  <tr key={fiche.id} className="align-top">
-                    <td className="border-b border-zinc-100 py-3 pr-4">
-                      <span className="font-medium text-zinc-800">
-                        {fiche.nom ?? "—"}
-                      </span>
-                      <br />
-                      <a
-                        href={`mailto:${fiche.email}`}
-                        className="text-xs text-zinc-500 underline underline-offset-2"
-                      >
-                        {fiche.email}
-                      </a>
-                      {fiche.telephone && (
-                        <>
-                          <br />
-                          <a
-                            href={`tel:${fiche.telephone}`}
-                            className="text-xs text-zinc-500"
-                          >
-                            {fiche.telephone}
-                          </a>
-                        </>
-                      )}
-                      <span className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-zinc-500 sm:hidden">
-                        <span>
-                          {fiche.venues} venue{fiche.venues > 1 ? "s" : ""}
+                  <tr
+                    key={fiche.id}
+                    className="align-middle transition-colors hover:bg-brand-cream/60"
+                  >
+                    <td className="border-b border-zinc-100 px-5 py-4">
+                      <div className="flex items-center gap-3">
+                        <Initiale fiche={fiche} />
+                        <div className="flex min-w-0 flex-col">
+                          {/* Sans nom, l'adresse devient le nom : un tiret
+                              en tête de ligne ne désigne personne. */}
+                          <span className="truncate font-semibold text-ink">
+                            {fiche.nom ?? fiche.email}
+                          </span>
+                          <span className="flex flex-wrap gap-x-3 text-xs text-zinc-500">
+                            {fiche.nom && (
+                              <a
+                                href={`mailto:${fiche.email}`}
+                                className="truncate hover:text-brand-navy hover:underline"
+                              >
+                                {fiche.email}
+                              </a>
+                            )}
+                            {fiche.telephone && (
+                              <a
+                                href={`tel:${fiche.telephone}`}
+                                className="hover:text-brand-navy hover:underline"
+                              >
+                                {fiche.telephone}
+                              </a>
+                            )}
+                            {!fiche.nom && !fiche.telephone && (
+                              <a
+                                href={`mailto:${fiche.email}`}
+                                className="hover:text-brand-navy hover:underline"
+                              >
+                                Écrire
+                              </a>
+                            )}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="mt-3 flex flex-col gap-2 md:hidden">
+                        <span className="flex flex-wrap items-center gap-2 text-xs text-zinc-500">
+                          <Venues fiche={fiche} />
+                          {fiche.derniere_venue && (
+                            <span>· {dateLisible(fiche.derniere_venue)}</span>
+                          )}
+                          <Consentement fiche={fiche} />
                         </span>
-                        {fiche.derniere_venue && (
-                          <>
-                            <span aria-hidden="true">·</span>
-                            <span>{dateLisible(fiche.derniere_venue)}</span>
-                          </>
-                        )}
-                        <span aria-hidden="true">·</span>
-                        <Consentement fiche={fiche} />
-                      </span>
-                      <span className="mt-2 flex sm:hidden">
                         <NoteContact
                           restaurantId={id}
                           contactId={fiche.id}
                           note={fiche.note_interne}
                         />
-                      </span>
+                      </div>
                     </td>
-                    <td className="hidden border-b border-zinc-100 py-3 pr-4 text-zinc-700 sm:table-cell">
-                      {fiche.venues}
-                      {fiche.couverts > 0 && (
-                        <span className="text-xs text-zinc-500">
-                          {" "}
-                          · {fiche.couverts} couv.
-                        </span>
+                    <td className="hidden border-b border-zinc-100 px-4 py-4 md:table-cell">
+                      <Venues fiche={fiche} />
+                    </td>
+                    <td className="hidden border-b border-zinc-100 px-4 py-4 text-zinc-700 md:table-cell">
+                      {fiche.derniere_venue ? (
+                        dateLisible(fiche.derniere_venue)
+                      ) : (
+                        <span className="text-zinc-400">—</span>
                       )}
                     </td>
-                    <td className="hidden border-b border-zinc-100 py-3 pr-4 text-zinc-700 sm:table-cell">
-                      {dateLisible(fiche.derniere_venue)}
-                    </td>
-                    <td className="hidden border-b border-zinc-100 py-3 pr-4 sm:table-cell">
+                    <td className="hidden border-b border-zinc-100 px-4 py-4 md:table-cell">
                       <Consentement fiche={fiche} />
                     </td>
-                    <td className="hidden border-b border-zinc-100 py-3 sm:table-cell">
+                    <td className="hidden border-b border-zinc-100 px-5 py-4 md:table-cell">
                       <NoteContact
                         restaurantId={id}
                         contactId={fiche.id}
@@ -262,41 +291,54 @@ export default async function ClientsPage({
                 ))}
               </tbody>
             </table>
-          </div>
 
-          <div className="flex flex-wrap items-center gap-4 text-sm text-zinc-500">
-            <span>
-              {trouves} fiche{trouves > 1 ? "s" : ""}
-              {pages > 1 && ` · page ${pageChoisie + 1} sur ${pages}`}
-            </span>
-            {pageChoisie > 0 && (
-              <Link
-                href={lien({ page: String(pageChoisie - 1) })}
-                className="underline underline-offset-2"
+            <div className="flex flex-wrap items-center gap-4 px-5 py-4 text-sm text-zinc-500">
+              <span>
+                {trouves} fiche{trouves > 1 ? "s" : ""}
+                {pages > 1 && ` · page ${pageChoisie + 1} sur ${pages}`}
+              </span>
+              {pageChoisie > 0 && (
+                <Link
+                  href={lien({ page: String(pageChoisie - 1) })}
+                  className="font-medium text-ink hover:underline"
+                >
+                  ← Précédentes
+                </Link>
+              )}
+              {pageChoisie + 1 < pages && (
+                <Link
+                  href={lien({ page: String(pageChoisie + 1) })}
+                  className="font-medium text-ink hover:underline"
+                >
+                  Suivantes →
+                </Link>
+              )}
+              {/* L'export emporte tout le fichier, pas la page affichée :
+                  c'est ce qu'on attend d'un export, et le contraire
+                  surprendrait au pire moment. */}
+              <a
+                href={`/dashboard/${id}/clients/export`}
+                className="ml-auto inline-flex items-center gap-2 rounded-lg border border-zinc-200 px-3.5 py-2 text-sm font-medium text-ink transition-colors hover:border-ink"
               >
-                ← Précédentes
-              </Link>
-            )}
-            {pageChoisie + 1 < pages && (
-              <Link
-                href={lien({ page: String(pageChoisie + 1) })}
-                className="underline underline-offset-2"
-              >
-                Suivantes →
-              </Link>
-            )}
-            {/* L'export emporte tout le fichier, pas la page affichée :
-                c'est ce qu'on attend d'un export, et le contraire
-                surprendrait au pire moment. */}
-            <a
-              href={`/dashboard/${id}/clients/export`}
-              className="ml-auto underline underline-offset-2"
-            >
-              Exporter en CSV
-            </a>
-          </div>
-        </>
-      )}
+                <svg
+                  aria-hidden="true"
+                  width="15"
+                  height="15"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M12 3v12m0 0-4-4m4 4 4-4M4 19h16" />
+                </svg>
+                Exporter en CSV
+              </a>
+            </div>
+          </>
+        )}
+      </section>
     </div>
   );
 }
@@ -312,15 +354,56 @@ function Compteur({
 }) {
   return (
     <div
-      className={`flex min-w-40 flex-col gap-0.5 rounded-xl border px-4 py-3 ${
+      className={`flex flex-col gap-1 rounded-2xl border px-4 py-4 sm:px-6 sm:py-5 ${
         accent
-          ? "border-brand-orange bg-brand-orange-soft"
-          : "border-zinc-200 bg-white"
+          ? "border-brand-orange/60 bg-brand-orange-soft"
+          : "border-zinc-200/70 bg-white shadow-sm"
       }`}
     >
-      <span className="font-serif text-2xl text-ink">{valeur}</span>
-      <span className="text-xs text-zinc-600">{libelle}</span>
+      <span className="font-serif text-3xl leading-none text-ink sm:text-5xl">
+        {valeur}
+      </span>
+      <span className="text-xs leading-snug text-zinc-600 sm:text-sm">
+        {libelle}
+      </span>
     </div>
+  );
+}
+
+/** La première lettre du nom, ou de l'adresse faute de nom. */
+function Initiale({ fiche }: { fiche: { nom: string | null; email: string } }) {
+  const lettre = (fiche.nom ?? fiche.email).trim().charAt(0).toUpperCase();
+  return (
+    <span
+      aria-hidden="true"
+      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-orange-soft font-serif text-lg text-brand-orange-dark"
+    >
+      {lettre || "?"}
+    </span>
+  );
+}
+
+/**
+ * « Pas encore venu » plutôt que « 0 » : un zéro seul se lit comme une
+ * donnée manquante, alors que c'est un fait — la personne a réservé, sa
+ * table n'est pas encore passée.
+ */
+function Venues({
+  fiche,
+}: {
+  fiche: { venues: number; couverts: number };
+}) {
+  if (fiche.venues === 0) {
+    return <span className="text-zinc-400">Pas encore venu</span>;
+  }
+  return (
+    <span className="text-zinc-700">
+      <span className="font-semibold text-ink">{fiche.venues}</span> venue
+      {fiche.venues > 1 ? "s" : ""}
+      {fiche.couverts > 0 && (
+        <span className="text-xs text-zinc-500"> · {fiche.couverts} couv.</span>
+      )}
+    </span>
   );
 }
 
@@ -335,21 +418,31 @@ function Consentement({
 }) {
   if (fiche.desabonne_le) {
     return (
-      <span className="text-xs text-zinc-500">
-        Désinscrit le {dateLisible(fiche.desabonne_le.slice(0, 10))}
+      <span className="inline-flex flex-col gap-0.5">
+        <span className="w-fit rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-800">
+          Désinscrit
+        </span>
+        <span className="text-[11px] text-zinc-400">
+          le {dateLisible(fiche.desabonne_le.slice(0, 10))}
+        </span>
       </span>
     );
   }
   if (!fiche.consentement) {
-    return <span className="text-xs text-zinc-400">Non</span>;
+    return (
+      <span className="w-fit rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-semibold text-zinc-500">
+        Non
+      </span>
+    );
   }
   return (
-    <span className="text-xs font-medium text-emerald-700">
-      Oui
+    <span className="inline-flex flex-col gap-0.5">
+      <span className="w-fit rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">
+        Accepte
+      </span>
       {fiche.consentement_le && (
-        <span className="font-normal text-zinc-500">
-          {" "}
-          · {dateLisible(fiche.consentement_le.slice(0, 10))}
+        <span className="text-[11px] text-zinc-400">
+          depuis le {dateLisible(fiche.consentement_le.slice(0, 10))}
         </span>
       )}
     </span>
