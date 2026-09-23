@@ -27,6 +27,15 @@ type Post = {
   derniere_erreur: string | null;
 };
 
+/** « 12 oct. » : la date de la prochaine publication, pour une tuile. */
+function jourCourt(iso: string): string {
+  return new Date(iso).toLocaleDateString("fr-FR", {
+    day: "numeric",
+    month: "short",
+    timeZone: "Europe/Paris",
+  });
+}
+
 function quand(iso: string): string {
   return new Date(iso).toLocaleString("fr-FR", {
     weekday: "long",
@@ -34,6 +43,7 @@ function quand(iso: string): string {
     month: "long",
     hour: "numeric",
     minute: "2-digit",
+    timeZone: "Europe/Paris",
   });
 }
 
@@ -100,24 +110,33 @@ export default async function PostsPage({
 
   const programmees = posts.filter((p) => p.statut === "programme").length;
   const publiees = posts.filter((p) => p.statut === "publie").length;
+  // La file part dans l'ordre des dates : la plus proche est la suivante.
+  const prochaine = posts
+    .filter((p) => p.statut === "programme")
+    .map((p) => p.publier_le)
+    .sort()[0];
+  const enEchec = posts.filter(
+    (p) => p.statut === "programme" && p.derniere_erreur,
+  ).length;
 
   return (
-    <div className="flex flex-1 flex-col gap-6 px-6 py-8">
-      <PageHeader
-        icon={dashboardIcons.google}
-        title={`Publications Google — ${restaurant.nom}`}
-        backHref={`/dashboard/${id}/google`}
-      />
-
-      <p className="max-w-4xl text-sm text-zinc-600">
-        Une publication vit une semaine sur ta fiche Google, puis disparaît.
-        L&apos;intérêt est d&apos;en avoir toujours une : écris-les à
-        l&apos;avance, Klarr les publie le jour venu.
-      </p>
+    <div className="flex flex-1 flex-col gap-8 px-6 py-8">
+      <div className="flex flex-col gap-3">
+        <PageHeader
+          icon={dashboardIcons.google}
+          title={`Publications Google — ${restaurant.nom}`}
+          backHref={`/dashboard/${id}/google`}
+        />
+        <p className="max-w-4xl text-sm text-zinc-600">
+          Une publication vit une semaine sur ta fiche Google, puis disparaît.
+          L&apos;intérêt est d&apos;en avoir toujours une : écris-les à
+          l&apos;avance, Klarr les publie le jour venu.
+        </p>
+      </div>
 
       {/* Dit avant qu'on s'en aperçoive : l'attente vient de Google, pas
           d'une panne, et l'imprécision de l'heure vient du plan Vercel. */}
-      <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900">
+      <p className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm leading-relaxed text-amber-900">
         <strong>L&apos;envoi vers Google n&apos;est pas encore ouvert.</strong>{" "}
         Google accorde l&apos;accès à son API de publication sur dossier ; la
         demande est en cours. Tes publications sont enregistrées et partiront
@@ -126,19 +145,31 @@ export default async function PostsPage({
         choisie, pas à la minute près.
       </p>
 
-      <div className="grid grid-cols-2 gap-3 sm:gap-4">
+      {/* Une fiche sans publication à venir redevient muette dans la
+          semaine : c'est la case à surveiller, d'où l'orange à zéro. */}
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <Compteur
           valeur={programmees}
           libelle={`publication${programmees > 1 ? "s" : ""} programmée${programmees > 1 ? "s" : ""}`}
+          accent={programmees === 0}
+        />
+        <Compteur
+          valeur={prochaine ? jourCourt(prochaine) : "—"}
+          libelle={prochaine ? "prochaine publication" : "rien de prévu"}
         />
         <Compteur
           valeur={publiees}
           libelle={`publiée${publiees > 1 ? "s" : ""} sur ta fiche`}
         />
+        <Compteur
+          valeur={enEchec}
+          libelle="en échec, à revoir"
+          accent={enEchec > 0}
+        />
       </div>
 
-      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
-        <section className="flex min-w-0 flex-col gap-3">
+      <div className="grid items-start gap-8 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
+        <section className="flex min-w-0 flex-col gap-4">
           <TitreSection>Nouvelle publication</TitreSection>
           <FormulairePost
             restaurantId={id}
@@ -147,11 +178,17 @@ export default async function PostsPage({
           />
         </section>
 
-        <section className="flex min-w-0 flex-col gap-3">
-          <TitreSection>Tes publications</TitreSection>
+        <section className="flex min-w-0 flex-col gap-4">
+          <TitreSection
+            aside={posts.length > 0 ? `${posts.length} au total` : undefined}
+          >
+            Tes publications
+          </TitreSection>
           {posts.length === 0 ? (
-            <p className="rounded-2xl border border-dashed border-zinc-300 bg-white px-6 py-12 text-center text-sm text-zinc-500">
+            <p className="rounded-2xl border border-dashed border-zinc-300 bg-white/60 px-6 py-12 text-center text-sm text-zinc-600">
               Aucune publication pour l&apos;instant.
+              {pistes.length > 0 &&
+                " Pars d'un plat ou d'un espace dans « Partir de… » : le texte s'écrit presque seul."}
             </p>
           ) : (
             <ul className="flex flex-col gap-3">
@@ -184,7 +221,7 @@ export default async function PostsPage({
                   </p>
 
                   {post.derniere_erreur && (
-                    <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                    <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
                       Dernier essai : {post.derniere_erreur}
                     </p>
                   )}
@@ -198,7 +235,7 @@ export default async function PostsPage({
                       <input type="hidden" name="post_id" value={post.id} />
                       <button
                         type="submit"
-                        className="text-xs font-medium text-zinc-400 transition-colors hover:text-red-600"
+                        className="text-sm font-medium text-zinc-500 transition-colors hover:text-red-600"
                       >
                         Annuler cette publication
                       </button>

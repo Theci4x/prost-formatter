@@ -78,7 +78,7 @@ function Champs({
           ne connaît ni la carte ni les espaces. */}
       {suggestions.length > 0 && (
         <div className="flex flex-col gap-1.5">
-          <span className="text-xs font-medium text-zinc-500">Partir de…</span>
+          <span className="text-sm font-medium text-zinc-700">Partir de…</span>
           <div className="flex flex-wrap gap-1.5">
             {suggestions.map((suggestion) => (
               <button
@@ -88,7 +88,7 @@ function Champs({
                   setTexte(suggestion.texte);
                   if (suggestion.bouton) setBouton(suggestion.bouton);
                 }}
-                className="rounded-full border border-zinc-200 px-3 py-1 text-xs text-zinc-700 transition-colors hover:border-brand-orange hover:bg-brand-orange-soft"
+                className="rounded-full border border-zinc-200 bg-white px-3.5 py-1.5 text-sm text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
               >
                 {suggestion.libelle}
               </button>
@@ -105,7 +105,7 @@ function Champs({
           value={texte}
           onChange={(e) => setTexte(e.target.value)}
           placeholder="Notre menu d'automne arrive lundi : gibier, champignons, et la tarte aux quetsches de la maison."
-          className="rounded-md border border-zinc-300 px-3 py-2 text-sm font-normal outline-none focus:border-brand-navy"
+          className="rounded-lg border border-zinc-200 bg-zinc-50 px-3.5 py-2.5 text-sm font-normal outline-none transition-colors focus:border-brand-navy focus:bg-white"
         />
         <span
           className={`text-xs font-normal ${trop ? "text-red-600" : "text-zinc-500"}`}
@@ -153,7 +153,7 @@ function Champs({
             name="bouton"
             value={bouton}
             onChange={(e) => setBouton(e.target.value)}
-            className="rounded-md border border-zinc-300 px-3 py-2 text-sm font-normal outline-none focus:border-brand-navy"
+            className="rounded-lg border border-zinc-200 bg-zinc-50 px-3.5 py-2.5 text-sm font-normal outline-none transition-colors focus:border-brand-navy focus:bg-white"
           >
             <option value="">Aucun</option>
             {Object.entries(LIBELLE_BOUTON).map(([cle, libelle]) => (
@@ -171,7 +171,7 @@ function Champs({
               name="bouton_url"
               type="url"
               placeholder="https://www.klarr.net/reserver/..."
-              className="rounded-md border border-zinc-300 px-3 py-2 text-sm font-normal outline-none focus:border-brand-navy"
+              className="rounded-lg border border-zinc-200 bg-zinc-50 px-3.5 py-2.5 text-sm font-normal outline-none transition-colors focus:border-brand-navy focus:bg-white"
             />
           </label>
         )}
@@ -181,7 +181,7 @@ function Champs({
           <input
             name="publier_le"
             type="datetime-local"
-            className="rounded-md border border-zinc-300 px-3 py-2 text-sm font-normal outline-none focus:border-brand-navy"
+            className="rounded-lg border border-zinc-200 bg-zinc-50 px-3.5 py-2.5 text-sm font-normal outline-none transition-colors focus:border-brand-navy focus:bg-white"
           />
         </label>
       </div>
@@ -190,7 +190,7 @@ function Champs({
         <button
           type="submit"
           disabled={pending || trop}
-          className="w-fit rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover disabled:opacity-50"
+          className="w-fit rounded-lg bg-brand-navy px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover disabled:opacity-50"
         >
           {pending ? "Enregistrement…" : "Programmer"}
         </button>
