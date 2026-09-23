@@ -2,6 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
+import { Compteur } from "@/components/dashboard/Compteur";
+import { Depliable } from "@/components/dashboard/Depliable";
 import {
   EspaceForm,
   EspaceModifiable,
@@ -190,6 +192,16 @@ export default async function ConfigurationReservationsPage({
   };
   const slug = publique.slug_reservation;
   const site = siteUrl();
+  const capaciteTotale = espaces.reduce((t, e) => t + e.capacite, 0);
+  const enLigne = Boolean(slug) && espaces.length > 0 && services.length > 0;
+  // Le sommaire : cinq réglages sur une page longue, chacun à un clic.
+  const sommaire = [
+    { ancre: "espaces", titre: cfg.espacesTitre },
+    { ancre: "services", titre: cfg.servicesTitre },
+    { ancre: "confirmations", titre: cfg.confirmationsCourt },
+    { ancre: "fermetures", titre: cfg.fermeturesTitre },
+    { ancre: "page", titre: cfg.pageTitre },
+  ];
 
   return (
     <div className="flex flex-1 flex-col gap-8 px-6 py-8">
@@ -199,12 +211,56 @@ export default async function ConfigurationReservationsPage({
         backHref={`/dashboard/${id}/reservations`}
       />
 
-      <p className="max-w-4xl text-sm text-zinc-500">{cfg.chapo}</p>
+      <p className="max-w-4xl text-sm text-zinc-600">{cfg.chapo}</p>
 
-      <section className="flex flex-col gap-4">
+      {/* L'état de la page d'abord : c'est la question qu'on se pose en
+          arrivant ici — mes clients peuvent-ils réserver ? */}
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+        <a href="#page" className="block">
+          <Compteur
+            valeur={enLigne ? cfg.pageEnLigneCourt : cfg.pageFermeeCourt}
+            libelle={cfg.compteurPage}
+            accent={!enLigne}
+          />
+        </a>
+        <a href="#espaces" className="block">
+          <Compteur
+            valeur={espaces.length}
+            libelle={cfg.compteurEspaces(espaces.length, capaciteTotale)}
+            accent={espaces.length === 0}
+          />
+        </a>
+        <a href="#services" className="block">
+          <Compteur
+            valeur={services.length}
+            libelle={cfg.compteurServices(services.length)}
+            accent={services.length === 0}
+          />
+        </a>
+        <a href="#fermetures" className="block">
+          <Compteur
+            valeur={fermetures.length}
+            libelle={cfg.compteurFermetures(fermetures.length)}
+          />
+        </a>
+      </div>
+
+      <nav className="flex flex-wrap gap-2">
+        {sommaire.map((entree) => (
+          <a
+            key={entree.ancre}
+            href={`#${entree.ancre}`}
+            className="rounded-full border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:border-ink hover:text-ink"
+          >
+            {entree.titre}
+          </a>
+        ))}
+      </nav>
+
+      <section id="espaces" className="flex scroll-mt-8 flex-col gap-4">
         <div className="flex flex-col gap-1">
           <h2 className="font-serif text-2xl text-ink">{cfg.espacesTitre}</h2>
-          <p className="text-sm text-zinc-500">{cfg.espacesChapo}</p>
+          <p className="text-sm text-zinc-600">{cfg.espacesChapo}</p>
         </div>
 
         {espaces.length > 0 && (
@@ -222,7 +278,7 @@ export default async function ConfigurationReservationsPage({
                     langue={langue}
                   >
                     <div className="flex min-w-0 flex-col gap-2">
-                      <span className="font-medium text-zinc-900">
+                      <span className="font-serif text-xl text-ink">
                         {espace.nom}
                       </span>
                       {espace.description && (
@@ -271,13 +327,19 @@ export default async function ConfigurationReservationsPage({
           </ul>
         )}
 
-        <EspaceForm restaurantId={id} langue={langue} />
+        <Depliable
+          libelle={cfg.nouvelEspace}
+          fermer={cfg.fermer}
+          ouvertParDefaut={espaces.length === 0}
+        >
+          <EspaceForm restaurantId={id} langue={langue} />
+        </Depliable>
       </section>
 
       {/* Les réglages qu'on fait une fois, deux par deux sur grand écran :
           empilés, la page demandait six écrans de défilement. */}
       <div className="grid items-start gap-8 xl:grid-cols-2">
-        <section className="flex flex-col gap-4">
+        <section id="services" className="flex scroll-mt-8 flex-col gap-4">
           <div className="flex flex-col gap-1">
             <h2 className="font-serif text-2xl text-ink">
               {cfg.servicesTitre}
@@ -308,10 +370,16 @@ export default async function ConfigurationReservationsPage({
             </ul>
           )}
 
-          <ServiceForm restaurantId={id} langue={langue} />
+          <Depliable
+            libelle={cfg.nouveauService}
+            fermer={cfg.fermer}
+            ouvertParDefaut={services.length === 0}
+          >
+            <ServiceForm restaurantId={id} langue={langue} />
+          </Depliable>
         </section>
 
-        <section className="flex flex-col gap-4">
+        <section id="confirmations" className="flex scroll-mt-8 flex-col gap-4">
           <div className="flex flex-col gap-1">
             <h2 className="font-serif text-2xl text-ink">
               {cfg.confirmationsTitre}
@@ -328,7 +396,7 @@ export default async function ConfigurationReservationsPage({
           />
         </section>
 
-        <section className="flex flex-col gap-4">
+        <section id="fermetures" className="flex scroll-mt-8 flex-col gap-4">
           <div className="flex flex-col gap-1">
             <h2 className="font-serif text-2xl text-ink">
               {cfg.fermeturesTitre}
@@ -377,10 +445,16 @@ export default async function ConfigurationReservationsPage({
             </ul>
           )}
 
-          <FermetureForm restaurantId={id} espaces={espaces} langue={langue} />
+          <Depliable libelle={cfg.nouvelleFermeture} fermer={cfg.fermer}>
+            <FermetureForm
+              restaurantId={id}
+              espaces={espaces}
+              langue={langue}
+            />
+          </Depliable>
         </section>
 
-        <section className="flex flex-col gap-4">
+        <section id="page" className="flex scroll-mt-8 flex-col gap-4">
           <div className="flex flex-col gap-1">
             <h2 className="font-serif text-2xl text-ink">{cfg.pageTitre}</h2>
             <p className="text-sm text-zinc-500">{cfg.pageChapo}</p>
@@ -467,7 +541,7 @@ export default async function ConfigurationReservationsPage({
                 <p className="text-sm text-zinc-500">{cfg.pasEncoreOuverte}</p>
                 <button
                   type="submit"
-                  className="w-fit rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover"
+                  className="w-fit rounded-lg bg-brand-navy px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover"
                 >
                   {cfg.ouvrirMaPage}
                 </button>

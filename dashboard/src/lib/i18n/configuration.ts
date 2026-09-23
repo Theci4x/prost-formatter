@@ -30,6 +30,18 @@ export type ClesConfiguration = {
   fermer: string;
   facultatif: string;
 
+  /** Les compteurs et le sommaire en tête de page. */
+  compteurPage: string;
+  pageEnLigneCourt: string;
+  pageFermeeCourt: string;
+  compteurEspaces(n: number, couverts: number): string;
+  compteurServices(n: number): string;
+  compteurFermetures(n: number): string;
+  confirmationsCourt: string;
+  nouvelEspace: string;
+  nouveauService: string;
+  nouvelleFermeture: string;
+
   espacesTitre: string;
   espacesChapo: string;
   couverts(n: number): string;
@@ -178,6 +190,16 @@ const fr: ClesConfiguration = {
   fermer: "Fermer",
   facultatif: "(facultatif)",
 
+  compteurPage: "page de réservation",
+  pageEnLigneCourt: "En ligne",
+  pageFermeeCourt: "Fermée",
+  compteurEspaces: (n, c) => `espace${s(n)} · ${c} couvert${s(c)} au total`,
+  compteurServices: (n) => `service${s(n)} par semaine`,
+  compteurFermetures: (n) => `fermeture${s(n)} à venir`,
+  nouvelEspace: "Ajouter un espace",
+  nouveauService: "Ajouter un service",
+  nouvelleFermeture: "Fermer une période",
+  confirmationsCourt: "Confirmations",
   espacesTitre: "Tes espaces",
   espacesChapo:
     "La salle principale, la terrasse, la cave — tout ce qui peut accueillir un groupe.",
@@ -351,6 +373,16 @@ const en: ClesConfiguration = {
   fermer: "Close",
   facultatif: "(optional)",
 
+  compteurPage: "booking page",
+  pageEnLigneCourt: "Online",
+  pageFermeeCourt: "Closed",
+  compteurEspaces: (n, c) => `room${s(n)} · ${c} cover${s(c)} in total`,
+  compteurServices: (n) => `service${s(n)} a week`,
+  compteurFermetures: (n) => `upcoming closure${s(n)}`,
+  nouvelEspace: "Add a room",
+  nouveauService: "Add a service",
+  nouvelleFermeture: "Close a period",
+  confirmationsCourt: "Confirmations",
   espacesTitre: "Your rooms",
   espacesChapo:
     "The main room, the terrace, the cellar — anything that can hold a party.",
@@ -519,6 +551,16 @@ const zh: ClesConfiguration = {
   fermer: "关闭",
   facultatif: "（选填）",
 
+  compteurPage: "订位页",
+  pageEnLigneCourt: "已上线",
+  pageFermeeCourt: "未开放",
+  compteurEspaces: (_n, c) => `个场地 · 共 ${c} 位`,
+  compteurServices: () => `个服务时段`,
+  compteurFermetures: () => `个即将到来的休息日`,
+  nouvelEspace: "添加场地",
+  nouveauService: "添加服务时段",
+  nouvelleFermeture: "设置休息日",
+  confirmationsCourt: "确认",
   espacesTitre: "您的场地",
   espacesChapo: "主厅、露台、地窖——凡是能接待一桌人的地方。",
   couverts: (n) => `${n} 位`,
