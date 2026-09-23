@@ -12,7 +12,7 @@
  */
 export function EtatVide({ site }: { site: string }) {
   return (
-    <div className="flex flex-col items-start gap-4 rounded-xl border border-dashed border-line bg-paper/60 px-6 py-8 sm:flex-row sm:items-center sm:gap-6">
+    <div className="flex flex-col items-start gap-4 rounded-2xl border border-dashed border-zinc-300 bg-white/60 px-6 py-8 sm:flex-row sm:items-center sm:gap-6">
       <svg
         aria-hidden="true"
         width="56"

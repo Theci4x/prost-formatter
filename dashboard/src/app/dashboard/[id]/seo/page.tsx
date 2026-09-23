@@ -19,10 +19,26 @@ import { EtatVide } from "@/components/seo/EtatVide";
 import { etatSearchConsole } from "@/lib/google/requetes-restaurant";
 import { aDessiner, synthese } from "@/lib/seo/synthese";
 import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
+import { Compteur } from "@/components/dashboard/Compteur";
 import type { Restaurant } from "@/types/restaurant";
 import type { RestaurantKeyword } from "@/types/keyword";
 import { exiger } from "@/lib/equipe/roles";
 import { exigerModule } from "@/lib/abonnement/acces";
+
+const SOMMAIRE = [
+  { ancre: "constat", titre: "Ce que les gens tapent" },
+  { ancre: "analyse", titre: "Analyse Klarr Tool" },
+  { ancre: "mots-cles", titre: "Mots-clés ciblés" },
+];
+
+/** « 22 sept. » : la date d'une analyse, assez courte pour une tuile. */
+function jourCourt(iso: string): string {
+  return new Date(iso).toLocaleDateString("fr-FR", {
+    day: "numeric",
+    month: "short",
+    timeZone: "Europe/Paris",
+  });
+}
 
 /**
  * La page SEO d'un établissement.
@@ -99,13 +115,65 @@ export default async function SeoPage({
   const aDesChiffres =
     mesure.connecte && !mesure.erreur && mesure.site !== null;
   const dessin = aDessiner(mesure.requetes);
+  const avecTuiles = aDesChiffres && mesure.requetes.length > 0;
 
   return (
     <div className="flex flex-1 flex-col gap-8 px-6 py-8">
-      <PageHeader icon={dashboardIcons.seo} title={`SEO — ${restaurant.nom}`} />
+      <div className="flex flex-col gap-3">
+        <PageHeader
+          icon={dashboardIcons.seo}
+          title={`SEO — ${restaurant.nom}`}
+        />
+        <p className="max-w-4xl text-sm text-zinc-600">
+          Ce qui te fait sortir sur Google quand quelqu&apos;un cherche où
+          manger. En haut, ce que Search Console a vraiment mesuré ; en dessous,
+          l&apos;analyse de Klarr Tool et les mots-clés sur lesquels tu veux
+          sortir.
+        </p>
+      </div>
+
+      {/* Sans chiffres Google, les tuiles de Search Console ne s'affichent
+          pas : ces trois-là disent où en est la page, et ce qui manque. */}
+      {!avecTuiles && (
+        <div className="grid grid-cols-3 gap-3 sm:gap-4">
+          <Compteur
+            valeur={keywords.length}
+            libelle={`mot${keywords.length > 1 ? "s" : ""}-clé${keywords.length > 1 ? "s" : ""} ciblé${keywords.length > 1 ? "s" : ""}`}
+            accent={keywords.length === 0}
+          />
+          <Compteur
+            valeur={precedente ? jourCourt(precedente.analyseLe) : "—"}
+            libelle={precedente ? "dernière analyse" : "aucune analyse"}
+            accent={!precedente}
+          />
+          <Compteur
+            valeur={aDesChiffres ? "Relié" : "—"}
+            libelle={
+              aDesChiffres ? "Search Console" : "Search Console à relier"
+            }
+            accent={!aDesChiffres}
+          />
+        </div>
+      )}
+
+      <nav className="flex flex-wrap gap-2">
+        {SOMMAIRE.map((entree) => (
+          <a
+            key={entree.ancre}
+            href={`#${entree.ancre}`}
+            className="rounded-full border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:border-ink hover:text-ink"
+          >
+            {entree.titre}
+          </a>
+        ))}
+      </nav>
 
       {/* ── Le constat ─────────────────────────────────────────────── */}
-      <section className="flex flex-col gap-5" aria-labelledby="constat-titre">
+      <section
+        id="constat"
+        className="flex scroll-mt-8 flex-col gap-5"
+        aria-labelledby="constat-titre"
+      >
         <div className="flex flex-col gap-1">
           <h2 id="constat-titre" className="font-serif text-2xl text-ink">
             Ce que les gens tapent vraiment
@@ -128,10 +196,10 @@ export default async function SeoPage({
                 se lisent comme un tableau à deux colonnes ; l'un sous
                 l'autre sur un petit, l'ordre reste. */}
             <div className="grid gap-5 xl:grid-cols-5">
-              <div className="rounded-2xl border border-line bg-paper shadow-sm p-5 xl:col-span-3">
+              <div className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm xl:col-span-3">
                 <GraphiqueRequetes requetes={dessin} />
               </div>
-              <div className="rounded-2xl border border-line bg-paper shadow-sm p-5 xl:col-span-2">
+              <div className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm xl:col-span-2">
                 <GraphiquePositions requetes={dessin} />
               </div>
             </div>
@@ -150,19 +218,20 @@ export default async function SeoPage({
         />
 
         <aside
-          className="flex flex-col gap-4 xl:sticky xl:top-24"
+          id="mots-cles"
+          className="flex scroll-mt-8 flex-col gap-4 xl:sticky xl:top-24"
           aria-labelledby="mots-cles-titre"
         >
           <div className="flex flex-col gap-0.5">
             <h2 id="mots-cles-titre" className="font-serif text-2xl text-ink">
               Mots-clés ciblés
             </h2>
-            <p className="text-xs text-ink-soft">
+            <p className="text-sm text-zinc-600">
               Ce sur quoi tu veux sortir. L&apos;analyse les commente.
             </p>
           </div>
 
-          <div className="flex flex-col gap-4 rounded-2xl border border-line bg-paper p-5 shadow-sm">
+          <div className="flex flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm">
             <form action={addKeyword} className="flex gap-2">
               <input type="hidden" name="restaurant_id" value={id} />
               <input
@@ -174,7 +243,7 @@ export default async function SeoPage({
               />
               <button
                 type="submit"
-                className="shrink-0 rounded-lg border border-line bg-paper px-3.5 py-2 text-sm font-medium text-ink transition-colors hover:border-brand-navy hover:text-brand-navy"
+                className="shrink-0 rounded-lg border border-zinc-200 bg-white px-4 py-2.5 text-sm font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
               >
                 Ajouter
               </button>

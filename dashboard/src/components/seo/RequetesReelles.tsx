@@ -50,7 +50,7 @@ export function AvantLesChiffres({
       );
     }
     return (
-      <div className="flex flex-col gap-3 rounded-2xl border border-line bg-paper shadow-sm p-5">
+      <div className="flex flex-col gap-3 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm">
         <p className="text-sm font-medium text-ink">Quel site suivre ?</p>
         <ul className="grid gap-2 sm:grid-cols-2">
           {etat.proprietes.map((propriete) => (
@@ -64,7 +64,7 @@ export function AvantLesChiffres({
                 <input type="hidden" name="site" value={propriete.site} />
                 <button
                   type="submit"
-                  className="w-full rounded-lg border border-line px-3 py-2.5 text-left text-sm font-medium text-ink transition-colors hover:border-brand-navy hover:text-brand-navy"
+                  className="w-full rounded-lg border border-zinc-200 bg-white px-3.5 py-2.5 text-left text-sm font-semibold text-ink transition-colors hover:border-brand-navy hover:text-brand-navy"
                 >
                   {propriete.site}
                 </button>
@@ -81,7 +81,7 @@ export function AvantLesChiffres({
 
 function Encadre({ children }: { children: React.ReactNode }) {
   return (
-    <p className="rounded-xl border border-dashed border-line bg-paper/60 px-5 py-4 text-sm leading-relaxed text-ink-soft">
+    <p className="rounded-2xl border border-dashed border-zinc-300 bg-white/60 px-5 py-4 text-sm leading-relaxed text-zinc-600">
       {children}
     </p>
   );
@@ -124,7 +124,7 @@ export function SourceSuivie({
  */
 export function TableauRequetes({ requetes }: { requetes: RequeteMesuree[] }) {
   return (
-    <details className="group rounded-2xl border border-line bg-paper shadow-sm">
+    <details className="group rounded-2xl border border-zinc-200/70 bg-white shadow-sm">
       <summary className="flex cursor-pointer list-none items-center justify-between px-5 py-3 text-sm font-medium text-ink [&::-webkit-details-marker]:hidden">
         <span>
           Toutes les requêtes{" "}

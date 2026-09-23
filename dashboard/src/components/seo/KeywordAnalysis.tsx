@@ -43,13 +43,17 @@ export function KeywordAnalysis({
   const bouge = analyse ? ceQuiABouge(analyse.motsCles, motsClesActuels) : null;
 
   return (
-    <section className="flex flex-col gap-4" aria-labelledby="analyse-titre">
+    <section
+      id="analyse"
+      className="flex scroll-mt-8 flex-col gap-4"
+      aria-labelledby="analyse-titre"
+    >
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
         <div className="flex flex-col gap-0.5">
           <h2 id="analyse-titre" className="font-serif text-2xl text-ink">
             Analyse SEO par Klarr Tool
           </h2>
-          <p className="text-xs text-ink-soft">
+          <p className="text-sm text-zinc-600">
             {analyse && !enCours
               ? `Analysée le ${quand(analyse.analyseLe)}`
               : "Un audit local complet, écrit pour ton établissement."}
@@ -60,7 +64,7 @@ export function KeywordAnalysis({
           type="button"
           onClick={lancer}
           disabled={enCours}
-          className="inline-flex items-center gap-2 rounded-lg bg-brand-navy px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-brand-navy-hover disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex items-center gap-2 rounded-lg bg-brand-navy px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover disabled:cursor-not-allowed disabled:opacity-60"
         >
           {enCours ? (
             <span
@@ -94,11 +98,11 @@ export function KeywordAnalysis({
       {enCours ? (
         <Patience aUneAnalyse={Boolean(analyse)} />
       ) : analyse?.analysis ? (
-        <div className="rounded-2xl border border-line bg-paper shadow-sm p-5 text-sm text-zinc-700 sm:p-7">
+        <div className="rounded-2xl border border-zinc-200/70 bg-white p-5 text-sm text-zinc-700 shadow-sm sm:p-7">
           <Markdown texte={analyse.analysis} />
         </div>
       ) : (
-        <div className="rounded-xl border border-dashed border-line bg-paper/60 px-6 py-8 text-sm leading-relaxed text-ink-soft">
+        <div className="rounded-2xl border border-dashed border-zinc-300 bg-white/60 px-6 py-8 text-sm leading-relaxed text-zinc-600">
           Aucune analyse pour le moment. Elle s&apos;appuie sur ton nom, ton
           adresse, tes mots-clés ciblés et — quand Search Console est relié —
           sur ce que les gens tapent vraiment. Ajoute tes mots-clés d&apos;abord

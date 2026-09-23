@@ -40,7 +40,7 @@ export function Patience({ aUneAnalyse }: { aUneAnalyse: boolean }) {
 
   return (
     <div
-      className="flex flex-col gap-6 rounded-2xl border border-line bg-paper shadow-sm p-5 sm:p-6"
+      className="flex flex-col gap-6 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm sm:p-6"
       role="status"
       aria-live="polite"
     >
