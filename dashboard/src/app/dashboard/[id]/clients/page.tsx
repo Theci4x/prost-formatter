@@ -100,6 +100,12 @@ export default async function ClientsPage({
               Exporter en CSV
             </a>
           )}
+          <Link
+            href={`/dashboard/${id}/import`}
+            className="rounded-lg border border-zinc-200 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
+          >
+            Importer depuis TheFork ou Zenchef
+          </Link>
         </div>
       </div>
 

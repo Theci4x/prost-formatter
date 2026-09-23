@@ -21,7 +21,10 @@ import type { Langue } from "@/lib/i18n/langue";
 export type ClesReservations = {
   titre(restaurant: string): string;
   chapo: string;
-  liens: Record<"service" | "plan" | "experiences" | "configuration", string>;
+  liens: Record<
+    "service" | "plan" | "experiences" | "configuration" | "importer",
+    string
+  >;
   /** La feuille de service du jour, à imprimer ou en PDF. */
   feuilleDuJour: string;
 
@@ -173,6 +176,7 @@ const fr: ClesReservations = {
     plan: "Plan de salle",
     experiences: "Expériences",
     configuration: "Espaces, services et page publique",
+    importer: "Importer depuis TheFork ou Zenchef",
   },
   statuts: {
     demande: "En attente",
@@ -320,6 +324,7 @@ const en: ClesReservations = {
     plan: "Floor plan",
     experiences: "Experiences",
     configuration: "Rooms, services and public page",
+    importer: "Import from TheFork or Zenchef",
   },
   statuts: {
     demande: "Pending",
@@ -466,6 +471,7 @@ const zh: ClesReservations = {
     plan: "餐厅平面图",
     experiences: "特色体验",
     configuration: "区域、服务时段与对外页面",
+    importer: "从 TheFork 或 Zenchef 导入",
   },
   statuts: {
     demande: "待处理",

@@ -739,6 +739,12 @@ export default async function ReservationsPage({
           >
             {r.liens.configuration}
           </Link>
+          <Link
+            href={`/dashboard/${id}/import?type=reservations`}
+            className={BOUTON_SECONDAIRE}
+          >
+            {r.liens.importer}
+          </Link>
         </div>
       </div>
 

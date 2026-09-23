@@ -54,6 +54,9 @@ export async function rappelerLesReservations({
     )
     .eq("date_reservation", jour)
     .eq("statut", "confirmee")
+    // Une table reprise d'un autre outil a son propre rappel là-bas : deux
+    // messages de deux expéditeurs pour un même dîner sèment le doute.
+    .neq("origine", "import")
     .limit(plafond);
 
   if (error) {
