@@ -6,6 +6,7 @@ import { langueVisiteur } from "@/lib/i18n/langue";
 import { choisirLangueVisiteur } from "@/app/langue-actions";
 import { KlarrMark, KlarrWordmark } from "@/components/brand/KlarrMark";
 import { LoginIllustration } from "@/components/brand/LoginIllustration";
+import { suiteSure } from "@/lib/auth/suite";
 
 import type { Metadata } from "next";
 
@@ -25,11 +26,11 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ confirm?: string; email?: string }>;
+  searchParams: Promise<{ confirm?: string; email?: string; suite?: string }>;
 }) {
   const langue = await langueVisiteur();
   const t = AUTH[langue];
-  const { confirm, email } = await searchParams;
+  const { confirm, email, suite } = await searchParams;
 
   return (
     <div className="flex min-h-full flex-1 flex-col md:flex-row">
@@ -67,7 +68,11 @@ export default async function LoginPage({
           </p>
         )}
 
-        <LoginForm langue={langue} emailInitial={email} />
+        <LoginForm
+          langue={langue}
+          emailInitial={email}
+          suite={suiteSure(suite) ?? undefined}
+        />
 
         {/* Sans ce lien, le visiteur arrivé sur la connexion n'a aucun chemin
             de retour vers la page qui explique ce qu'est Klarr. */}

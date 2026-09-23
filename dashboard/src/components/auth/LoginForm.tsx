@@ -18,9 +18,12 @@ const initialState: AuthState = { error: null };
 export function LoginForm({
   emailInitial,
   langue,
+  suite,
 }: {
   emailInitial?: string;
   langue: Langue;
+  /** Le chemin où revenir une fois connecté, déjà vérifié par la page. */
+  suite?: string;
 }) {
   const t = AUTH[langue];
   const [loginState, loginAction, loginPending] = useActionState(
@@ -36,6 +39,7 @@ export function LoginForm({
 
   return (
     <form className="flex w-full max-w-sm flex-col gap-4">
+      {suite && <input type="hidden" name="suite" value={suite} />}
       <div className="flex flex-col gap-1.5">
         <label htmlFor="email" className="text-sm font-medium text-zinc-700">
           {t.email}

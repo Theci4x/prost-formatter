@@ -180,7 +180,7 @@ function Suivre({
 }
 
 export default async function AdminPage() {
-  const email = await requireAdmin();
+  const email = await requireAdmin("/admin");
 
   // Le contrôle d'accès ci-dessus est la seule barrière : ce client
   // contourne toutes les règles de sécurité de la base.

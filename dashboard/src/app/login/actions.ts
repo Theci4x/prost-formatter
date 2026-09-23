@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { langueVisiteur } from "@/lib/i18n/langue";
 import { siteUrl } from "@/lib/site-url";
+import { suiteSure } from "@/lib/auth/suite";
 
 export type AuthState = {
   error: string | null;
@@ -26,7 +27,9 @@ export async function login(
     return { error: error.message };
   }
 
-  redirect("/dashboard");
+  // Revenir là où l'on allait — /admin, typiquement — plutôt qu'au
+  // tableau de bord, d'où il faudrait retaper l'adresse.
+  redirect(suiteSure(formData.get("suite")) ?? "/dashboard");
 }
 
 export async function signup(
