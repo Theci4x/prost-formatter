@@ -9,6 +9,27 @@ import { optionsFraicheur, FRAICHEUR_ECRAN } from "@/lib/reviews/fraicheur";
 const PLACES_BASE_URL =
   process.env.GOOGLE_PLACES_BASE_URL ?? "https://places.googleapis.com/v1";
 
+/**
+ * Deux points d'entrée, et deux seulement.
+ *
+ *   `places:searchText`  → trouver l'établissement à partir de son nom
+ *   `places/{id}`        → en lire la note, le nombre d'avis, le statut
+ *
+ * Ce n'est pas qu'une observation : c'est un réglage posé côté Google.
+ * Les dix-neuf autres quotas de Places API (New) — autocomplétion, photos,
+ * recherche à proximité, médias — sont à **zéro** dans la console Cloud.
+ * Une API qu'on n'appelle pas n'a aucune raison d'être autorisée, et
+ * `AutocompletePlacesRequest` était ouverte à 175 000 requêtes par jour :
+ * c'est le genre de ligne qui fait les factures dont on parle sur les
+ * forums, le jour où une clé fuite.
+ *
+ * Donc : **ajouter ici un appel à un troisième point d'entrée ne
+ * marchera pas** tant que son quota n'aura pas été relevé dans la
+ * console. L'échec ne sera pas parlant — Google refuse, il n'explique
+ * pas. Si vous ajoutez les photos Google ou l'autocomplétion, commencez
+ * par là, sans quoi vous chercherez le défaut dans ce fichier.
+ */
+
 export type PlaceSearchResult = {
   id: string;
   displayName: string;
