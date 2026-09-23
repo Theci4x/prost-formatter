@@ -89,7 +89,28 @@ export async function updateSession(request: NextRequest) {
       appli: request.headers.get("sec-fetch-dest") ?? null,
       navigateur: (request.headers.get("user-agent") ?? "").slice(0, 120),
     });
-    return rediriger("/login");
+    // La cause voyage aussi avec la redirection, et l'écran de connexion
+    // l'affiche en petit. Les journaux Vercel ne gardent les lignes
+    // qu'une heure sur l'offre gratuite : « je me suis fait déconnecter ce
+    // matin » n'y laisse plus rien. Une capture d'écran, si. Seulement un
+    // code, jamais le jeton.
+    const motif =
+      cookiesSession.length === 0
+        ? "sans_cookie"
+        : verdict.code
+          ? verdict.code.replace(/[^a-z_]/gi, "").slice(0, 40)
+          : "sans_session";
+    const url = request.nextUrl.clone();
+    const suite = `${request.nextUrl.pathname}${request.nextUrl.search}`;
+    url.pathname = "/login";
+    url.search = "";
+    url.searchParams.set("motif", motif);
+    url.searchParams.set("suite", suite);
+    const reponse = NextResponse.redirect(url);
+    for (const cookie of supabaseResponse.cookies.getAll()) {
+      reponse.cookies.set(cookie);
+    }
+    return reponse;
   }
 
   if (verdict.etat === "indecidable") {

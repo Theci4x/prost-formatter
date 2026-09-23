@@ -20,7 +20,7 @@ export default async function DashboardLayout({
   // Le proxy protège déjà /dashboard ; cette vérification serveur est une
   // deuxième ligne de défense (défense en profondeur).
   if (verdict.etat === "deconnecte") {
-    redirect("/login");
+    redirect("/login?motif=ecran_tableau_de_bord");
   }
 
   // Injoignable : on le dit, et on ne rend surtout pas les écrans en

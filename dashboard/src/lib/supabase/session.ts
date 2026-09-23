@@ -35,6 +35,8 @@ export type Verdict =
        * causes qui ne se corrigent pas du tout au même endroit.
        */
       motif?: string;
+      /** Le code court de Supabase (« refresh_token_already_used »…). */
+      code?: string;
     }
   /** On n'a pas pu savoir. Surtout ne rien casser sur cette base. */
   | { etat: "indecidable"; motif: string };
@@ -59,6 +61,7 @@ export function verdictDe(
   return {
     etat: "deconnecte",
     motif: [erreur.code, erreur.message].filter(Boolean).join(" — "),
+    code: erreur.code ?? undefined,
   };
 }
 

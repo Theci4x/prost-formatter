@@ -26,11 +26,16 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ confirm?: string; email?: string; suite?: string }>;
+  searchParams: Promise<{
+    confirm?: string;
+    email?: string;
+    suite?: string;
+    motif?: string;
+  }>;
 }) {
   const langue = await langueVisiteur();
   const t = AUTH[langue];
-  const { confirm, email, suite } = await searchParams;
+  const { confirm, email, suite, motif } = await searchParams;
 
   return (
     <div className="flex min-h-full flex-1 flex-col md:flex-row">
@@ -73,6 +78,16 @@ export default async function LoginPage({
           emailInitial={email}
           suite={suiteSure(suite) ?? undefined}
         />
+
+        {/* Pourquoi on est là, quand ce n'est pas un choix : un code court,
+            à peine visible, qu'une capture d'écran suffit à transmettre.
+            Il dit si le téléphone a oublié la session ou si Supabase l'a
+            refusée — deux causes qui ne se corrigent pas au même endroit. */}
+        {motif && /^[a-z_]{1,40}$/i.test(motif) && (
+          <p className="text-center text-[11px] text-zinc-400">
+            Session interrompue · {motif}
+          </p>
+        )}
 
         {/* Sans ce lien, le visiteur arrivé sur la connexion n'a aucun chemin
             de retour vers la page qui explique ce qu'est Klarr. */}
