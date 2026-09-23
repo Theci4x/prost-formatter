@@ -192,12 +192,31 @@ export default async function VisibiliteIaPage({
   const actifs = configuredProviders().map((provider) => provider.label);
   const aDesAnalyses = actuelles.length > 0;
 
+  const sommaire = [
+    { ancre: "plan", titre: "Ce que tu peux faire" },
+    ...(podium.lignes.length > 1
+      ? [{ ancre: "classement", titre: "Qui l'IA cite à ta place" }]
+      : []),
+    ...(voix !== null
+      ? [{ ancre: "part-de-voix", titre: "Ta part de voix" }]
+      : []),
+    { ancre: "questions", titre: `Tes questions (${questions.length})` },
+  ];
+
   return (
     <div className="flex flex-1 flex-col gap-8 px-6 py-8">
-      <PageHeader
-        icon={dashboardIcons.visibiliteIa}
-        title={`Visibilité IA — ${restaurant.nom}`}
-      />
+      <div className="flex flex-col gap-3">
+        <PageHeader
+          icon={dashboardIcons.visibiliteIa}
+          title={`Visibilité IA — ${restaurant.nom}`}
+        />
+        <p className="max-w-4xl text-sm text-zinc-600">
+          De plus en plus de clients demandent à ChatGPT, Claude ou Gemini où
+          aller manger. Pose les questions qu&apos;ils poseraient : Klarr
+          regarde si les assistants te citent, qui ils citent à ta place, et te
+          dit quoi corriger.
+        </p>
+      </div>
 
       {actifs.length === 0 && (
         <div className="rounded-2xl border border-orange-200 bg-orange-50 p-5">
@@ -364,10 +383,26 @@ export default async function VisibiliteIaPage({
         <Demarrage pretes={questions.length} />
       )}
 
+      {/* Le sommaire : quatre blocs l'un sous l'autre, dont le dernier —
+          les questions — est le plus long. On y saute sans défiler. */}
+      {aDesAnalyses && (
+        <nav className="flex flex-wrap gap-2">
+          {sommaire.map((entree) => (
+            <a
+              key={entree.ancre}
+              href={`#${entree.ancre}`}
+              className="rounded-full border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:border-ink hover:text-ink"
+            >
+              {entree.titre}
+            </a>
+          ))}
+        </nav>
+      )}
+
       {aDesAnalyses && (
         <div className="grid gap-8 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
           {/* ——— Le plan d'action ————————————————————————————————— */}
-          <section className="flex flex-col gap-3">
+          <section id="plan" className="flex scroll-mt-8 flex-col gap-3">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <Titre numero="01">Ce que tu peux faire</Titre>
               {plan && (
@@ -383,14 +418,14 @@ export default async function VisibiliteIaPage({
                 {plan.actions.map((action, rang) => (
                   <li
                     key={`${rang}-${action.titre}`}
-                    className="group flex gap-4 rounded-2xl border border-line bg-paper p-4 shadow-sm transition-colors hover:border-brand-navy/30"
+                    className="group flex gap-4 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm"
                   >
                     <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-navy font-mono text-xs font-semibold text-white">
                       {rang + 1}
                     </span>
                     <div className="flex min-w-0 flex-1 flex-col gap-1">
                       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-                        <p className="text-sm font-semibold text-ink">
+                        <p className="text-base font-semibold text-ink">
                           {action.titre}
                         </p>
                         {rang === 0 && (
@@ -407,7 +442,7 @@ export default async function VisibiliteIaPage({
                       {action.ecran && (
                         <Link
                           href={`/dashboard/${id}/${ECRANS[action.ecran].chemin}`}
-                          className="mt-1 w-fit text-xs font-semibold text-brand-orange hover:underline"
+                          className="mt-1 w-fit text-sm font-semibold text-brand-orange-dark hover:underline"
                         >
                           Ouvrir « {ECRANS[action.ecran].libelle} » →
                         </Link>
@@ -430,15 +465,18 @@ export default async function VisibiliteIaPage({
               enCours="Claude lit tes analyses et ta fiche…"
               className={
                 plan
-                  ? "text-sm font-medium text-brand-orange hover:underline"
-                  : "rounded-md bg-brand-orange px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:brightness-95"
+                  ? "rounded-lg border border-zinc-200 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
+                  : "rounded-lg bg-brand-navy px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover"
               }
             />
           </section>
 
           {/* ——— Le classement ————————————————————————————————————— */}
           {podium.lignes.length > 1 && (
-            <section className="flex flex-col gap-3">
+            <section
+              id="classement"
+              className="flex scroll-mt-8 flex-col gap-3"
+            >
               <Titre numero="02">Qui l&apos;IA cite à ta place</Titre>
 
               {/* Ceux qui te battent quand le client veut réserver sont tes
@@ -478,21 +516,21 @@ export default async function VisibiliteIaPage({
 
       {/* ——— L'évolution ——————————————————————————————————————— */}
       {aDesAnalyses && voix !== null && (
-        <section className="flex flex-col gap-3">
+        <section id="part-de-voix" className="flex scroll-mt-8 flex-col gap-3">
           <Titre numero="03">Ta part de voix</Titre>
           <PartDeVoix series={series} voix={voix} reponses={releves.length} />
         </section>
       )}
 
       {/* ——— Les questions suivies ————————————————————————————— */}
-      <section className="flex flex-col gap-4">
+      <section id="questions" className="flex scroll-mt-8 flex-col gap-4">
         <Titre numero={aDesAnalyses ? "04" : "01"}>Tes questions</Titre>
 
-        <div className="flex flex-col gap-3 rounded-2xl border border-line bg-paper p-5 shadow-sm">
+        <div className="flex flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm">
           <form action={addQuestion} className="flex flex-wrap items-end gap-2">
             <input type="hidden" name="restaurant_id" value={id} />
             <div className="flex flex-1 basis-56 flex-col gap-1">
-              <label className="text-xs font-medium text-ink-soft">
+              <label className="text-sm font-medium text-zinc-700">
                 Une question que poserait un client
               </label>
               <input
@@ -500,17 +538,17 @@ export default async function VisibiliteIaPage({
                 type="text"
                 required
                 placeholder="ex : où réserver pour un anniversaire dans le 11e ?"
-                className="w-full rounded-md border border-line px-3 py-2 text-sm outline-none focus:border-brand-navy"
+                className="w-full rounded-lg border border-zinc-200 bg-zinc-50 px-3.5 py-2.5 text-sm outline-none transition-colors focus:border-brand-navy focus:bg-white"
               />
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-ink-soft">
+              <label className="text-sm font-medium text-zinc-700">
                 Ce que le client cherche
               </label>
               <select
                 name="intention"
                 defaultValue="reservation"
-                className="rounded-md border border-line px-3 py-2 text-sm outline-none focus:border-brand-navy"
+                className="rounded-lg border border-zinc-200 bg-zinc-50 px-3.5 py-2.5 text-sm outline-none transition-colors focus:border-brand-navy focus:bg-white"
               >
                 {INTENTIONS.map((intention) => (
                   <option key={intention} value={intention}>
@@ -521,7 +559,7 @@ export default async function VisibiliteIaPage({
             </div>
             <button
               type="submit"
-              className="rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-brand-navy-hover"
+              className="rounded-lg bg-brand-navy px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover"
             >
               Ajouter
             </button>
@@ -538,8 +576,8 @@ export default async function VisibiliteIaPage({
             enCours="Le modèle écrit tes questions…"
             className={
               questions.length === 0
-                ? "rounded-md bg-brand-orange px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:brightness-95"
-                : "text-sm font-medium text-brand-orange hover:underline"
+                ? "rounded-lg bg-brand-navy px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover"
+                : "rounded-lg border border-zinc-200 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
             }
           />
 
@@ -560,7 +598,7 @@ export default async function VisibiliteIaPage({
             <div key={intention} className="flex flex-col gap-2">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <div className="flex flex-col gap-0.5">
-                  <h3 className="text-lg font-semibold text-ink">
+                  <h3 className="font-serif text-xl text-ink">
                     {LIBELLE_INTENTION[intention]}
                   </h3>
                   <p className="text-xs leading-relaxed text-ink-soft">
@@ -724,9 +762,8 @@ function Demarrage({ pretes }: { pretes: number }) {
             Score de visibilité IA
           </p>
           <p className="mt-2 max-w-4xl text-sm leading-relaxed text-white/80">
-            De plus en plus de clients demandent à une IA où aller manger. Cette
-            page mesure si ton restaurant fait partie des réponses — et te dit
-            quoi faire pour y entrer.
+            Trois pas pour obtenir ton premier score. Compte cinq minutes, dont
+            une à attendre les assistants.
           </p>
         </div>
         <ol className="grid gap-3 sm:grid-cols-3">
@@ -751,7 +788,7 @@ function Demarrage({ pretes }: { pretes: number }) {
         </ol>
         <p className="text-xs text-white/50">
           {pretes === 0
-            ? "Commence par le bouton orange ci-dessous."
+            ? "Commence par « Proposer six questions », juste en dessous : six questions prêtes en un clic."
             : `${pretes} question${pretes > 1 ? "s" : ""} prête${pretes > 1 ? "s" : ""} — lance une analyse ci-dessous.`}
         </p>
       </div>
@@ -796,8 +833,8 @@ function Palmares({
         </p>
       )}
       <ol
-        className={`flex flex-col overflow-hidden rounded-2xl border border-line ${
-          compact ? "bg-brand-cream" : "bg-paper shadow-sm"
+        className={`flex flex-col overflow-hidden rounded-2xl border border-zinc-200/70 ${
+          compact ? "bg-brand-cream" : "bg-white shadow-sm"
         }`}
       >
         {podium.lignes.map((ligne, index) => {
@@ -895,7 +932,7 @@ function CarteQuestion({
   );
 
   return (
-    <li className="flex flex-col gap-3 rounded-2xl border border-line bg-paper p-4 shadow-sm">
+    <li className="flex flex-col gap-3 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm">
       <div className="flex items-start justify-between gap-4">
         <p className="text-sm font-medium text-ink">{question.question}</p>
         <form action={removeQuestion}>
@@ -985,13 +1022,13 @@ function CarteQuestion({
           // Une demi-minute sans rien à l'écran passe pour une panne. Dire
           // qui travaille, et à quoi s'attendre, suffit à faire patienter.
           enCours="Les assistants répondent… (30 s à 1 min)"
-          className="w-fit rounded-md border border-line px-3 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
+          className="w-fit rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
         />
       ) : (
         <button
           type="button"
           disabled
-          className="w-fit cursor-not-allowed rounded-md border border-line px-3 py-1.5 text-xs font-medium text-zinc-700 opacity-40"
+          className="w-fit cursor-not-allowed rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 opacity-40"
         >
           Analyser
         </button>

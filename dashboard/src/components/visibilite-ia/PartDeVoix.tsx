@@ -27,7 +27,7 @@ export function PartDeVoix({
   const joursMesures = series[0]?.points.length ?? 0;
 
   return (
-    <div className="grid gap-6 rounded-2xl border border-line bg-paper p-5 shadow-sm lg:grid-cols-[minmax(0,15rem)_minmax(0,1fr)] lg:gap-8 lg:p-6">
+    <div className="grid gap-6 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm lg:grid-cols-[minmax(0,15rem)_minmax(0,1fr)] lg:gap-8 lg:p-6">
       {/* Le chiffre d'abord : c'est lui qu'on retient. */}
       <div className="flex flex-col gap-2 lg:border-r lg:border-line lg:pr-8">
         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-soft">
