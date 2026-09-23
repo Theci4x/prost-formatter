@@ -70,25 +70,33 @@ export default async function CampagnesPage({
   );
 
   return (
-    <div className="flex flex-1 flex-col gap-6 px-6 py-8">
+    <div className="flex flex-1 flex-col gap-8 px-6 py-8">
       <PageHeader
         icon={dashboardIcons.avis}
         title={`Campagnes e-mail — ${restaurant.nom}`}
         backHref="/dashboard"
       />
 
-      <p className="max-w-4xl text-sm text-zinc-600">
-        Un message à ceux qui ont accepté d&apos;en recevoir. Écrivez-le quand
-        vous avez le temps, choisissez le jour, Klarr l&apos;envoie le matin
-        venu. Chaque message porte un lien de désinscription — c&apos;est la
-        loi, et c&apos;est ce qui vous évite d&apos;atterrir en indésirable.
-      </p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="max-w-4xl text-sm text-zinc-600">
+          Un message à ceux qui ont accepté d&apos;en recevoir. Écris-le quand
+          tu as le temps, choisis le jour, Klarr l&apos;envoie le matin venu.
+          Chaque message porte un lien de désinscription — c&apos;est la loi, et
+          c&apos;est ce qui t&apos;évite d&apos;atterrir en indésirable.
+        </p>
+        <Link
+          href={`/dashboard/${id}/clients`}
+          className="rounded-lg border border-zinc-200 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
+        >
+          Fichier client
+        </Link>
+      </div>
 
       <div className="grid grid-cols-3 gap-3 sm:gap-4">
         <Compteur
           valeur={compteurs.tous}
-          libelle="personnes joignables"
-          accent={compteurs.tous > 0}
+          libelle={`personne${compteurs.tous > 1 ? "s" : ""} joignable${compteurs.tous > 1 ? "s" : ""}`}
+          accent={compteurs.tous === 0}
         />
         <Compteur
           valeur={envoyees.length}
@@ -123,15 +131,15 @@ export default async function CampagnesPage({
       </section>
 
       <section className="flex flex-col gap-3">
-        <h2 className="font-serif text-2xl text-ink">Vos campagnes</h2>
+        <h2 className="font-serif text-2xl text-ink">Tes campagnes</h2>
         {campagnes.length === 0 ? (
           <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-zinc-300 bg-white px-6 py-12 text-center">
             <span className="text-sm font-semibold text-ink">
               Aucune campagne pour l&apos;instant.
             </span>
             <span className="max-w-md text-sm text-zinc-500">
-              Écrivez la première au-dessus : elle reste en brouillon tant que
-              vous ne choisissez pas de jour d&apos;envoi.
+              Écris la première au-dessus : elle reste en brouillon tant que tu
+              ne choisis pas de jour d&apos;envoi.
             </span>
           </div>
         ) : (
@@ -140,7 +148,7 @@ export default async function CampagnesPage({
               <li key={campagne.id}>
                 <Link
                   href={`/dashboard/${id}/campagnes/${campagne.id}`}
-                  className="group flex h-full flex-col gap-3 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm transition-colors hover:border-zinc-300"
+                  className="group flex h-full flex-col gap-3 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm transition-[border-color,transform,box-shadow] hover:-translate-y-px hover:border-ink hover:shadow-md"
                 >
                   <div className="flex items-start justify-between gap-4">
                     <span
@@ -152,7 +160,7 @@ export default async function CampagnesPage({
                       Créée le {jourCourt(campagne.created_at)}
                     </span>
                   </div>
-                  <span className="text-base font-semibold leading-snug text-ink group-hover:underline">
+                  <span className="font-serif text-xl leading-snug text-ink">
                     {campagne.objet}
                   </span>
                   <span className="line-clamp-2 text-sm leading-relaxed text-zinc-500">

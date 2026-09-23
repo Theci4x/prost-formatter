@@ -97,8 +97,8 @@ export function FormulaireCampagne({
           <span
             className={`text-xs font-normal ${objet.length > OBJET_MAX ? "text-red-600" : "text-zinc-500"}`}
           >
-            {objet.length} / {OBJET_MAX} caractères — c&apos;est la seule
-            phrase que tout le monde lira.
+            {objet.length} / {OBJET_MAX} caractères — c&apos;est la seule phrase
+            que tout le monde lira.
           </span>
         </label>
 
@@ -118,9 +118,8 @@ export function FormulaireCampagne({
           <span
             className={`text-xs font-normal ${texte.length > TEXTE_MAX ? "text-red-600" : "text-zinc-500"}`}
           >
-            {texte.length} / {TEXTE_MAX} caractères. Une ligne vide sépare
-            deux paragraphes. Votre nom signe le message, inutile de le
-            répéter.
+            {texte.length} / {TEXTE_MAX} caractères. Une ligne vide sépare deux
+            paragraphes. Votre nom signe le message, inutile de le répéter.
           </span>
         </label>
 
@@ -168,9 +167,9 @@ export function FormulaireCampagne({
           </div>
           {compteurs.tous === 0 && (
             <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-900">
-              Personne n&apos;a encore accepté vos e-mails. Vous pouvez écrire
-              la campagne, elle partira quand le fichier se remplira — la case
-              est proposée à chaque réservation.
+              Personne n&apos;a encore accepté tes e-mails. Tu peux écrire la
+              campagne, elle partira quand le fichier se remplira — la case est
+              proposée à chaque réservation.
             </p>
           )}
         </fieldset>
@@ -273,7 +272,7 @@ function Apercu({
           <span className="truncate text-sm font-semibold text-ink">
             {objet || (
               <span className="font-normal text-zinc-400">
-                L&apos;objet de votre message
+                L&apos;objet de ton message
               </span>
             )}
           </span>
@@ -304,8 +303,8 @@ function Apercu({
             )}
           </div>
           <p className="mt-4 text-center text-[11px] leading-relaxed text-zinc-500">
-            Vous recevez ce message parce que vous avez accepté les
-            actualités de {maison} en réservant.
+            Vous recevez ce message parce que vous avez accepté les actualités
+            de {maison} en réservant.
             <br />
             <span className="underline">Me désinscrire en un clic</span>
           </p>
