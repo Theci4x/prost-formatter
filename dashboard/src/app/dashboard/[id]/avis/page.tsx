@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -10,6 +11,8 @@ import {
   TuilePlateforme,
   type AvisAffiche,
 } from "@/components/reviews/PlatformReviewsCard";
+import { tripadvisorDuReleve } from "@/lib/reviews/releve";
+import { FRAICHEUR_DEMANDE } from "@/lib/reviews/fraicheur";
 import { ConfirmationTripadvisor } from "@/components/reviews/ConfirmationTripadvisor";
 import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
 import type { Restaurant } from "@/types/restaurant";
@@ -18,10 +21,15 @@ import { exigerModule } from "@/lib/abonnement/acces";
 
 export default async function AvisPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ tripadvisor?: string }>;
 }) {
   const { id } = await params;
+  // Les avis Tripadvisor ne se chargent que sur demande : chaque appel
+  // est facturé, et la note, elle, vient du relevé de la semaine.
+  const chargerTripadvisor = (await searchParams).tripadvisor === "avis";
   await exiger(id, "gerant");
   await exigerModule(id, "visibilite");
 
@@ -38,19 +46,28 @@ export default async function AvisPage({
   }
 
   const location = restaurant.adresse ?? "";
-  const epingleTripadvisor = (
-    restaurant as Restaurant & { tripadvisor_location_id?: string | null }
-  ).tripadvisor_location_id;
+  const suivi = restaurant as Restaurant & {
+    tripadvisor_location_id?: string | null;
+    reputation_relevee_le?: string | null;
+  };
+  const epingleTripadvisor = suivi.tripadvisor_location_id;
 
-  const [google, yelp, tripadvisor] = await Promise.all([
+  const [google, yelp, releveTripadvisor, direct] = await Promise.all([
     fetchGooglePlatformReviews(restaurant.nom, location),
     fetchYelpPlatformReviews(restaurant.nom, location),
-    fetchTripadvisorPlatformReviews(
-      restaurant.nom,
-      location,
-      epingleTripadvisor,
-    ),
+    tripadvisorDuReleve(supabase, suivi),
+    chargerTripadvisor
+      ? fetchTripadvisorPlatformReviews(
+          restaurant.nom,
+          location,
+          epingleTripadvisor,
+          FRAICHEUR_DEMANDE,
+        )
+      : Promise.resolve(null),
   ]);
+  // Chargé à la demande, l'appel direct l'emporte : il porte les avis, le
+  // lien vers la fiche et le nom retenu. Sinon, le relevé suffit.
+  const tripadvisor = direct?.found ? direct : releveTripadvisor;
 
   const plateformes = [google, yelp, tripadvisor].filter((p) => p.configured);
 
@@ -98,12 +115,31 @@ export default async function AvisPage({
             data={p}
             pied={
               p.platform === "tripadvisor" ? (
-                <ConfirmationTripadvisor
-                  restaurantId={id}
-                  nomTrouve={p.businessName ?? null}
-                  requeteInitiale={`${restaurant.nom} ${location}`.trim()}
-                  epingle={Boolean(p.epingle)}
-                />
+                <div className="flex flex-col gap-3">
+                  {!direct && (
+                    <Link
+                      href={`/dashboard/${id}/avis?tripadvisor=avis`}
+                      className="w-fit rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-ink transition-colors hover:border-ink"
+                    >
+                      Charger les derniers avis Tripadvisor
+                    </Link>
+                  )}
+                  <ConfirmationTripadvisor
+                    restaurantId={id}
+                    nomTrouve={
+                      // Le relevé ne garde que la note : le nom exact se
+                      // voit en chargeant les avis, qui l'apportent.
+                      p.businessName ??
+                      (p.epingle
+                        ? "l'établissement que tu as choisi"
+                        : p.found
+                          ? "nom visible en chargeant les avis"
+                          : null)
+                    }
+                    requeteInitiale={`${restaurant.nom} ${location}`.trim()}
+                    epingle={Boolean(p.epingle)}
+                  />
+                </div>
               ) : null
             }
           />

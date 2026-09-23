@@ -114,7 +114,8 @@ export async function chercherSurTripadvisor(
   const restaurantId = String(formData.get("restaurant_id") ?? "");
   const requete = String(formData.get("requete") ?? "").trim();
 
-  if (!restaurantId) return { candidats: null, error: "Établissement inconnu." };
+  if (!restaurantId)
+    return { candidats: null, error: "Établissement inconnu." };
   if (requete.length < 3) {
     return { candidats: null, error: "Donne au moins trois caractères." };
   }
@@ -151,7 +152,13 @@ export async function epinglerTripadvisor(formData: FormData): Promise<void> {
     .from("restaurants")
     // Une chaîne vide détache : le restaurateur revient à la recherche
     // automatique s'il s'est trompé en confirmant.
-    .update({ tripadvisor_location_id: locationId || null })
+    // La date de relevé s'efface avec : la page Avis ne lit plus que le
+    // relevé de nuit, et c'est ce qui fait passer cet établissement en
+    // tête de la file dès la nuit suivante, au lieu d'attendre son tour.
+    .update({
+      tripadvisor_location_id: locationId || null,
+      reputation_relevee_le: null,
+    })
     .eq("id", restaurantId);
 
   revalidatePath(`/dashboard/${restaurantId}/avis`);

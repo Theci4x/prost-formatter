@@ -129,6 +129,7 @@ export async function GET(request: Request) {
         location,
         restaurant.tripadvisor_location_id,
         TOUJOURS_FRAIS,
+        false,
       ),
     ]);
 

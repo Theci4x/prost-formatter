@@ -31,6 +31,17 @@ export type PlatformReviews = {
    * aujourd'hui ; d'où l'optionnel plutôt qu'un champ par plateforme.
    */
   businessStatus?: StatutGoogle | null;
+  /**
+   * La date du relevé d'où vient la note, quand elle ne sort pas d'un
+   * appel à l'instant : l'écran le dit, pour qu'une note vieille de six
+   * jours ne passe pas pour celle du matin.
+   */
+  releveLe?: string | null;
+  /**
+   * Vrai tant que le relevé de nuit n'est pas encore passé — premier
+   * relevé, ou établissement qu'on vient de confirmer.
+   */
+  releveAttendu?: boolean;
   reviews: {
     author: string;
     rating: number;
@@ -79,6 +90,12 @@ export async function fetchTripadvisorPlatformReviews(
   /** L'identifiant confirmé, s'il y en a un : on ne redevine alors plus. */
   locationIdEpingle?: string | null,
   fraicheur: number = FRAICHEUR_ECRAN,
+  /**
+   * Faux pour le relevé de nuit, qui n'enregistre que la note et le
+   * nombre d'avis : les textes lui coûteraient un appel facturé par
+   * établissement et par semaine, pour rien.
+   */
+  avecAvis = true,
 ): Promise<PlatformReviews> {
   if (!process.env.TRIPADVISOR_API_KEY) {
     return {
@@ -108,7 +125,9 @@ export async function fetchTripadvisorPlatformReviews(
 
     const [details, reviews] = await Promise.all([
       getTripadvisorDetails(locationId, fraicheur),
-      getTripadvisorReviews(locationId, fraicheur),
+      avecAvis
+        ? getTripadvisorReviews(locationId, fraicheur)
+        : Promise.resolve([]),
     ]);
 
     return {

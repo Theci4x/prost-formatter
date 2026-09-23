@@ -72,7 +72,22 @@ function silence(data: PlatformReviews, label: string): string | null {
   if (!data.configured) {
     return `Non configuré — ajoutez une clé API ${label} pour l'activer.`;
   }
-  if (!data.found) return `Établissement introuvable sur ${label}.`;
+  if (!data.found) {
+    return data.releveAttendu
+      ? `Premier relevé ${label} la nuit prochaine.`
+      : `Établissement introuvable sur ${label}.`;
+  }
+  // Une note lue dans le relevé de nuit : on donne sa date, et on dit
+  // quand elle sera rafraîchie si l'établissement vient d'être confirmé.
+  if (data.releveLe && data.reviews.length === 0) {
+    const date = new Date(data.releveLe).toLocaleDateString("fr-FR", {
+      day: "numeric",
+      month: "long",
+    });
+    return data.releveAttendu
+      ? `Relevé le ${date} — mise à jour la nuit prochaine.`
+      : `Relevé le ${date}. Klarr relève ${label} une fois par semaine.`;
+  }
   if (data.reviews.length > 0) return null;
   // Deux silences différents. Aucun avis du tout : il n'y a rien à dire.
   // Des centaines de notes et aucun avis transmis : c'est la plateforme

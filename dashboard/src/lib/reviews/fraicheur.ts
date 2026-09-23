@@ -17,6 +17,13 @@
 /** Six heures : un avis n'arrive pas à la minute, un écran non plus. */
 export const FRAICHEUR_ECRAN = 6 * 3600;
 
+/**
+ * Vingt-quatre heures : ce qu'on charge à la demande, comme les avis
+ * Tripadvisor de la page Avis. Un second clic dans la journée ne refait
+ * pas l'appel.
+ */
+export const FRAICHEUR_DEMANDE = 24 * 3600;
+
 /** Zéro : toujours frais, pour qui fait autorité. */
 export const TOUJOURS_FRAIS = 0;
 
