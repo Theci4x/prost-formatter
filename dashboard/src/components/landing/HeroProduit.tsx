@@ -1,5 +1,6 @@
 import { FloatingChip, Tilt } from "@/components/landing/Tilt";
 import type { ClesAccueilPublic } from "@/lib/i18n/accueilPublic";
+import { MAISON } from "@/lib/demo/maison";
 
 /**
  * Le visuel du hero : ce que voit un client, pas ce que voit le patron.
@@ -10,8 +11,10 @@ import type { ClesAccueilPublic } from "@/lib/i18n/accueilPublic";
  * téléphone, avec la fiche Google qui dépasse derrière : les deux moitiés
  * de Klarr dans une seule image, et rien qui ne corresponde pas au produit.
  *
- * Aucun chiffre inventé sur une vraie maison : Prost est un client, sa
- * carte ne porte donc ni note ni nombre d'avis fabriqués.
+ * La maison est fictive — voir `lib/demo/maison`. Le hero montrait Prost,
+ * un vrai client ; on ne met pas de démonstration sous un vrai nom, et
+ * le restaurateur qu'on cherche à convaincre n'a pas à voir un
+ * concurrent en tête de page.
  */
 
 const CRENEAUX = ["19:00", "19:30", "20:00", "20:30", "21:00", "21:30"];
@@ -77,10 +80,10 @@ export function HeroProduit({ t }: { t: ClesAccueilPublic["produit"] }) {
               justifyContent: "center",
             }}
           >
-            P
+            {MAISON.initiale}
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            <span style={{ fontSize: 13, fontWeight: 700 }}>Prost</span>
+            <span style={{ fontSize: 13, fontWeight: 700 }}>{MAISON.nom}</span>
             <span style={{ fontSize: 11, color: "var(--ink-soft)" }}>
               {t.lieu}
             </span>
@@ -110,7 +113,15 @@ export function HeroProduit({ t }: { t: ClesAccueilPublic["produit"] }) {
       </div>
 
       <Tilt>
-        <FloatingChip depth={80} style={{ top: -16, left: -22 }}>
+        {/* Sur un téléphone, -22 px la faisait sortir de l'écran — la
+            perspective projette le bord gauche plus loin que la valeur
+            posée. Le décalage se règle donc par classe : collée au bord sur
+            petit écran, en débord sur grand. */}
+        <FloatingChip
+          depth={80}
+          className="flex left-2 sm:-left-[22px]"
+          style={{ top: -16 }}
+        >
           <span
             style={{
               fontFamily: "var(--font-instrument-serif), Georgia, serif",
@@ -122,6 +133,31 @@ export function HeroProduit({ t }: { t: ClesAccueilPublic["produit"] }) {
             0 %
           </span>
           {t.commission}
+        </FloatingChip>
+        <FloatingChip
+          depth={95}
+          // Sous la fiche Google, à cheval sur le bord droit de la carte :
+          // elle ne recouvre que la case du lundi, grisée. Plus haut, elle
+          // cachait le bouton « Réserver une table ».
+          style={{ top: 96, right: -44 }}
+          // Masquée sur téléphone : la fiche Google derrière l'est aussi,
+          // et une pastille sans rien derrière flotte dans le vide.
+          className="hidden sm:flex"
+        >
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="var(--accent-dark)"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6z" />
+          </svg>
+          {t.iaChip}
         </FloatingChip>
         <FloatingChip depth={60} style={{ bottom: -16, right: -14 }}>
           <span
@@ -163,12 +199,12 @@ export function HeroProduit({ t }: { t: ClesAccueilPublic["produit"] }) {
               <span
                 style={{
                   fontFamily: "var(--font-instrument-serif), Georgia, serif",
-                  fontSize: 22,
-                  letterSpacing: "0.08em",
+                  fontSize: 19,
+                  letterSpacing: "0.06em",
                   lineHeight: 1,
                 }}
               >
-                PROST
+                {MAISON.nom.toUpperCase()}
               </span>
               <span
                 style={{
@@ -178,7 +214,7 @@ export function HeroProduit({ t }: { t: ClesAccueilPublic["produit"] }) {
                   color: "var(--ink-soft)",
                 }}
               >
-                GERMAN · FRENCH
+                {MAISON.sousTitre}
               </span>
             </div>
             <span

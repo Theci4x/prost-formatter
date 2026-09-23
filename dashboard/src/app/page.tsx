@@ -17,6 +17,7 @@ import { ChoixLangueSite } from "@/components/landing/ChoixLangueSite";
 import { MenuMobile } from "@/components/accueil/MenuMobile";
 import { HeroBackdrop } from "@/components/landing/HeroBackdrop";
 import { HeroProduit } from "@/components/landing/HeroProduit";
+import { Showcase } from "@/components/landing/Showcase";
 import { Reveal } from "@/components/landing/Reveal";
 
 import type { Metadata } from "next";
@@ -206,10 +207,7 @@ export default async function Home() {
             Klarr
           </span>
         </div>
-        <div
-          className="hidden gap-8 lg:flex"
-          style={{ alignItems: "center" }}
-        >
+        <div className="hidden gap-8 lg:flex" style={{ alignItems: "center" }}>
           {/* En tête, et pas dans le pied de page : quatre outils
               gratuits enterrés sous toute la page ne servent à personne,
               et c'est précisément ce que le visiteur cherche avant de
@@ -517,119 +515,14 @@ export default async function Home() {
         <Problem t={t.probleme} />
       </Reveal>
 
-      {/* BENEFITS */}
-      <div
-        id="benefices"
-        className="px-5 py-20 sm:px-8 sm:py-24"
-        style={{ background: "var(--bg-alt)" }}
-      >
-        <div style={{ maxWidth: 1180, margin: "0 auto" }}>
-          <div
-            style={{
-              maxWidth: 560,
-              marginBottom: 44,
-              display: "flex",
-              flexDirection: "column",
-              gap: 16,
-            }}
-          >
-            <span
-              style={{
-                fontSize: 13,
-                fontWeight: 700,
-                letterSpacing: "0.08em",
-                textTransform: "uppercase",
-                color: "var(--accent-dark)",
-              }}
-            >
-              {t.benefices.surtitre}
-            </span>
-            <h2
-              style={{
-                fontFamily: "var(--font-instrument-serif), Georgia, serif",
-                fontWeight: 400,
-                margin: 0,
-                fontSize: 36,
-                lineHeight: 1.2,
-              }}
-            >
-              {t.benefices.titre}
-            </h2>
-          </div>
-          <div
-            className="flex-col sm:flex-row"
-            style={{ display: "flex", gap: 20 }}
-          >
-            {t.benefices.cartes.map((carte, rang) => (
-              <div
-                key={carte.titre}
-                style={{
-                  flex: 1,
-                  position: "relative",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 16,
-                  background: "var(--paper)",
-                  border: "1px solid var(--line)",
-                  borderRadius: 20,
-                  padding: "30px 28px 32px",
-                }}
-              >
-                <span
-                  aria-hidden="true"
-                  style={{
-                    position: "absolute",
-                    top: 22,
-                    right: 26,
-                    fontFamily: "var(--font-instrument-serif), Georgia, serif",
-                    fontSize: 40,
-                    lineHeight: 1,
-                    color: "var(--accent-dark)",
-                    opacity: 0.55,
-                  }}
-                >
-                  0{rang + 1}
-                </span>
-                <div
-                  style={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: 11,
-                    background: "var(--paper)",
-                    border: "1px solid var(--line)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  {ICONES_BENEFICES[rang]}
-                </div>
-                <h3
-                  style={{
-                    fontSize: 20,
-                    fontFamily: "var(--font-manrope), sans-serif",
-                    fontWeight: 700,
-                    margin: 0,
-                    paddingRight: 56,
-                  }}
-                >
-                  {carte.titre}
-                </h3>
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: 15,
-                    lineHeight: 1.65,
-                    color: "var(--ink-soft)",
-                  }}
-                >
-                  {carte.texte}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+      {/* Comment ça marche — chaque promesse avec son écran en face. */}
+      <Showcase
+        t={t.benefices}
+        v={t.vitrine}
+        langue={langue}
+        icones={ICONES_BENEFICES}
+        lieu={t.produit.lieu}
+      />
 
       <Reveal>
         <Comparison t={t.difference} />

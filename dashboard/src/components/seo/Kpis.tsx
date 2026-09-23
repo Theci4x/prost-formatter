@@ -11,21 +11,49 @@ import { nombre, type Synthese } from "@/lib/seo/synthese";
  * Pas de variation « vs semaine dernière » : Search Console ne nous donne
  * que la fenêtre courante, et une flèche inventée vaudrait moins que rien.
  */
-export function Kpis({ s }: { s: Synthese }) {
+export type LibellesKpis = {
+  vus: string;
+  clics: string;
+  taux: string;
+  premierePage: (n: number) => string;
+  aPortee: (n: number) => string;
+  sur: (n: number) => string;
+};
+
+/**
+ * Le tableau de bord parle français ; la page d'accueil, elle, montre
+ * ces mêmes tuiles à un visiteur anglais ou chinois. Les libellés
+ * s'injectent donc, et le français reste le défaut pour ne rien changer
+ * aux appelants existants.
+ */
+const FRANCAIS: LibellesKpis = {
+  vus: "fois vu dans Google",
+  clics: "clics vers vos pages",
+  taux: "des vues ont cliqué",
+  premierePage: (n) => `requête${n > 1 ? "s" : ""} en première page`,
+  aPortee: (n) => `${n} à portée, en deuxième page`,
+  sur: (n) => `sur ${n}`,
+};
+
+export function Kpis({
+  s,
+  libelles = FRANCAIS,
+}: {
+  s: Synthese;
+  libelles?: LibellesKpis;
+}) {
   const tuiles: { valeur: string; libelle: string; detail?: string }[] = [
-    { valeur: nombre(s.impressions), libelle: "fois vu dans Google" },
-    { valeur: nombre(s.clics), libelle: "clics vers vos pages" },
+    { valeur: nombre(s.impressions), libelle: libelles.vus },
+    { valeur: nombre(s.clics), libelle: libelles.clics },
     {
       valeur: `${s.ctr.toLocaleString("fr-FR")} %`,
-      libelle: "des vues ont cliqué",
+      libelle: libelles.taux,
     },
     {
       valeur: `${s.enPremierePage}`,
-      libelle: `requête${s.enPremierePage > 1 ? "s" : ""} en première page`,
+      libelle: libelles.premierePage(s.enPremierePage),
       detail:
-        s.presque > 0
-          ? `${s.presque} à portée, en deuxième page`
-          : `sur ${s.requetes}`,
+        s.presque > 0 ? libelles.aPortee(s.presque) : libelles.sur(s.requetes),
     },
   ];
 

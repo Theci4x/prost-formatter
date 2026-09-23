@@ -47,17 +47,22 @@ export function FloatingChip({
   children,
   depth = 60,
   style,
+  className,
 }: {
   children: React.ReactNode;
   depth?: number;
   style?: React.CSSProperties;
+  className?: string;
 }) {
   return (
     <div
+      // Sans classe, la pastille s'affiche ; avec, c'est la classe qui
+      // décide — « hidden sm:flex » doit pouvoir la masquer sur téléphone,
+      // ce qu'un display en style inline empêcherait.
+      className={className ?? "flex"}
       style={{
         position: "absolute",
         transform: `translateZ(${depth}px)`,
-        display: "flex",
         alignItems: "center",
         gap: 8,
         background: "var(--paper)",

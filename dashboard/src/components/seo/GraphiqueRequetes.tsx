@@ -20,12 +20,30 @@ import { nombre, plafond } from "@/lib/seo/synthese";
 /** La barre la plus longue s'arrête là : le reste est pour la valeur. */
 const LARGEUR_MAX = 84;
 
+export type LibellesGraphique = {
+  titre: string;
+  vu: string;
+  clique: string;
+};
+
+/** Le français par défaut ; la page d'accueil injecte les siens. */
+const FRANCAIS: LibellesGraphique = {
+  titre: "Les requêtes les plus vues",
+  vu: "vu",
+  clique: "cliqué",
+};
+
 export function GraphiqueRequetes({
   requetes,
   id = "graphique-requetes",
+  libelles = FRANCAIS,
+  /** Sans infobulle ni survol : une maquette n'a rien à répondre. */
+  statique = false,
 }: {
   requetes: RequeteMesuree[];
   id?: string;
+  libelles?: LibellesGraphique;
+  statique?: boolean;
 }) {
   const max = plafond(Math.max(0, ...requetes.map((r) => r.impressions)));
 
@@ -33,7 +51,7 @@ export function GraphiqueRequetes({
     <figure className="flex flex-col gap-3" aria-labelledby={`${id}-titre`}>
       <figcaption className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
         <span id={`${id}-titre`} className="text-sm font-medium text-ink">
-          Les requêtes les plus vues
+          {libelles.titre}
         </span>
         <span className="flex items-center gap-4 text-xs text-ink-soft">
           <span className="flex items-center gap-1.5">
@@ -41,14 +59,14 @@ export function GraphiqueRequetes({
               aria-hidden="true"
               className="inline-block h-2.5 w-4 rounded-sm bg-brand-orange/25"
             />
-            vu
+            {libelles.vu}
           </span>
           <span className="flex items-center gap-1.5">
             <span
               aria-hidden="true"
               className="inline-block h-2.5 w-4 rounded-sm bg-brand-orange-dark"
             />
-            cliqué
+            {libelles.clique}
           </span>
         </span>
       </figcaption>
@@ -63,7 +81,7 @@ export function GraphiqueRequetes({
           return (
             <li
               key={r.requete}
-              title={infobulle}
+              title={statique ? undefined : infobulle}
               className="group flex flex-col gap-1 py-1.5 sm:grid sm:grid-cols-[minmax(0,13rem)_minmax(0,1fr)] sm:items-center sm:gap-x-3 sm:py-0"
             >
               <span className="truncate text-[13px] text-ink sm:h-[34px] sm:leading-[34px]">

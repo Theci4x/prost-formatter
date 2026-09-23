@@ -152,12 +152,52 @@ export type ClesAccueilPublic = {
     ficheAJour: string;
     commission: string;
     tableConfirmee: string;
+    /** La pastille qui relie les deux moitiés : ce qu'un assistant répond. */
+    iaChip: string;
     reserver: string;
     jours: string[];
     couverts: string;
     service: string;
     demander: string;
     mention: string;
+  };
+  /**
+   * Les trois écrans montrés dans « Comment ça marche », sur une maison
+   * fictive. Chaque promesse de la section est prouvée par l'écran qui la
+   * tient, recodé plutôt que capturé : il se traduit, il ne vieillit pas,
+   * il reste net.
+   */
+  vitrine: {
+    exemple: string;
+    ia: {
+      surtitre: string;
+      questionLabel: string;
+      /** Avec ses guillemets : « » en français, “ ” en anglais, 「 」 en chinois. */
+      question: string;
+      /** « cité #{rang} » — le rang s'insère. */
+      cite: string;
+      nonCite: string;
+      aVotrePlace: string;
+      /** « sur 3 réponses » */
+      surReponses: string;
+    };
+    seo: {
+      surtitre: string;
+      titre: string;
+      vu: string;
+      clique: string;
+      vus: string;
+      clics: string;
+      taux: string;
+      /** « requêtes en première page » */
+      premierePage: string;
+      /** « {n} à portée, en deuxième page » */
+      aPortee: string;
+    };
+    alerte: {
+      surtitre: string;
+      aujourdhui: string;
+    };
   };
   pied: {
     /** L'intitulé de la rangée d'outils, au-dessus des mentions. */
@@ -565,8 +605,9 @@ const fr: ClesAccueilPublic = {
     enFrancais: "",
   },
   produit: {
-    lieu: "Restaurant · Paris 3e",
+    lieu: "Bistrot · Lyon 2e",
     ficheAJour: "Fiche Google à jour",
+    iaChip: "Gemini vous cite en 3e",
     commission: "de commission",
     tableConfirmee: "Table confirmée · il y a 2 min",
     reserver: "Réserver une table",
@@ -575,6 +616,33 @@ const fr: ClesAccueilPublic = {
     service: "Samedi soir",
     demander: "Demander une table",
     mention: "Aucun compte à créer. Aucune commission pour le restaurant.",
+  },
+  vitrine: {
+    exemple: "Exemple",
+    ia: {
+      surtitre: "Visibilité IA · ce matin",
+      questionLabel: "Question posée",
+      question: "« Quel est le meilleur bistrot à Lyon, près de Bellecour ? »",
+      cite: "cité #{rang}",
+      nonCite: "non cité",
+      aVotrePlace: "Cités à votre place",
+      surReponses: "sur 3 réponses",
+    },
+    seo: {
+      surtitre: "Search Console · 28 derniers jours",
+      titre: "Les requêtes les plus vues",
+      vu: "vu",
+      clique: "cliqué",
+      vus: "fois vu dans Google",
+      clics: "clics vers vos pages",
+      taux: "des vues ont cliqué",
+      premierePage: "requêtes en première page",
+      aPortee: "{n} à portée, en deuxième page",
+    },
+    alerte: {
+      surtitre: "Votre tableau de bord · ce matin",
+      aujourdhui: "Aujourd'hui",
+    },
   },
   pied: {
     outils: "Outils gratuits",
@@ -920,8 +988,9 @@ const en: ClesAccueilPublic = {
     enFrancais: "Written in French.",
   },
   produit: {
-    lieu: "Restaurant · Paris 3e",
+    lieu: "Bistro · Lyon 2nd",
     ficheAJour: "Google listing up to date",
+    iaChip: "Gemini lists you 3rd",
     commission: "commission",
     tableConfirmee: "Table confirmed · 2 min ago",
     reserver: "Book a table",
@@ -930,6 +999,33 @@ const en: ClesAccueilPublic = {
     service: "Saturday evening",
     demander: "Request a table",
     mention: "No account to create. No commission for the restaurant.",
+  },
+  vitrine: {
+    exemple: "Example",
+    ia: {
+      surtitre: "AI visibility · this morning",
+      questionLabel: "Question asked",
+      question: "“What's the best bistro in Lyon, near Bellecour?”",
+      cite: "cited #{rang}",
+      nonCite: "not cited",
+      aVotrePlace: "Cited instead of you",
+      surReponses: "of 3 answers",
+    },
+    seo: {
+      surtitre: "Search Console · last 28 days",
+      titre: "Most-seen queries",
+      vu: "seen",
+      clique: "clicked",
+      vus: "times seen on Google",
+      clics: "clicks to your pages",
+      taux: "of views clicked",
+      premierePage: "queries on page one",
+      aPortee: "{n} within reach, on page two",
+    },
+    alerte: {
+      surtitre: "Your dashboard · this morning",
+      aujourdhui: "Today",
+    },
   },
   pied: {
     outils: "Free tools",
@@ -1253,8 +1349,9 @@ const zh: ClesAccueilPublic = {
     enFrancais: "文章为法语。",
   },
   produit: {
-    lieu: "餐厅 · 巴黎三区",
+    lieu: "小酒馆 · 里昂二区",
     ficheAJour: "Google 资料已更新",
+    iaChip: "Gemini 把您排在第 3 位",
     commission: "抽成",
     tableConfirmee: "桌位已确认 · 2 分钟前",
     reserver: "订一张桌",
@@ -1263,6 +1360,33 @@ const zh: ClesAccueilPublic = {
     service: "周六晚",
     demander: "提交订位申请",
     mention: "无需注册账号。餐厅无需支付抽成。",
+  },
+  vitrine: {
+    exemple: "示例",
+    ia: {
+      surtitre: "AI 曝光度 · 今晨",
+      questionLabel: "提出的问题",
+      question: "「里昂白莱果广场附近最好的小酒馆是哪家？」",
+      cite: "被提及，第 {rang} 位",
+      nonCite: "未被提及",
+      aVotrePlace: "取代您被提及的餐厅",
+      surReponses: "共 3 条回答",
+    },
+    seo: {
+      surtitre: "Search Console · 最近 28 天",
+      titre: "曝光最多的搜索词",
+      vu: "曝光",
+      clique: "点击",
+      vus: "次在 Google 上被看到",
+      clics: "次点击进入您的页面",
+      taux: "的曝光带来了点击",
+      premierePage: "个搜索词位于首页",
+      aPortee: "{n} 个在第二页，触手可及",
+    },
+    alerte: {
+      surtitre: "您的仪表盘 · 今晨",
+      aujourdhui: "今天",
+    },
   },
   pied: {
     outils: "免费工具",
