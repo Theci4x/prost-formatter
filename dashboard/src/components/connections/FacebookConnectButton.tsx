@@ -183,7 +183,7 @@ export function FacebookConnectButton({
               type="button"
               disabled={loading}
               onClick={() => exchange(accessToken, page.id)}
-              className="rounded-md border border-zinc-200 px-4 py-2 text-left text-sm font-medium text-zinc-900 transition-colors hover:border-brand-navy hover:text-brand-navy disabled:opacity-50"
+              className="rounded-lg border border-zinc-200 bg-white px-4 py-2.5 text-left text-sm font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy disabled:opacity-50"
             >
               {page.name}
             </button>
@@ -200,7 +200,7 @@ export function FacebookConnectButton({
         type="button"
         onClick={handleClick}
         disabled={loading}
-        className="rounded-md bg-brand-navy px-4 py-2 text-center text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover disabled:opacity-50"
+        className="rounded-lg bg-brand-navy px-5 py-2.5 text-center text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover disabled:opacity-50"
       >
         {loading ? "Connexion..." : label}
       </button>

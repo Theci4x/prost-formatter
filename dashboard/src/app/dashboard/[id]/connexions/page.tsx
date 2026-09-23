@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
+import { Compteur, TitreSection } from "@/components/dashboard/Compteur";
 import { FacebookConnectButton } from "@/components/connections/FacebookConnectButton";
 import { platformIcons } from "@/components/connections/platformIcons";
 import type { Restaurant } from "@/types/restaurant";
@@ -19,6 +20,8 @@ type Platform = {
   color: string;
   tint: string;
   connected: boolean;
+  /** Relié, mais pas encore utilisable : un dossier Stripe à terminer. */
+  aTerminer?: boolean;
   // Le compte réellement relié, pour que le restaurateur vérifie d'un coup
   // d'œil qu'il n'a pas connecté la page d'un autre établissement.
   detail: string | null;
@@ -42,7 +45,11 @@ function PlatformCard({ platform }: { platform: Platform }) {
   return (
     <li
       className={`flex flex-col gap-5 rounded-2xl border bg-white p-6 shadow-sm ${
-        platform.connected ? "border-emerald-200" : "border-zinc-200/70"
+        platform.aTerminer
+          ? "border-brand-orange/60"
+          : platform.connected
+            ? "border-emerald-200"
+            : "border-zinc-200/70"
       }`}
     >
       <div className="flex items-start justify-between gap-3">
@@ -54,19 +61,32 @@ function PlatformCard({ platform }: { platform: Platform }) {
         </div>
         <span
           className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${
-            platform.connected
-              ? "bg-emerald-50 text-emerald-700"
-              : "bg-zinc-100 text-zinc-500"
+            platform.aTerminer
+              ? "bg-brand-orange-soft text-brand-orange-dark"
+              : platform.connected
+                ? "bg-emerald-50 text-emerald-700"
+                : "bg-zinc-100 text-zinc-500"
           }`}
         >
-          <StatusDot connected={platform.connected} />
-          {platform.connected ? "Connecté" : "Non connecté"}
+          {platform.aTerminer ? (
+            <span
+              aria-hidden="true"
+              className="inline-block h-2 w-2 shrink-0 rounded-full bg-brand-orange"
+            />
+          ) : (
+            <StatusDot connected={platform.connected} />
+          )}
+          {platform.aTerminer
+            ? "À terminer"
+            : platform.connected
+              ? "Connecté"
+              : "Non connecté"}
         </span>
       </div>
 
       <div className="flex flex-col gap-1">
         <span className="font-serif text-2xl text-ink">{platform.name}</span>
-        <span className="text-sm text-zinc-500">{platform.purpose}</span>
+        <span className="text-sm text-zinc-600">{platform.purpose}</span>
       </div>
 
       {/* Le compte réellement relié : c'est ce qui permet de voir qu'on a
@@ -94,10 +114,17 @@ function PlatformCard({ platform }: { platform: Platform }) {
       </ul>
 
       <div className="mt-auto pt-1">
-        {platform.connected ? (
+        {platform.aTerminer ? (
           <Link
             href={platform.managePath}
-            className="block w-full rounded-lg border border-zinc-200 px-4 py-2.5 text-center text-sm font-semibold text-ink transition-colors hover:border-brand-navy hover:text-brand-navy"
+            className="block w-full rounded-lg bg-brand-navy px-5 py-2.5 text-center text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover"
+          >
+            Terminer le dossier
+          </Link>
+        ) : platform.connected ? (
+          <Link
+            href={platform.managePath}
+            className="block w-full rounded-lg border border-zinc-200 bg-white px-5 py-2.5 text-center text-sm font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
           >
             Gérer
           </Link>
@@ -106,7 +133,7 @@ function PlatformCard({ platform }: { platform: Platform }) {
         ) : (
           <a
             href={platform.connectHref}
-            className="block w-full rounded-lg bg-brand-navy px-4 py-2.5 text-center text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover"
+            className="block w-full rounded-lg bg-brand-navy px-5 py-2.5 text-center text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover"
           >
             Connecter
           </a>
@@ -257,6 +284,7 @@ export default async function ConnexionsPage({
       color: "#635bff",
       tint: "#eeedff",
       connected: Boolean(stripe),
+      aTerminer: Boolean(stripe) && !stripe?.paiements_actifs,
       // Un compte relié mais au dossier incomplet n'encaisse rien : mieux
       // vaut le dire ici que de le laisser découvrir à la première demande
       // d'acompte.
@@ -289,22 +317,31 @@ export default async function ConnexionsPage({
   }
 
   const connectedCount = platforms.filter((p) => p.connected).length;
+  const restants = platforms.filter((p) => !p.connected);
 
   return (
-    <div className="flex flex-1 flex-col gap-6 px-6 py-8">
-      <PageHeader
-        icon={dashboardIcons.connexions}
-        title={`Connexions — ${restaurant.nom}`}
-      />
+    <div className="flex flex-1 flex-col gap-8 px-6 py-8">
+      <div className="flex flex-col gap-3">
+        <PageHeader
+          icon={dashboardIcons.connexions}
+          title={`Connexions — ${restaurant.nom}`}
+        />
+        <p className="max-w-4xl text-sm text-zinc-600">
+          Relie tes comptes à Klarr pour qu&apos;il puisse lire tes avis, tes
+          publications et tes statistiques, et encaisser tes acomptes. Tu restes
+          propriétaire de tes comptes : la connexion se retire quand tu veux,
+          depuis « Gérer ».
+        </p>
+      </div>
 
       {connected && (
-        <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+        <p className="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-800">
           Compte connecté avec succès.
         </p>
       )}
 
       {stripeError && (
-        <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <p className="rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">
           La connexion Stripe n&apos;a pas abouti.{" "}
           <Link
             href={`/dashboard/${id}/paiements`}
@@ -316,69 +353,58 @@ export default async function ConnexionsPage({
         </p>
       )}
 
-      <p className="max-w-4xl text-sm text-zinc-500">
-        Relie tes comptes à Klarr pour qu&apos;il puisse lire tes avis, tes
-        publications et tes statistiques. Tu restes propriétaire de tes comptes
-        : la connexion se retire quand tu veux, depuis « Gérer ».
-      </p>
+      {/* L'avancement, puis ce qui reste : c'est la seule question qu'on
+          se pose en ouvrant cet écran. Les paiements ont leur propre case,
+          parce qu'un dossier Stripe à moitié rempli n'encaisse rien. */}
+      <div className="grid grid-cols-3 gap-3 sm:gap-4">
+        <Compteur
+          valeur={`${connectedCount}/${platforms.length}`}
+          libelle={`compte${connectedCount > 1 ? "s" : ""} relié${connectedCount > 1 ? "s" : ""}`}
+        />
+        <a href="#comptes" className="block [&>div]:h-full">
+          <Compteur
+            valeur={restants.length}
+            libelle={
+              restants.length === 0
+                ? "tout est relié"
+                : `à relier : ${restants.map((p) => p.name).join(", ")}`
+            }
+            accent={restants.length > 0}
+          />
+        </a>
+        <Compteur
+          valeur={
+            !stripe ? "—" : stripe.paiements_actifs ? "Actifs" : "À finir"
+          }
+          libelle={
+            !stripe
+              ? "paiements en ligne"
+              : stripe.paiements_actifs
+                ? "paiements en ligne"
+                : "dossier Stripe à terminer"
+          }
+          accent={Boolean(stripe) && !stripe?.paiements_actifs}
+        />
+      </div>
 
-      {/* L'avancement en grand, et ce qui reste en une ligne : c'est la
-          seule question qu'on se pose en ouvrant cet écran. */}
-      <section
-        className={`flex flex-col gap-4 rounded-2xl border p-6 sm:flex-row sm:items-center sm:gap-8 ${
-          connectedCount === platforms.length
-            ? "border-emerald-200 bg-emerald-50/70"
-            : "border-zinc-200/70 bg-white shadow-sm"
-        }`}
-      >
-        <span className="flex shrink-0 items-baseline gap-1.5">
-          <span className="font-serif text-6xl leading-none text-ink">
-            {connectedCount}
-          </span>
-          <span className="font-serif text-2xl text-zinc-500">
-            / {platforms.length}
-          </span>
-        </span>
-        <div className="flex min-w-0 flex-1 flex-col gap-3">
-          <p className="text-sm leading-relaxed text-ink sm:text-base">
-            {connectedCount === platforms.length ? (
-              "Tous tes comptes sont reliés."
-            ) : (
-              <>
-                compte{connectedCount > 1 ? "s" : ""} relié
-                {connectedCount > 1 ? "s" : ""}. Il reste :{" "}
-                <strong className="font-semibold">
-                  {platforms
-                    .filter((p) => !p.connected)
-                    .map((p) => p.name)
-                    .join(", ")}
-                </strong>
-                .
-              </>
-            )}
-          </p>
-          <div className="h-2 overflow-hidden rounded-full bg-zinc-100">
-            <div
-              className="h-full rounded-full bg-emerald-500"
-              style={{
-                width: `${(connectedCount / platforms.length) * 100}%`,
-              }}
-            />
-          </div>
-        </div>
+      <section id="comptes" className="flex scroll-mt-8 flex-col gap-4">
+        <TitreSection
+          aside={`${connectedCount} relié${connectedCount > 1 ? "s" : ""} sur ${platforms.length}`}
+        >
+          Tes comptes
+        </TitreSection>
+        <ul
+          className={`grid gap-4 sm:grid-cols-2 ${
+            platforms.length > 4
+              ? "xl:grid-cols-3 2xl:grid-cols-5"
+              : "xl:grid-cols-4"
+          }`}
+        >
+          {platforms.map((platform) => (
+            <PlatformCard key={platform.key} platform={platform} />
+          ))}
+        </ul>
       </section>
-
-      <ul
-        className={`grid gap-4 sm:grid-cols-2 ${
-          platforms.length > 4
-            ? "xl:grid-cols-3 2xl:grid-cols-5"
-            : "xl:grid-cols-4"
-        }`}
-      >
-        {platforms.map((platform) => (
-          <PlatformCard key={platform.key} platform={platform} />
-        ))}
-      </ul>
     </div>
   );
 }
