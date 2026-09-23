@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Compteur, TitreSection } from "@/components/dashboard/Compteur";
@@ -78,21 +77,60 @@ export default async function ExperiencesPage({
     .filter((p) => p.statut === "confirmee" && prepayees.has(p.experience_id))
     .reduce((somme, p) => somme + (p.montant_centimes ?? 0), 0);
   const maintenant = new Date();
+  // Les séances des quatre prochaines semaines, calculées une fois : elles
+  // servent aux cartes et au compteur des places encore à vendre.
+  const seancesParExperience = new Map(
+    experiences.map((experience) => [
+      experience.id,
+      prochainesSeances({
+        experience,
+        depuis: aujourdhui,
+        jours: 28,
+        places: 1,
+        reservations: places.filter(
+          (place) => place.experience_id === experience.id,
+        ),
+        fermetures,
+        maintenant,
+      }),
+    ]),
+  );
+  const placesLibres = experiences
+    .filter((experience) => experience.actif)
+    .flatMap((experience) => seancesParExperience.get(experience.id) ?? [])
+    .filter((seance) => !seance.raison)
+    .reduce((somme, seance) => somme + seance.placesRestantes, 0);
+  const slug = (restaurant as Restaurant & { slug_reservation?: string | null })
+    .slug_reservation;
 
   return (
-    <div className="flex flex-1 flex-col gap-6 px-6 py-8">
+    <div className="flex flex-1 flex-col gap-8 px-6 py-8">
       <PageHeader
         icon={dashboardIcons.menu}
         title={`Expériences — ${restaurant.nom}`}
+        backHref={`/dashboard/${id}/reservations`}
       />
 
-      <p className="max-w-4xl text-sm text-zinc-500">
-        Un cours, un atelier, une dégustation : une séance à places limitées qui
-        revient selon le rythme que tu choisis. Elle apparaît sur ta page de
-        réservation, et le client paie sur ton compte Stripe — sans commission.
-      </p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="max-w-4xl text-sm text-zinc-600">
+          Un cours, un atelier, une dégustation : une séance à places limitées
+          qui revient selon le rythme que tu choisis. Elle apparaît sur ta page
+          de réservation, et le client paie sur ton compte Stripe — sans
+          commission.
+        </p>
+        {slug && (
+          <a
+            href={`/reserver/${slug}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="rounded-lg border border-zinc-200 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
+          >
+            Voir sur ma page de réservation ↗
+          </a>
+        )}
+      </div>
 
-      <div className="grid grid-cols-3 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <Compteur
           valeur={actives}
           libelle={`expérience${actives > 1 ? "s" : ""} en cours`}
@@ -104,6 +142,10 @@ export default async function ExperiencesPage({
         <Compteur
           valeur={formatEuros(encaisse)}
           libelle="déjà payés pour les séances à venir"
+        />
+        <Compteur
+          valeur={placesLibres}
+          libelle={`place${placesLibres > 1 ? "s" : ""} encore libre${placesLibres > 1 ? "s" : ""} sur 4 semaines`}
         />
       </div>
 
@@ -122,15 +164,7 @@ export default async function ExperiencesPage({
                 const siennes = places.filter(
                   (place) => place.experience_id === experience.id,
                 );
-                const seances = prochainesSeances({
-                  experience,
-                  depuis: aujourdhui,
-                  jours: 28,
-                  places: 1,
-                  reservations: siennes,
-                  fermetures,
-                  maintenant,
-                });
+                const seances = seancesParExperience.get(experience.id) ?? [];
 
                 return (
                   <li
@@ -146,7 +180,7 @@ export default async function ExperiencesPage({
                         <span className="font-serif text-2xl text-ink">
                           {experience.nom}
                           {!experience.actif && (
-                            <span className="ml-2 rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-500">
+                            <span className="ml-2 rounded-full bg-zinc-100 px-2.5 py-0.5 align-middle font-sans text-xs font-medium text-zinc-500">
                               arrêtée
                             </span>
                           )}
@@ -178,7 +212,7 @@ export default async function ExperiencesPage({
                         />
                         <button
                           type="submit"
-                          className="rounded-md border border-zinc-200 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
+                          className="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
                         >
                           {experience.actif ? "Arrêter" : "Relancer"}
                         </button>
@@ -198,10 +232,12 @@ export default async function ExperiencesPage({
                         {seances.slice(0, 4).map((seance) => (
                           <span
                             key={seance.date}
-                            className={`rounded-md px-3 py-1.5 text-xs ${
+                            className={`rounded-lg px-3 py-2 text-sm ${
                               seance.raison
                                 ? "bg-zinc-100 text-zinc-500"
-                                : "bg-brand-orange-soft text-brand-navy"
+                                : seance.placesRestantes === 0
+                                  ? "bg-emerald-50 font-medium text-emerald-800"
+                                  : "bg-brand-orange-soft text-brand-navy"
                             }`}
                           >
                             <span className="first-letter:capitalize">
@@ -209,7 +245,9 @@ export default async function ExperiencesPage({
                             </span>{" "}
                             —{" "}
                             {seance.raison ??
-                              `${seance.placesRestantes} places`}
+                              (seance.placesRestantes === 0
+                                ? "complet"
+                                : `${seance.placesRestantes} place${seance.placesRestantes > 1 ? "s" : ""} libre${seance.placesRestantes > 1 ? "s" : ""}`)}
                           </span>
                         ))}
                         {seances.length === 0 && (
@@ -287,13 +325,6 @@ export default async function ExperiencesPage({
           <ExperienceForm restaurantId={id} />
         </section>
       </div>
-
-      <Link
-        href={`/dashboard/${id}/reservations`}
-        className="text-sm text-zinc-500 hover:text-zinc-900"
-      >
-        ← Réservations
-      </Link>
     </div>
   );
 }
