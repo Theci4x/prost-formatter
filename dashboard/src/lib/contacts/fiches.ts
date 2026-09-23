@@ -51,7 +51,25 @@ export type Lecture = {
   joignables: number;
   /** Combien répondent à la recherche en cours. */
   trouves: number;
+  /**
+   * Vrai quand la vue n'a pas répondu et que la liste vient directement
+   * de la table : les personnes sont là, leurs venues non. L'écran le dit
+   * au lieu d'annoncer un fichier vide sous un compteur qui en affiche
+   * deux — c'est ce qu'il faisait.
+   */
+  sansHistorique: boolean;
 };
+
+/** Les colonnes de la table qu'on montre, le jeton de désinscription exclu. */
+const COLONNES_CONTACT =
+  "id, email, nom, telephone, consentement, consentement_le, desabonne_le, note_interne, created_at";
+
+/** Le motif de recherche, débarrassé de ce qui a un sens pour PostgREST. */
+function motifDe(q: string): string {
+  // `%` et `,` ont un sens dans la syntaxe de PostgREST : sans cet
+  // échappement, chercher « a,b » coupe le filtre en deux conditions.
+  return `%${q.replace(/[%,()]/g, " ")}%`;
+}
 
 /**
  * Cherche dans un fichier client.
@@ -82,9 +100,7 @@ export async function lireFiches({
     .eq("restaurant_id", restaurantId);
 
   if (q) {
-    // `%` et `,` ont un sens dans la syntaxe de PostgREST : sans cet
-    // échappement, chercher « a,b » coupe le filtre en deux conditions.
-    const motif = `%${q.replace(/[%,()]/g, " ")}%`;
+    const motif = motifDe(q);
     requete = requete.or(`nom.ilike.${motif},email.ilike.${motif}`);
   }
 
@@ -101,11 +117,12 @@ export async function lireFiches({
 
   if (liste.error) {
     console.error("[fiches] lecture", liste.error.message);
+    // La vue calcule l'historique ; la table, elle, a les personnes. Si
+    // la première ne répond pas, on montre au moins les secondes.
     return {
-      fiches: [],
+      ...(await lireSansHistorique(supabase, restaurantId, q, tri, debut)),
       total: totaux.total,
       joignables: totaux.joignables,
-      trouves: 0,
     };
   }
 
@@ -114,7 +131,54 @@ export async function lireFiches({
     total: totaux.total,
     joignables: totaux.joignables,
     trouves: liste.count ?? 0,
+    sansHistorique: false,
   };
+}
+
+/**
+ * Le repli : la table des contacts telle quelle, sans venues ni dates.
+ * « Derniers venus » y devient « derniers inscrits » — l'ordre le plus
+ * proche qu'on puisse tenir sans l'historique.
+ */
+async function lireSansHistorique(
+  supabase: SupabaseClient,
+  restaurantId: string,
+  q: string,
+  tri: Tri,
+  debut: number,
+): Promise<{ fiches: Fiche[]; trouves: number; sansHistorique: true }> {
+  let requete = supabase
+    .from("restaurant_contacts")
+    .select(COLONNES_CONTACT, { count: "exact" })
+    .eq("restaurant_id", restaurantId);
+  if (q) {
+    const motif = motifDe(q);
+    requete = requete.or(`nom.ilike.${motif},email.ilike.${motif}`);
+  }
+  const { data, count, error } = await (tri === "nom"
+    ? requete.order("nom", { ascending: true, nullsFirst: false })
+    : requete.order("created_at", { ascending: false })
+  )
+    .order("email", { ascending: true })
+    .range(debut, debut + FICHES_PAR_PAGE - 1);
+
+  if (error) {
+    console.error("[fiches] repli", error.message);
+    return { fiches: [], trouves: 0, sansHistorique: true };
+  }
+  const fiches = (
+    (data ?? []) as Omit<
+      Fiche,
+      "venues" | "couverts" | "premiere_venue" | "derniere_venue"
+    >[]
+  ).map((contact) => ({
+    ...contact,
+    venues: 0,
+    couverts: 0,
+    premiere_venue: null,
+    derniere_venue: null,
+  }));
+  return { fiches, trouves: count ?? 0, sansHistorique: true };
 }
 
 async function compterLeFichier(

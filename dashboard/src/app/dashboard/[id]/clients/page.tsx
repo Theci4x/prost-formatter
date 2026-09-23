@@ -57,7 +57,7 @@ export default async function ClientsPage({
   const restaurant = restaurantData as Restaurant | null;
   if (!restaurant) notFound();
 
-  const { fiches, total, joignables, trouves } = lecture;
+  const { fiches, total, joignables, trouves, sansHistorique } = lecture;
   const muets = total - joignables;
   const pages = Math.ceil(trouves / FICHES_PAR_PAGE);
   const lien = (modif: Record<string, string>) => {
@@ -148,11 +148,22 @@ export default async function ClientsPage({
         </span>
       </form>
 
+      {sansHistorique && (
+        <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-relaxed text-amber-900">
+          <strong>L&apos;historique des venues n&apos;a pas pu être
+          calculé.</strong>{" "}
+          Voici vos clients tels qu&apos;ils sont enregistrés ; le nombre de
+          venues et les dates reviendront dès que le calcul répondra.
+        </p>
+      )}
+
       {fiches.length === 0 ? (
         <p className="text-sm text-zinc-500">
           {q
             ? `Personne ne correspond à « ${q} ».`
-            : "Le fichier est vide : il se remplira à la première réservation."}
+            : total > 0
+              ? "La liste n'a pas pu être lue. Rechargez la page dans un instant."
+              : "Le fichier est vide : il se remplira à la première réservation."}
         </p>
       ) : (
         <>
