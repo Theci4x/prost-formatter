@@ -684,6 +684,13 @@ export default async function ReservationsPage({
   // jour suffit : inutile d'attendre minuit pour saisir un service du
   // soir qu'on vient de terminer.
   const journeePassee = Boolean(jour && jour <= aujourdhui);
+  const confirmees = reservations.filter((x) => x.statut === "confirmee");
+  const couvertsDuJour = confirmees
+    .filter((x) => x.date_reservation === aujourdhui)
+    .reduce((somme, x) => somme + x.couverts, 0);
+  const aVenir = confirmees.filter(
+    (x) => x.date_reservation >= aujourdhui,
+  ).length;
 
   return (
     <div className="flex flex-1 flex-col gap-8 px-6 py-8">
@@ -722,6 +729,26 @@ export default async function ReservationsPage({
         </div>
       </div>
 
+      {/* Ce qui attend, puis ce qui vient : les deux premiers se
+          traitent, les deux autres se regardent. */}
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+        <Compteur
+          valeur={aTraiter.length}
+          libelle={r.compteurATraiter(aTraiter.length)}
+          accent={aTraiter.length > 0}
+        />
+        <Compteur
+          valeur={garantiesARegler}
+          libelle={r.compteurGaranties(garantiesARegler)}
+          accent={garantiesARegler > 0}
+        />
+        <Compteur
+          valeur={couvertsDuJour}
+          libelle={r.compteurCouvertsDuJour(couvertsDuJour)}
+        />
+        <Compteur valeur={aVenir} libelle={r.compteurAVenir(aVenir)} />
+      </div>
+
       <SaisieReservation
         restaurantId={id}
         espaces={espaces}
@@ -729,91 +756,105 @@ export default async function ReservationsPage({
         langue={langue}
       />
 
-      <section className="flex flex-col gap-4">
-        <h2 className="text-base font-semibold text-zinc-900">
-          {r.aTraiter}
-          {aTraiter.length > 0 && (
-            <span className="ml-2 rounded-full bg-brand-orange px-2 py-0.5 text-xs font-semibold text-white">
-              {aTraiter.length}
-            </span>
-          )}
-        </h2>
-
-        {aTraiter.length === 0 ? (
-          <p className="rounded-2xl border border-zinc-200/70 bg-white p-5 text-sm text-zinc-500 shadow-sm">
-            {r.aucuneDemande}
-          </p>
-        ) : (
-          <ul className="flex flex-col gap-3">
-            {aTraiter.map((demande) => (
-              <Ligne
-                key={demande.id}
-                demande={demande}
-                restaurantId={id}
-                r={r}
-                langue={langue}
-                site={site}
-                devis={parDevis.get(demande.id)}
-                espace={parEspace.get(demande.espace_id)}
-                service={
-                  demande.service_id
-                    ? parService.get(demande.service_id)
-                    : undefined
-                }
-                absencesPassees={absencesDuClient(
-                  demande.client_email,
-                  demande.id,
-                  reservations,
-                )}
-              />
-            ))}
-          </ul>
-        )}
-      </section>
-
-      {garanties.length > 0 && (
+      {/* Les deux listes à trancher côte à côte sur grand écran : elles
+          se traitent dans la même séance, et empilées l'une laissait la
+          moitié de l'écran vide. Seule, la première prend toute la largeur
+          et range ses demandes sur deux colonnes. */}
+      <div
+        className={`grid items-start gap-8 ${
+          garanties.length > 0 ? "2xl:grid-cols-2" : ""
+        }`}
+      >
         <section className="flex flex-col gap-4">
-          <div className="flex flex-col gap-1">
-            <h2 className="text-base font-semibold text-zinc-900">
-              {r.garanties}
-              {garantiesARegler > 0 && (
-                <span className="ml-2 rounded-full bg-brand-orange px-2 py-0.5 text-xs font-semibold text-white">
-                  {garantiesARegler}
-                </span>
-              )}
-            </h2>
-            <p className="text-sm text-zinc-500">{r.garantiesChapo}</p>
-          </div>
-          <ul className="flex flex-col gap-3">
-            {garanties.map((demande) => (
-              <Ligne
-                key={demande.id}
-                demande={demande}
-                restaurantId={id}
-                r={r}
-                langue={langue}
-                site={site}
-                devis={parDevis.get(demande.id)}
-                espace={parEspace.get(demande.espace_id)}
-                service={
-                  demande.service_id
-                    ? parService.get(demande.service_id)
-                    : undefined
-                }
-                absencesPassees={absencesDuClient(
-                  demande.client_email,
-                  demande.id,
-                  reservations,
-                )}
-              />
-            ))}
-          </ul>
-        </section>
-      )}
+          <h2 className="flex items-center font-serif text-2xl text-ink">
+            {r.aTraiter}
+            {aTraiter.length > 0 && (
+              <span className="ml-2 rounded-full bg-brand-orange px-2 py-0.5 text-xs font-semibold text-white">
+                {aTraiter.length}
+              </span>
+            )}
+          </h2>
 
-      <section className="grid gap-6 lg:grid-cols-[320px_1fr]">
+          {aTraiter.length === 0 ? (
+            <p className="rounded-2xl border border-zinc-200/70 bg-white p-5 text-sm text-zinc-500 shadow-sm">
+              {r.aucuneDemande}
+            </p>
+          ) : (
+            <ul
+              className={`grid items-start gap-4 ${
+                garanties.length > 0 ? "" : "2xl:grid-cols-2"
+              }`}
+            >
+              {aTraiter.map((demande) => (
+                <Ligne
+                  key={demande.id}
+                  demande={demande}
+                  restaurantId={id}
+                  r={r}
+                  langue={langue}
+                  site={site}
+                  devis={parDevis.get(demande.id)}
+                  espace={parEspace.get(demande.espace_id)}
+                  service={
+                    demande.service_id
+                      ? parService.get(demande.service_id)
+                      : undefined
+                  }
+                  absencesPassees={absencesDuClient(
+                    demande.client_email,
+                    demande.id,
+                    reservations,
+                  )}
+                />
+              ))}
+            </ul>
+          )}
+        </section>
+
+        {garanties.length > 0 && (
+          <section className="flex flex-col gap-4">
+            <div className="flex flex-col gap-1">
+              <h2 className="flex items-center font-serif text-2xl text-ink">
+                {r.garanties}
+                {garantiesARegler > 0 && (
+                  <span className="ml-2 rounded-full bg-brand-orange px-2 py-0.5 text-xs font-semibold text-white">
+                    {garantiesARegler}
+                  </span>
+                )}
+              </h2>
+              <p className="text-sm text-zinc-500">{r.garantiesChapo}</p>
+            </div>
+            <ul className="grid items-start gap-4">
+              {garanties.map((demande) => (
+                <Ligne
+                  key={demande.id}
+                  demande={demande}
+                  restaurantId={id}
+                  r={r}
+                  langue={langue}
+                  site={site}
+                  devis={parDevis.get(demande.id)}
+                  espace={parEspace.get(demande.espace_id)}
+                  service={
+                    demande.service_id
+                      ? parService.get(demande.service_id)
+                      : undefined
+                  }
+                  absencesPassees={absencesDuClient(
+                    demande.client_email,
+                    demande.id,
+                    reservations,
+                  )}
+                />
+              ))}
+            </ul>
+          </section>
+        )}
+      </div>
+
+      <section className="grid gap-8 lg:grid-cols-[360px_1fr] xl:grid-cols-[420px_1fr]">
         <div className="flex flex-col gap-4">
-          <h2 className="text-base font-semibold text-zinc-900">
+          <h2 className="flex items-center font-serif text-2xl text-ink">
             {r.calendrier}
           </h2>
           <CalendrierMois
@@ -827,7 +868,7 @@ export default async function ReservationsPage({
         </div>
 
         <div className="flex flex-col gap-4">
-          <h2 className="text-base font-semibold text-zinc-900 first-letter:capitalize">
+          <h2 className="font-serif text-2xl text-ink first-letter:capitalize">
             {jour ? dateJour(jour, langue) : r.choisirJour}
           </h2>
 
@@ -840,7 +881,7 @@ export default async function ReservationsPage({
               {r.rienPrevu}
             </p>
           ) : (
-            <ul className="flex flex-col gap-3">
+            <ul className="grid items-start gap-4 2xl:grid-cols-2">
               {duJour.map((demande) => (
                 <Ligne
                   key={demande.id}
@@ -876,6 +917,33 @@ export default async function ReservationsPage({
         lienPeriode={lienPeriode}
         r={r}
       />
+    </div>
+  );
+}
+
+function Compteur({
+  valeur,
+  libelle,
+  accent = false,
+}: {
+  valeur: number;
+  libelle: string;
+  accent?: boolean;
+}) {
+  return (
+    <div
+      className={`flex flex-col gap-1 rounded-2xl border px-4 py-4 sm:px-6 sm:py-5 ${
+        accent
+          ? "border-brand-orange/60 bg-brand-orange-soft"
+          : "border-zinc-200/70 bg-white shadow-sm"
+      }`}
+    >
+      <span className="font-serif text-3xl leading-none text-ink sm:text-5xl">
+        {valeur}
+      </span>
+      <span className="text-xs leading-snug text-zinc-600 sm:text-sm">
+        {libelle}
+      </span>
     </div>
   );
 }

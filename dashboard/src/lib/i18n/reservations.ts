@@ -71,6 +71,11 @@ export type ClesReservations = {
   >;
 
   aTraiter: string;
+  /** Les trois compteurs en tête d'écran. */
+  compteurATraiter(n: number): string;
+  compteurGaranties(n: number): string;
+  compteurCouvertsDuJour(n: number): string;
+  compteurAVenir(n: number): string;
   aucuneDemande: string;
   garanties: string;
   garantiesChapo: string;
@@ -213,6 +218,13 @@ const fr: ClesReservations = {
     annulation: "Annulation…",
   },
   aTraiter: "À traiter",
+  compteurATraiter: (n) => (n > 1 ? "demandes à traiter" : "demande à traiter"),
+  compteurGaranties: (n) =>
+    n > 1 ? "acomptes ou cautions à régler" : "acompte ou caution à régler",
+  compteurCouvertsDuJour: (n) =>
+    n > 1 ? "couverts confirmés aujourd'hui" : "couvert confirmé aujourd'hui",
+  compteurAVenir: (n) =>
+    n > 1 ? "réservations confirmées à venir" : "réservation confirmée à venir",
   aucuneDemande: "Aucune demande en attente.",
   garanties: "Acomptes et cautions",
   garantiesChapo:
@@ -351,6 +363,13 @@ const en: ClesReservations = {
     annulation: "Cancelling…",
   },
   aTraiter: "To handle",
+  compteurATraiter: (n) => (n === 1 ? "request to handle" : "requests to handle"),
+  compteurGaranties: (n) =>
+    n === 1 ? "deposit or hold to settle" : "deposits or holds to settle",
+  compteurCouvertsDuJour: (n) =>
+    n === 1 ? "guest confirmed today" : "guests confirmed today",
+  compteurAVenir: (n) =>
+    n === 1 ? "upcoming confirmed booking" : "upcoming confirmed bookings",
   aucuneDemande: "No pending request.",
   garanties: "Deposits and card guarantees",
   garantiesChapo:
@@ -487,6 +506,10 @@ const zh: ClesReservations = {
     annulation: "正在取消…",
   },
   aTraiter: "待处理",
+  compteurATraiter: () => "条待处理请求",
+  compteurGaranties: () => "笔订金或担保待处理",
+  compteurCouvertsDuJour: () => "位今日已确认客人",
+  compteurAVenir: () => "个即将到来的已确认订位",
   aucuneDemande: "没有待处理的订位申请。",
   garanties: "订金与银行卡担保",
   garantiesChapo:
