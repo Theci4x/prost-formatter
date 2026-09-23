@@ -75,7 +75,13 @@ export type Bloc =
    * roue en a un, et c'est la seule chose de la lettre qu'on cherche
    * trois semaines plus tard.
    */
-  | { code: { libelle: string; valeur: string } };
+  | { code: { libelle: string; valeur: string } }
+  /**
+   * Du HTML déjà construit, posé tel quel : la grille de chiffres du
+   * rapport mensuel ne rentre dans aucun des blocs ci-dessus. Il doit
+   * être échappé par celui qui l'écrit.
+   */
+  | { brut: string };
 
 const ENCRE = "#1f1b17";
 const ENCRE_DOUCE = "#7a7168";
@@ -229,6 +235,7 @@ export function enveloppe(
       if ("bouton" in bloc)
         return boutonHtml(bloc.bouton.libelle, bloc.bouton.url);
       if ("code" in bloc) return codeHtml(bloc.code.libelle, bloc.code.valeur);
+      if ("brut" in bloc) return bloc.brut;
       return encadreHtml(bloc.encadre);
     })
     .join("");
@@ -493,9 +500,14 @@ export function texteNu(
       if (typeof bloc === "string") return deshtml(bloc, langue);
       if ("bouton" in bloc)
         return m.lienTexte(bloc.bouton.libelle, bloc.bouton.url);
-      if ("code" in bloc) return m.lienTexte(bloc.code.libelle, bloc.code.valeur);
+      if ("code" in bloc)
+        return m.lienTexte(bloc.code.libelle, bloc.code.valeur);
+      // Le HTML brut n'a pas d'équivalent texte : qui l'emploie écrit
+      // sa version texte à part.
+      if ("brut" in bloc) return "";
       return bloc.encadre.join("\n");
-    });
+    })
+    .filter((morceau) => morceau !== "");
   const corps = `${nu.join("\n\n")}\n\n— ${signature}`;
   return pied ? `${corps}\n\n—\n${deshtml(pied, langue)}` : corps;
 }

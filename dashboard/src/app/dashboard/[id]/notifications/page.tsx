@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -159,6 +160,32 @@ export default async function NotificationsPage({
             d&apos;abonnement : une notification qui ne sert à rien est une
             notification qu&apos;on coupe.
           </p>
+        </section>
+
+        {/* Le seul autre message que Klarr envoie de lui-même : le
+            bilan du mois, par e-mail. Il se règle sur sa propre page. */}
+        <section className="flex flex-col gap-3">
+          <TitreSection>Par e-mail, une fois par mois</TitreSection>
+          <Link
+            href={`/dashboard/${id}/rapport`}
+            className="group flex items-start gap-4 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm transition-[border-color,transform,box-shadow] hover:-translate-y-px hover:border-ink hover:shadow-md"
+          >
+            <span className="flex flex-col gap-0.5">
+              <span className="flex items-center gap-2 font-semibold text-ink">
+                Le bilan mensuel
+                <span
+                  aria-hidden="true"
+                  className="text-zinc-400 transition-transform group-hover:translate-x-0.5 group-hover:text-ink"
+                >
+                  →
+                </span>
+              </span>
+              <span className="text-sm text-zinc-500">
+                Le 1er du mois : couverts, note Google, nouveaux clients, et ce
+                qui t&apos;attend. Aperçu, envoi d&apos;essai et désinscription.
+              </span>
+            </span>
+          </Link>
         </section>
       </div>
     </div>
