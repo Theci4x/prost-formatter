@@ -153,6 +153,8 @@ export type ClesConfiguration = {
 
   pageTitre: string;
   pageChapo: string;
+  /** Le lien vers le module à coller sur le site du restaurant. */
+  integrerSite: string;
   tonLogo: string;
   logoAide: string;
   logoActuel: string;
@@ -330,6 +332,7 @@ const fr: ClesConfiguration = {
   pageTitre: "Ta page de réservation",
   pageChapo:
     "L'adresse à partager sur ta fiche Google, ton Instagram et ta page Facebook. Tes clients y voient uniquement ce qui est réellement disponible.",
+  integrerSite: "Tu as déjà un site ? Mets-y ta réservation →",
   tonLogo: "Ton logo",
   logoAide: "— affiché en haut de ta page",
   logoActuel: "Logo actuel",
@@ -510,6 +513,7 @@ const en: ClesConfiguration = {
   pageTitre: "Your booking page",
   pageChapo:
     "The address to share on your Google listing, your Instagram and your Facebook page. Your guests only see what is genuinely available.",
+  integrerSite: "Already have a website? Add your booking to it →",
   tonLogo: "Your logo",
   logoAide: "— shown at the top of your page",
   logoActuel: "Current logo",
@@ -681,6 +685,7 @@ const zh: ClesConfiguration = {
   pageTitre: "您的订位页",
   pageChapo:
     "这个网址可以放到 Google 商家资料、Instagram 和 Facebook 主页上。客人在上面看到的，只有真正还能订的时段。",
+  integrerSite: "已有网站？把订位功能放进去 →",
   tonLogo: "您的店标",
   logoAide: "— 显示在页面顶部",
   logoActuel: "当前店标",

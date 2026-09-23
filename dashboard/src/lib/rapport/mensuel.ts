@@ -1,4 +1,5 @@
 import "server-only";
+import { comparer } from "@/lib/voisins/comparaison";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { chargerPouls } from "@/lib/dashboard/pouls";
 import { echapper, enveloppe, lien, type Bloc } from "@/lib/courriel/messages";
@@ -89,6 +90,13 @@ export type Rapport = {
   retours: { recus: number; aLire: number };
   clients: { nouveaux: number; joignables: number };
   aFaire: { texte: string; chemin: string }[];
+  /** La maison face à ses voisins suivis ; null sans voisins. */
+  voisins: {
+    rang: number | null;
+    total: number;
+    gain: number | null;
+    gainMoyen: number | null;
+  } | null;
 };
 
 type RestaurantRapport = {
@@ -282,6 +290,24 @@ export async function calculerRapport(
     });
   }
 
+  // Les voisins, si la maison en suit : la table peut manquer (migration
+  // 0086), et un bilan ne doit jamais tomber pour ça.
+  const comparaison = await comparer(supabase, restaurant, debut, fin).catch(
+    () => null,
+  );
+  const voisins =
+    comparaison && comparaison.lignes.some((l) => !l.nous)
+      ? {
+          rang: comparaison.rang,
+          total: comparaison.lignes.filter((l) => l.note != null).length,
+          gain: comparaison.lignes.find((l) => l.nous)?.gain ?? null,
+          gainMoyen:
+            comparaison.moyenneGain != null
+              ? Math.round(comparaison.moyenneGain)
+              : null,
+        }
+      : null;
+
   return {
     restaurant: { id, nom: restaurant.nom },
     periode,
@@ -303,6 +329,7 @@ export async function calculerRapport(
       joignables: contactsJoignables ?? 0,
     },
     aFaire,
+    voisins,
   };
 }
 
@@ -386,6 +413,16 @@ function lignes(r: Rapport): string[] {
   if (r.avis.reponses) {
     l.push(
       `${r.avis.reponses} ${pluriel(r.avis.reponses, "réponse")} à des avis ${r.avis.reponses > 1 ? "publiées" : "publiée"}`,
+    );
+  }
+  if (r.voisins?.rang) {
+    const signe = (n: number) => `${n > 0 ? "+" : ""}${n}`;
+    const rythme =
+      r.voisins.gain != null && r.voisins.gainMoyen != null
+        ? `, et ${signe(r.voisins.gain)} avis ce mois-ci contre ${signe(r.voisins.gainMoyen)} en moyenne chez tes voisins`
+        : "";
+    l.push(
+      `${r.voisins.rang === 1 ? "1re" : `${r.voisins.rang}e`} note Google sur ${r.voisins.total} dans ton quartier${rythme}`,
     );
   }
   if (r.retours.recus > 0) {

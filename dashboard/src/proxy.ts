@@ -24,6 +24,8 @@ export async function proxy(request: NextRequest) {
  *   du tout — ils déclenchaient pourtant un appel à Supabase chacun.
  * - **`/sw.js` et `/manifest.webmanifest`** — demandés par le navigateur,
  *   jamais par quelqu'un.
+ * - **`/widget.js`** — le module de réservation, chargé par les sites des
+ *   restaurants : leurs visiteurs n'ont pas de session chez nous.
  *
  * Ce n'est pas qu'une économie. Supabase fait tourner le jeton de
  * rafraîchissement à chaque usage : au démarrage à froid de l'application
@@ -36,6 +38,6 @@ export async function proxy(request: NextRequest) {
  */
 export const config = {
   matcher: [
-    "/((?!api|sw\\.js|manifest\\.webmanifest|_next/static|_next/image|favicon\\.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|txt|xml|json)$).*)",
+    "/((?!api|sw\\.js|widget\\.js|manifest\\.webmanifest|_next/static|_next/image|favicon\\.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|txt|xml|json)$).*)",
   ],
 };

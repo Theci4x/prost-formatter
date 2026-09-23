@@ -54,21 +54,38 @@ const nextConfig: NextConfig = {
    * permissions : Stripe s'en sert pour Apple Pay et Google Pay.
    */
   async headers() {
+    const communs = [
+      {
+        key: "Strict-Transport-Security",
+        value: "max-age=63072000; includeSubDomains",
+      },
+      { key: "X-Content-Type-Options", value: "nosniff" },
+      { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+      {
+        key: "Permissions-Policy",
+        value: "camera=(), microphone=(), geolocation=()",
+      },
+    ];
     return [
       {
-        source: "/:path*",
+        // Tout, sauf les deux chemins qu'un restaurant affiche dans son
+        // propre site : une règle qui les excluait après coup ne suffisait
+        // pas, deux valeurs pour le même en-tête ne se départagent pas.
+        source: "/:path((?!reserver/|paiement/).*)",
         headers: [
-          {
-            key: "Strict-Transport-Security",
-            value: "max-age=63072000; includeSubDomains",
-          },
-          { key: "X-Content-Type-Options", value: "nosniff" },
-          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-          {
-            key: "Permissions-Policy",
-            value: "camera=(), microphone=(), geolocation=()",
-          },
+          ...communs,
           { key: "Content-Security-Policy", value: "frame-ancestors 'self'" },
+        ],
+      },
+      {
+        // La réservation, et le paiement qui la suit parfois, peuvent
+        // s'afficher dans le site de n'importe quel restaurant — c'est le
+        // module à intégrer. Rien d'autre ne l'est : ni le tableau de
+        // bord, ni la connexion, ni le bon cadeau.
+        source: "/:dossier(reserver|paiement)/:path*",
+        headers: [
+          ...communs,
+          { key: "Content-Security-Policy", value: "frame-ancestors *" },
         ],
       },
       {
@@ -79,6 +96,16 @@ const nextConfig: NextConfig = {
         // ne sont pas tous les nôtres.
         source: "/restaurant/:slug",
         headers: [{ key: "Vary", value: "Accept-Language, Cookie" }],
+      },
+      {
+        // Le module posé sur les sites des restaurants : une heure de
+        // cache, pas plus — une correction doit arriver le jour même sur
+        // tous les sites qui l'ont collé.
+        source: "/widget.js",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=3600" },
+          { key: "Access-Control-Allow-Origin", value: "*" },
+        ],
       },
       {
         // Le service worker doit rester frais : mis en cache, un appareil

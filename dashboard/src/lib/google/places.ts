@@ -1,4 +1,8 @@
-import { optionsFraicheur, FRAICHEUR_ECRAN } from "@/lib/reviews/fraicheur";
+import {
+  optionsFraicheur,
+  FRAICHEUR_DEMANDE,
+  FRAICHEUR_ECRAN,
+} from "@/lib/reviews/fraicheur";
 // Google Places API (New) — nécessite une clé API avec "Places API (New)"
 // activée et la facturation Google Cloud configurée (pas d'OAuth, pas de
 // vérification à attendre, contrairement à l'API Business Profile).
@@ -280,5 +284,125 @@ export async function getPlaceDetails(
         Boolean(r.publishTime),
       )
       .map((r) => ({ publishTime: r.publishTime })),
+  };
+}
+
+/**
+ * Les voisins : les deux mêmes points d'entrée, rien de plus.
+ *
+ * La « recherche à proximité » est fermée dans la console (voir plus
+ * haut) ; la recherche texte fait le même travail avec un biais de
+ * position, et rend la note et le nombre d'avis dans la même réponse — un
+ * appel pour vingt restaurants, au lieu de vingt fiches.
+ */
+export type Position = { lat: number; lng: number };
+
+export type LieuAutour = {
+  id: string;
+  nom: string;
+  adresse: string;
+  note: number | null;
+  nombreAvis: number | null;
+  position: Position | null;
+};
+
+/** Où est un établissement. Le seul champ demandé est le moins cher. */
+export async function positionDe(placeId: string): Promise<Position | null> {
+  const res = await fetch(`${PLACES_BASE_URL}/places/${placeId}`, {
+    headers: { "X-Goog-Api-Key": apiKey(), "X-Goog-FieldMask": "location" },
+    ...optionsFraicheur(FRAICHEUR_ECRAN),
+  });
+  if (!res.ok) {
+    throw new Error(
+      `Places position a échoué : ${res.status} ${await res.text()}`,
+    );
+  }
+  const data = (await res.json()) as {
+    location?: { latitude?: number; longitude?: number };
+  };
+  const { latitude, longitude } = data.location ?? {};
+  return typeof latitude === "number" && typeof longitude === "number"
+    ? { lat: latitude, lng: longitude }
+    : null;
+}
+
+export async function chercherAutour(
+  requete: string,
+  centre: Position,
+  rayonMetres = 1200,
+): Promise<LieuAutour[]> {
+  const res = await fetch(`${PLACES_BASE_URL}/places:searchText`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Goog-Api-Key": apiKey(),
+      "X-Goog-FieldMask":
+        "places.id,places.displayName,places.formattedAddress,places.rating,places.userRatingCount,places.location",
+    },
+    body: JSON.stringify({
+      textQuery: requete,
+      languageCode: "fr",
+      locationBias: {
+        circle: {
+          center: { latitude: centre.lat, longitude: centre.lng },
+          radius: rayonMetres,
+        },
+      },
+    }),
+    ...optionsFraicheur(FRAICHEUR_DEMANDE),
+  });
+  if (!res.ok) {
+    throw new Error(
+      `Places autour a échoué : ${res.status} ${await res.text()}`,
+    );
+  }
+  const data = (await res.json()) as {
+    places?: {
+      id: string;
+      displayName?: { text?: string };
+      formattedAddress?: string;
+      rating?: number;
+      userRatingCount?: number;
+      location?: { latitude?: number; longitude?: number };
+    }[];
+  };
+  return (data.places ?? []).map((p) => ({
+    id: p.id,
+    nom: p.displayName?.text ?? "",
+    adresse: p.formattedAddress ?? "",
+    note: p.rating ?? null,
+    nombreAvis: p.userRatingCount ?? null,
+    position:
+      typeof p.location?.latitude === "number" &&
+      typeof p.location?.longitude === "number"
+        ? { lat: p.location.latitude, lng: p.location.longitude }
+        : null,
+  }));
+}
+
+/** Le relevé fait autorité : jamais de réponse mise en cache. */
+const TOUJOURS_FRAIS_PLACES = 0;
+
+/** La note et le nombre d'avis d'un voisin, pour le relevé de la semaine. */
+export async function noteDe(
+  placeId: string,
+): Promise<{ note: number | null; nombreAvis: number | null }> {
+  const res = await fetch(`${PLACES_BASE_URL}/places/${placeId}`, {
+    headers: {
+      "X-Goog-Api-Key": apiKey(),
+      "X-Goog-FieldMask": "rating,userRatingCount",
+    },
+    ...optionsFraicheur(TOUJOURS_FRAIS_PLACES),
+  });
+  if (!res.ok) {
+    throw new Error(`Places note a échoué : ${res.status} ${await res.text()}`);
+  }
+  const data = (await res.json()) as {
+    rating?: number;
+    userRatingCount?: number;
+  };
+  return {
+    note: data.rating ?? null,
+    nombreAvis: data.userRatingCount ?? null,
   };
 }

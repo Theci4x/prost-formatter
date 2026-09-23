@@ -131,6 +131,13 @@ const ICONES = {
       <path d="M12 17h.01" />
     </Icone>
   ),
+  voisins: (
+    <Icone>
+      <path d="M12 21s-6-5.5-6-10a6 6 0 0 1 12 0c0 4.5-6 10-6 10z" />
+      <circle cx="12" cy="11" r="2" />
+      <path d="M3 9.5c0 2.5 2.5 5.5 2.5 5.5M21 9.5c0 2.5-2.5 5.5-2.5 5.5" />
+    </Icone>
+  ),
   cadeau: (
     <Icone>
       <rect x="3" y="8" width="18" height="4" rx="1" />
@@ -375,6 +382,13 @@ function groupes(t: ClesAccueil, d: DetailsAccueil, langue: Langue): Groupe[] {
           label: t.entrees.roue.label,
           resume: t.entrees.roue.resume,
           icone: ICONES.roue,
+          minimum: "gerant",
+        },
+        {
+          href: "voisins",
+          label: t.entrees.voisins.label,
+          resume: t.entrees.voisins.resume,
+          icone: ICONES.voisins,
           minimum: "gerant",
         },
         {

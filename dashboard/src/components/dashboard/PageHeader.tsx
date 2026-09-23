@@ -336,4 +336,20 @@ export const dashboardIcons = {
       <path d="M12 8c-1.5-3-5-3.5-5-1.2C7 8 9 8 12 8zM12 8c1.5-3 5-3.5 5-1.2C17 8 15 8 12 8z" />
     </svg>
   ),
+  voisins: (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M12 21s-6-5.5-6-10a6 6 0 0 1 12 0c0 4.5-6 10-6 10z" />
+      <circle cx="12" cy="11" r="2" />
+      <path d="M3 9.5c0 2.5 2.5 5.5 2.5 5.5M21 9.5c0 2.5-2.5 5.5-2.5 5.5" />
+    </svg>
+  ),
 };

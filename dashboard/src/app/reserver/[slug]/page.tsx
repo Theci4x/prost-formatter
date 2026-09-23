@@ -29,6 +29,7 @@ import { heureLisible } from "@/lib/site/horaires";
 import { SignatureKlarr } from "@/components/brand/SignatureKlarr";
 import { ChoixLangueSite } from "@/components/landing/ChoixLangueSite";
 import { chargerMaisonCadeau } from "@/lib/bons/maison";
+import { estIntegre } from "@/lib/integration/cadre";
 import { BONS } from "@/lib/i18n/bons";
 import { langueVisiteur } from "@/lib/i18n/langue";
 import { RESERVER } from "@/lib/i18n/reserver";
@@ -52,6 +53,8 @@ type Query = {
   espace?: string;
   /** L'heure d'arrivée retenue, « 19:30 ». */
   heure?: string;
+  /** « 1 » : affichée dans le site du restaurant (voir `estIntegre`). */
+  integre?: string;
 };
 
 async function chargerRestaurant(slug: string) {
@@ -219,6 +222,9 @@ export default async function ReserverPage({
   // de témoin — c'est l'en-tête du navigateur qui le sauve.
   const langue = await langueVisiteur();
   const r = RESERVER[langue];
+  // Dans le site du restaurant, son en-tête est déjà au-dessus : on ne
+  // remet ni le nom ni le logo, seulement la réservation.
+  const integre = await estIntegre(query.integre);
 
   const date =
     query.date && /^\d{4}-\d{2}-\d{2}$/.test(query.date)
@@ -372,38 +378,40 @@ export default async function ReserverPage({
 
   return (
     <div className="flex min-h-screen flex-col bg-brand-cream">
-      <header className="border-b border-zinc-200/70 bg-white/90 px-6 py-4">
-        <div className="mx-auto flex max-w-3xl items-center justify-between gap-4">
-          <span className="flex items-center gap-3">
-            {restaurant.logo_url && (
-              <span className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg">
-                <Image
-                  src={restaurant.logo_url}
-                  alt=""
-                  fill
-                  sizes="40px"
-                  className="object-contain"
-                />
+      {!integre && (
+        <header className="border-b border-zinc-200/70 bg-white/90 px-6 py-4">
+          <div className="mx-auto flex max-w-3xl items-center justify-between gap-4">
+            <span className="flex items-center gap-3">
+              {restaurant.logo_url && (
+                <span className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg">
+                  <Image
+                    src={restaurant.logo_url}
+                    alt=""
+                    fill
+                    sizes="40px"
+                    className="object-contain"
+                  />
+                </span>
+              )}
+              <span className="font-serif text-2xl text-ink">
+                {restaurant.nom}
               </span>
-            )}
-            <span className="font-serif text-2xl text-ink">
-              {restaurant.nom}
             </span>
-          </span>
-          <span className="flex shrink-0 items-center gap-3">
-            {restaurant.adresse && (
-              <span className="hidden text-base text-zinc-500 sm:inline">
-                {restaurant.adresse}
-              </span>
-            )}
-            {/* Le client arrive ici par un QR collé sur une table : il
+            <span className="flex shrink-0 items-center gap-3">
+              {restaurant.adresse && (
+                <span className="hidden text-base text-zinc-500 sm:inline">
+                  {restaurant.adresse}
+                </span>
+              )}
+              {/* Le client arrive ici par un QR collé sur une table : il
                 n'est jamais passé par l'accueil, et n'a donc jamais eu
                 l'occasion de choisir sa langue. C'est le seul endroit où
                 il peut le faire. */}
-            <ChoixLangueSite courante={langue} />
-          </span>
-        </div>
-      </header>
+              <ChoixLangueSite courante={langue} />
+            </span>
+          </div>
+        </header>
+      )}
 
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-6 py-10">
         {/* Ce que Google lit pour afficher la note, les horaires, la

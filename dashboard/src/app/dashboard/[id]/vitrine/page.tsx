@@ -235,6 +235,27 @@ export default async function VitrinePage({
             )}
           </section>
 
+          {/* Pour ceux qui ont déjà un site ailleurs : la réservation va
+              chez eux, plutôt que l'inverse. */}
+          <Link
+            href={`/dashboard/${id}/integrer`}
+            className="group flex flex-col gap-1 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm transition-[border-color,box-shadow] hover:border-ink hover:shadow-md"
+          >
+            <span className="flex items-center gap-2 font-semibold text-ink">
+              Tu as déjà un site ?
+              <span
+                aria-hidden="true"
+                className="text-zinc-400 transition-transform group-hover:translate-x-0.5 group-hover:text-ink"
+              >
+                →
+              </span>
+            </span>
+            <span className="text-sm text-zinc-500">
+              Ajoute-lui un bouton « Réserver » qui ouvre ta réservation Klarr,
+              sans quitter ton site.
+            </span>
+          </Link>
+
           {/* Ce qui est fait, ce qui reste : une barre et une liste. */}
           <section className="flex flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm">
             <div className="flex items-baseline justify-between gap-4">

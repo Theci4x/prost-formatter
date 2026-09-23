@@ -27,6 +27,7 @@ export type ClesAccueil = {
     | "faq"
     | "experiences"
     | "bonsCadeaux"
+    | "voisins"
     | "avis"
     | "retours"
     | "roue"
@@ -89,6 +90,10 @@ const fr: ClesAccueil = {
     experiences: {
       label: "Expériences",
       resume: "Ateliers, dégustations, soirées à places comptées.",
+    },
+    voisins: {
+      label: "Tes voisins",
+      resume: "Leur note et leurs avis, relevés chaque semaine.",
     },
     bonsCadeaux: {
       label: "Bons cadeaux",
@@ -184,6 +189,10 @@ const en: ClesAccueil = {
       label: "Experiences",
       resume: "Workshops, tastings, evenings with limited seats.",
     },
+    voisins: {
+      label: "Your neighbours",
+      resume: "Their rating and reviews, checked every week.",
+    },
     bonsCadeaux: {
       label: "Gift cards",
       resume: "Sold online, paid into your Stripe account.",
@@ -271,6 +280,10 @@ const zh: ClesAccueil = {
     experiences: {
       label: "活动",
       resume: "工作坊、品鉴会、限位晚宴。",
+    },
+    voisins: {
+      label: "周边同行",
+      resume: "他们的评分和评价数，每周更新。",
     },
     bonsCadeaux: {
       label: "礼品卡",

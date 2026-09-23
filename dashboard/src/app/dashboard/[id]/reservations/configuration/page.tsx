@@ -458,6 +458,12 @@ export default async function ConfigurationReservationsPage({
           <div className="flex flex-col gap-1">
             <h2 className="font-serif text-2xl text-ink">{cfg.pageTitre}</h2>
             <p className="text-sm text-zinc-500">{cfg.pageChapo}</p>
+            <Link
+              href={`/dashboard/${id}/integrer`}
+              className="w-fit text-sm font-semibold text-brand-orange-dark hover:underline"
+            >
+              {cfg.integrerSite}
+            </Link>
           </div>
 
           <IdentitePublique

@@ -387,12 +387,13 @@ export default async function PaiementPage({
       )}
 
       {echec || !lienStripe ? (
-        <p className="text-sm text-red-600">
-          {p.indisponible(restaurant.nom)}
-        </p>
+        <p className="text-sm text-red-600">{p.indisponible(restaurant.nom)}</p>
       ) : (
         <a
           href={lienStripe}
+          // Stripe refuse de s'afficher dans une iframe : depuis le site
+          // d'un restaurant, le paiement prend toute la fenêtre.
+          target="_top"
           className="rounded-md bg-brand-navy px-4 py-3 text-center text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover"
         >
           {enCaution ? p.enregistrerMaCarte : p.payer(somme)}

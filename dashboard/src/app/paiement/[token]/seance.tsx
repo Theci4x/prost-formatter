@@ -254,6 +254,9 @@ export async function PaiementSeance({
       ) : (
         <a
           href={lien}
+          // Stripe refuse de s'afficher dans une iframe : depuis le site
+          // d'un restaurant, le paiement prend toute la fenêtre.
+          target="_top"
           className="rounded-md bg-brand-navy px-4 py-3 text-center text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover"
         >
           {p.payer(somme)}
