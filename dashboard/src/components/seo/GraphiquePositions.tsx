@@ -55,7 +55,7 @@ export function GraphiquePositions({
     <figure className="flex flex-col gap-3" aria-labelledby={`${id}-titre`}>
       <figcaption className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
         <span id={`${id}-titre`} className="text-sm font-medium text-ink">
-          À quelle place vous sortez
+          À quelle place tu sors
         </span>
         <span className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-ink-soft">
           {(["premiere", "deuxieme", "loin"] as const).map((p) => (

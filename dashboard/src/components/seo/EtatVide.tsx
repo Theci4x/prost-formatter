@@ -62,12 +62,12 @@ export function EtatVide({ site }: { site: string }) {
       </svg>
       <div className="flex flex-col gap-1.5">
         <p className="text-sm font-medium text-ink">
-          Pas encore de requête mesurée sur vos pages
+          Pas encore de requête mesurée sur tes pages
         </p>
         <p className="max-w-prose text-sm leading-relaxed text-ink-soft">
           Google n&apos;a rien enregistré ces quatre dernières semaines pour les
-          pages de votre établissement. C&apos;est le cas d&apos;une page
-          récente, ou d&apos;une maison fermée. Les chiffres arriveront ici
+          pages de ton établissement. C&apos;est le cas d&apos;une page récente,
+          ou d&apos;une maison fermée. Les chiffres arriveront ici
           d&apos;eux-mêmes, avec trois jours de retard — c&apos;est le rythme de
           Search Console.
         </p>

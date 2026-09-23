@@ -22,8 +22,8 @@ export function AvantLesChiffres({
   if (!etat.connecte) {
     return (
       <Encadre>
-        Reliez votre compte Google depuis « Connexions » pour voir les requêtes
-        réellement tapées par ceux qui vous trouvent. C&apos;est la seule mesure
+        Relie ton compte Google depuis « Connexions » pour voir les requêtes
+        réellement tapées par ceux qui te trouvent. C&apos;est la seule mesure
         qui ne soit pas une supposition.
       </Encadre>
     );
@@ -44,8 +44,8 @@ export function AvantLesChiffres({
     if (etat.proprietes.length === 0) {
       return (
         <Encadre>
-          Aucun site vérifié sur ce compte Google. Search Console suppose que
-          vous possédez un site et que vous l&apos;y avez fait vérifier.
+          Aucun site vérifié sur ce compte Google. Search Console suppose que tu
+          possèdes un site et que tu l&apos;y as fait vérifier.
         </Encadre>
       );
     }
@@ -98,9 +98,7 @@ export function SourceSuivie({
   if (!etat.site) return null;
   return (
     <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-xs text-ink-soft">
-      <span>
-        {etat.site} · 28 derniers jours · pages de votre établissement
-      </span>
+      <span>{etat.site} · 28 derniers jours · pages de ton établissement</span>
       {etat.proprietes.length > 1 && (
         <form action={choisirPropriete}>
           <input type="hidden" name="restaurant_id" value={restaurantId} />

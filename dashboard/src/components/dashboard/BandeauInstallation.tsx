@@ -165,12 +165,12 @@ export function BandeauInstallation() {
 
           <div className="flex min-w-0 flex-col gap-0.5">
             <p className="text-[15px] font-semibold text-ink">
-              Posez Klarr sur votre écran d&apos;accueil
+              Pose Klarr sur ton écran d&apos;accueil
             </p>
             <p className="text-[13px] leading-relaxed text-ink-soft">
               {plateforme === "ios"
-                ? "Votre carnet en un geste, et les réservations qui arrivent même téléphone verrouillé — Apple ne les autorise que pour les applications installées."
-                : "Votre carnet en un geste, et les réservations qui arrivent même téléphone verrouillé."}
+                ? "Ton carnet en un geste, et les réservations qui arrivent même téléphone verrouillé — Apple ne les autorise que pour les applications installées."
+                : "Ton carnet en un geste, et les réservations qui arrivent même téléphone verrouillé."}
             </p>
           </div>
 
@@ -203,16 +203,16 @@ export function BandeauInstallation() {
                 </li>
                 <li>
                   <strong className="font-semibold text-ink">2.</strong> Faites
-                  défiler, puis touchez{" "}
+                  défiler, puis touche{" "}
                   <strong className="font-semibold text-ink">
                     Sur l&apos;écran d&apos;accueil
                   </strong>
                   .
                 </li>
                 <li>
-                  <strong className="font-semibold text-ink">3.</strong> Touchez{" "}
+                  <strong className="font-semibold text-ink">3.</strong> Touche{" "}
                   <strong className="font-semibold text-ink">Ajouter</strong>,
-                  puis ouvrez Klarr depuis sa nouvelle icône.
+                  puis ouvre Klarr depuis sa nouvelle icône.
                 </li>
                 <li className="pt-1 text-ink-soft/80">
                   Depuis Safari uniquement : Apple ne le permet pas depuis un
@@ -222,12 +222,12 @@ export function BandeauInstallation() {
             ) : (
               <>
                 <li>
-                  <strong className="font-semibold text-ink">1.</strong> Ouvrez
+                  <strong className="font-semibold text-ink">1.</strong> Ouvre
                   le menu <strong className="font-semibold text-ink">⋮</strong>{" "}
-                  de votre navigateur, en haut à droite.
+                  de ton navigateur, en haut à droite.
                 </li>
                 <li>
-                  <strong className="font-semibold text-ink">2.</strong> Touchez{" "}
+                  <strong className="font-semibold text-ink">2.</strong> Touche{" "}
                   <strong className="font-semibold text-ink">
                     Installer l&apos;application
                   </strong>{" "}

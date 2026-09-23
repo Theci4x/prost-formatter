@@ -28,7 +28,7 @@ export type LibellesKpis = {
  */
 const FRANCAIS: LibellesKpis = {
   vus: "fois vu dans Google",
-  clics: "clics vers vos pages",
+  clics: "clics vers tes pages",
   taux: "des vues ont cliqué",
   premierePage: (n) => `requête${n > 1 ? "s" : ""} en première page`,
   aPortee: (n) => `${n} à portée, en deuxième page`,

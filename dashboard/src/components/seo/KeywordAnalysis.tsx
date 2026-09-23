@@ -52,7 +52,7 @@ export function KeywordAnalysis({
           <p className="text-xs text-ink-soft">
             {analyse && !enCours
               ? `Analysée le ${quand(analyse.analyseLe)}`
-              : "Un audit local complet, écrit pour votre établissement."}
+              : "Un audit local complet, écrit pour ton établissement."}
           </p>
         </div>
 
@@ -99,10 +99,10 @@ export function KeywordAnalysis({
         </div>
       ) : (
         <div className="rounded-xl border border-dashed border-line bg-paper/60 px-6 py-8 text-sm leading-relaxed text-ink-soft">
-          Aucune analyse pour le moment. Elle s&apos;appuie sur votre nom, votre
-          adresse, vos mots-clés ciblés et — quand Search Console est relié —
-          sur ce que les gens tapent vraiment. Ajoutez vos mots-clés
-          d&apos;abord : l&apos;analyse en sera meilleure.
+          Aucune analyse pour le moment. Elle s&apos;appuie sur ton nom, ton
+          adresse, tes mots-clés ciblés et — quand Search Console est relié —
+          sur ce que les gens tapent vraiment. Ajoute tes mots-clés d&apos;abord
+          : l&apos;analyse en sera meilleure.
         </div>
       )}
     </section>

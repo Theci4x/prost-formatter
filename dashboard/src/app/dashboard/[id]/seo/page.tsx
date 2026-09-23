@@ -158,7 +158,7 @@ export default async function SeoPage({
               Mots-clés ciblés
             </h2>
             <p className="text-xs text-ink-soft">
-              Ce sur quoi vous voulez sortir. L&apos;analyse les commente.
+              Ce sur quoi tu veux sortir. L&apos;analyse les commente.
             </p>
           </div>
 
