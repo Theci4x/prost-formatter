@@ -34,7 +34,19 @@ export type Plateforme = {
   verifier?: (nom: string, adresse: string) => string;
   /** L'écran Klarr qui relie la plateforme, quand il existe. */
   ecranKlarr?: string;
+  /**
+   * La marche à suivre, étape par étape. Écrite pour quelqu'un qui n'a
+   * jamais revendiqué de fiche : c'est le cas de la plupart des
+   * restaurateurs, et c'est la raison pour laquelle ils ne le font pas.
+   * Les plateformes changent leurs écrans : on décrit le chemin, pas
+   * l'intitulé exact de chaque bouton.
+   */
+  etapes?: string[];
 };
+
+/** L'étape commune : recopier la fiche plutôt que la retaper. */
+const COLLER =
+  "Remplis la fiche en collant les champs de « Ta fiche à copier », en haut de cette page : mêmes nom, téléphone et horaires, au caractère près.";
 
 const q = encodeURIComponent;
 
@@ -53,6 +65,13 @@ export const PLATEFORMES: Plateforme[] = [
     verifier: (nom, adresse) =>
       `https://www.google.com/maps/search/?api=1&query=${q(`${nom} ${adresse}`.trim())}`,
     ecranKlarr: "google",
+    etapes: [
+      "Ouvre « Créer ou revendiquer » et connecte-toi avec un compte Google — idéalement créé avec l'adresse e-mail du restaurant, pas un compte personnel.",
+      "Cherche ton restaurant : s'il existe déjà sur Maps, revendique-le ; sinon, ajoute-le.",
+      "Google vérifie que tu en es le gérant. Selon les cas : courte vidéo de la devanture, appel, SMS, e-mail ou courrier. Suis la méthode qu'il te propose.",
+      COLLER,
+      "Reviens dans Klarr, écran « Fiche Google », et relie ton compte : ta note et tes avis remonteront tout seuls.",
+    ],
   },
   {
     cle: "apple",
@@ -65,6 +84,13 @@ export const PLATEFORMES: Plateforme[] = [
     creer: "https://businessconnect.apple.com/",
     verifier: (nom, adresse) =>
       `https://maps.apple.com/?q=${q(`${nom} ${adresse}`.trim())}`,
+    etapes: [
+      "Ouvre « Créer ou revendiquer » et connecte-toi avec un identifiant Apple. Pas besoin d'iPhone : le mieux est d'en créer un avec l'adresse e-mail du restaurant.",
+      "Cherche ton restaurant : s'il apparaît déjà dans Plans, revendique-le ; sinon, crée l'établissement.",
+      "Apple vérifie que tu en es le gérant, souvent par un appel au numéro de la fiche ou avec un justificatif. Compte quelques jours.",
+      COLLER,
+      "Ajoute quelques photos et ton lien de réservation, puis reviens ici cliquer « À jour ».",
+    ],
   },
   {
     cle: "bing",
@@ -77,6 +103,12 @@ export const PLATEFORMES: Plateforme[] = [
     creer: "https://www.bingplaces.com/",
     verifier: (nom, adresse) =>
       `https://www.bing.com/maps?q=${q(`${nom} ${adresse}`.trim())}`,
+    etapes: [
+      "Ouvre « Créer ou revendiquer » et connecte-toi avec un compte Microsoft, Google ou Facebook.",
+      "Choisis l'import depuis ta fiche Google : Bing reprend nom, adresse, horaires et photos en une fois. Sans fiche Google, ajoute l'établissement à la main.",
+      "Bing vérifie ensuite l'établissement ; suis la méthode proposée.",
+      "Relis la fiche importée et corrige ce qui diffère de « Ta fiche à copier », puis reviens ici cliquer « À jour ».",
+    ],
   },
   {
     cle: "tripadvisor",
@@ -87,6 +119,13 @@ export const PLATEFORMES: Plateforme[] = [
     verifier: (nom, adresse) =>
       `https://www.tripadvisor.fr/Search?q=${q(`${nom} ${adresse}`.trim())}`,
     ecranKlarr: "avis",
+    etapes: [
+      "Clique « Vérifier ma fiche » : la plupart des restaurants ont déjà une fiche, créée par des clients.",
+      "Ouvre « Créer ou revendiquer », cherche ton restaurant et revendique-le avec un compte TripAdvisor.",
+      "TripAdvisor vérifie que tu es le gérant ; suis la méthode proposée.",
+      COLLER,
+      "Dans Klarr, écran « Avis », épingle ta fiche TripAdvisor : ta note s'affichera avec les autres.",
+    ],
   },
   {
     cle: "pagesjaunes",
@@ -97,6 +136,13 @@ export const PLATEFORMES: Plateforme[] = [
     conseil:
       "Si ta fiche existe, revendique-la depuis la fiche elle-même ; l'inscription de base est gratuite.",
     verifier: surLeSite("pagesjaunes.fr"),
+    etapes: [
+      "Clique « Vérifier ma fiche » pour trouver ta page sur PagesJaunes.",
+      "Sur ta fiche, suis le lien destiné aux professionnels pour la revendiquer, et crée ton compte pro.",
+      "Sans fiche, inscris ton établissement depuis l'espace professionnel : l'inscription de base est gratuite.",
+      COLLER,
+      "Des offres payantes te seront proposées : elles ne sont pas nécessaires pour une fiche juste.",
+    ],
   },
   {
     cle: "petitfute",
@@ -106,6 +152,12 @@ export const PLATEFORMES: Plateforme[] = [
     conseil:
       "Cherche ta fiche : si elle existe, un lien pour les professionnels permet de la corriger.",
     verifier: surLeSite("petitfute.com"),
+    etapes: [
+      "Clique « Vérifier ma fiche » pour voir si le guide parle déjà de toi.",
+      "Si oui, suis le lien pour les professionnels sur la fiche et demande la correction de ce qui ne va pas.",
+      "Si non, le Petit Futé est un guide : il choisit ses adresses. Tu peux lui proposer la tienne depuis son espace professionnel, sans garantie d'y figurer.",
+      "Reviens ici cliquer ce que tu as trouvé.",
+    ],
   },
   {
     cle: "yelp",
@@ -116,6 +168,13 @@ export const PLATEFORMES: Plateforme[] = [
     creer: "https://business.yelp.com/",
     verifier: (nom, adresse) =>
       `https://www.yelp.fr/search?find_desc=${q(nom)}&find_loc=${q(adresse)}`,
+    etapes: [
+      "Ouvre « Créer ou revendiquer » et cherche ton restaurant.",
+      "Revendique la fiche ou crée-la, avec un compte Yelp pour les professionnels.",
+      "Yelp vérifie que tu es le gérant, en général par téléphone ou par e-mail.",
+      COLLER,
+      "Yelp te proposera de la publicité : tu n'es pas obligé d'en acheter pour avoir une fiche juste.",
+    ],
   },
   {
     cle: "facebook",
@@ -124,6 +183,12 @@ export const PLATEFORMES: Plateforme[] = [
     pourquoi: "Horaires, photos et avis : beaucoup de clients vérifient ici.",
     creer: "https://www.facebook.com/pages/create",
     ecranKlarr: "social",
+    etapes: [
+      "Ouvre « Créer ou revendiquer » en étant connecté à ton compte Facebook personnel : c'est lui qui administre la page, rien de ta vie privée n'y apparaît.",
+      "Choisis la catégorie « Restaurant » et donne à la page le nom exact du restaurant.",
+      COLLER,
+      "Dans Klarr, écran « Réseaux sociaux », connecte la page : abonnés et derniers posts remonteront tout seuls.",
+    ],
   },
   {
     cle: "instagram",
@@ -133,6 +198,12 @@ export const PLATEFORMES: Plateforme[] = [
     conseil:
       "Passe ton compte en professionnel, puis rattache-le à ta page Facebook.",
     ecranKlarr: "social",
+    etapes: [
+      "Dans l'application Instagram, ouvre les paramètres du compte et passe-le en compte professionnel, catégorie « Restaurant ».",
+      "Toujours dans les paramètres, rattache ce compte à la page Facebook du restaurant.",
+      "Mets l'adresse de ta vitrine ou ton lien de réservation dans la bio.",
+      "Dans Klarr, écran « Réseaux sociaux », reconnecte Facebook : Instagram suivra avec la page.",
+    ],
   },
   {
     cle: "vitrine",
@@ -141,6 +212,11 @@ export const PLATEFORMES: Plateforme[] = [
     pourquoi:
       "La source que toutes les autres fiches peuvent citer : carte, horaires, réservation.",
     ecranKlarr: "vitrine",
+    etapes: [
+      "Dans Klarr, écran « Vitrine », complète ce qui manque : photos, carte, horaires, description.",
+      "Publie-la : elle obtient son adresse, que tu retrouves dans « Ta fiche à copier ».",
+      "Colle cette adresse comme site web sur Google, Apple, Bing, Facebook et dans ta bio Instagram : toutes tes fiches pointeront vers la même source.",
+    ],
   },
 ];
 

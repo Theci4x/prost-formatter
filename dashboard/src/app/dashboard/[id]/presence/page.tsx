@@ -320,7 +320,7 @@ export default async function PresencePage({
             className="flex scroll-mt-8 flex-col gap-4"
           >
             <TitreSection>{LIBELLE_GROUPE[groupe]}</TitreSection>
-            <ul className="grid gap-3 sm:gap-4 md:grid-cols-2 2xl:grid-cols-3">
+            <ul className="grid items-start gap-3 sm:gap-4 md:grid-cols-2 2xl:grid-cols-3">
               {PLATEFORMES.filter((p) => p.groupe === groupe).map(
                 (plateforme) => (
                   <CartePlateforme
@@ -448,6 +448,35 @@ function CartePlateforme({
           </Link>
         )}
       </div>
+
+      {/* Replié par défaut, et absent quand la plateforme est déjà
+          reliée : la carte se lit d'un coup d'œil, et le détail s'ouvre
+          au moment de s'y mettre. */}
+      {!relie && plateforme.etapes && plateforme.etapes.length > 0 && (
+        <details className="group rounded-xl border border-zinc-200 bg-zinc-50/60">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-semibold text-ink [&::-webkit-details-marker]:hidden">
+            Pas à pas · {plateforme.etapes.length} étapes
+            <span
+              aria-hidden="true"
+              className="text-zinc-400 transition-transform group-open:rotate-180"
+            >
+              ⌄
+            </span>
+          </summary>
+          <ol className="flex flex-col gap-3 border-t border-zinc-200 px-4 py-4">
+            {plateforme.etapes.map((etape, index) => (
+              <li key={index} className="flex gap-3">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-navy text-xs font-semibold text-white">
+                  {index + 1}
+                </span>
+                <span className="text-sm leading-relaxed text-zinc-700">
+                  {etape}
+                </span>
+              </li>
+            ))}
+          </ol>
+        </details>
+      )}
 
       {/* Relié, l'état se lit dans Klarr : rien à déclarer à la main. */}
       {!relie && (
