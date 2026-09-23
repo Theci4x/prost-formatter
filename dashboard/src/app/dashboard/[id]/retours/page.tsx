@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
@@ -8,6 +9,7 @@ import type { Restaurant } from "@/types/restaurant";
 import { exiger } from "@/lib/equipe/roles";
 import { exigerModule } from "@/lib/abonnement/acces";
 import { qrSvgDe } from "@/lib/menu/qr";
+import { BoutonCopier } from "@/components/dashboard/BoutonCopier";
 
 type Retour = {
   id: string;
@@ -29,10 +31,13 @@ function quand(iso: string): string {
 
 export default async function RetoursPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ filtre?: string }>;
 }) {
   const { id } = await params;
+  const { filtre } = await searchParams;
   await exiger(id, "gerant");
   await exigerModule(id, "visibilite");
 
@@ -59,26 +64,53 @@ export default async function RetoursPage({
   const qr = adresse ? await qrSvgDe(adresse) : null;
 
   const aTraiter = retours.filter((r) => !r.traite).length;
+  const ilYA30Jours = Date.now() - 30 * 24 * 3600 * 1000;
+  const recents = retours.filter(
+    (r) => new Date(r.created_at).getTime() >= ilYA30Jours,
+  ).length;
+  const filtres = [
+    { cle: "", libelle: `Tous · ${retours.length}` },
+    { cle: "a-traiter", libelle: `À traiter · ${aTraiter}` },
+    { cle: "traites", libelle: `Traités · ${retours.length - aTraiter}` },
+  ];
+  const actif = filtres.some((f) => f.cle === filtre) ? (filtre ?? "") : "";
+  const affiches = retours.filter((r) =>
+    actif === "a-traiter" ? !r.traite : actif === "traites" ? r.traite : true,
+  );
 
   return (
-    <div className="flex flex-1 flex-col gap-6 px-6 py-8">
+    <div className="flex flex-1 flex-col gap-8 px-6 py-8">
       <PageHeader
         icon={dashboardIcons.avis}
         title={`Retours clients — ${restaurant.nom}`}
       />
 
-      <p className="max-w-4xl text-sm text-zinc-600">
-        Ce que des clients ont préféré vous dire en privé plutôt qu&apos;en
-        public. Personne n&apos;a été trié : la page leur proposait l&apos;avis
-        Google et ce message côte à côte, ils ont choisi.
-      </p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="max-w-4xl text-sm text-zinc-600">
+          Ce que des clients ont préféré te dire en privé plutôt qu&apos;en
+          public. Personne n&apos;a été trié : la page leur proposait
+          l&apos;avis Google et ce message côte à côte, ils ont choisi.
+        </p>
+        <Link
+          href={`/dashboard/${id}/avis`}
+          className="rounded-lg border border-zinc-200 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
+        >
+          Avis publics
+        </Link>
+      </div>
 
-      <div className="grid grid-cols-3 gap-3 sm:gap-4">
-        <Compteur
-          valeur={aTraiter}
-          libelle={`retour${aTraiter > 1 ? "s" : ""} à traiter`}
-          accent={aTraiter > 0}
-        />
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+        <Link
+          href={`/dashboard/${id}/retours?filtre=a-traiter#messages`}
+          scroll={false}
+          className="block"
+        >
+          <Compteur
+            valeur={aTraiter}
+            libelle={`retour${aTraiter > 1 ? "s" : ""} à traiter`}
+            accent={aTraiter > 0}
+          />
+        </Link>
         <Compteur
           valeur={retours.length - aTraiter}
           libelle={`traité${retours.length - aTraiter > 1 ? "s" : ""}`}
@@ -87,19 +119,50 @@ export default async function RetoursPage({
           valeur={retours.length}
           libelle={`retour${retours.length > 1 ? "s" : ""} en tout`}
         />
+        <Compteur
+          valeur={recents}
+          libelle={`reçu${recents > 1 ? "s" : ""} ces 30 derniers jours`}
+        />
       </div>
 
       <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
-        <section className="flex min-w-0 flex-col gap-3">
-          <TitreSection>Les messages</TitreSection>
+        <section
+          id="messages"
+          className="flex min-w-0 scroll-mt-8 flex-col gap-4"
+        >
+          <div className="flex flex-wrap items-baseline justify-between gap-3">
+            <TitreSection>Les messages</TitreSection>
+            {retours.length > 0 && (
+              <nav className="flex flex-wrap gap-2">
+                {filtres.map((f) => (
+                  <Link
+                    key={f.cle || "tous"}
+                    href={`/dashboard/${id}/retours${f.cle ? `?filtre=${f.cle}` : ""}#messages`}
+                    scroll={false}
+                    className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
+                      actif === f.cle
+                        ? "border-brand-navy bg-brand-navy text-white"
+                        : "border-zinc-200 bg-white text-zinc-700 hover:border-ink hover:text-ink"
+                    }`}
+                  >
+                    {f.libelle}
+                  </Link>
+                ))}
+              </nav>
+            )}
+          </div>
           {retours.length === 0 ? (
             <p className="rounded-2xl border border-dashed border-zinc-300 bg-white px-6 py-12 text-center text-sm text-zinc-500">
-              Aucun retour pour l&apos;instant. Posez le QR code à côté : ils
+              Aucun retour pour l&apos;instant. Pose le QR code à côté : ils
               arriveront ici, et nulle part ailleurs.
+            </p>
+          ) : affiches.length === 0 ? (
+            <p className="rounded-2xl border border-zinc-200/70 bg-white p-6 text-sm text-zinc-500 shadow-sm">
+              Rien dans cette catégorie.
             </p>
           ) : (
             <ul className="grid items-start gap-4 2xl:grid-cols-2">
-              {retours.map((retour) => (
+              {affiches.map((retour) => (
                 <li
                   key={retour.id}
                   className={`flex flex-col gap-3 rounded-2xl border p-6 shadow-sm ${
@@ -166,7 +229,7 @@ export default async function RetoursPage({
                         className={
                           retour.traite
                             ? "text-xs font-medium text-zinc-400 hover:text-brand-navy"
-                            : "rounded-lg border border-zinc-200 px-3 py-1.5 text-xs font-semibold text-ink transition-colors hover:border-brand-navy hover:text-brand-navy"
+                            : "rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-ink transition-colors hover:border-brand-navy hover:text-brand-navy"
                         }
                       >
                         {retour.traite ? "Rouvrir" : "Marquer comme traité"}
@@ -198,11 +261,22 @@ export default async function RetoursPage({
               <code className="w-full break-all rounded-lg bg-zinc-50 px-3 py-2 text-xs text-zinc-700">
                 {adresse}
               </code>
+              <div className="flex flex-wrap justify-center gap-2">
+                <BoutonCopier texte={adresse} />
+                <a
+                  href={adresse}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
+                >
+                  Voir la page ↗
+                </a>
+              </div>
             </div>
           ) : (
             <p className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-900">
-              Ouvrez d&apos;abord votre page de réservation : c&apos;est son
-              adresse qui sert aussi à celle des avis.
+              Ouvre d&apos;abord ta page de réservation : c&apos;est son adresse
+              qui sert aussi à celle des avis.
             </p>
           )}
         </aside>
