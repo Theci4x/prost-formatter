@@ -8,6 +8,7 @@ import {
 } from "@/lib/reviews/aggregate";
 import {
   CarteAvis,
+  LIBELLE_PLATEFORME,
   TuilePlateforme,
   type AvisAffiche,
 } from "@/components/reviews/PlatformReviewsCard";
@@ -15,6 +16,7 @@ import { tripadvisorDuReleve } from "@/lib/reviews/releve";
 import { FRAICHEUR_DEMANDE } from "@/lib/reviews/fraicheur";
 import { ConfirmationTripadvisor } from "@/components/reviews/ConfirmationTripadvisor";
 import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
+import { Compteur } from "@/components/dashboard/Compteur";
 import type { Restaurant } from "@/types/restaurant";
 import { exiger } from "@/lib/equipe/roles";
 import { exigerModule } from "@/lib/abonnement/acces";
@@ -24,12 +26,13 @@ export default async function AvisPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ tripadvisor?: string }>;
+  searchParams: Promise<{ tripadvisor?: string; filtre?: string }>;
 }) {
   const { id } = await params;
+  const query = await searchParams;
   // Les avis Tripadvisor ne se chargent que sur demande : chaque appel
   // est facturé, et la note, elle, vient du relevé de la semaine.
-  const chargerTripadvisor = (await searchParams).tripadvisor === "avis";
+  const chargerTripadvisor = query.tripadvisor === "avis";
   await exiger(id, "gerant");
   await exigerModule(id, "visibilite");
 
@@ -84,18 +87,100 @@ export default async function AvisPage({
     )
     .sort((a, b) => (b.publishedAt ?? "").localeCompare(a.publishedAt ?? ""));
 
+  // Les chiffres d'ensemble, toutes plateformes : la note moyenne pèse
+  // chaque plateforme par son nombre d'avis — 4,8 sur 12 avis ne vaut
+  // pas 4,3 sur 900.
+  const notees = plateformes.filter(
+    (p) => p.found && p.rating != null && (p.reviewCount ?? 0) > 0,
+  );
+  const totalAvis = notees.reduce((t, p) => t + (p.reviewCount ?? 0), 0);
+  const moyenne =
+    totalAvis > 0
+      ? notees.reduce((t, p) => t + p.rating! * (p.reviewCount ?? 0), 0) /
+        totalAvis
+      : null;
+  const bas = avis.filter((a) => a.rating > 0 && a.rating <= 3);
+
+  // Les filtres de la liste : les avis à traiter d'abord, et une entrée
+  // par plateforme qui a transmis quelque chose.
+  const filtres = [
+    { cle: "", libelle: `Tous · ${avis.length}` },
+    ...(bas.length > 0
+      ? [{ cle: "a-traiter", libelle: `À traiter · ${bas.length}` }]
+      : []),
+    ...plateformes
+      .filter((p) => avis.some((a) => a.platform === p.platform))
+      .map((p) => ({
+        cle: p.platform,
+        libelle: `${LIBELLE_PLATEFORME[p.platform]} · ${avis.filter((a) => a.platform === p.platform).length}`,
+      })),
+  ];
+  const actif = filtres.some((f) => f.cle === query.filtre)
+    ? (query.filtre ?? "")
+    : "";
+  const affiches = avis.filter((a) =>
+    actif === "a-traiter"
+      ? a.rating > 0 && a.rating <= 3
+      : actif
+        ? a.platform === actif
+        : true,
+  );
+  const lienFiltre = (cle: string) => {
+    const params = new URLSearchParams();
+    if (chargerTripadvisor) params.set("tripadvisor", "avis");
+    if (cle) params.set("filtre", cle);
+    const chaine = params.toString();
+    return `/dashboard/${id}/avis${chaine ? `?${chaine}` : ""}#avis`;
+  };
+
   return (
-    <div className="flex flex-1 flex-col gap-6 px-6 py-8">
+    <div className="flex flex-1 flex-col gap-8 px-6 py-8">
       <PageHeader
         icon={dashboardIcons.avis}
         title={`Avis — ${restaurant.nom}`}
       />
 
-      <p className="max-w-4xl text-sm text-zinc-600">
-        Klarr peut rédiger une réponse pour chaque avis. La publication directe
-        sur Google arrivera avec l&apos;accès à son API ; en attendant, la
-        réponse se copie en un clic.
-      </p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="max-w-4xl text-sm text-zinc-600">
+          Klarr peut rédiger une réponse pour chaque avis. La publication
+          directe sur Google arrivera avec l&apos;accès à son API ; en
+          attendant, la réponse se copie en un clic.
+        </p>
+        {/* L'autre moitié de la réputation : ce que les clients disent en
+            privé, avant d'écrire en public. */}
+        <Link
+          href={`/dashboard/${id}/retours`}
+          className="rounded-lg border border-zinc-200 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
+        >
+          Retours clients privés
+        </Link>
+      </div>
+
+      {plateformes.length > 0 && (
+        <div className="grid grid-cols-3 gap-3 sm:gap-4">
+          <Compteur
+            valeur={
+              moyenne != null ? moyenne.toFixed(1).replace(".", ",") : "—"
+            }
+            libelle={
+              notees.length > 1
+                ? "note moyenne, toutes plateformes"
+                : "note moyenne"
+            }
+          />
+          <Compteur
+            valeur={totalAvis.toLocaleString("fr-FR")}
+            libelle={`avis au total`}
+          />
+          <a href="#avis" className="block">
+            <Compteur
+              valeur={bas.length}
+              libelle={`avis de 3 étoiles ou moins à traiter`}
+              accent={bas.length > 0}
+            />
+          </a>
+        </div>
+      )}
 
       {/* Une plateforme sans clé API n'est pas montrée : « ajoutez une clé
           Yelp » s'adresse à nous, et le restaurateur n'y peut rien. Elle
@@ -146,14 +231,34 @@ export default async function AvisPage({
         ))}
       </div>
 
-      <section className="flex flex-col gap-4">
-        <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
-          <h2 className="font-serif text-2xl text-ink">Derniers avis</h2>
-          {avis.length > 0 && (
-            <p className="text-xs text-zinc-500">
-              Les plateformes n&apos;en transmettent que quelques-uns — les plus
-              récents ou les plus pertinents selon elles.
-            </p>
+      <section id="avis" className="flex scroll-mt-8 flex-col gap-4">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-3">
+          <div className="flex flex-col gap-1">
+            <h2 className="font-serif text-2xl text-ink">Derniers avis</h2>
+            {avis.length > 0 && (
+              <p className="text-xs text-zinc-500">
+                Les plateformes n&apos;en transmettent que quelques-uns — les
+                plus récents ou les plus pertinents selon elles.
+              </p>
+            )}
+          </div>
+          {filtres.length > 2 && (
+            <nav className="flex flex-wrap gap-2">
+              {filtres.map((f) => (
+                <Link
+                  key={f.cle || "tous"}
+                  href={lienFiltre(f.cle)}
+                  scroll={false}
+                  className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
+                    actif === f.cle
+                      ? "border-brand-navy bg-brand-navy text-white"
+                      : "border-zinc-200 bg-white text-zinc-700 hover:border-ink hover:text-ink"
+                  }`}
+                >
+                  {f.libelle}
+                </Link>
+              ))}
+            </nav>
           )}
         </div>
         {avis.length === 0 ? (
@@ -163,7 +268,7 @@ export default async function AvisPage({
           </div>
         ) : (
           <ul className="grid gap-4 lg:grid-cols-2">
-            {avis.map((a, i) => (
+            {affiches.map((a, i) => (
               <CarteAvis
                 key={`${a.platform}-${i}`}
                 avis={a}
