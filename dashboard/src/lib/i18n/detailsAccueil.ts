@@ -45,6 +45,7 @@ export type DetailsAccueil = {
   prochainePublication(date: string): string;
   pasEncoreVerifie: string;
   citeSur(citees: number, total: number): string;
+  fichesARevoir(n: number): string;
   rienDeRelie: string;
   /** Les quatre grands chiffres en tête de carte. */
   aucunCouvertConfirme: string;
@@ -122,6 +123,7 @@ const fr: DetailsAccueil = {
   prochainePublication: (date) => `Prochaine : ${date}`,
   pasEncoreVerifie: "Pas encore vérifié",
   citeSur: (c, t) => `Cité sur ${c} question${s(c)} sur ${t}`,
+  fichesARevoir: (n) => `${n} fiche${s(n)} à mettre à jour`,
   rienDeRelie: "Rien de relié",
   aucunCouvertConfirme: "aucun couvert confirmé",
   couvertsMidiSoir: "couverts midi · soir",
@@ -169,6 +171,7 @@ const en: DetailsAccueil = {
   prochainePublication: (date) => `Next: ${date}`,
   pasEncoreVerifie: "Not checked yet",
   citeSur: (c, t) => `Cited in ${c} question${s(c)} out of ${t}`,
+  fichesARevoir: (n) => `${n} listing${s(n)} to update`,
   rienDeRelie: "Nothing connected",
   aucunCouvertConfirme: "no covers confirmed",
   couvertsMidiSoir: "covers lunch · dinner",
@@ -218,6 +221,7 @@ const zh: DetailsAccueil = {
   prochainePublication: (date) => `下一次：${date}`,
   pasEncoreVerifie: "尚未检测",
   citeSur: (c, t) => `${t} 个问题中被提及 ${c} 次`,
+  fichesARevoir: (n) => `${n} 个平台信息待更新`,
   rienDeRelie: "还没有绑定任何账号",
   aucunCouvertConfirme: "今天没有确认的客人",
   couvertsMidiSoir: "午市 · 晚市客数",

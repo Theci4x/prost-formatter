@@ -146,6 +146,36 @@ export async function createRestaurant(
   redirect("/dashboard");
 }
 
+/**
+ * Deux valeurs égales à l'ordre des clés près : une colonne jsonb ne
+ * rend pas forcément les horaires dans l'ordre où on les a écrits.
+ */
+function stable(valeur: unknown): string {
+  if (Array.isArray(valeur)) return `[${valeur.map(stable).join(",")}]`;
+  if (valeur && typeof valeur === "object") {
+    // Une clé vide ou nulle vaut une clé absente : le formulaire envoie
+    // parfois `seconde: undefined` là où la base n'a rien, et ce n'est pas
+    // une modification de la fiche.
+    const objet = valeur as Record<string, unknown>;
+    return `{${Object.keys(objet)
+      .filter((cle) => objet[cle] != null && objet[cle] !== "")
+      .sort()
+      .map((cle) => `${JSON.stringify(cle)}:${stable(objet[cle])}`)
+      .join(",")}}`;
+  }
+  return JSON.stringify(valeur ?? null);
+}
+
+/** Ce qu'on recopie sur les autres plateformes a-t-il changé ? */
+function ficheChangee(
+  avant: Record<string, unknown>,
+  apres: Record<string, unknown>,
+): boolean {
+  return Object.keys(apres).some(
+    (cle) => stable(avant[cle] ?? null) !== stable(apres[cle] ?? null),
+  );
+}
+
 export async function updateRestaurant(
   _prevState: RestaurantFormState,
   formData: FormData,
@@ -163,23 +193,47 @@ export async function updateRestaurant(
 
   const supabase = await createClient();
 
+  // Ce qu'il y avait avant, pour savoir si la fiche recopiée ailleurs
+  // (Apple, PagesJaunes…) vient de devenir fausse.
+  const { data: avant } = await supabase
+    .from("restaurants")
+    .select("nom, adresse, telephone, site_web, horaires")
+    .eq("id", id)
+    .maybeSingle();
+
+  const nouvelle = {
+    nom,
+    adresse: adresse || null,
+    telephone: telephone || null,
+    site_web: siteWeb || null,
+    horaires,
+  };
+
   // La RLS ("restaurants_update_own") garantit qu'on ne peut modifier que
   // ses propres restaurants, meme si l'id est manipule.
   const { error } = await supabase
     .from("restaurants")
     .update({
-      nom,
-      adresse: adresse || null,
-      telephone: telephone || null,
-      site_web: siteWeb || null,
+      ...nouvelle,
       description: description || null,
       type_cuisine: typeCuisine?.trim() || null,
-      horaires,
     })
     .eq("id", id);
 
   if (error) {
     return { error: error.message };
+  }
+
+  // À part, et sans bloquer : sur une base sans la migration 0080, la
+  // colonne n'existe pas, et l'enregistrement de la fiche ne doit pas
+  // échouer pour autant.
+  if (avant && ficheChangee(avant, nouvelle)) {
+    const { error: erreurDate } = await supabase
+      .from("restaurants")
+      .update({ fiche_modifiee_le: new Date().toISOString() })
+      .eq("id", id);
+    if (erreurDate)
+      console.error("[updateRestaurant] fiche_modifiee_le", erreurDate.message);
   }
 
   revalidatePath("/dashboard");

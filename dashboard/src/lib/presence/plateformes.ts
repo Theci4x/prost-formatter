@@ -12,18 +12,27 @@
  * chercher le bouton de revendication.
  */
 
-export type GroupePresence = "cartes" | "avis" | "reseaux";
+export type GroupePresence = "cartes" | "avis" | "reseaux" | "annuaires";
 
 export const LIBELLE_GROUPE: Record<GroupePresence, string> = {
   cartes: "Cartes et assistants",
   avis: "Avis et guides",
   reseaux: "Réseaux et site",
+  annuaires: "Pour aller plus loin : annuaires et GPS",
 };
 
 export type Plateforme = {
   cle: string;
   nom: string;
   groupe: GroupePresence;
+  /**
+   * 1 = essentielle : là où les clients cherchent vraiment. 2 = pour aller
+   * plus loin : annuaires et GPS, utiles surtout parce que d'autres
+   * services puisent dans leurs données.
+   */
+  niveau: 1 | 2;
+  /** Le temps qu'il faut compter, hors attente de la vérification. */
+  minutes: number;
   /** Pourquoi elle compte, en une phrase. */
   pourquoi: string;
   /** Comment s'y prendre, quand ce n'est pas évident. */
@@ -46,9 +55,37 @@ export type Plateforme = {
 
 /** L'étape commune : recopier la fiche plutôt que la retaper. */
 const COLLER =
-  "Remplis la fiche en collant les champs de « Ta fiche à copier », en haut de cette page : mêmes nom, téléphone et horaires, au caractère près.";
+  "Remplis la fiche en collant les champs de « Ta fiche à copier » : mêmes nom, téléphone et horaires, au caractère près.";
+
+/**
+ * Quand la fiche existe déjà et que seule la fiche Klarr a changé : pas
+ * besoin de tout reprendre, seulement de reporter la différence.
+ */
+export const ETAPES_MISE_A_JOUR: string[] = [
+  "Ouvre ta fiche sur la plateforme et connecte-toi au compte qui la gère.",
+  "Compare chaque champ avec « Ta fiche à copier » : nom, adresse, téléphone, site, horaires.",
+  "Corrige ce qui a changé, enregistre, puis confirme ici que c'est à jour.",
+];
 
 const q = encodeURIComponent;
+
+/**
+ * Une recherche Google sur le nom de l'annuaire : pour ceux dont l'adresse
+ * change selon le pays ou l'époque, c'est plus sûr qu'un lien direct.
+ */
+const avecLeNom = (annuaire: string) => (nom: string, adresse: string) =>
+  `https://www.google.com/search?q=${q(`${annuaire} ${nom} ${adresse}`.trim())}`;
+
+/**
+ * La marche commune aux annuaires : chacun a son formulaire, mais le
+ * chemin est toujours le même, et nommer des boutons qui changent
+ * d'intitulé d'une année sur l'autre égarerait plus qu'il n'aiderait.
+ */
+const ANNUAIRE: string[] = [
+  "Clique « Vérifier ma fiche » : beaucoup d'annuaires ont déjà créé ta fiche à partir d'autres sources.",
+  "Si elle existe, cherche sur la fiche le lien destiné aux professionnels (« revendiquer », « modifier », « signaler une erreur »).",
+  "Sinon, cherche sur le site l'inscription gratuite pour les professionnels. Ignore les offres payantes : elles ne sont pas nécessaires.",
+];
 
 /** Une recherche Google limitée à un site : robuste, sans paramètre maison. */
 const surLeSite = (domaine: string) => (nom: string, adresse: string) =>
@@ -59,6 +96,8 @@ export const PLATEFORMES: Plateforme[] = [
     cle: "google",
     nom: "Google Recherche et Maps",
     groupe: "cartes",
+    niveau: 1,
+    minutes: 15,
     pourquoi:
       "L'essentiel des recherches « restaurant près de moi » passent par là.",
     creer: "https://business.google.com/",
@@ -77,6 +116,8 @@ export const PLATEFORMES: Plateforme[] = [
     cle: "apple",
     nom: "Apple Plans et Siri",
     groupe: "cartes",
+    niveau: 1,
+    minutes: 15,
     pourquoi:
       "Ce que voit un client sur iPhone quand il demande à Siri ou ouvre Plans.",
     conseil:
@@ -96,6 +137,8 @@ export const PLATEFORMES: Plateforme[] = [
     cle: "bing",
     nom: "Bing et Copilot",
     groupe: "cartes",
+    niveau: 1,
+    minutes: 10,
     pourquoi:
       "Une partie des assistants IA cherchent sur le web via Bing : une fiche absente ici leur manque.",
     conseil:
@@ -114,6 +157,8 @@ export const PLATEFORMES: Plateforme[] = [
     cle: "tripadvisor",
     nom: "TripAdvisor",
     groupe: "avis",
+    niveau: 1,
+    minutes: 15,
     pourquoi: "Les touristes, et les avis que les assistants citent souvent.",
     creer: "https://www.tripadvisor.fr/Owners",
     verifier: (nom, adresse) =>
@@ -131,6 +176,8 @@ export const PLATEFORMES: Plateforme[] = [
     cle: "pagesjaunes",
     nom: "PagesJaunes",
     groupe: "avis",
+    niveau: 1,
+    minutes: 15,
     pourquoi:
       "Encore très consulté en France, et repris par de nombreux annuaires.",
     conseil:
@@ -148,6 +195,8 @@ export const PLATEFORMES: Plateforme[] = [
     cle: "petitfute",
     nom: "Petit Futé",
     groupe: "avis",
+    niveau: 1,
+    minutes: 10,
     pourquoi: "Le guide que consultent les visiteurs qui préparent un séjour.",
     conseil:
       "Cherche ta fiche : si elle existe, un lien pour les professionnels permet de la corriger.",
@@ -163,6 +212,8 @@ export const PLATEFORMES: Plateforme[] = [
     cle: "yelp",
     nom: "Yelp",
     groupe: "avis",
+    niveau: 1,
+    minutes: 10,
     pourquoi:
       "Moins lu en France, mais ses données alimentent d'autres services.",
     creer: "https://business.yelp.com/",
@@ -180,6 +231,8 @@ export const PLATEFORMES: Plateforme[] = [
     cle: "facebook",
     nom: "Facebook",
     groupe: "reseaux",
+    niveau: 1,
+    minutes: 10,
     pourquoi: "Horaires, photos et avis : beaucoup de clients vérifient ici.",
     creer: "https://www.facebook.com/pages/create",
     ecranKlarr: "social",
@@ -194,6 +247,8 @@ export const PLATEFORMES: Plateforme[] = [
     cle: "instagram",
     nom: "Instagram",
     groupe: "reseaux",
+    niveau: 1,
+    minutes: 5,
     pourquoi: "Là où l'on choisit sur photo, surtout chez les moins de 35 ans.",
     conseil:
       "Passe ton compte en professionnel, puis rattache-le à ta page Facebook.",
@@ -209,6 +264,8 @@ export const PLATEFORMES: Plateforme[] = [
     cle: "vitrine",
     nom: "Ton site vitrine Klarr",
     groupe: "reseaux",
+    niveau: 1,
+    minutes: 20,
     pourquoi:
       "La source que toutes les autres fiches peuvent citer : carte, horaires, réservation.",
     ecranKlarr: "vitrine",
@@ -218,8 +275,127 @@ export const PLATEFORMES: Plateforme[] = [
       "Colle cette adresse comme site web sur Google, Apple, Bing, Facebook et dans ta bio Instagram : toutes tes fiches pointeront vers la même source.",
     ],
   },
+  {
+    cle: "waze",
+    nom: "Waze",
+    groupe: "annuaires",
+    niveau: 2,
+    minutes: 5,
+    pourquoi:
+      "Le GPS de beaucoup d'automobilistes : ton restaurant doit y être à la bonne adresse.",
+    etapes: [
+      "Dans l'application Waze, cherche ton restaurant.",
+      "S'il manque ou est mal placé, signale-le depuis l'application : Waze fait valider les lieux par sa communauté d'éditeurs.",
+      COLLER,
+    ],
+  },
+  {
+    cle: "tomtom",
+    nom: "TomTom",
+    groupe: "annuaires",
+    niveau: 2,
+    minutes: 10,
+    pourquoi:
+      "Ses cartes équipent de nombreux GPS de voiture et services de navigation.",
+    conseil:
+      "TomTom ne crée pas de fiche à la demande : tu lui signales le lieu, et il l'examine avant de l'ajouter.",
+    creer: "https://www.tomtom.com/mapshare/tools/",
+    verifier: avecLeNom("TomTom"),
+    etapes: [
+      "Ouvre « Créer ou revendiquer » : c'est l'outil de signalement de TomTom.",
+      "Cherche ton adresse sur la carte, puis signale le lieu manquant ou l'information fausse.",
+      COLLER,
+      "TomTom examine le signalement : il peut s'écouler plusieurs semaines avant qu'il apparaisse.",
+    ],
+  },
+  {
+    cle: "mappy",
+    nom: "Mappy",
+    groupe: "annuaires",
+    niveau: 2,
+    minutes: 10,
+    pourquoi: "Le site de cartes et d'itinéraires très utilisé en France.",
+    verifier: surLeSite("mappy.com"),
+    etapes: [...ANNUAIRE, COLLER],
+  },
+  {
+    cle: "foursquare",
+    nom: "Foursquare",
+    groupe: "annuaires",
+    niveau: 2,
+    minutes: 10,
+    pourquoi:
+      "Ses données de lieux sont reprises par de nombreuses applications, sans que tu le voies.",
+    verifier: surLeSite("foursquare.com"),
+    etapes: [...ANNUAIRE, COLLER],
+  },
+  {
+    cle: "118000",
+    nom: "118 000",
+    groupe: "annuaires",
+    niveau: 2,
+    minutes: 10,
+    pourquoi:
+      "Un annuaire français encore consulté pour trouver un numéro de téléphone.",
+    verifier: surLeSite("118000.fr"),
+    etapes: [...ANNUAIRE, COLLER],
+  },
+  {
+    cle: "leshoraires",
+    nom: "Les-horaires.fr",
+    groupe: "annuaires",
+    niveau: 2,
+    minutes: 10,
+    pourquoi:
+      "Bien placé sur Google quand on cherche « horaires + nom du restaurant » : un horaire faux s'y voit.",
+    verifier: surLeSite("les-horaires.fr"),
+    etapes: [...ANNUAIRE, COLLER],
+  },
+  {
+    cle: "horaires24",
+    nom: "Horaires d'Ouverture 24",
+    groupe: "annuaires",
+    niveau: 2,
+    minutes: 10,
+    pourquoi:
+      "Même rôle : les horaires affichés quand on les cherche sur Google.",
+    verifier: avecLeNom("Horaires d'ouverture 24"),
+    etapes: [...ANNUAIRE, COLLER],
+  },
+  {
+    cle: "infobel",
+    nom: "Infobel",
+    groupe: "annuaires",
+    niveau: 2,
+    minutes: 10,
+    pourquoi:
+      "Un annuaire européen dont les données sont revendues à d'autres services.",
+    verifier: surLeSite("infobel.com"),
+    etapes: [...ANNUAIRE, COLLER],
+  },
+  {
+    cle: "cylex",
+    nom: "Cylex",
+    groupe: "annuaires",
+    niveau: 2,
+    minutes: 10,
+    pourquoi:
+      "Un annuaire d'entreprises repris par plusieurs moteurs de recherche locaux.",
+    verifier: avecLeNom("Cylex"),
+    etapes: [...ANNUAIRE, COLLER],
+  },
+  {
+    cle: "hotfrog",
+    nom: "Hotfrog",
+    groupe: "annuaires",
+    niveau: 2,
+    minutes: 10,
+    pourquoi:
+      "Un annuaire gratuit de plus, qui renforce la cohérence de ta fiche sur le web.",
+    verifier: avecLeNom("Hotfrog"),
+    etapes: [...ANNUAIRE, COLLER],
+  },
 ];
-
 export const STATUTS = ["a_jour", "a_corriger", "absente"] as const;
 export type StatutPresence = (typeof STATUTS)[number];
 

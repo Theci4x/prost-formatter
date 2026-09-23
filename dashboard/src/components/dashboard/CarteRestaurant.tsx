@@ -376,6 +376,9 @@ function groupes(t: ClesAccueil, d: DetailsAccueil, langue: Langue): Groupe[] {
           resume: t.entrees.presence.resume,
           icone: ICONES.presence,
           minimum: "gerant",
+          detail: (p) =>
+            p.presenceARevoir > 0 ? d.fichesARevoir(p.presenceARevoir) : null,
+          attention: (p) => p.presenceARevoir > 0,
         },
         // Masquée tant que Google n'a pas ouvert la publication : elle
         // revient d'elle-même le jour où l'accès est accordé, sans toucher

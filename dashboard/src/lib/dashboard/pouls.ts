@@ -1,4 +1,6 @@
 import "server-only";
+import { aRevoir, constatsDe } from "@/lib/presence/etat";
+import { PLATEFORMES } from "@/lib/presence/plateformes";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { completude } from "@/lib/seo/questions-suggerees";
 import { ficheFermeeAlorsQuOnOuvre } from "@/lib/dashboard/anomalies";
@@ -93,6 +95,12 @@ export type Pouls = {
    * combien de clients sont passés sans cocher la case.
    */
   contacts: { total: number; joignables: number };
+  /**
+   * Les plateformes où la fiche est devenue fausse : nom, adresse,
+   * téléphone, site ou horaires changés dans Klarr depuis la dernière
+   * vérification. Même calcul que l'écran « Présence en ligne ».
+   */
+  presenceARevoir: number;
 };
 
 /** Même convention que l'écran de service : le jour, tel que le serveur le voit. */
@@ -156,6 +164,9 @@ export async function chargerPouls(
     email_contact?: string | null;
     /** Colonne récente (0073) : absente sur une base pas encore migrée. */
     google_statut?: string | null;
+    /** Colonne récente (0080), idem. */
+    fiche_modifiee_le?: string | null;
+    tripadvisor_location_id?: string | null;
   },
   maintenant: Date = new Date(),
 ): Promise<Pouls> {
@@ -189,6 +200,7 @@ export async function chargerPouls(
     contactsJoignables,
     services,
     couvertsProches,
+    presence,
   ] = await Promise.all([
     supabase
       .from("restaurant_reservations")
@@ -298,6 +310,22 @@ export async function chargerPouls(
       { colonne: "date_reservation", valeur: jour },
       { colonne: "date_reservation", valeur: dansUneSemaine },
     ),
+    // Sans modification de la fiche, rien ne peut être à revoir : pas
+    // de lecture.
+    restaurant.fiche_modifiee_le
+      ? supabase
+          .from("restaurant_presence")
+          .select("plateforme, statut, verifie_le")
+          .eq("restaurant_id", id)
+          .then(({ data, error }) => {
+            if (error) console.error("[pouls] présence", error.message);
+            return (data ?? []) as {
+              plateforme: string;
+              statut: string;
+              verifie_le: string;
+            }[];
+          })
+      : Promise.resolve([]),
   ]);
 
   let couvertsMidi = 0;
@@ -381,5 +409,33 @@ export async function chargerPouls(
     },
     ia,
     contacts: { total: contactsTotal, joignables: contactsJoignables },
+    presenceARevoir: compterARevoir(
+      presence,
+      {
+        google: google > 0,
+        facebook: social !== null,
+        instagram: Boolean(social?.instagram_business_account_id),
+        tripadvisor: Boolean(restaurant.tripadvisor_location_id),
+      },
+      restaurant.fiche_modifiee_le,
+    ),
   };
+}
+
+/** Le même décompte que l'écran « Présence en ligne », sans ses libellés. */
+function compterARevoir(
+  lignes: { plateforme: string; statut: string; verifie_le: string }[],
+  relies: Record<string, boolean>,
+  ficheModifieeLe: string | null | undefined,
+): number {
+  if (!ficheModifieeLe) return 0;
+  const constats = constatsDe(lignes);
+  return PLATEFORMES.filter((p) =>
+    aRevoir(
+      p.cle,
+      relies[p.cle] ? { texte: "", ecran: "" } : null,
+      constats.get(p.cle) ?? null,
+      ficheModifieeLe,
+    ),
+  ).length;
 }
