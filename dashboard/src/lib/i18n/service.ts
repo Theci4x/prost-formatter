@@ -54,6 +54,33 @@ export type ClesService = {
   enCoursRetrait: string;
   enCoursEnregistrement: string;
   enCoursAnnulation: string;
+
+  /** Les compteurs du haut. */
+  compteurCouverts: string;
+  compteurReservations(n: number): string;
+  compteurATrancher: string;
+  compteurAPlacer: string;
+  aPlacerPastille(n: number): string;
+  couvertsSurCapacite(occupes: number, capacite: number): string;
+
+  /** La feuille de service imprimable (et son PDF). */
+  exporterPdf: string;
+  imprimer: string;
+  astucePdf: string;
+  retourService: string;
+  feuilleTitre: string;
+  editeeLe(quand: string): string;
+  colArrive: string;
+  colHeure: string;
+  colClient: string;
+  colCouverts: string;
+  colTable: string;
+  colTelephone: string;
+  colNotes: string;
+  totalService(couverts: number, tables: number): string;
+  aucuneReservationService: string;
+  demandesNonConfirmees: string;
+  sansEspace: string;
 };
 
 const fr: ClesService = {
@@ -93,6 +120,31 @@ const fr: ClesService = {
   enCoursRetrait: "Retrait…",
   enCoursEnregistrement: "Enregistrement…",
   enCoursAnnulation: "Annulation…",
+  compteurCouverts: "couverts attendus",
+  compteurReservations: (n) => (n > 1 ? "réservations" : "réservation"),
+  compteurATrancher: "à trancher",
+  compteurAPlacer: "à placer",
+  aPlacerPastille: (n) => `${n} à placer`,
+  couvertsSurCapacite: (o, c) => `${o} / ${c} couverts`,
+  exporterPdf: "Exporter en PDF",
+  imprimer: "Imprimer ou enregistrer en PDF",
+  astucePdf:
+    "Pour un PDF, choisis « Enregistrer au format PDF » comme imprimante.",
+  retourService: "← Retour au service",
+  feuilleTitre: "Feuille de service",
+  editeeLe: (q) => `Éditée le ${q}`,
+  colArrive: "Arrivé",
+  colHeure: "Heure",
+  colClient: "Client",
+  colCouverts: "Couv.",
+  colTable: "Table",
+  colTelephone: "Téléphone",
+  colNotes: "Notes",
+  totalService: (c, t) =>
+    `${c} couvert${c > 1 ? "s" : ""} · ${t} table${t > 1 ? "s" : ""}`,
+  aucuneReservationService: "Aucune réservation sur ce service.",
+  demandesNonConfirmees: "Demandes pas encore confirmées",
+  sansEspace: "Sans espace",
 };
 
 const en: ClesService = {
@@ -131,6 +183,30 @@ const en: ClesService = {
   enCoursRetrait: "Removing…",
   enCoursEnregistrement: "Saving…",
   enCoursAnnulation: "Cancelling…",
+  compteurCouverts: "covers expected",
+  compteurReservations: (n) => (n > 1 ? "bookings" : "booking"),
+  compteurATrancher: "to decide",
+  compteurAPlacer: "to seat",
+  aPlacerPastille: (n) => `${n} to seat`,
+  couvertsSurCapacite: (o, c) => `${o} / ${c} covers`,
+  exporterPdf: "Export as PDF",
+  imprimer: "Print or save as PDF",
+  astucePdf: "For a PDF, pick “Save as PDF” as the printer.",
+  retourService: "← Back to service",
+  feuilleTitre: "Service sheet",
+  editeeLe: (q) => `Printed on ${q}`,
+  colArrive: "Arrived",
+  colHeure: "Time",
+  colClient: "Guest",
+  colCouverts: "Covers",
+  colTable: "Table",
+  colTelephone: "Phone",
+  colNotes: "Notes",
+  totalService: (c, t) =>
+    `${c} cover${c > 1 ? "s" : ""} · ${t} table${t > 1 ? "s" : ""}`,
+  aucuneReservationService: "No booking for this service.",
+  demandesNonConfirmees: "Requests not confirmed yet",
+  sansEspace: "No area",
 };
 
 const zh: ClesService = {
@@ -169,6 +245,29 @@ const zh: ClesService = {
   enCoursRetrait: "正在撤销…",
   enCoursEnregistrement: "正在保存…",
   enCoursAnnulation: "正在取消…",
+  compteurCouverts: "预计人数",
+  compteurReservations: () => "笔订位",
+  compteurATrancher: "待处理",
+  compteurAPlacer: "待安排",
+  aPlacerPastille: (n) => `${n} 桌待安排`,
+  couvertsSurCapacite: (o, c) => `${o} / ${c} 位`,
+  exporterPdf: "导出 PDF",
+  imprimer: "打印或保存为 PDF",
+  astucePdf: "如需 PDF，请在打印机中选择「另存为 PDF」。",
+  retourService: "← 返回服务",
+  feuilleTitre: "服务单",
+  editeeLe: (q) => `打印于 ${q}`,
+  colArrive: "已到",
+  colHeure: "时间",
+  colClient: "客人",
+  colCouverts: "人数",
+  colTable: "桌号",
+  colTelephone: "电话",
+  colNotes: "备注",
+  totalService: (c, t) => `${c} 位 · ${t} 桌`,
+  aucuneReservationService: "这个时段没有订位。",
+  demandesNonConfirmees: "尚未确认的请求",
+  sansEspace: "未指定区域",
 };
 
 export const SERVICE: Record<Langue, ClesService> = { fr, en, zh };

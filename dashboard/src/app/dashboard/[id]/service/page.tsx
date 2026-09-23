@@ -136,6 +136,23 @@ export default async function ServicePage({
   // Une fermeture posée après coup laisse des convives déjà attendus : le
   // bandeau le dit, et la liste reste affichée pour qu'on sache qui rappeler.
   const fermeture = fermetureApplicable(jour, null, fermetures);
+  // Ce qui reste à asseoir sur toute la journée : le compteur n'a de sens
+  // que si un plan de salle existe.
+  const aPlacerDuJour =
+    tables.length > 0
+      ? servicesDuJour.reduce(
+          (total, service) =>
+            total +
+            reservationsNonPlacees(
+              lignes.filter(
+                (l) =>
+                  l.service_id === service.id && occupeLaJauge(l, maintenant),
+              ) as ReservationPlacable[],
+            ).length,
+          0,
+        )
+      : null;
+  const lienFeuille = `/dashboard/${id}/service/imprimer?jour=${jour}&auto=1`;
 
   return (
     <div className="flex flex-1 flex-col gap-8 px-6 py-8">
@@ -165,7 +182,7 @@ export default async function ServicePage({
           <p className="text-sm text-zinc-500">{restaurant.nom}</p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Link
             href={`/dashboard/${id}/service?jour=${decalerJour(jour, -1)}`}
             className="rounded-lg border border-zinc-200 bg-white px-4 py-2.5 text-sm font-medium text-zinc-700 hover:border-brand-navy hover:text-brand-navy"
@@ -184,6 +201,31 @@ export default async function ServicePage({
           >
             {sv.lendemain}
           </Link>
+          {/* La feuille à imprimer : pour la brigade qui n'a pas l'écran
+              sous les yeux, ou pour le classeur du passe. */}
+          <Link
+            href={lienFeuille}
+            prefetch={false}
+            className="inline-flex items-center gap-2 rounded-lg bg-brand-navy px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
+              <path d="M14 3v5h5" />
+              <path d="M12 12v6" />
+              <path d="m9 15 3 3 3-3" />
+            </svg>
+            {sv.exporterPdf}
+          </Link>
         </div>
       </div>
 
@@ -195,17 +237,28 @@ export default async function ServicePage({
       )}
 
       {/* Le chiffre que le chef veut en arrivant : combien de couverts. */}
-      <div className="grid grid-cols-3 gap-3 sm:gap-4">
-        <Compteur valeur={couvertsAttendus} libelle="couverts attendus" />
+      <div
+        className={`grid gap-3 sm:gap-4 ${
+          aPlacerDuJour === null ? "grid-cols-3" : "grid-cols-2 sm:grid-cols-4"
+        }`}
+      >
+        <Compteur valeur={couvertsAttendus} libelle={sv.compteurCouverts} />
         <Compteur
           valeur={confirmees.length}
-          libelle={`réservation${confirmees.length > 1 ? "s" : ""}`}
+          libelle={sv.compteurReservations(confirmees.length)}
         />
         <Compteur
           valeur={enAttente.length}
-          libelle="à trancher"
+          libelle={sv.compteurATrancher}
           accent={enAttente.length > 0}
         />
+        {aPlacerDuJour !== null && (
+          <Compteur
+            valeur={aPlacerDuJour}
+            libelle={sv.compteurAPlacer}
+            accent={aPlacerDuJour > 0}
+          />
+        )}
       </div>
 
       <SaisieReservation
@@ -215,194 +268,213 @@ export default async function ServicePage({
         langue={langue}
       />
 
-      {enAttente.length > 0 && (
-        <section className="flex flex-col gap-3">
-          <h2 className="font-serif text-2xl text-ink">{sv.enAttente}</h2>
-          <ul className="grid gap-3 2xl:grid-cols-2">
-            {enAttente.map((ligne) => (
-              <li
-                key={ligne.id}
-                className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-brand-orange/40 bg-brand-orange-soft/40 p-4"
-              >
-                <span className="text-sm">
-                  <span className="font-medium text-zinc-900">
-                    {ligne.client_nom}
-                  </span>{" "}
-                  <span className="text-zinc-600">
-                    {ligne.heure_arrivee &&
-                      ` · ${heureLisible(ligne.heure_arrivee)}`}
-                    · {r.couverts(ligne.couverts)}
-                    {ligne.type === "privatisation" && ` · ${r.privatisation}`}
+      <div
+        className={`grid items-start gap-8 ${
+          enAttente.length > 0 ? "xl:grid-cols-[minmax(0,1fr)_400px]" : ""
+        }`}
+      >
+        {enAttente.length > 0 && (
+          <section className="flex flex-col gap-3 xl:sticky xl:top-24 xl:order-2">
+            <h2 className="font-serif text-2xl text-ink">{sv.enAttente}</h2>
+            <ul className="flex flex-col gap-3">
+              {enAttente.map((ligne) => (
+                <li
+                  key={ligne.id}
+                  className="flex flex-col gap-3 rounded-2xl border border-brand-orange/50 bg-brand-orange-soft p-5"
+                >
+                  <span className="flex flex-col gap-0.5">
+                    <span className="font-serif text-xl text-ink">
+                      {ligne.client_nom}
+                    </span>
+                    <span className="text-sm text-zinc-600">
+                      {[
+                        ligne.heure_arrivee &&
+                          heureLisible(ligne.heure_arrivee),
+                        r.couverts(ligne.couverts),
+                        ligne.type === "privatisation" && r.privatisation,
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </span>
                   </span>
-                </span>
-                <DecisionDemande
-                  reservationId={ligne.id}
-                  restaurantId={id}
-                  langue={langue}
-                />
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
+                  <DecisionDemande
+                    reservationId={ligne.id}
+                    restaurantId={id}
+                    langue={langue}
+                  />
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
-      {servicesDuJour.length === 0 ? (
-        <p className="rounded-2xl border border-zinc-200/70 bg-white p-5 text-sm text-zinc-500 shadow-sm">
-          {sv.aucunService}
-        </p>
-      ) : (
-        servicesDuJour.map((service) => {
-          // Ce qui pèse réellement sur ce service : c'est là-dessus qu'on
-          // juge si une table est déjà prise.
-          const actifs = lignes.filter(
-            (l) => l.service_id === service.id && occupeLaJauge(l, maintenant),
-          ) as ReservationPlacable[];
-          const aPlacer = reservationsNonPlacees(actifs);
+        <div className="flex min-w-0 flex-col gap-8 xl:order-1">
+          {servicesDuJour.length === 0 ? (
+            <p className="rounded-2xl border border-zinc-200/70 bg-white p-5 text-sm text-zinc-500 shadow-sm">
+              {sv.aucunService}
+            </p>
+          ) : (
+            servicesDuJour.map((service) => {
+              // Ce qui pèse réellement sur ce service : c'est là-dessus qu'on
+              // juge si une table est déjà prise.
+              const actifs = lignes.filter(
+                (l) =>
+                  l.service_id === service.id && occupeLaJauge(l, maintenant),
+              ) as ReservationPlacable[];
+              const aPlacer = reservationsNonPlacees(actifs);
 
-          return (
-            <section key={service.id} className="flex flex-col gap-4">
-              <h2 className="font-serif text-2xl text-ink">
-                {service.nom}{" "}
-                <span className="font-sans text-base font-normal text-zinc-500">
-                  {formatCreneau(service.heure_debut, service.heure_fin)}
-                </span>
-                {tables.length > 0 && aPlacer.length > 0 && (
-                  <span className="ml-2 rounded-full bg-brand-orange-soft px-2 py-0.5 align-middle font-sans text-xs font-medium text-brand-navy">
-                    {aPlacer.length} à placer
-                  </span>
-                )}
-              </h2>
-
-              <div className="grid gap-4 lg:grid-cols-2 2xl:grid-cols-3">
-                {espaces.map((espace) => {
-                  const dispo = disponibiliteEspace({
-                    espace,
-                    service,
-                    date: jour,
-                    couverts: 1,
-                    reservations: lignes,
-                    fermetures,
-                    maintenant,
-                    langue,
-                  });
-                  const duService = confirmees.filter(
-                    (l) =>
-                      l.espace_id === espace.id && l.service_id === service.id,
-                  );
-                  // Une salle qui ne se loue qu'en entier n'a pas de plan :
-                  // le groupe qui la privatise la prend toute.
-                  const tablesSalle = salleADessiner(espace)
-                    ? tablesDeLEspace(tables, espace.id)
-                    : [];
-
-                  return (
-                    <div
-                      key={espace.id}
-                      className="flex flex-col gap-3 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm"
-                    >
-                      <div className="flex flex-wrap items-baseline justify-between gap-2">
-                        <span className="font-medium text-zinc-900">
-                          {espace.nom}
-                        </span>
-                        <span className="text-sm tabular-nums text-zinc-600">
-                          {dispo.occupes} / {espace.capacite} couverts
-                        </span>
-                      </div>
-
-                      {/* Jauge du créneau : pleine en rouge, pour qu'un coup
-                        d'œil suffise en plein service. */}
-                      <span className="flex h-2 w-full overflow-hidden rounded-[4px] bg-zinc-100">
-                        <span
-                          className={`h-2 rounded-[4px] ${
-                            dispo.restants === 0
-                              ? "bg-red-500"
-                              : "bg-brand-navy"
-                          }`}
-                          style={{
-                            width: `${Math.min((dispo.occupes / espace.capacite) * 100, 100)}%`,
-                          }}
-                        />
+              return (
+                <section key={service.id} className="flex flex-col gap-4">
+                  <h2 className="font-serif text-2xl text-ink">
+                    {service.nom}{" "}
+                    <span className="font-sans text-base font-normal text-zinc-500">
+                      {formatCreneau(service.heure_debut, service.heure_fin)}
+                    </span>
+                    {tables.length > 0 && aPlacer.length > 0 && (
+                      <span className="ml-2 rounded-full bg-brand-orange-soft px-2.5 py-0.5 align-middle font-sans text-xs font-medium text-brand-navy">
+                        {sv.aPlacerPastille(aPlacer.length)}
                       </span>
+                    )}
+                  </h2>
 
-                      {tablesSalle.length > 0 && (
-                        <PlanService
-                          sv={sv}
-                          tables={tablesSalle}
-                          espaceId={espace.id}
-                          reservations={actifs}
-                          reperes={reperes.filter(
-                            (repere) => repere.espace_id === espace.id,
-                          )}
-                        />
-                      )}
+                  <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,420px),1fr))] gap-4">
+                    {espaces.map((espace) => {
+                      const dispo = disponibiliteEspace({
+                        espace,
+                        service,
+                        date: jour,
+                        couverts: 1,
+                        reservations: lignes,
+                        fermetures,
+                        maintenant,
+                        langue,
+                      });
+                      const duService = confirmees.filter(
+                        (l) =>
+                          l.espace_id === espace.id &&
+                          l.service_id === service.id,
+                      );
+                      // Une salle qui ne se loue qu'en entier n'a pas de plan :
+                      // le groupe qui la privatise la prend toute.
+                      const tablesSalle = salleADessiner(espace)
+                        ? tablesDeLEspace(tables, espace.id)
+                        : [];
 
-                      {duService.length === 0 ? (
-                        <p className="text-sm text-zinc-400">
-                          {sv.personnePourInstant}
-                        </p>
-                      ) : (
-                        <ul className="flex flex-col divide-y divide-zinc-100">
-                          {duService.map((ligne) => (
-                            <LigneService
-                              langue={langue}
-                              key={ligne.id}
-                              restaurantId={id}
-                              jour={jour}
-                              detail={{
-                                id: ligne.id,
-                                clientNom: ligne.client_nom,
-                                telephone: ligne.client_telephone,
-                                email: ligne.client_email,
-                                couverts: ligne.couverts,
-                                heure: ligne.heure_arrivee,
-                                occasion: ligne.occasion,
-                                message: ligne.message,
-                                noteInterne: ligne.note_interne,
-                                type: ligne.type,
-                                statut: ligne.statut,
-                                absenceConstatee: Boolean(
-                                  ligne.absence_constatee_le,
-                                ),
-                                date: ligne.date_reservation,
+                      return (
+                        <div
+                          key={espace.id}
+                          className="flex flex-col gap-3 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm"
+                        >
+                          <div className="flex flex-wrap items-baseline justify-between gap-2">
+                            <span className="font-serif text-xl text-ink">
+                              {espace.nom}
+                            </span>
+                            <span className="text-sm tabular-nums text-zinc-600">
+                              {sv.couvertsSurCapacite(
+                                dispo.occupes,
+                                espace.capacite,
+                              )}
+                            </span>
+                          </div>
+
+                          {/* Jauge du créneau : pleine en rouge, pour qu'un coup
+                        d'œil suffise en plein service. */}
+                          <span className="flex h-2 w-full overflow-hidden rounded-[4px] bg-zinc-100">
+                            <span
+                              className={`h-2 rounded-[4px] ${
+                                dispo.restants === 0
+                                  ? "bg-red-500"
+                                  : "bg-brand-navy"
+                              }`}
+                              style={{
+                                width: `${Math.min((dispo.occupes / espace.capacite) * 100, 100)}%`,
                               }}
-                            >
-                              {tablesSalle.length > 0 &&
-                                ligne.type !== "privatisation" && (
-                                  <PlacerReservation
-                                    langue={langue}
-                                    restaurantId={id}
-                                    reservationId={ligne.id}
-                                    couverts={ligne.couverts}
-                                    tableActuelle={
-                                      tablesSalle.find(
-                                        (table) => table.id === ligne.table_id,
-                                      ) ?? null
-                                    }
-                                    tables={tablesProposees({
-                                      tables: tablesSalle,
-                                      reservation: ligne as ReservationPlacable,
-                                      occupees: actifs,
-                                    })}
-                                  />
-                                )}
-                            </LigneService>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </section>
-          );
-        })
-      )}
+                            />
+                          </span>
 
-      {servicesDuJour.length > 0 && (
-        <p className="text-xs text-zinc-400">
-          {sv.heuresIndicatives(formatHeure(servicesDuJour[0].heure_debut))}
-        </p>
-      )}
+                          {tablesSalle.length > 0 && (
+                            <PlanService
+                              sv={sv}
+                              tables={tablesSalle}
+                              espaceId={espace.id}
+                              reservations={actifs}
+                              reperes={reperes.filter(
+                                (repere) => repere.espace_id === espace.id,
+                              )}
+                            />
+                          )}
+
+                          {duService.length === 0 ? (
+                            <p className="text-sm text-zinc-400">
+                              {sv.personnePourInstant}
+                            </p>
+                          ) : (
+                            <ul className="flex flex-col divide-y divide-zinc-100">
+                              {duService.map((ligne) => (
+                                <LigneService
+                                  langue={langue}
+                                  key={ligne.id}
+                                  restaurantId={id}
+                                  jour={jour}
+                                  detail={{
+                                    id: ligne.id,
+                                    clientNom: ligne.client_nom,
+                                    telephone: ligne.client_telephone,
+                                    email: ligne.client_email,
+                                    couverts: ligne.couverts,
+                                    heure: ligne.heure_arrivee,
+                                    occasion: ligne.occasion,
+                                    message: ligne.message,
+                                    noteInterne: ligne.note_interne,
+                                    type: ligne.type,
+                                    statut: ligne.statut,
+                                    absenceConstatee: Boolean(
+                                      ligne.absence_constatee_le,
+                                    ),
+                                    date: ligne.date_reservation,
+                                  }}
+                                >
+                                  {tablesSalle.length > 0 &&
+                                    ligne.type !== "privatisation" && (
+                                      <PlacerReservation
+                                        langue={langue}
+                                        restaurantId={id}
+                                        reservationId={ligne.id}
+                                        couverts={ligne.couverts}
+                                        tableActuelle={
+                                          tablesSalle.find(
+                                            (table) =>
+                                              table.id === ligne.table_id,
+                                          ) ?? null
+                                        }
+                                        tables={tablesProposees({
+                                          tables: tablesSalle,
+                                          reservation:
+                                            ligne as ReservationPlacable,
+                                          occupees: actifs,
+                                        })}
+                                      />
+                                    )}
+                                </LigneService>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </section>
+              );
+            })
+          )}
+
+          {servicesDuJour.length > 0 && (
+            <p className="text-xs text-zinc-400">
+              {sv.heuresIndicatives(formatHeure(servicesDuJour[0].heure_debut))}
+            </p>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

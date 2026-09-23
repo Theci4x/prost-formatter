@@ -75,3 +75,17 @@ export function dateLongue(jour: string, langue: Langue): string {
     year: "numeric",
   });
 }
+
+/**
+ * « 23/09/2026 18:42 » — le moment où une feuille a été éditée.
+ *
+ * Heure de Paris, explicitement : le serveur tourne en UTC, et une
+ * feuille imprimée à 18h qui dit 16h fait douter de tout le reste.
+ */
+export function horodatage(quand: Date, langue: Langue): string {
+  return quand.toLocaleString(locale(langue), {
+    dateStyle: "short",
+    timeStyle: "short",
+    timeZone: "Europe/Paris",
+  });
+}

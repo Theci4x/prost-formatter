@@ -51,8 +51,10 @@ export default async function DashboardLayout({
   const user = verdict.user;
 
   return (
-    <div className="flex min-h-screen flex-1 flex-col bg-brand-cream">
-      <header className="sticky top-0 z-10 flex items-center justify-between border-b border-zinc-200/70 bg-white/90 px-6 py-4 shadow-sm backdrop-blur">
+    <div className="flex min-h-screen flex-1 flex-col bg-brand-cream print:min-h-0 print:bg-white">
+      {/* À l'impression, seul l'écran compte : ni en-tête, ni bandeau,
+          ni bulle d'aide sur une feuille de service ou un devis. */}
+      <header className="sticky top-0 z-10 flex items-center justify-between border-b border-zinc-200/70 bg-white/90 px-6 py-4 shadow-sm backdrop-blur print:hidden">
         {/* Le logo ramène à la liste des établissements.
             C'est le geste que tout le monde tente en premier pour
             « revenir » — sur un téléphone il n'y a pas de barre
@@ -86,9 +88,13 @@ export default async function DashboardLayout({
       </header>
       {/* Sous l'en-tête, au-dessus du travail : visible sans couvrir quoi
           que ce soit, et absent dès que Klarr est installé. */}
-      <BandeauInstallation />
+      <div className="print:hidden">
+        <BandeauInstallation />
+      </div>
       <main className="flex flex-1 flex-col">{children}</main>
-      <Commis connecte />
+      <div className="print:hidden">
+        <Commis connecte />
+      </div>
     </div>
   );
 }
