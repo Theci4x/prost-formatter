@@ -115,8 +115,8 @@ export default async function AvisPage({
           <h2 className="font-serif text-2xl text-ink">Derniers avis</h2>
           {avis.length > 0 && (
             <p className="text-xs text-zinc-500">
-              Les plateformes n&apos;en transmettent que quelques-uns — les
-              plus récents ou les plus pertinents selon elles.
+              Les plateformes n&apos;en transmettent que quelques-uns — les plus
+              récents ou les plus pertinents selon elles.
             </p>
           )}
         </div>
@@ -128,7 +128,11 @@ export default async function AvisPage({
         ) : (
           <ul className="grid gap-4 lg:grid-cols-2">
             {avis.map((a, i) => (
-              <CarteAvis key={`${a.platform}-${i}`} avis={a} restaurantId={id} />
+              <CarteAvis
+                key={`${a.platform}-${i}`}
+                avis={a}
+                restaurantId={id}
+              />
             ))}
           </ul>
         )}

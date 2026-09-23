@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Compteur } from "@/components/dashboard/Compteur";
 import { langueUtilisateur } from "@/lib/i18n/langue";
 import { RESERVATIONS } from "@/lib/i18n/reservations";
 import { SERVICE } from "@/lib/i18n/service";
@@ -158,7 +159,7 @@ export default async function ServicePage({
               </Link>
             )}
           </span>
-          <h1 className="text-2xl font-semibold text-zinc-900 first-letter:capitalize">
+          <h1 className="font-serif text-4xl text-ink first-letter:capitalize">
             {dateJour(jour, langue)}
           </h1>
           <p className="text-sm text-zinc-500">{restaurant.nom}</p>
@@ -167,19 +168,19 @@ export default async function ServicePage({
         <div className="flex items-center gap-2">
           <Link
             href={`/dashboard/${id}/service?jour=${decalerJour(jour, -1)}`}
-            className="rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-600 hover:border-brand-navy hover:text-brand-navy"
+            className="rounded-lg border border-zinc-200 bg-white px-4 py-2.5 text-sm font-medium text-zinc-700 hover:border-brand-navy hover:text-brand-navy"
           >
             {sv.veille}
           </Link>
           <Link
             href={`/dashboard/${id}/service`}
-            className="rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-600 hover:border-brand-navy hover:text-brand-navy"
+            className="rounded-lg border border-zinc-200 bg-white px-4 py-2.5 text-sm font-medium text-zinc-700 hover:border-brand-navy hover:text-brand-navy"
           >
             {sv.aujourdhui}
           </Link>
           <Link
             href={`/dashboard/${id}/service?jour=${decalerJour(jour, 1)}`}
-            className="rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-600 hover:border-brand-navy hover:text-brand-navy"
+            className="rounded-lg border border-zinc-200 bg-white px-4 py-2.5 text-sm font-medium text-zinc-700 hover:border-brand-navy hover:text-brand-navy"
           >
             {sv.lendemain}
           </Link>
@@ -194,27 +195,17 @@ export default async function ServicePage({
       )}
 
       {/* Le chiffre que le chef veut en arrivant : combien de couverts. */}
-      <div className="flex flex-wrap items-end gap-x-10 gap-y-4 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm">
-        <span className="flex flex-col">
-          <span className="text-5xl font-semibold tabular-nums text-brand-navy">
-            {couvertsAttendus}
-          </span>
-          <span className="text-sm text-zinc-600">couverts attendus</span>
-        </span>
-        <span className="flex flex-col">
-          <span className="text-2xl font-semibold tabular-nums text-zinc-700">
-            {confirmees.length}
-          </span>
-          <span className="text-sm text-zinc-600">réservations</span>
-        </span>
-        {enAttente.length > 0 && (
-          <span className="flex flex-col">
-            <span className="text-2xl font-semibold tabular-nums text-brand-orange">
-              {enAttente.length}
-            </span>
-            <span className="text-sm text-zinc-600">à trancher</span>
-          </span>
-        )}
+      <div className="grid grid-cols-3 gap-3 sm:gap-4">
+        <Compteur valeur={couvertsAttendus} libelle="couverts attendus" />
+        <Compteur
+          valeur={confirmees.length}
+          libelle={`réservation${confirmees.length > 1 ? "s" : ""}`}
+        />
+        <Compteur
+          valeur={enAttente.length}
+          libelle="à trancher"
+          accent={enAttente.length > 0}
+        />
       </div>
 
       <SaisieReservation
@@ -226,10 +217,8 @@ export default async function ServicePage({
 
       {enAttente.length > 0 && (
         <section className="flex flex-col gap-3">
-          <h2 className="text-base font-semibold text-zinc-900">
-            {sv.enAttente}
-          </h2>
-          <ul className="flex flex-col gap-3">
+          <h2 className="font-serif text-2xl text-ink">{sv.enAttente}</h2>
+          <ul className="grid gap-3 2xl:grid-cols-2">
             {enAttente.map((ligne) => (
               <li
                 key={ligne.id}
@@ -272,19 +261,19 @@ export default async function ServicePage({
 
           return (
             <section key={service.id} className="flex flex-col gap-4">
-              <h2 className="text-base font-semibold text-zinc-900">
+              <h2 className="font-serif text-2xl text-ink">
                 {service.nom}{" "}
-                <span className="font-normal text-zinc-500">
+                <span className="font-sans text-base font-normal text-zinc-500">
                   {formatCreneau(service.heure_debut, service.heure_fin)}
                 </span>
                 {tables.length > 0 && aPlacer.length > 0 && (
-                  <span className="ml-2 rounded-full bg-brand-orange-soft px-2 py-0.5 text-xs font-medium text-brand-navy">
+                  <span className="ml-2 rounded-full bg-brand-orange-soft px-2 py-0.5 align-middle font-sans text-xs font-medium text-brand-navy">
                     {aPlacer.length} à placer
                   </span>
                 )}
               </h2>
 
-              <div className="grid gap-4 lg:grid-cols-2">
+              <div className="grid gap-4 lg:grid-cols-2 2xl:grid-cols-3">
                 {espaces.map((espace) => {
                   const dispo = disponibiliteEspace({
                     espace,

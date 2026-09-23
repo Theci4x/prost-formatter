@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
+import { Compteur } from "@/components/dashboard/Compteur";
 import { exiger } from "@/lib/equipe/roles";
 import { exigerModule } from "@/lib/abonnement/acces";
 import { lireFiches, FICHES_PAR_PAGE, type Tri } from "@/lib/contacts/fiches";
@@ -106,8 +107,9 @@ export default async function ClientsPage({
 
       {sansHistorique && (
         <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900">
-          <strong>L&apos;historique des venues n&apos;a pas pu être
-          calculé.</strong>{" "}
+          <strong>
+            L&apos;historique des venues n&apos;a pas pu être calculé.
+          </strong>{" "}
           Voici vos clients tels qu&apos;ils sont enregistrés ; le nombre de
           venues et les dates reviendront dès que le calcul répondra.
         </p>
@@ -343,33 +345,6 @@ export default async function ClientsPage({
   );
 }
 
-function Compteur({
-  valeur,
-  libelle,
-  accent = false,
-}: {
-  valeur: number;
-  libelle: string;
-  accent?: boolean;
-}) {
-  return (
-    <div
-      className={`flex flex-col gap-1 rounded-2xl border px-4 py-4 sm:px-6 sm:py-5 ${
-        accent
-          ? "border-brand-orange/60 bg-brand-orange-soft"
-          : "border-zinc-200/70 bg-white shadow-sm"
-      }`}
-    >
-      <span className="font-serif text-3xl leading-none text-ink sm:text-5xl">
-        {valeur}
-      </span>
-      <span className="text-xs leading-snug text-zinc-600 sm:text-sm">
-        {libelle}
-      </span>
-    </div>
-  );
-}
-
 /** La première lettre du nom, ou de l'adresse faute de nom. */
 function Initiale({ fiche }: { fiche: { nom: string | null; email: string } }) {
   const lettre = (fiche.nom ?? fiche.email).trim().charAt(0).toUpperCase();
@@ -388,11 +363,7 @@ function Initiale({ fiche }: { fiche: { nom: string | null; email: string } }) {
  * donnée manquante, alors que c'est un fait — la personne a réservé, sa
  * table n'est pas encore passée.
  */
-function Venues({
-  fiche,
-}: {
-  fiche: { venues: number; couverts: number };
-}) {
+function Venues({ fiche }: { fiche: { venues: number; couverts: number } }) {
   if (fiche.venues === 0) {
     return <span className="text-zinc-400">Pas encore venu</span>;
   }

@@ -48,126 +48,139 @@ export function RestaurantForm({
   });
 
   return (
-    <form action={formAction} className="flex w-full max-w-4xl flex-col gap-4">
+    <form
+      action={formAction}
+      className="grid w-full items-start gap-6 xl:grid-cols-2"
+    >
       {restaurant && <input type="hidden" name="id" value={restaurant.id} />}
 
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="nom" className="text-sm font-medium text-zinc-700">
-          Nom
-        </label>
-        <input
-          id="nom"
-          name="nom"
-          type="text"
-          required
-          defaultValue={restaurant?.nom}
-          className="rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-zinc-500"
-        />
-      </div>
+      {/* Deux cartes côte à côte : ce qui dit qui on est, et quand on
+          ouvre. Empilées, les horaires tombaient sous le pli, et c'est
+          pourtant ce qu'on vient corriger le plus souvent. */}
+      <section className="flex flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm">
+        <h2 className="font-serif text-2xl text-ink">L&apos;établissement</h2>
 
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="adresse" className="text-sm font-medium text-zinc-700">
-          Adresse
-        </label>
-        <input
-          id="adresse"
-          name="adresse"
-          type="text"
-          defaultValue={restaurant?.adresse ?? ""}
-          className="rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-zinc-500"
-        />
-      </div>
-
-      <div className="flex gap-4">
-        <div className="flex flex-1 flex-col gap-1.5">
-          <label
-            htmlFor="telephone"
-            className="text-sm font-medium text-zinc-700"
-          >
-            Téléphone
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="nom" className="text-sm font-medium text-zinc-700">
+            Nom
           </label>
           <input
-            id="telephone"
-            name="telephone"
-            type="tel"
-            defaultValue={restaurant?.telephone ?? ""}
-            className="rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-zinc-500"
+            id="nom"
+            name="nom"
+            type="text"
+            required
+            defaultValue={restaurant?.nom}
+            className="rounded-lg border border-zinc-200 bg-zinc-50 px-3.5 py-2.5 text-sm outline-none transition-colors focus:border-brand-navy focus:bg-white"
           />
         </div>
-        <div className="flex flex-1 flex-col gap-1.5">
+
+        <div className="flex flex-col gap-1.5">
           <label
-            htmlFor="site_web"
+            htmlFor="adresse"
             className="text-sm font-medium text-zinc-700"
           >
-            Site web
+            Adresse
           </label>
           <input
-            id="site_web"
-            name="site_web"
-            type="url"
-            placeholder="https://..."
-            defaultValue={restaurant?.site_web ?? ""}
-            className="rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-zinc-500"
+            id="adresse"
+            name="adresse"
+            type="text"
+            defaultValue={restaurant?.adresse ?? ""}
+            className="rounded-lg border border-zinc-200 bg-zinc-50 px-3.5 py-2.5 text-sm outline-none transition-colors focus:border-brand-navy focus:bg-white"
           />
         </div>
-      </div>
 
-      <div className="flex flex-col gap-1.5">
-        <label
-          htmlFor="type_cuisine"
-          className="text-sm font-medium text-zinc-700"
-        >
-          Type de cuisine{" "}
-          <span className="font-normal text-zinc-400">
-            (ce que cherchent Google et les assistants)
-          </span>
-        </label>
-        <input
-          id="type_cuisine"
-          name="type_cuisine"
-          type="text"
-          placeholder="Allemande, brasserie"
-          defaultValue={restaurant?.type_cuisine ?? ""}
-          className="rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-zinc-500"
-        />
-        <p className="text-xs text-zinc-500">
-          Sépare par des virgules. C&apos;est ce qui permet d&apos;être proposé
-          sur « restaurant allemand près de République ».
-        </p>
-      </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="flex flex-col gap-1.5">
+            <label
+              htmlFor="telephone"
+              className="text-sm font-medium text-zinc-700"
+            >
+              Téléphone
+            </label>
+            <input
+              id="telephone"
+              name="telephone"
+              type="tel"
+              defaultValue={restaurant?.telephone ?? ""}
+              className="rounded-lg border border-zinc-200 bg-zinc-50 px-3.5 py-2.5 text-sm outline-none transition-colors focus:border-brand-navy focus:bg-white"
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label
+              htmlFor="site_web"
+              className="text-sm font-medium text-zinc-700"
+            >
+              Site web
+            </label>
+            <input
+              id="site_web"
+              name="site_web"
+              type="url"
+              placeholder="https://..."
+              defaultValue={restaurant?.site_web ?? ""}
+              className="rounded-lg border border-zinc-200 bg-zinc-50 px-3.5 py-2.5 text-sm outline-none transition-colors focus:border-brand-navy focus:bg-white"
+            />
+          </div>
+        </div>
 
-      <div className="flex flex-col gap-1.5">
-        <label
-          htmlFor="description"
-          className="text-sm font-medium text-zinc-700"
-        >
-          Description
-        </label>
-        <textarea
-          id="description"
-          name="description"
-          rows={3}
-          defaultValue={restaurant?.description ?? ""}
-          className="rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-zinc-500"
-        />
-      </div>
+        <div className="flex flex-col gap-1.5">
+          <label
+            htmlFor="type_cuisine"
+            className="text-sm font-medium text-zinc-700"
+          >
+            Type de cuisine{" "}
+            <span className="font-normal text-zinc-400">
+              (ce que cherchent Google et les assistants)
+            </span>
+          </label>
+          <input
+            id="type_cuisine"
+            name="type_cuisine"
+            type="text"
+            placeholder="Allemande, brasserie"
+            defaultValue={restaurant?.type_cuisine ?? ""}
+            className="rounded-lg border border-zinc-200 bg-zinc-50 px-3.5 py-2.5 text-sm outline-none transition-colors focus:border-brand-navy focus:bg-white"
+          />
+          <p className="text-xs text-zinc-500">
+            Sépare par des virgules. C&apos;est ce qui permet d&apos;être
+            proposé sur « restaurant allemand près de République ».
+          </p>
+        </div>
 
-      <div className="flex flex-col gap-2">
-        <span className="text-sm font-medium text-zinc-700">
+        <div className="flex flex-col gap-1.5">
+          <label
+            htmlFor="description"
+            className="text-sm font-medium text-zinc-700"
+          >
+            Description
+          </label>
+          <textarea
+            id="description"
+            name="description"
+            rows={6}
+            defaultValue={restaurant?.description ?? ""}
+            className="rounded-lg border border-zinc-200 bg-zinc-50 px-3.5 py-2.5 text-sm outline-none transition-colors focus:border-brand-navy focus:bg-white"
+          />
+        </div>
+      </section>
+
+      <section className="flex flex-col gap-3 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm">
+        <h2 className="font-serif text-2xl text-ink">
           Horaires d&apos;ouverture
-        </span>
+        </h2>
         <p className="-mt-1 text-xs text-zinc-500">
           Ceux de ta devanture, pas tes créneaux de réservation. Coche
           «&nbsp;Coupure&nbsp;» si tu fermes entre le déjeuner et le dîner.
         </p>
-        <div className="flex flex-col gap-2 rounded-md border border-zinc-200 p-3">
+        <div className="flex flex-col gap-2">
           {JOURS_SEMAINE.map((jour) => (
             <div
               key={jour}
               className="flex flex-col gap-1.5 border-b border-zinc-100 pb-2 last:border-0 last:pb-0"
             >
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-                <span className="w-24 shrink-0 text-sm text-zinc-700">
+                <span className="w-24 shrink-0 text-sm font-medium text-ink">
                   {JOUR_LABELS[jour]}
                 </span>
                 <label className="flex items-center gap-1.5 text-xs text-zinc-500">
@@ -250,17 +263,18 @@ export function RestaurantForm({
             </div>
           ))}
         </div>
+      </section>
+
+      <div className="flex flex-wrap items-center gap-4 xl:col-span-2">
+        <button
+          type="submit"
+          disabled={pending}
+          className="rounded-lg bg-brand-navy px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover disabled:opacity-50"
+        >
+          {pending ? "Enregistrement..." : submitLabel}
+        </button>
+        {state.error && <p className="text-sm text-red-600">{state.error}</p>}
       </div>
-
-      {state.error && <p className="text-sm text-red-600">{state.error}</p>}
-
-      <button
-        type="submit"
-        disabled={pending}
-        className="rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover disabled:opacity-50"
-      >
-        {pending ? "Enregistrement..." : submitLabel}
-      </button>
     </form>
   );
 }

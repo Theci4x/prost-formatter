@@ -192,7 +192,7 @@ export default async function ConfigurationReservationsPage({
   const site = siteUrl();
 
   return (
-    <div className="flex flex-1 flex-col gap-10 px-6 py-8">
+    <div className="flex flex-1 flex-col gap-8 px-6 py-8">
       <PageHeader
         icon={dashboardIcons.reservations}
         title={cfg.titre(restaurant.nom)}
@@ -203,14 +203,12 @@ export default async function ConfigurationReservationsPage({
 
       <section className="flex flex-col gap-4">
         <div className="flex flex-col gap-1">
-          <h2 className="text-base font-semibold text-zinc-900">
-            {cfg.espacesTitre}
-          </h2>
+          <h2 className="font-serif text-2xl text-ink">{cfg.espacesTitre}</h2>
           <p className="text-sm text-zinc-500">{cfg.espacesChapo}</p>
         </div>
 
         {espaces.length > 0 && (
-          <ul className="flex flex-col gap-3">
+          <ul className="grid items-start gap-3 2xl:grid-cols-2">
             {espaces.map((espace) => {
               const garantie = garantieLisible(espace, cfg, langue);
               return (
@@ -276,204 +274,208 @@ export default async function ConfigurationReservationsPage({
         <EspaceForm restaurantId={id} langue={langue} />
       </section>
 
-      <section className="flex flex-col gap-4">
-        <div className="flex flex-col gap-1">
-          <h2 className="text-base font-semibold text-zinc-900">
-            {cfg.servicesTitre}
-          </h2>
-          <p className="text-sm text-zinc-500">{cfg.servicesChapo}</p>
-        </div>
+      {/* Les réglages qu'on fait une fois, deux par deux sur grand écran :
+          empilés, la page demandait six écrans de défilement. */}
+      <div className="grid items-start gap-8 xl:grid-cols-2">
+        <section className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1">
+            <h2 className="font-serif text-2xl text-ink">
+              {cfg.servicesTitre}
+            </h2>
+            <p className="text-sm text-zinc-500">{cfg.servicesChapo}</p>
+          </div>
 
-        {services.length > 0 && (
-          <ul className="flex flex-col gap-3">
-            {services.map((service) => (
-              <li
-                key={service.id}
-                className="flex flex-wrap items-start justify-between gap-4 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm"
-              >
-                <ServiceModifiable
-                  restaurantId={id}
-                  service={service}
-                  langue={langue}
-                />
-                <Supprimer
-                  id={service.id}
-                  restaurantId={id}
-                  action={removeService}
-                  libelle={cfg.supprimer}
-                />
-              </li>
-            ))}
-          </ul>
-        )}
+          {services.length > 0 && (
+            <ul className="flex flex-col gap-3">
+              {services.map((service) => (
+                <li
+                  key={service.id}
+                  className="flex flex-wrap items-start justify-between gap-4 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm"
+                >
+                  <ServiceModifiable
+                    restaurantId={id}
+                    service={service}
+                    langue={langue}
+                  />
+                  <Supprimer
+                    id={service.id}
+                    restaurantId={id}
+                    action={removeService}
+                    libelle={cfg.supprimer}
+                  />
+                </li>
+              ))}
+            </ul>
+          )}
 
-        <ServiceForm restaurantId={id} langue={langue} />
-      </section>
+          <ServiceForm restaurantId={id} langue={langue} />
+        </section>
 
-      <section className="flex flex-col gap-4">
-        <div className="flex flex-col gap-1">
-          <h2 className="text-base font-semibold text-zinc-900">
-            {cfg.confirmationsTitre}
-          </h2>
-          <p className="text-sm text-zinc-500">{cfg.confirmationsChapo}</p>
-        </div>
+        <section className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1">
+            <h2 className="font-serif text-2xl text-ink">
+              {cfg.confirmationsTitre}
+            </h2>
+            <p className="text-sm text-zinc-500">{cfg.confirmationsChapo}</p>
+          </div>
 
-        <ReglesConfirmation
-          restaurantId={id}
-          auto={publique.confirmation_auto ?? true}
-          delaiHeures={publique.confirmation_auto_delai_heures ?? 24}
-          emailContact={publique.email_contact ?? null}
-          langue={langue}
-        />
-      </section>
+          <ReglesConfirmation
+            restaurantId={id}
+            auto={publique.confirmation_auto ?? true}
+            delaiHeures={publique.confirmation_auto_delai_heures ?? 24}
+            emailContact={publique.email_contact ?? null}
+            langue={langue}
+          />
+        </section>
 
-      <section className="flex flex-col gap-4">
-        <div className="flex flex-col gap-1">
-          <h2 className="text-base font-semibold text-zinc-900">
-            {cfg.fermeturesTitre}
-          </h2>
-          <p className="text-sm text-zinc-500">{cfg.fermeturesChapo}</p>
-        </div>
+        <section className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1">
+            <h2 className="font-serif text-2xl text-ink">
+              {cfg.fermeturesTitre}
+            </h2>
+            <p className="text-sm text-zinc-500">{cfg.fermeturesChapo}</p>
+          </div>
 
-        {fermetures.length > 0 && (
-          <ul className="flex flex-col gap-3">
-            {fermetures.map((fermeture) => (
-              <li
-                key={fermeture.id}
-                className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-zinc-200/70 bg-white p-4 shadow-sm"
-              >
-                <span className="flex flex-col">
-                  <span className="font-medium text-zinc-900">
-                    {formatPeriode(
-                      fermeture.date_debut,
-                      fermeture.date_fin,
-                      cfg,
-                      langue,
-                    )}
+          {fermetures.length > 0 && (
+            <ul className="flex flex-col gap-3">
+              {fermetures.map((fermeture) => (
+                <li
+                  key={fermeture.id}
+                  className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-zinc-200/70 bg-white p-4 shadow-sm"
+                >
+                  <span className="flex flex-col">
+                    <span className="font-medium text-zinc-900">
+                      {formatPeriode(
+                        fermeture.date_debut,
+                        fermeture.date_fin,
+                        cfg,
+                        langue,
+                      )}
+                    </span>
+                    <span className="text-sm text-zinc-500">
+                      {fermeture.espace_id
+                        ? cfg.espaceSeulement(
+                            nomEspace.get(fermeture.espace_id) ??
+                              cfg.espaceSupprime,
+                          )
+                        : cfg.toutEtablissement}
+                      {fermeture.motif && ` · ${fermeture.motif}`}
+                    </span>
                   </span>
-                  <span className="text-sm text-zinc-500">
-                    {fermeture.espace_id
-                      ? cfg.espaceSeulement(
-                          nomEspace.get(fermeture.espace_id) ??
-                            cfg.espaceSupprime,
-                        )
-                      : cfg.toutEtablissement}
-                    {fermeture.motif && ` · ${fermeture.motif}`}
-                  </span>
-                </span>
-                <form action={supprimerFermeture}>
-                  <input type="hidden" name="id" value={fermeture.id} />
-                  <input type="hidden" name="restaurant_id" value={id} />
-                  <button
-                    type="submit"
-                    className="text-sm font-medium text-zinc-500 hover:text-red-600"
-                  >
-                    {cfg.rouvrir}
-                  </button>
-                </form>
-              </li>
-            ))}
-          </ul>
-        )}
+                  <form action={supprimerFermeture}>
+                    <input type="hidden" name="id" value={fermeture.id} />
+                    <input type="hidden" name="restaurant_id" value={id} />
+                    <button
+                      type="submit"
+                      className="text-sm font-medium text-zinc-500 hover:text-red-600"
+                    >
+                      {cfg.rouvrir}
+                    </button>
+                  </form>
+                </li>
+              ))}
+            </ul>
+          )}
 
-        <FermetureForm restaurantId={id} espaces={espaces} langue={langue} />
-      </section>
+          <FermetureForm restaurantId={id} espaces={espaces} langue={langue} />
+        </section>
 
-      <section className="flex flex-col gap-4">
-        <div className="flex flex-col gap-1">
-          <h2 className="text-base font-semibold text-zinc-900">
-            {cfg.pageTitre}
-          </h2>
-          <p className="text-sm text-zinc-500">{cfg.pageChapo}</p>
-        </div>
+        <section className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1">
+            <h2 className="font-serif text-2xl text-ink">{cfg.pageTitre}</h2>
+            <p className="text-sm text-zinc-500">{cfg.pageChapo}</p>
+          </div>
 
-        <IdentitePublique
-          restaurantId={id}
-          logoUrl={publique.logo_url ?? null}
-          mentions={publique.mentions_legales ?? null}
-          langue={langue}
-        />
+          <IdentitePublique
+            restaurantId={id}
+            logoUrl={publique.logo_url ?? null}
+            mentions={publique.mentions_legales ?? null}
+            langue={langue}
+          />
 
-        <div className="flex flex-col gap-3 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm">
-          {slug ? (
-            <>
-              {/* Une page déjà en ligne a une adresse : on ne la cache jamais,
+          <div className="flex flex-col gap-3 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm">
+            {slug ? (
+              <>
+                {/* Une page déjà en ligne a une adresse : on ne la cache jamais,
                   même s'il manque une salle ou un service. C'est elle que le
                   restaurateur colle sur sa fiche Google. */}
-              <a
-                href={`/reserver/${slug}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-fit break-all font-medium text-brand-orange hover:underline"
-              >
-                {site}/reserver/{slug}
-              </a>
-              {espaces.length === 0 || services.length === 0 ? (
-                <p className="text-sm text-amber-700">
-                  {cfg.adresseEnLigneMais(
-                    espaces.length === 0 && services.length === 0
-                      ? cfg.manqueSalleEtService
-                      : espaces.length === 0
-                        ? cfg.manqueSalle
-                        : cfg.manqueService,
-                  )}
-                </p>
-              ) : (
-                <p className="text-sm text-zinc-500">{cfg.elleEstEnLigne}</p>
-              )}
+                <a
+                  href={`/reserver/${slug}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-fit break-all font-medium text-brand-orange hover:underline"
+                >
+                  {site}/reserver/{slug}
+                </a>
+                {espaces.length === 0 || services.length === 0 ? (
+                  <p className="text-sm text-amber-700">
+                    {cfg.adresseEnLigneMais(
+                      espaces.length === 0 && services.length === 0
+                        ? cfg.manqueSalleEtService
+                        : espaces.length === 0
+                          ? cfg.manqueSalle
+                          : cfg.manqueService,
+                    )}
+                  </p>
+                ) : (
+                  <p className="text-sm text-zinc-500">{cfg.elleEstEnLigne}</p>
+                )}
 
-              {/* La vitrine se règle sur la fiche de l'établissement, une
+                {/* La vitrine se règle sur la fiche de l'établissement, une
                   page qu'on n'ouvre presque jamais. C'est ici qu'on vient
                   chercher ses adresses publiques : autant qu'elle s'y
                   trouve aussi. */}
-              <div className="mt-2 border-t border-zinc-100 pt-4">
-                {publique.site_publie ? (
-                  <>
-                    <p className="mb-1 text-sm font-medium text-zinc-900">
-                      {cfg.siteVitrine}
+                <div className="mt-2 border-t border-zinc-100 pt-4">
+                  {publique.site_publie ? (
+                    <>
+                      <p className="mb-1 text-sm font-medium text-zinc-900">
+                        {cfg.siteVitrine}
+                      </p>
+                      <a
+                        href={`/restaurant/${slug}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-fit break-all font-medium text-brand-orange hover:underline"
+                      >
+                        {site}/restaurant/{slug}
+                      </a>
+                    </>
+                  ) : (
+                    <p className="text-sm text-zinc-500">
+                      {cfg.vitrineProposition}{" "}
+                      <Link
+                        href={`/dashboard/${id}/vitrine`}
+                        className="font-medium text-brand-orange hover:underline"
+                      >
+                        {cfg.laPageSiteVitrine}
+                      </Link>
+                      .
                     </p>
-                    <a
-                      href={`/restaurant/${slug}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-fit break-all font-medium text-brand-orange hover:underline"
-                    >
-                      {site}/restaurant/{slug}
-                    </a>
-                  </>
-                ) : (
-                  <p className="text-sm text-zinc-500">
-                    {cfg.vitrineProposition}{" "}
-                    <Link
-                      href={`/dashboard/${id}/vitrine`}
-                      className="font-medium text-brand-orange hover:underline"
-                    >
-                      {cfg.laPageSiteVitrine}
-                    </Link>
-                    .
-                  </p>
-                )}
-              </div>
-            </>
-          ) : espaces.length === 0 || services.length === 0 ? (
-            <p className="text-sm text-zinc-500">{cfg.ajouteEspaceEtService}</p>
-          ) : (
-            <form
-              action={activerPageReservation}
-              className="flex flex-col gap-3"
-            >
-              <input type="hidden" name="restaurant_id" value={id} />
-              <p className="text-sm text-zinc-500">{cfg.pasEncoreOuverte}</p>
-              <button
-                type="submit"
-                className="w-fit rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover"
+                  )}
+                </div>
+              </>
+            ) : espaces.length === 0 || services.length === 0 ? (
+              <p className="text-sm text-zinc-500">
+                {cfg.ajouteEspaceEtService}
+              </p>
+            ) : (
+              <form
+                action={activerPageReservation}
+                className="flex flex-col gap-3"
               >
-                {cfg.ouvrirMaPage}
-              </button>
-            </form>
-          )}
-        </div>
-      </section>
+                <input type="hidden" name="restaurant_id" value={id} />
+                <p className="text-sm text-zinc-500">{cfg.pasEncoreOuverte}</p>
+                <button
+                  type="submit"
+                  className="w-fit rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover"
+                >
+                  {cfg.ouvrirMaPage}
+                </button>
+              </form>
+            )}
+          </div>
+        </section>
+      </div>
     </div>
   );
 }

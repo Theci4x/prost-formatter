@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { Compteur, TitreSection } from "@/components/dashboard/Compteur";
 import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
 import { FormulairePost } from "@/components/posts/FormulairePost";
 import { publicationsGoogleOuvertes } from "@/lib/google/business";
@@ -75,13 +76,13 @@ export default async function PostsPage({
     // publication se compose à partir de ce qui est déjà saisi, pas
     // d'une page blanche.
     supabase
-      .from("menu_items")
+      .from("restaurant_menu_items")
       .select("id, nom, description, prix_centimes")
       .eq("restaurant_id", id)
       .eq("actif", true)
       .order("ordre", { ascending: true }),
     supabase
-      .from("espaces")
+      .from("restaurant_espaces")
       .select("id, nom, description, capacite, privatisation_minimum")
       .eq("restaurant_id", id)
       .order("ordre", { ascending: true }),
@@ -97,6 +98,9 @@ export default async function PostsPage({
     (espacesData ?? []) as EspaceSuggerable[],
   );
 
+  const programmees = posts.filter((p) => p.statut === "programme").length;
+  const publiees = posts.filter((p) => p.statut === "publie").length;
+
   return (
     <div className="flex flex-1 flex-col gap-6 px-6 py-8">
       <PageHeader
@@ -111,79 +115,100 @@ export default async function PostsPage({
         l&apos;avance, Klarr les publie le jour venu.
       </p>
 
-      <div className="flex flex-col gap-4">
-        <FormulairePost
-          restaurantId={id}
-          photos={photos}
-          suggestions={pistes}
+      {/* Dit avant qu'on s'en aperçoive : l'attente vient de Google, pas
+          d'une panne, et l'imprécision de l'heure vient du plan Vercel. */}
+      <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900">
+        <strong>L&apos;envoi vers Google n&apos;est pas encore ouvert.</strong>{" "}
+        Google accorde l&apos;accès à son API de publication sur dossier ; la
+        demande est en cours. Tes publications sont enregistrées et partiront
+        toutes seules le jour où l&apos;accès arrive — rien à ressaisir. Une
+        publication paraît au premier passage de la nuit suivant la date
+        choisie, pas à la minute près.
+      </p>
+
+      <div className="grid grid-cols-2 gap-3 sm:gap-4">
+        <Compteur
+          valeur={programmees}
+          libelle={`publication${programmees > 1 ? "s" : ""} programmée${programmees > 1 ? "s" : ""}`}
         />
+        <Compteur
+          valeur={publiees}
+          libelle={`publiée${publiees > 1 ? "s" : ""} sur ta fiche`}
+        />
+      </div>
 
-        {/* Dit avant qu'on s'en aperçoive : l'attente vient de Google, pas
-            d'une panne, et l'imprécision de l'heure vient du plan Vercel. */}
-        <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-relaxed text-amber-900">
-          <strong>
-            L&apos;envoi vers Google n&apos;est pas encore ouvert.
-          </strong>{" "}
-          Google accorde l&apos;accès à son API de publication sur dossier ; la
-          demande est en cours. Tes publications sont enregistrées et partiront
-          toutes seules le jour où l&apos;accès arrive — rien à ressaisir. En
-          attendant, elles restent « programmées ».
-          <br />
-          Précision de l&apos;heure : la file est traitée une fois par nuit,
-          donc une publication paraît au premier passage suivant la date
-          choisie, pas à la minute près.
-        </p>
+      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
+        <section className="flex min-w-0 flex-col gap-3">
+          <TitreSection>Nouvelle publication</TitreSection>
+          <FormulairePost
+            restaurantId={id}
+            photos={photos}
+            suggestions={pistes}
+          />
+        </section>
 
-        {posts.length === 0 ? (
-          <p className="text-sm text-zinc-500">
-            Aucune publication pour l&apos;instant.
-          </p>
-        ) : (
-          <ul className="flex flex-col gap-3">
-            {posts.map((post) => (
-              <li
-                key={post.id}
-                className="flex flex-col gap-2 rounded-2xl border border-zinc-200 bg-white p-4"
-              >
-                <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-                  <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">
-                    {post.statut === "publie"
-                      ? `Publiée ${post.publie_le ? quand(post.publie_le) : ""}`
-                      : `Programmée ${quand(post.publier_le)}`}
-                  </span>
-                  {post.bouton && (
-                    <span className="text-xs text-zinc-500">
-                      Bouton : {LIBELLE_BOUTON[post.bouton]}
-                    </span>
-                  )}
-                </div>
-
-                <p className="whitespace-pre-wrap text-sm text-zinc-800">
-                  {post.texte}
-                </p>
-
-                {post.derniere_erreur && (
-                  <p className="text-xs text-amber-800">
-                    Dernier essai : {post.derniere_erreur}
-                  </p>
-                )}
-
-                {post.statut === "programme" && (
-                  <form action={annulerPost} className="w-fit">
-                    <input type="hidden" name="restaurant_id" value={id} />
-                    <input type="hidden" name="post_id" value={post.id} />
-                    <button
-                      type="submit"
-                      className="text-xs font-medium text-zinc-500 underline underline-offset-2 hover:text-red-600"
+        <section className="flex min-w-0 flex-col gap-3">
+          <TitreSection>Tes publications</TitreSection>
+          {posts.length === 0 ? (
+            <p className="rounded-2xl border border-dashed border-zinc-300 bg-white px-6 py-12 text-center text-sm text-zinc-500">
+              Aucune publication pour l&apos;instant.
+            </p>
+          ) : (
+            <ul className="flex flex-col gap-3">
+              {posts.map((post) => (
+                <li
+                  key={post.id}
+                  className="flex flex-col gap-3 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+                    <span
+                      className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                        post.statut === "publie"
+                          ? "bg-emerald-50 text-emerald-700"
+                          : "bg-brand-orange-soft text-brand-orange-dark"
+                      }`}
                     >
-                      Annuler
-                    </button>
-                  </form>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
+                      {post.statut === "publie"
+                        ? `Publiée ${post.publie_le ? quand(post.publie_le) : ""}`
+                        : `Programmée ${quand(post.publier_le)}`}
+                    </span>
+                    {post.bouton && (
+                      <span className="text-xs text-zinc-500">
+                        Bouton : {LIBELLE_BOUTON[post.bouton]}
+                      </span>
+                    )}
+                  </div>
+
+                  <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-ink">
+                    {post.texte}
+                  </p>
+
+                  {post.derniere_erreur && (
+                    <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                      Dernier essai : {post.derniere_erreur}
+                    </p>
+                  )}
+
+                  {post.statut === "programme" && (
+                    <form
+                      action={annulerPost}
+                      className="border-t border-zinc-100 pt-3"
+                    >
+                      <input type="hidden" name="restaurant_id" value={id} />
+                      <input type="hidden" name="post_id" value={post.id} />
+                      <button
+                        type="submit"
+                        className="text-xs font-medium text-zinc-400 transition-colors hover:text-red-600"
+                      >
+                        Annuler cette publication
+                      </button>
+                    </form>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
       </div>
     </div>
   );

@@ -173,7 +173,7 @@ export default async function AbonnementPage({
         </p>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-2">
         {MODULES.map((cle) => {
           const abonnement = abonnements.get(cle);
           const paye = abonnement
@@ -184,17 +184,17 @@ export default async function AbonnementPage({
           return (
             <div
               key={cle}
-              className={`flex flex-col gap-3 rounded-2xl border p-6 shadow-sm ${
+              className={`flex flex-col gap-5 rounded-2xl border p-8 shadow-sm ${
                 paye
                   ? "border-emerald-200/70 bg-white"
                   : "border-zinc-200/70 bg-white"
               }`}
             >
               <div className="flex flex-col gap-1">
-                <span className="text-base font-semibold text-zinc-900">
+                <span className="font-serif text-3xl text-ink">
                   {LIBELLE_MODULE[cle]}
                 </span>
-                <span className="text-sm font-medium text-brand-navy">
+                <span className="text-xl font-semibold text-brand-navy">
                   {PRIX_MODULE[cle]}{" "}
                   {/* Le HT pour comparer, le TTC pour ne pas être surpris
                       au débit : c'est le second qui est prélevé. */}
@@ -256,7 +256,7 @@ export default async function AbonnementPage({
                     ? `/api/stripe/portal?restaurant_id=${id}`
                     : `/api/stripe/checkout?restaurant_id=${id}&module=${cle}`
                 }
-                className={`mt-auto w-fit rounded-md px-4 py-2 text-sm font-medium shadow-sm transition-colors ${
+                className={`mt-auto w-fit rounded-lg px-5 py-2.5 text-sm font-semibold shadow-sm transition-colors ${
                   paye
                     ? "border border-zinc-300 text-zinc-700 hover:border-brand-navy hover:text-brand-navy"
                     : "bg-brand-navy text-white hover:bg-brand-navy-hover"
@@ -275,12 +275,10 @@ export default async function AbonnementPage({
           une chose payée en double. Ce cas-là se règle au portail Stripe,
           ou par un message. */}
       {aucunAbonnement && (
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-3 rounded-2xl border border-brand-navy/20 bg-brand-orange-soft p-6 shadow-sm">
+        <div className="flex flex-wrap items-center gap-x-8 gap-y-4 rounded-2xl border border-brand-navy/20 bg-brand-orange-soft p-8 shadow-sm">
           <div className="flex min-w-0 flex-1 basis-64 flex-col gap-1">
-            <span className="text-base font-semibold text-zinc-900">
-              {LIBELLE_PACK}
-            </span>
-            <span className="text-sm font-medium text-brand-navy">
+            <span className="font-serif text-3xl text-ink">{LIBELLE_PACK}</span>
+            <span className="text-xl font-semibold text-brand-navy">
               {PRIX_PACK}{" "}
               <span className="font-normal text-zinc-500">
                 ({PRIX_PACK_TTC})
@@ -292,7 +290,7 @@ export default async function AbonnementPage({
           </div>
           <a
             href={`/api/stripe/checkout?restaurant_id=${id}&module=pack`}
-            className="w-fit rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-brand-navy-hover"
+            className="w-fit rounded-lg bg-brand-navy px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-navy-hover"
           >
             {a.prendreLesDeux}
           </a>
@@ -304,12 +302,12 @@ export default async function AbonnementPage({
           que le restaurateur comprend qu'on ne cherche pas à lui vendre
           deux abonnements. */}
       {basculePossible && manquant && (
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-3 rounded-2xl border border-brand-navy/20 bg-brand-orange-soft p-6 shadow-sm">
+        <div className="flex flex-wrap items-center gap-x-8 gap-y-4 rounded-2xl border border-brand-navy/20 bg-brand-orange-soft p-8 shadow-sm">
           <div className="flex min-w-0 flex-1 basis-64 flex-col gap-1">
-            <span className="text-base font-semibold text-zinc-900">
+            <span className="font-serif text-3xl text-ink">
               {a.ajouterModule(LIBELLE_MODULE[manquant])}
             </span>
-            <span className="text-sm font-medium text-brand-navy">
+            <span className="text-xl font-semibold text-brand-navy">
               {PRIX_PACK}{" "}
               <span className="font-normal text-zinc-500">
                 ({PRIX_PACK_TTC})
@@ -321,7 +319,7 @@ export default async function AbonnementPage({
           </div>
           <a
             href={`/api/stripe/pack?restaurant_id=${id}`}
-            className="w-fit rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-brand-navy-hover"
+            className="w-fit rounded-lg bg-brand-navy px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-navy-hover"
           >
             {a.passerAuPack}
           </a>

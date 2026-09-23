@@ -366,81 +366,89 @@ export default async function DevisPage({
         </p>
       )}
 
-      <EditeurDevis
-        devisId={devis.id}
-        restaurantId={id}
-        lignesInitiales={lignes.map((ligne) => ({
-          libelle: ligne.libelle,
-          quantite: String(ligne.quantite).replace(/\.00$/, ""),
-          prix: (ligne.prix_unitaire_centimes / 100)
-            .toFixed(2)
-            .replace(".", ","),
-          tva: Number(ligne.tva_taux),
-        }))}
-        tauxParDefaut={Number(devis.tva_taux)}
-        prestations={prestations.map((prestation) => ({
-          id: prestation.id,
-          libelle: prestation.libelle,
-          prix: (prestation.prix_unitaire_centimes / 100)
-            .toFixed(2)
-            .replace(".", ","),
-          tva: Number(prestation.tva_taux),
-        }))}
-        mentionsInitiales={mentions}
-        acompteInitial={
-          devis.acompte_centimes
-            ? (devis.acompte_centimes / 100).toFixed(2).replace(".", ",")
-            : ""
-        }
-        valideJusquauInitial={devis.valide_jusquau}
-        messageInitial={devis.message ?? ""}
-        couverts={reservation.couverts}
-        modifiable={!fige}
-      />
+      {/* L'éditeur à gauche, le document à droite : on voit ce qu'on
+          écrit devenir la feuille que le client recevra, sans descendre
+          d'un écran à chaque ligne. */}
+      <div className="grid items-start gap-8 2xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] print:block">
+        <section className="flex min-w-0 flex-col gap-3 print:hidden">
+          <h2 className="font-serif text-2xl text-ink">Les lignes</h2>
+          <EditeurDevis
+            devisId={devis.id}
+            restaurantId={id}
+            lignesInitiales={lignes.map((ligne) => ({
+              libelle: ligne.libelle,
+              quantite: String(ligne.quantite).replace(/\.00$/, ""),
+              prix: (ligne.prix_unitaire_centimes / 100)
+                .toFixed(2)
+                .replace(".", ","),
+              tva: Number(ligne.tva_taux),
+            }))}
+            tauxParDefaut={Number(devis.tva_taux)}
+            prestations={prestations.map((prestation) => ({
+              id: prestation.id,
+              libelle: prestation.libelle,
+              prix: (prestation.prix_unitaire_centimes / 100)
+                .toFixed(2)
+                .replace(".", ","),
+              tva: Number(prestation.tva_taux),
+            }))}
+            mentionsInitiales={mentions}
+            acompteInitial={
+              devis.acompte_centimes
+                ? (devis.acompte_centimes / 100).toFixed(2).replace(".", ",")
+                : ""
+            }
+            valideJusquauInitial={devis.valide_jusquau}
+            messageInitial={devis.message ?? ""}
+            couverts={reservation.couverts}
+            modifiable={!fige}
+          />
+        </section>
 
-      {/* Le document, tel qu'il partira. Il rend ce qui est en base et non
+        {/* Le document, tel qu'il partira. Il rend ce qui est en base et non
           la saisie en cours : le restaurateur voit donc ce que son client
           verrait s'il ouvrait le lien maintenant — ce qui est justement la
           question qu'on se pose avant d'envoyer. */}
-      {lignes.length > 0 && maison && (
-        <section className="flex flex-col gap-4">
-          <div className="flex flex-wrap items-center justify-between gap-3 print:hidden">
-            <div className="flex flex-col">
-              <h2 className="font-serif text-2xl text-ink">Le document</h2>
-              <p className="text-sm text-ink-soft">
-                Tel que le client le verra, au dernier enregistrement.
-              </p>
+        {lignes.length > 0 && maison && (
+          <section className="flex min-w-0 flex-col gap-4 2xl:sticky 2xl:top-24">
+            <div className="flex flex-wrap items-center justify-between gap-3 print:hidden">
+              <div className="flex flex-col">
+                <h2 className="font-serif text-2xl text-ink">Le document</h2>
+                <p className="text-sm text-ink-soft">
+                  Tel que le client le verra, au dernier enregistrement.
+                </p>
+              </div>
+              <BoutonImprimer />
             </div>
-            <BoutonImprimer />
-          </div>
-          <FeuilleDevis
-            numero={devis.numero}
-            valideJusquau={devis.valide_jusquau}
-            acompteCentimes={devis.acompte_centimes}
-            message={devis.message}
-            lignes={lignes.map((ligne) => ({
-              libelle: ligne.libelle,
-              quantite: Number(ligne.quantite),
-              prixUnitaireCentimes: ligne.prix_unitaire_centimes,
-              tauxTva: Number(ligne.tva_taux),
-            }))}
-            maison={{
-              nom: maison.nom,
-              adresse: maison.adresse,
-              telephone: maison.telephone,
-              logoUrl: maison.logo_url,
-              mentionsLegales: devis.mentions ?? mentions ?? null,
-            }}
-            evenement={{
-              clientNom: reservation.client_nom,
-              couverts: reservation.couverts,
-              date: reservation.date_reservation,
-              heure: null,
-              espaceNom: null,
-            }}
-          />
-        </section>
-      )}
+            <FeuilleDevis
+              numero={devis.numero}
+              valideJusquau={devis.valide_jusquau}
+              acompteCentimes={devis.acompte_centimes}
+              message={devis.message}
+              lignes={lignes.map((ligne) => ({
+                libelle: ligne.libelle,
+                quantite: Number(ligne.quantite),
+                prixUnitaireCentimes: ligne.prix_unitaire_centimes,
+                tauxTva: Number(ligne.tva_taux),
+              }))}
+              maison={{
+                nom: maison.nom,
+                adresse: maison.adresse,
+                telephone: maison.telephone,
+                logoUrl: maison.logo_url,
+                mentionsLegales: devis.mentions ?? mentions ?? null,
+              }}
+              evenement={{
+                clientNom: reservation.client_nom,
+                couverts: reservation.couverts,
+                date: reservation.date_reservation,
+                heure: null,
+                espaceNom: null,
+              }}
+            />
+          </section>
+        )}
+      </div>
 
       <Link
         href={`/dashboard/${id}/reservations`}

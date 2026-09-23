@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { Compteur, TitreSection } from "@/components/dashboard/Compteur";
 import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
 import { ExperienceForm } from "@/components/experiences/ExperienceForm";
 import { exiger } from "@/lib/equipe/roles";
@@ -65,10 +66,21 @@ export default async function ExperiencesPage({
 
   const experiences = (experiencesResult.data ?? []) as Experience[];
   const places = (placesResult.data ?? []) as Place[];
+  const actives = experiences.filter((e) => e.actif).length;
+  const tenues = places.filter((p) => p.statut !== "annulee");
+  const inscrits = tenues.reduce((somme, p) => somme + p.places, 0);
+  // Seules les expériences payées d'avance encaissent quelque chose : une
+  // place « confirmée » payable sur place n'a encore rien rapporté.
+  const prepayees = new Set(
+    experiences.filter((e) => e.prepaiement).map((e) => e.id),
+  );
+  const encaisse = places
+    .filter((p) => p.statut === "confirmee" && prepayees.has(p.experience_id))
+    .reduce((somme, p) => somme + (p.montant_centimes ?? 0), 0);
   const maintenant = new Date();
 
   return (
-    <div className="flex flex-1 flex-col gap-8 px-6 py-8">
+    <div className="flex flex-1 flex-col gap-6 px-6 py-8">
       <PageHeader
         icon={dashboardIcons.menu}
         title={`Expériences — ${restaurant.nom}`}
@@ -80,170 +92,201 @@ export default async function ExperiencesPage({
         réservation, et le client paie sur ton compte Stripe — sans commission.
       </p>
 
-      {experiences.length > 0 && (
-        <ul className="flex flex-col gap-4">
-          {experiences.map((experience) => {
-            const siennes = places.filter(
-              (place) => place.experience_id === experience.id,
-            );
-            const seances = prochainesSeances({
-              experience,
-              depuis: aujourdhui,
-              jours: 28,
-              places: 1,
-              reservations: siennes,
-              fermetures,
-              maintenant,
-            });
+      <div className="grid grid-cols-3 gap-3 sm:gap-4">
+        <Compteur
+          valeur={actives}
+          libelle={`expérience${actives > 1 ? "s" : ""} en cours`}
+        />
+        <Compteur
+          valeur={inscrits}
+          libelle={`place${inscrits > 1 ? "s" : ""} réservée${inscrits > 1 ? "s" : ""}`}
+        />
+        <Compteur
+          valeur={formatEuros(encaisse)}
+          libelle="déjà payés pour les séances à venir"
+        />
+      </div>
 
-            return (
-              <li
-                key={experience.id}
-                className={`flex flex-col gap-4 rounded-2xl border bg-white p-5 shadow-sm ${
-                  experience.actif
-                    ? "border-zinc-200/70"
-                    : "border-zinc-200/70 opacity-70"
-                }`}
-              >
-                <div className="flex flex-wrap items-start justify-between gap-4">
-                  <div className="flex min-w-0 flex-col gap-1">
-                    <span className="font-medium text-zinc-900">
-                      {experience.nom}
-                      {!experience.actif && (
-                        <span className="ml-2 rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-500">
-                          arrêtée
+      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+        <section className="flex min-w-0 flex-col gap-3">
+          <TitreSection>Tes expériences</TitreSection>
+          {experiences.length === 0 && (
+            <p className="rounded-2xl border border-dashed border-zinc-300 bg-white px-6 py-12 text-center text-sm text-zinc-500">
+              Aucune expérience pour l&apos;instant. Crée la première à côté :
+              une dégustation, un atelier, une soirée à thème.
+            </p>
+          )}
+          {experiences.length > 0 && (
+            <ul className="flex flex-col gap-4">
+              {experiences.map((experience) => {
+                const siennes = places.filter(
+                  (place) => place.experience_id === experience.id,
+                );
+                const seances = prochainesSeances({
+                  experience,
+                  depuis: aujourdhui,
+                  jours: 28,
+                  places: 1,
+                  reservations: siennes,
+                  fermetures,
+                  maintenant,
+                });
+
+                return (
+                  <li
+                    key={experience.id}
+                    className={`flex flex-col gap-4 rounded-2xl border bg-white p-6 shadow-sm ${
+                      experience.actif
+                        ? "border-zinc-200/70"
+                        : "border-zinc-200/70 opacity-70"
+                    }`}
+                  >
+                    <div className="flex flex-wrap items-start justify-between gap-4">
+                      <div className="flex min-w-0 flex-col gap-1">
+                        <span className="font-serif text-2xl text-ink">
+                          {experience.nom}
+                          {!experience.actif && (
+                            <span className="ml-2 rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-500">
+                              arrêtée
+                            </span>
+                          )}
                         </span>
-                      )}
-                    </span>
-                    <span className="text-sm text-zinc-500">
-                      {formatEuros(experience.prix_centimes)} par personne ·{" "}
-                      {experience.places} places ·{" "}
-                      {formatHeure(experience.heure)}
-                      {experience.duree_minutes &&
-                        ` · ${experience.duree_minutes} min`}
-                    </span>
-                    <span className="text-sm text-zinc-500 first-letter:capitalize">
-                      {formatJours(experience.jours)}
-                      {!experience.prepaiement && " · paiement sur place"}
-                    </span>
-                  </div>
+                        <span className="text-sm text-zinc-500">
+                          {formatEuros(experience.prix_centimes)} par personne ·{" "}
+                          {experience.places} places ·{" "}
+                          {formatHeure(experience.heure)}
+                          {experience.duree_minutes &&
+                            ` · ${experience.duree_minutes} min`}
+                        </span>
+                        <span className="text-sm text-zinc-500 first-letter:capitalize">
+                          {formatJours(experience.jours)}
+                          {!experience.prepaiement && " · paiement sur place"}
+                        </span>
+                      </div>
 
-                  <form action={basculerExperience}>
-                    <input
-                      type="hidden"
-                      name="experience_id"
-                      value={experience.id}
-                    />
-                    <input type="hidden" name="restaurant_id" value={id} />
-                    <input
-                      type="hidden"
-                      name="actif"
-                      value={experience.actif ? "0" : "1"}
-                    />
-                    <button
-                      type="submit"
-                      className="rounded-md border border-zinc-200 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
-                    >
-                      {experience.actif ? "Arrêter" : "Relancer"}
-                    </button>
-                  </form>
-                </div>
-
-                {experience.description && (
-                  <p className="text-sm text-zinc-600">
-                    {experience.description}
-                  </p>
-                )}
-
-                {/* Les quatre prochaines séances : de quoi vérifier d'un coup
-                    d'œil que le rythme configuré est bien celui qu'on voulait. */}
-                {experience.actif && (
-                  <div className="flex flex-wrap gap-2">
-                    {seances.slice(0, 4).map((seance) => (
-                      <span
-                        key={seance.date}
-                        className={`rounded-md px-3 py-1.5 text-xs ${
-                          seance.raison
-                            ? "bg-zinc-100 text-zinc-500"
-                            : "bg-brand-orange-soft text-brand-navy"
-                        }`}
-                      >
-                        <span className="first-letter:capitalize">
-                          {formatJour(seance.date)}
-                        </span>{" "}
-                        — {seance.raison ?? `${seance.placesRestantes} places`}
-                      </span>
-                    ))}
-                    {seances.length === 0 && (
-                      <span className="text-sm text-zinc-400">
-                        Aucune séance dans les quatre prochaines semaines.
-                      </span>
-                    )}
-                  </div>
-                )}
-
-                {siennes.filter((place) => place.statut !== "annulee").length >
-                  0 && (
-                  <ul className="flex flex-col divide-y divide-zinc-100 border-t border-zinc-100 pt-2">
-                    {siennes
-                      .filter((place) => place.statut !== "annulee")
-                      .map((place) => (
-                        <li
-                          key={place.id}
-                          className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 py-2.5"
+                      <form action={basculerExperience}>
+                        <input
+                          type="hidden"
+                          name="experience_id"
+                          value={experience.id}
+                        />
+                        <input type="hidden" name="restaurant_id" value={id} />
+                        <input
+                          type="hidden"
+                          name="actif"
+                          value={experience.actif ? "0" : "1"}
+                        />
+                        <button
+                          type="submit"
+                          className="rounded-md border border-zinc-200 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
                         >
-                          <span className="flex flex-col">
-                            <span className="text-sm font-medium text-zinc-900">
-                              {place.client_nom}
-                              <span className="ml-2 font-normal text-zinc-500">
-                                {place.places} place
-                                {place.places > 1 ? "s" : ""}
-                              </span>
-                            </span>
-                            <span className="text-sm text-zinc-500 first-letter:capitalize">
-                              {formatJour(place.date_seance)} ·{" "}
-                              {place.statut === "confirmee"
-                                ? `${formatEuros(place.montant_centimes)} encaissés`
-                                : "en attente de paiement"}
-                            </span>
-                          </span>
-                          <span className="flex items-baseline gap-4 text-sm">
-                            <a
-                              href={`mailto:${place.client_email}`}
-                              className="text-brand-orange hover:underline"
-                            >
-                              {place.client_email}
-                            </a>
-                            <form action={annulerPlace}>
-                              <input
-                                type="hidden"
-                                name="reservation_id"
-                                value={place.id}
-                              />
-                              <input
-                                type="hidden"
-                                name="restaurant_id"
-                                value={id}
-                              />
-                              <button
-                                type="submit"
-                                className="font-medium text-zinc-500 hover:text-red-600"
-                              >
-                                Annuler
-                              </button>
-                            </form>
-                          </span>
-                        </li>
-                      ))}
-                  </ul>
-                )}
-              </li>
-            );
-          })}
-        </ul>
-      )}
+                          {experience.actif ? "Arrêter" : "Relancer"}
+                        </button>
+                      </form>
+                    </div>
 
-      <ExperienceForm restaurantId={id} />
+                    {experience.description && (
+                      <p className="text-sm text-zinc-600">
+                        {experience.description}
+                      </p>
+                    )}
+
+                    {/* Les quatre prochaines séances : de quoi vérifier d'un coup
+                    d'œil que le rythme configuré est bien celui qu'on voulait. */}
+                    {experience.actif && (
+                      <div className="flex flex-wrap gap-2">
+                        {seances.slice(0, 4).map((seance) => (
+                          <span
+                            key={seance.date}
+                            className={`rounded-md px-3 py-1.5 text-xs ${
+                              seance.raison
+                                ? "bg-zinc-100 text-zinc-500"
+                                : "bg-brand-orange-soft text-brand-navy"
+                            }`}
+                          >
+                            <span className="first-letter:capitalize">
+                              {formatJour(seance.date)}
+                            </span>{" "}
+                            —{" "}
+                            {seance.raison ??
+                              `${seance.placesRestantes} places`}
+                          </span>
+                        ))}
+                        {seances.length === 0 && (
+                          <span className="text-sm text-zinc-400">
+                            Aucune séance dans les quatre prochaines semaines.
+                          </span>
+                        )}
+                      </div>
+                    )}
+
+                    {siennes.filter((place) => place.statut !== "annulee")
+                      .length > 0 && (
+                      <ul className="flex flex-col divide-y divide-zinc-100 border-t border-zinc-100 pt-2">
+                        {siennes
+                          .filter((place) => place.statut !== "annulee")
+                          .map((place) => (
+                            <li
+                              key={place.id}
+                              className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 py-2.5"
+                            >
+                              <span className="flex flex-col">
+                                <span className="text-sm font-medium text-zinc-900">
+                                  {place.client_nom}
+                                  <span className="ml-2 font-normal text-zinc-500">
+                                    {place.places} place
+                                    {place.places > 1 ? "s" : ""}
+                                  </span>
+                                </span>
+                                <span className="text-sm text-zinc-500 first-letter:capitalize">
+                                  {formatJour(place.date_seance)} ·{" "}
+                                  {place.statut === "confirmee"
+                                    ? `${formatEuros(place.montant_centimes)} encaissés`
+                                    : "en attente de paiement"}
+                                </span>
+                              </span>
+                              <span className="flex items-baseline gap-4 text-sm">
+                                <a
+                                  href={`mailto:${place.client_email}`}
+                                  className="text-brand-orange hover:underline"
+                                >
+                                  {place.client_email}
+                                </a>
+                                <form action={annulerPlace}>
+                                  <input
+                                    type="hidden"
+                                    name="reservation_id"
+                                    value={place.id}
+                                  />
+                                  <input
+                                    type="hidden"
+                                    name="restaurant_id"
+                                    value={id}
+                                  />
+                                  <button
+                                    type="submit"
+                                    className="font-medium text-zinc-500 hover:text-red-600"
+                                  >
+                                    Annuler
+                                  </button>
+                                </form>
+                              </span>
+                            </li>
+                          ))}
+                      </ul>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
+
+        <section className="flex flex-col gap-3 xl:sticky xl:top-24">
+          <TitreSection>Nouvelle expérience</TitreSection>
+          <ExperienceForm restaurantId={id} />
+        </section>
+      </div>
 
       <Link
         href={`/dashboard/${id}/reservations`}

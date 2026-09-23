@@ -110,18 +110,16 @@ export default async function PanneauPage({
   ]);
 
   return (
-    <div className="flex flex-1 flex-col gap-6 px-6 py-8">
-      <div className="sans-impression flex flex-col gap-3">
+    <div className="grid flex-1 items-start gap-8 px-6 py-8 xl:grid-cols-[minmax(0,26rem)_minmax(0,1fr)] print:block">
+      <div className="sans-impression flex flex-col gap-3 xl:sticky xl:top-24">
         <Link
           href={`/dashboard/${id}/roue`}
           className="text-sm text-zinc-500 hover:text-zinc-900"
         >
           ← Roue de la fortune
         </Link>
-        <h1 className="text-xl font-semibold text-zinc-900">
-          Panneau à imprimer
-        </h1>
-        <p className="max-w-4xl text-sm text-zinc-500">
+        <h1 className="font-serif text-4xl text-ink">Panneau à imprimer</h1>
+        <p className="text-sm leading-relaxed text-zinc-500">
           Imprime en A5, ou en A4 puis plie en deux. Vérifie les deux QR avec
           ton propre téléphone avant d&apos;en faire cinquante : un carton
           imprimé de travers se paie en papier.
@@ -131,7 +129,7 @@ export default async function PanneauPage({
 
       {/* Le carton lui-même. Bordure et coins visibles à l'écran pour qu'on
           sache où couper ; à l'impression, seul le contenu sort. */}
-      <div className="panneau mx-auto flex w-full max-w-[148mm] flex-col items-center justify-between gap-8 rounded-2xl border border-zinc-200 bg-white px-8 py-10 print:rounded-none print:border-0 print:shadow-none">
+      <div className="panneau mx-auto flex w-full max-w-[148mm] flex-col items-center justify-between gap-8 rounded-2xl border border-zinc-200 bg-white px-8 py-10 shadow-[0_30px_80px_-40px_oklch(20%_0.02_60/45%)] print:rounded-none print:border-0 print:shadow-none">
         <p className="text-center font-serif text-3xl text-ink">
           {restaurant.nom}
         </p>

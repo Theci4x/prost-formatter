@@ -5,6 +5,7 @@ import { definirCouverture, removePhoto } from "./actions";
 import { AjoutPhoto } from "@/components/photos/AjoutPhoto";
 import { LegendePhoto } from "@/components/photos/LegendePhoto";
 import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
+import { Compteur } from "@/components/dashboard/Compteur";
 import type { Restaurant } from "@/types/restaurant";
 import type { RestaurantPhoto } from "@/types/photo";
 import { exiger } from "@/lib/equipe/roles";
@@ -41,7 +42,10 @@ export default async function PhotosPage({
       .order("created_at", { ascending: false }),
     // Pour dire de quelle salle est une photo : « La cave » sur la
     // vignette vaut mieux qu'une photo anonyme parmi d'autres.
-    supabase.from("restaurant_espaces").select("id, nom").eq("restaurant_id", id),
+    supabase
+      .from("restaurant_espaces")
+      .select("id, nom")
+      .eq("restaurant_id", id),
   ]);
   const nomEspace = new Map(
     ((espacesData ?? []) as { id: string; nom: string }[]).map((e) => [
@@ -69,10 +73,7 @@ export default async function PhotosPage({
 
       <div className="grid grid-cols-3 gap-3 sm:gap-4">
         <Compteur valeur={photos.length} libelle="photos" />
-        <Compteur
-          valeur={photos.length - sansLegende}
-          libelle="avec légende"
-        />
+        <Compteur valeur={photos.length - sansLegende} libelle="avec légende" />
         <Compteur
           valeur={sansLegende}
           libelle="sans légende"
@@ -117,8 +118,8 @@ export default async function PhotosPage({
           )}
           <p className="text-sm text-zinc-500">
             Elle ouvre votre site, en plein écran, avant qu&apos;on lise quoi
-            que ce soit : choisissez la salle pleine ou la façade plutôt que
-            le plat isolé. Pour en changer, « Mettre en couverture » sous
+            que ce soit : choisissez la salle pleine ou la façade plutôt que le
+            plat isolé. Pour en changer, « Mettre en couverture » sous
             n&apos;importe quelle photo.
           </p>
         </div>
@@ -214,11 +215,7 @@ export default async function PhotosPage({
                       )}
                       <form action={removePhoto}>
                         <input type="hidden" name="id" value={photo.id} />
-                        <input
-                          type="hidden"
-                          name="restaurant_id"
-                          value={id}
-                        />
+                        <input type="hidden" name="restaurant_id" value={id} />
                         <input
                           type="hidden"
                           name="storage_path"
@@ -240,33 +237,6 @@ export default async function PhotosPage({
           </ul>
         )}
       </section>
-    </div>
-  );
-}
-
-function Compteur({
-  valeur,
-  libelle,
-  accent = false,
-}: {
-  valeur: number;
-  libelle: string;
-  accent?: boolean;
-}) {
-  return (
-    <div
-      className={`flex flex-col gap-1 rounded-2xl border px-4 py-4 sm:px-6 sm:py-5 ${
-        accent
-          ? "border-brand-orange/60 bg-brand-orange-soft"
-          : "border-zinc-200/70 bg-white shadow-sm"
-      }`}
-    >
-      <span className="font-serif text-3xl leading-none text-ink sm:text-5xl">
-        {valeur}
-      </span>
-      <span className="text-xs leading-snug text-zinc-600 sm:text-sm">
-        {libelle}
-      </span>
     </div>
   );
 }

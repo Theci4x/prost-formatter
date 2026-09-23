@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { Compteur, TitreSection } from "@/components/dashboard/Compteur";
 import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
 import { LotForm, LotModifiable } from "@/components/roue/LotForm";
 import { ReglagesRoue } from "@/components/roue/ReglagesRoue";
@@ -92,6 +93,7 @@ export default async function RouePage({
     distribues[partie.lot_id] = (distribues[partie.lot_id] ?? 0) + 1;
   }
   const retires = parties.filter((p) => p.utilise_le !== null).length;
+  const gagnees = parties.filter((p) => p.gagnant).length;
 
   const slug = (restaurant as Restaurant & { slug_reservation?: string | null })
     .slug_reservation;
@@ -105,7 +107,7 @@ export default async function RouePage({
   const qr = adresseJeu ? await qrSvgDe(adresseJeu) : null;
 
   return (
-    <div className="flex flex-1 flex-col gap-10 px-6 py-8">
+    <div className="flex flex-1 flex-col gap-6 px-6 py-8">
       <PageHeader
         icon={dashboardIcons.roue}
         title={`Roue de la fortune — ${restaurant.nom}`}
@@ -118,6 +120,30 @@ export default async function RouePage({
         c&apos;est une raison de revenir autant qu&apos;un cadeau. Le totem des
         avis reste à part, il ne change pas.
       </p>
+
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+        <Compteur
+          valeur={roue.active ? "Allumée" : "Éteinte"}
+          libelle={
+            roue.active
+              ? "la roue tourne en salle"
+              : "rien ne change pour tes clients"
+          }
+          accent={!roue.active && prete}
+        />
+        <Compteur
+          valeur={parties.length}
+          libelle={`partie${parties.length > 1 ? "s" : ""} jouée${parties.length > 1 ? "s" : ""}`}
+        />
+        <Compteur
+          valeur={gagnees}
+          libelle={`lot${gagnees > 1 ? "s" : ""} gagné${gagnees > 1 ? "s" : ""}`}
+        />
+        <Compteur
+          valeur={retires}
+          libelle={`retiré${retires > 1 ? "s" : ""} en salle`}
+        />
+      </div>
 
       {/* Ce que le restaurateur doit savoir avant d'allumer. Il prend le
           risque sur sa fiche : il doit le lire, une fois, en clair. */}
@@ -136,195 +162,207 @@ export default async function RouePage({
         </p>
       </div>
 
-      <section className="flex flex-col gap-4">
-        <div className="flex flex-col gap-1">
-          <h2 className="text-base font-semibold text-zinc-900">Les cases</h2>
-          <p className="text-sm text-zinc-500">
-            Ce que la roue peut donner, et à quelle fréquence. Deux cases
-            minimum, dont une gagnante.
-          </p>
-        </div>
+      <div className="grid items-start gap-8 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
+        <section className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1">
+            <TitreSection>Les cases</TitreSection>
+            <p className="text-sm text-zinc-500">
+              Ce que la roue peut donner, et à quelle fréquence. Deux cases
+              minimum, dont une gagnante.
+            </p>
+          </div>
 
-        {lots.length > 0 && (
-          <ul className="flex flex-col gap-3">
-            {lots.map((lot) => {
-              const part = partEnPourcent(lot, lots, distribues);
-              const donnes = distribues[lot.id] ?? 0;
-              const epuise = lot.stock !== null && donnes >= lot.stock;
-              return (
-                <li
-                  key={lot.id}
-                  className="flex flex-wrap items-start justify-between gap-4 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm"
-                >
-                  <LotModifiable restaurantId={id} lot={lot}>
-                    <div className="flex min-w-0 flex-col gap-2">
-                      <span className="font-medium text-zinc-900">
-                        {lot.libelle}
-                      </span>
-                      {lot.precision_interne && (
-                        <span className="text-sm text-zinc-500">
-                          {lot.precision_interne}
+          {lots.length > 0 && (
+            <ul className="grid items-start gap-3 2xl:grid-cols-2">
+              {lots.map((lot) => {
+                const part = partEnPourcent(lot, lots, distribues);
+                const donnes = distribues[lot.id] ?? 0;
+                const epuise = lot.stock !== null && donnes >= lot.stock;
+                return (
+                  <li
+                    key={lot.id}
+                    className="flex flex-wrap items-start justify-between gap-4 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm"
+                  >
+                    <LotModifiable restaurantId={id} lot={lot}>
+                      <div className="flex min-w-0 flex-col gap-2">
+                        <span className="font-medium text-zinc-900">
+                          {lot.libelle}
                         </span>
-                      )}
-                      <div className="flex flex-wrap gap-2">
-                        {lot.gagnant ? (
-                          <Puce ton="chaud">Gagnante</Puce>
-                        ) : (
-                          <Puce>Perdante</Puce>
+                        {lot.precision_interne && (
+                          <span className="text-sm text-zinc-500">
+                            {lot.precision_interne}
+                          </span>
                         )}
-                        {epuise ? (
-                          <Puce ton="eteint">Stock épuisé</Puce>
-                        ) : lot.poids === 0 ? (
-                          <Puce ton="eteint">Retirée du tirage</Puce>
-                        ) : (
-                          <Puce>
-                            {part.toFixed(part < 10 ? 1 : 0).replace(".", ",")}{" "}
-                            % des parties
-                          </Puce>
-                        )}
-                        {lot.stock !== null && (
-                          <Puce>
-                            {donnes} sur {lot.stock} distribué
-                            {donnes > 1 ? "s" : ""}
-                          </Puce>
-                        )}
+                        <div className="flex flex-wrap gap-2">
+                          {lot.gagnant ? (
+                            <Puce ton="chaud">Gagnante</Puce>
+                          ) : (
+                            <Puce>Perdante</Puce>
+                          )}
+                          {epuise ? (
+                            <Puce ton="eteint">Stock épuisé</Puce>
+                          ) : lot.poids === 0 ? (
+                            <Puce ton="eteint">Retirée du tirage</Puce>
+                          ) : (
+                            <Puce>
+                              {part
+                                .toFixed(part < 10 ? 1 : 0)
+                                .replace(".", ",")}{" "}
+                              % des parties
+                            </Puce>
+                          )}
+                          {lot.stock !== null && (
+                            <Puce>
+                              {donnes} sur {lot.stock} distribué
+                              {donnes > 1 ? "s" : ""}
+                            </Puce>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  </LotModifiable>
+                    </LotModifiable>
 
-                  <form action={supprimerLot}>
-                    <input type="hidden" name="id" value={lot.id} />
-                    <input type="hidden" name="restaurant_id" value={id} />
-                    <button
-                      type="submit"
-                      className="text-sm font-medium text-red-600 hover:text-red-800"
-                    >
-                      Supprimer
-                    </button>
-                  </form>
-                </li>
-              );
-            })}
-          </ul>
-        )}
+                    <form action={supprimerLot}>
+                      <input type="hidden" name="id" value={lot.id} />
+                      <input type="hidden" name="restaurant_id" value={id} />
+                      <button
+                        type="submit"
+                        className="text-sm font-medium text-red-600 hover:text-red-800"
+                      >
+                        Supprimer
+                      </button>
+                    </form>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
 
-        {lots.length < LOTS_MAX ? (
-          <LotForm restaurantId={id} />
-        ) : (
-          <p className="text-sm text-zinc-500">
-            Douze cases, c&apos;est le maximum : au-delà, la roue devient
-            illisible sur un téléphone.
-          </p>
-        )}
-      </section>
-
-      <section className="flex flex-col gap-4">
-        <div className="flex flex-col gap-1">
-          <h2 className="text-base font-semibold text-zinc-900">
-            Les réglages
-          </h2>
-          <p className="text-sm text-zinc-500">
-            Ce que le client lit, et combien de temps son lot vaut.
-          </p>
-        </div>
-        <ReglagesRoue restaurantId={id} roue={roue} />
-      </section>
-
-      <section className="flex flex-col gap-4">
-        <div className="flex flex-col gap-1">
-          <h2 className="text-base font-semibold text-zinc-900">
-            Mise en service
-          </h2>
-          <p className="text-sm text-zinc-500">
-            Le seul réglage que tes clients voient. Tant qu&apos;il est éteint,
-            le totem se comporte comme aujourd&apos;hui.
-          </p>
-        </div>
-
-        <div className="flex flex-col gap-3 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm">
-          {roue.active ? (
-            <>
-              <p className="text-sm font-medium text-emerald-700">
-                La roue tourne.
-              </p>
-              {adresseJeu && (
-                <>
-                  <p className="text-sm text-zinc-500">
-                    L&apos;adresse à mettre sur le panneau du jeu. Ce n&apos;est
-                    pas celle du totem des avis.
-                  </p>
-                  <a
-                    href={`/jeu/${slug}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-fit break-all font-medium text-brand-orange hover:underline"
-                  >
-                    {adresseJeu}
-                  </a>
-                  {/* Le QR en vectoriel : un panneau s'imprime, et un QR en
-                      pixels grossis ne se scanne plus. */}
-                  {qr && (
-                    <div
-                      className="w-40 rounded-xl border border-zinc-200 bg-white p-2 [&>svg]:h-auto [&>svg]:w-full"
-                      dangerouslySetInnerHTML={{ __html: qr }}
-                    />
-                  )}
-                  <Link
-                    href={`/dashboard/${id}/roue/panneau`}
-                    className="w-fit rounded-md border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy active:border-brand-navy"
-                  >
-                    Le panneau à imprimer, avec les avis
-                  </Link>
-                </>
-              )}
-              <form action={basculerRoue} className="pt-1">
-                <input type="hidden" name="restaurant_id" value={id} />
-                <input type="hidden" name="active" value="0" />
-                <button
-                  type="submit"
-                  className="text-sm font-medium text-zinc-500 hover:text-red-600"
-                >
-                  Éteindre la roue
-                </button>
-              </form>
-            </>
-          ) : prete ? (
-            <form action={basculerRoue} className="flex flex-col gap-3">
-              <input type="hidden" name="restaurant_id" value={id} />
-              <input type="hidden" name="active" value="1" />
-              <p className="text-sm text-zinc-500">
-                Tes cases sont prêtes. En allumant, la roue apparaît sur la page
-                du totem.
-              </p>
-              <button
-                type="submit"
-                className="w-fit rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover"
-              >
-                Allumer la roue
-              </button>
-            </form>
+          {lots.length < LOTS_MAX ? (
+            <LotForm restaurantId={id} />
           ) : (
             <p className="text-sm text-zinc-500">
-              Il faut au moins deux cases, dont une gagnante, pour que la roue
-              ait un sens. Ajoute-les plus haut.
+              Douze cases, c&apos;est le maximum : au-delà, la roue devient
+              illisible sur un téléphone.
             </p>
           )}
+        </section>
 
-          {parties.length > 0 && (
-            <p className="border-t border-zinc-100 pt-3 text-sm text-zinc-500">
-              {parties.length} partie{parties.length > 1 ? "s" : ""} jouée
-              {parties.length > 1 ? "s" : ""}, {retires} lot
-              {retires > 1 ? "s" : ""} retiré{retires > 1 ? "s" : ""} en salle.{" "}
-              <Link
-                href={`/dashboard/${id}/roue/retirer`}
-                className="font-medium text-brand-orange hover:underline"
-              >
-                Retirer un lot
-              </Link>
-            </p>
-          )}
+        <div className="flex flex-col gap-8">
+          <section className="flex flex-col gap-4">
+            <div className="flex flex-col gap-1">
+              <TitreSection>Mise en service</TitreSection>
+              <p className="text-sm text-zinc-500">
+                Le seul réglage que tes clients voient. Tant qu&apos;il est
+                éteint, le totem se comporte comme aujourd&apos;hui.
+              </p>
+            </div>
+
+            <div
+              className={`flex flex-col gap-3 rounded-2xl border p-6 shadow-sm ${
+                roue.active
+                  ? "border-emerald-200 bg-emerald-50/60"
+                  : "border-zinc-200/70 bg-white"
+              }`}
+            >
+              {roue.active ? (
+                <>
+                  <p className="flex items-center gap-3 font-serif text-3xl text-ink">
+                    <span
+                      aria-hidden="true"
+                      className="h-3 w-3 rounded-full bg-emerald-500"
+                    />
+                    La roue tourne
+                  </p>
+                  {adresseJeu && (
+                    <>
+                      <p className="text-sm text-zinc-500">
+                        L&apos;adresse à mettre sur le panneau du jeu. Ce
+                        n&apos;est pas celle du totem des avis.
+                      </p>
+                      <a
+                        href={`/jeu/${slug}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-fit break-all font-medium text-brand-orange hover:underline"
+                      >
+                        {adresseJeu}
+                      </a>
+                      {/* Le QR en vectoriel : un panneau s'imprime, et un QR en
+                      pixels grossis ne se scanne plus. */}
+                      {qr && (
+                        <div
+                          className="w-44 rounded-xl border border-zinc-200 bg-white p-2 [&>svg]:h-auto [&>svg]:w-full"
+                          dangerouslySetInnerHTML={{ __html: qr }}
+                        />
+                      )}
+                      <Link
+                        href={`/dashboard/${id}/roue/panneau`}
+                        className="w-fit rounded-md border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy active:border-brand-navy"
+                      >
+                        Le panneau à imprimer, avec les avis
+                      </Link>
+                    </>
+                  )}
+                  <form action={basculerRoue} className="pt-1">
+                    <input type="hidden" name="restaurant_id" value={id} />
+                    <input type="hidden" name="active" value="0" />
+                    <button
+                      type="submit"
+                      className="text-sm font-medium text-zinc-500 hover:text-red-600"
+                    >
+                      Éteindre la roue
+                    </button>
+                  </form>
+                </>
+              ) : prete ? (
+                <form action={basculerRoue} className="flex flex-col gap-3">
+                  <input type="hidden" name="restaurant_id" value={id} />
+                  <input type="hidden" name="active" value="1" />
+                  <p className="text-sm text-zinc-500">
+                    Tes cases sont prêtes. En allumant, la roue apparaît sur la
+                    page du totem.
+                  </p>
+                  <button
+                    type="submit"
+                    className="w-fit rounded-lg bg-brand-navy px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover"
+                  >
+                    Allumer la roue
+                  </button>
+                </form>
+              ) : (
+                <p className="text-sm text-zinc-500">
+                  Il faut au moins deux cases, dont une gagnante, pour que la
+                  roue ait un sens. Ajoute-les plus haut.
+                </p>
+              )}
+
+              {parties.length > 0 && (
+                <p className="border-t border-zinc-100 pt-3 text-sm text-zinc-500">
+                  {parties.length} partie{parties.length > 1 ? "s" : ""} jouée
+                  {parties.length > 1 ? "s" : ""}, {retires} lot
+                  {retires > 1 ? "s" : ""} retiré{retires > 1 ? "s" : ""} en
+                  salle.{" "}
+                  <Link
+                    href={`/dashboard/${id}/roue/retirer`}
+                    className="font-medium text-brand-orange hover:underline"
+                  >
+                    Retirer un lot
+                  </Link>
+                </p>
+              )}
+            </div>
+          </section>
+          <section className="flex flex-col gap-4">
+            <div className="flex flex-col gap-1">
+              <TitreSection>Les réglages</TitreSection>
+              <p className="text-sm text-zinc-500">
+                Ce que le client lit, et combien de temps son lot vaut.
+              </p>
+            </div>
+            <ReglagesRoue restaurantId={id} roue={roue} />
+          </section>
         </div>
-      </section>
+      </div>
     </div>
   );
 }

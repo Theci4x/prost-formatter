@@ -33,7 +33,7 @@ export function FormulairePost({
   return (
     <form
       action={action}
-      className="flex flex-col gap-4 rounded-2xl border border-zinc-200 bg-white p-5"
+      className="flex flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm"
     >
       <input type="hidden" name="restaurant_id" value={restaurantId} />
       {/* La clé remonte les champs à chaque enregistrement, et les vide

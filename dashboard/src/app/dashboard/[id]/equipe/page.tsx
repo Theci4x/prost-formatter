@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
+import { Compteur } from "@/components/dashboard/Compteur";
 import { MembreForm } from "@/components/equipe/MembreForm";
 import {
   DESCRIPTIONS_ROLE,
@@ -265,32 +266,5 @@ function Initiale({
     >
       {texte.trim().charAt(0).toUpperCase() || "?"}
     </span>
-  );
-}
-
-function Compteur({
-  valeur,
-  libelle,
-  accent = false,
-}: {
-  valeur: number;
-  libelle: string;
-  accent?: boolean;
-}) {
-  return (
-    <div
-      className={`flex flex-col gap-1 rounded-2xl border px-4 py-4 sm:px-6 sm:py-5 ${
-        accent
-          ? "border-brand-orange/60 bg-brand-orange-soft"
-          : "border-zinc-200/70 bg-white shadow-sm"
-      }`}
-    >
-      <span className="font-serif text-3xl leading-none text-ink sm:text-5xl">
-        {valeur}
-      </span>
-      <span className="text-xs leading-snug text-zinc-600 sm:text-sm">
-        {libelle}
-      </span>
-    </div>
   );
 }

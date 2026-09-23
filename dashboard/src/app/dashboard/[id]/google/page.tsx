@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { publicationsGoogleOuvertes } from "@/lib/google/business";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getValidAccessToken } from "@/lib/google/connection";
@@ -90,40 +92,75 @@ export default async function GoogleConnectionPage({
       />
 
       {connected && (
-        <p className="rounded-md bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+        <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
           Compte Google connecté avec succès.
         </p>
       )}
       {error && (
-        <p className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
+        <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           La connexion à Google a échoué. Réessaie.
         </p>
       )}
 
       {!connection ? (
-        <div className="flex flex-col gap-4 rounded-md border border-zinc-200 p-4">
-          <p className="text-sm text-zinc-500">
-            Aucun compte Google connecté pour ce restaurant.
+        <div className="flex flex-col items-start gap-5 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm">
+          <div className="flex items-center gap-3">
+            <span
+              aria-hidden="true"
+              className="h-3 w-3 rounded-full bg-zinc-300"
+            />
+            <span className="font-serif text-3xl text-ink">
+              Aucun compte relié
+            </span>
+          </div>
+          <p className="text-sm leading-relaxed text-zinc-600">
+            Relie le compte Google qui gère ta fiche établissement : Klarr y
+            lira ta note, tes avis, tes horaires et les recherches qui
+            t&apos;amènent des clients.
           </p>
           <a
             href={`/api/google/authorize?restaurant_id=${id}`}
-            className="w-fit rounded-md bg-brand-navy px-4 py-2 text-center text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover"
+            className="w-fit rounded-lg bg-brand-navy px-5 py-2.5 text-center text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover"
           >
             Connecter mon compte Google Business Profile
           </a>
         </div>
       ) : connection.location_name ? (
-        <div className="flex flex-col gap-4 rounded-md border border-zinc-200 p-4">
-          <p className="text-sm text-zinc-700">
-            Connecté en tant que{" "}
-            <span className="font-medium">{connection.google_email}</span>
-          </p>
-          <div className="rounded-md border border-zinc-100 bg-zinc-50 px-3 py-2">
-            <p className="text-sm font-medium text-zinc-900">
-              {connection.location_title}
-            </p>
+        <div className="flex flex-col gap-5 rounded-2xl border border-emerald-200 bg-emerald-50/60 p-6 shadow-sm">
+          <div className="flex items-center gap-3">
+            <span
+              aria-hidden="true"
+              className="h-3 w-3 rounded-full bg-emerald-500"
+            />
+            <span className="font-serif text-3xl text-ink">Fiche reliée</span>
           </div>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-1 rounded-xl bg-white px-4 py-3">
+            <span className="text-lg font-semibold text-ink">
+              {connection.location_title}
+            </span>
+            <span className="text-sm text-zinc-500">
+              via {connection.google_email}
+            </span>
+          </div>
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+            <Link
+              href={`/dashboard/${id}/avis`}
+              className="rounded-lg bg-brand-navy px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover"
+            >
+              Voir mes avis
+            </Link>
+            {/* Tant que Google n'a pas ouvert l'accès, l'écran répond 404 :
+                pas de lien vers une page absente. */}
+            {publicationsGoogleOuvertes() && (
+              <Link
+                href={`/dashboard/${id}/posts`}
+                className="text-sm font-semibold text-brand-orange-dark hover:underline"
+              >
+                Publications Google
+              </Link>
+            )}
+          </div>
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-emerald-200/70 pt-4">
             <form action={selectGoogleLocation}>
               <input type="hidden" name="restaurant_id" value={id} />
               <input type="hidden" name="location_name" value="" />
@@ -147,21 +184,26 @@ export default async function GoogleConnectionPage({
           </div>
         </div>
       ) : (
-        <div className="flex flex-col gap-4 rounded-md border border-zinc-200 p-4">
-          <p className="text-sm text-zinc-700">
-            Connecté en tant que{" "}
-            <span className="font-medium">{connection.google_email}</span>
-          </p>
-          <p className="text-sm text-zinc-500">
-            Choisis la fiche établissement correspondant à ce restaurant :
-          </p>
+        <div className="flex flex-col gap-5 rounded-2xl border border-brand-orange/50 bg-white p-6 shadow-sm">
+          <div className="flex flex-col gap-1">
+            <span className="font-serif text-3xl text-ink">
+              Quelle fiche est la tienne ?
+            </span>
+            <span className="text-sm text-zinc-500">
+              Connecté en tant que{" "}
+              <span className="font-medium text-ink">
+                {connection.google_email}
+              </span>
+              . Choisis la fiche établissement de ce restaurant :
+            </span>
+          </div>
 
           {locationsError && (
             <p className="text-sm text-red-600">{locationsError}</p>
           )}
 
           {locations.length > 0 && (
-            <ul className="flex flex-col gap-2">
+            <ul className="grid gap-3 md:grid-cols-2 2xl:grid-cols-3">
               {locations.map((location) => (
                 <li key={location.name}>
                   <form action={selectGoogleLocation}>
@@ -183,9 +225,9 @@ export default async function GoogleConnectionPage({
                     />
                     <button
                       type="submit"
-                      className="flex w-full flex-col items-start gap-0.5 rounded-md border border-zinc-200 px-3 py-2 text-left hover:border-zinc-400"
+                      className="flex h-full w-full flex-col items-start gap-1 rounded-xl border border-zinc-200 px-4 py-3 text-left transition-colors hover:border-brand-orange hover:bg-brand-orange-soft"
                     >
-                      <span className="text-sm font-medium text-zinc-900">
+                      <span className="text-[15px] font-semibold text-ink">
                         {location.title}
                       </span>
                       {location.address && (

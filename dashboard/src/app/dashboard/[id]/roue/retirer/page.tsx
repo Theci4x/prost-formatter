@@ -31,19 +31,45 @@ export default async function RetirerPage({
   if (!restaurant) notFound();
 
   return (
-    <div className="flex w-full flex-1 flex-col gap-8 px-6 py-8">
+    <div className="flex w-full flex-1 flex-col gap-6 px-6 py-8">
       <PageHeader
         icon={dashboardIcons.roue}
         title="Retirer un lot"
         backHref={`/dashboard/${id}/service`}
       />
 
-      <p className="text-sm text-zinc-500">
-        Le client montre son e-mail ou son écran. Saisis le code, vérifie ce
-        qu&apos;il a gagné, puis confirme une fois le lot remis.
-      </p>
+      <div className="grid items-start gap-6 xl:grid-cols-[22rem_minmax(0,1fr)]">
+        {/* Les trois gestes au comptoir, dans l'ordre : on les lit une fois,
+            puis on n'a plus besoin de les lire. */}
+        <ol className="flex flex-col gap-3">
+          {[
+            ["Le client montre son code", "Dans son e-mail, ou sur son écran."],
+            [
+              "Tu vérifies le lot",
+              "Ce qu'il a gagné et jusqu'à quand il vaut.",
+            ],
+            [
+              "Tu confirmes la remise",
+              "Une fois le lot donné — le code ne resservira pas.",
+            ],
+          ].map(([titre, texte], i) => (
+            <li
+              key={titre}
+              className="flex items-start gap-4 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm"
+            >
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-navy text-sm font-bold text-white">
+                {i + 1}
+              </span>
+              <span className="flex flex-col gap-0.5">
+                <span className="font-semibold text-ink">{titre}</span>
+                <span className="text-sm text-zinc-500">{texte}</span>
+              </span>
+            </li>
+          ))}
+        </ol>
 
-      <RetirerLot restaurantId={id} aujourdhui={aujourdhui()} />
+        <RetirerLot restaurantId={id} aujourdhui={aujourdhui()} />
+      </div>
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { Compteur, TitreSection } from "@/components/dashboard/Compteur";
 import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
 import { exiger } from "@/lib/equipe/roles";
 import { exigerModule } from "@/lib/abonnement/acces";
@@ -71,30 +72,39 @@ export default async function CampagnePage({
         backHref={`/dashboard/${id}/campagnes`}
       />
 
-      <div className="flex flex-col gap-1">
-        <span className="text-sm text-zinc-600">
-          {LIBELLE_STATUT[campagne.statut]} ·{" "}
-          {LIBELLE_SEGMENT[campagne.segment]}
-        </span>
-        {campagne.statut === "envoyee" && (
-          <span className="text-sm text-zinc-500">
-            {envois.envoyes} envoi{envois.envoyes > 1 ? "s" : ""} le{" "}
-            {jourLisible(campagne.envoyee_le)}
-            {envois.echoues > 0 && ` · ${envois.echoues} en échec`}
-          </span>
-        )}
-        {campagne.statut === "en_cours" && (
-          <span className="text-sm text-zinc-500">
-            {envois.envoyes} parti{envois.envoyes > 1 ? "s" : ""},{" "}
-            {envois.restants} en attente — la suite au prochain passage.
-          </span>
-        )}
-        {campagne.derniere_erreur && (
-          <span className="text-sm text-red-700">
-            {campagne.derniere_erreur}
-          </span>
-        )}
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
+        <Compteur
+          valeur={LIBELLE_STATUT[campagne.statut]}
+          libelle={
+            campagne.statut === "programmee"
+              ? `part le ${jourLisible(campagne.envoyer_le)}`
+              : campagne.statut === "envoyee"
+                ? `le ${jourLisible(campagne.envoyee_le)}`
+                : "état de la campagne"
+          }
+          accent={campagne.statut === "echec"}
+        />
+        <Compteur
+          valeur={compteurs[campagne.segment]}
+          libelle={`destinataire${compteurs[campagne.segment] > 1 ? "s" : ""} · ${LIBELLE_SEGMENT[campagne.segment]}`}
+        />
+        <Compteur
+          valeur={envois.envoyes}
+          libelle={
+            campagne.statut === "en_cours"
+              ? `partis, ${envois.restants} en attente — la suite au prochain passage`
+              : envois.echoues > 0
+                ? `envoyés · ${envois.echoues} en échec`
+                : `e-mail${envois.envoyes > 1 ? "s" : ""} envoyé${envois.envoyes > 1 ? "s" : ""}`
+          }
+        />
       </div>
+
+      {campagne.derniere_erreur && (
+        <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {campagne.derniere_erreur}
+        </p>
+      )}
 
       <FormulaireCampagne
         restaurantId={id}
@@ -116,64 +126,80 @@ export default async function CampagnePage({
           {/* L'essai avant la programmation, dans cet ordre : personne
               n'envoie à cinq cents personnes un message qu'il n'a pas vu
               arriver dans une boîte. */}
-          <EssaiCampagne restaurantId={id} campagneId={campagne.id} />
+          <div className="grid items-start gap-6 xl:grid-cols-2">
+            <section className="flex flex-col gap-3">
+              <TitreSection>1. S&apos;envoyer un essai</TitreSection>
+              <EssaiCampagne restaurantId={id} campagneId={campagne.id} />
+            </section>
 
-          <div className="flex flex-col gap-3 rounded-2xl border border-zinc-200 bg-white p-5">
-            <span className="text-sm font-medium text-zinc-700">
-              {campagne.statut === "programmee"
-                ? `Programmée pour le ${jourLisible(campagne.envoyer_le)}`
-                : "Programmer l'envoi"}
-            </span>
-            <form
-              action={programmerCampagne}
-              className="flex flex-wrap items-end gap-3"
-            >
-              <input type="hidden" name="restaurant_id" value={id} />
-              <input type="hidden" name="campagne_id" value={campagne.id} />
-              <label className="flex flex-col gap-1 text-sm text-zinc-600">
-                Le jour
-                <input
-                  type="date"
-                  name="envoyer_le"
-                  min={aujourdhui}
-                  defaultValue={campagne.envoyer_le ?? aujourdhui}
-                  className="rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-brand-navy"
-                />
-              </label>
-              <button
-                type="submit"
-                className="rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover"
-              >
-                {campagne.statut === "programmee"
-                  ? "Changer la date"
-                  : "Programmer"}
-              </button>
-            </form>
-
-            <div className="flex flex-wrap items-center gap-4">
-              {campagne.statut === "programmee" && (
-                <form action={deprogrammerCampagne}>
+            <section className="flex flex-col gap-3">
+              <TitreSection>2. Programmer l&apos;envoi</TitreSection>
+              <div className="flex flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm">
+                <span className="text-sm font-semibold text-ink">
+                  {campagne.statut === "programmee"
+                    ? `Programmée pour le ${jourLisible(campagne.envoyer_le)}`
+                    : "Choisis le jour : elle part le matin venu."}
+                </span>
+                <form
+                  action={programmerCampagne}
+                  className="flex flex-wrap items-end gap-3"
+                >
                   <input type="hidden" name="restaurant_id" value={id} />
                   <input type="hidden" name="campagne_id" value={campagne.id} />
+                  <label className="flex flex-col gap-1 text-sm text-zinc-600">
+                    Le jour
+                    <input
+                      type="date"
+                      name="envoyer_le"
+                      min={aujourdhui}
+                      defaultValue={campagne.envoyer_le ?? aujourdhui}
+                      className="rounded-lg border border-zinc-200 bg-zinc-50 px-3.5 py-2.5 text-sm outline-none focus:border-brand-navy focus:bg-white"
+                    />
+                  </label>
                   <button
                     type="submit"
-                    className="text-xs font-medium text-zinc-500 underline underline-offset-2 hover:text-zinc-800"
+                    className="rounded-lg bg-brand-navy px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover"
                   >
-                    Annuler la programmation
+                    {campagne.statut === "programmee"
+                      ? "Changer la date"
+                      : "Programmer"}
                   </button>
                 </form>
-              )}
-              <form action={supprimerCampagne}>
-                <input type="hidden" name="restaurant_id" value={id} />
-                <input type="hidden" name="campagne_id" value={campagne.id} />
-                <button
-                  type="submit"
-                  className="text-xs font-medium text-zinc-500 underline underline-offset-2 hover:text-red-600"
-                >
-                  Supprimer
-                </button>
-              </form>
-            </div>
+
+                <div className="flex flex-wrap items-center gap-4">
+                  {campagne.statut === "programmee" && (
+                    <form action={deprogrammerCampagne}>
+                      <input type="hidden" name="restaurant_id" value={id} />
+                      <input
+                        type="hidden"
+                        name="campagne_id"
+                        value={campagne.id}
+                      />
+                      <button
+                        type="submit"
+                        className="text-xs font-medium text-zinc-500 underline underline-offset-2 hover:text-zinc-800"
+                      >
+                        Annuler la programmation
+                      </button>
+                    </form>
+                  )}
+                  <form action={supprimerCampagne}>
+                    <input type="hidden" name="restaurant_id" value={id} />
+                    <input
+                      type="hidden"
+                      name="campagne_id"
+                      value={campagne.id}
+                    />
+                    <button
+                      type="submit"
+                      className="text-xs font-medium text-zinc-500 underline underline-offset-2 hover:text-red-600"
+                    >
+                      Supprimer
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </section>
           </div>
         </>
       )}
