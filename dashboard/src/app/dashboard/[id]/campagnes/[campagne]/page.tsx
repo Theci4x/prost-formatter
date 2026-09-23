@@ -40,7 +40,7 @@ export default async function CampagnePage({
   if (!campagnesOuvertes()) notFound();
 
   const supabase = await createClient();
-  const [{ data }, compteurs, envois] = await Promise.all([
+  const [{ data }, compteurs, envois, { data: maison }] = await Promise.all([
     supabase
       .from("restaurant_campagnes")
       .select("*")
@@ -49,6 +49,8 @@ export default async function CampagnePage({
       .maybeSingle(),
     compterLesSegments(supabase, id),
     compterLesEnvois(supabase, campagneId),
+    // Le nom qui signe le message, pour l'aperçu.
+    supabase.from("restaurants").select("nom").eq("id", id).maybeSingle(),
   ]);
 
   const campagne = data as Campagne | null;
@@ -99,6 +101,7 @@ export default async function CampagnePage({
         campagneId={campagne.id}
         modifiable={modifiable}
         compteurs={compteurs}
+        maison={(maison as { nom: string } | null)?.nom}
         valeurs={{
           objet: campagne.objet,
           texte: campagne.texte,
