@@ -193,14 +193,14 @@ export function ActiverNotifications({
     return (
       <div className="flex flex-col gap-3 rounded-2xl border border-line bg-brand-orange-soft p-5">
         <p className="font-semibold text-ink">
-          Sur iPhone, ajoutez d&apos;abord Klarr à votre écran d&apos;accueil.
+          Sur iPhone, ajoute d&apos;abord Klarr à ton écran d&apos;accueil.
         </p>
         <p className="text-sm leading-relaxed text-ink-soft">
           Apple n&apos;autorise les notifications que pour les applications
-          installées. Dans Safari, touchez le bouton{" "}
+          installées. Dans Safari, touche le bouton{" "}
           <span aria-hidden="true">⎋</span> Partager en bas de l&apos;écran,
-          puis <strong>Sur l&apos;écran d&apos;accueil</strong>. Rouvrez Klarr
-          depuis l&apos;icône et revenez ici : le bouton d&apos;activation
+          puis <strong>Sur l&apos;écran d&apos;accueil</strong>. Rouvre Klarr
+          depuis l&apos;icône et reviens ici : le bouton d&apos;activation
           apparaîtra.
         </p>
       </div>
@@ -210,7 +210,7 @@ export function ActiverNotifications({
   if (etat === "impossible") {
     return (
       <p className="text-sm text-ink-soft">
-        Ce navigateur ne sait pas recevoir de notifications. Essayez depuis
+        Ce navigateur ne sait pas recevoir de notifications. Essaie depuis
         Chrome, Safari ou Firefox à jour.
       </p>
     );
@@ -224,8 +224,8 @@ export function ActiverNotifications({
         </p>
         <p className="text-sm leading-relaxed text-ink-soft">
           Le blocage vient du navigateur, pas de Klarr : nous ne pouvons plus le
-          demander nous-mêmes. Autorisez les notifications pour klarr.net dans
-          les réglages de votre navigateur, puis rechargez cette page.
+          demander nous-mêmes. Autorise les notifications pour klarr.net dans
+          les réglages de ton navigateur, puis recharge cette page.
         </p>
       </div>
     );
@@ -285,8 +285,8 @@ export function ActiverNotifications({
 
       {teste && (
         <p className="text-sm text-emerald-700">
-          Envoyée. Elle doit arriver dans les secondes qui viennent —
-          verrouillez l&apos;écran pour la voir comme un vrai soir de service.
+          Envoyée. Elle doit arriver dans les secondes qui viennent — verrouille
+          l&apos;écran pour la voir comme un vrai soir de service.
         </p>
       )}
       {erreur && <p className="text-sm text-red-600">{erreur}</p>}

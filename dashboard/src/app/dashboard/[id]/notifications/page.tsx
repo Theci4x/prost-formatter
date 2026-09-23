@@ -61,7 +61,7 @@ export default async function NotificationsPage({
   const appareils = (data ?? []) as Appareil[];
 
   return (
-    <div className="flex flex-1 flex-col gap-6 px-6 py-8">
+    <div className="flex flex-1 flex-col gap-8 px-6 py-8">
       <PageHeader
         icon={<Cloche />}
         title={`Notifications — ${(restaurant as { nom: string }).nom}`}
@@ -69,27 +69,29 @@ export default async function NotificationsPage({
 
       <p className="max-w-4xl text-sm leading-relaxed text-zinc-600">
         Une demande de réservation arrive à 19 h 40, en plein coup de feu.
-        L&apos;e-mail attendra la fermeture ; la notification, non. Activez-la
-        sur chaque appareil qui doit sonner — votre téléphone, celui de votre
+        L&apos;e-mail attendra la fermeture ; la notification, non. Active-la
+        sur chaque appareil qui doit sonner — ton téléphone, celui de ton
         gérant.
       </p>
 
-      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+      <div className="grid items-start gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <div className="flex flex-col gap-6">
           <section className="flex flex-col gap-3">
             <TitreSection>Sur cet appareil</TitreSection>
-            <ActiverNotifications restaurantId={id} />
+            <div className="rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm">
+              <ActiverNotifications restaurantId={id} />
+            </div>
           </section>
 
           <section className="flex flex-col gap-3">
             <TitreSection
               aside={`${appareils.length} appareil${appareils.length > 1 ? "s" : ""}`}
             >
-              Vos appareils
+              Tes appareils
             </TitreSection>
             {appareils.length === 0 ? (
               <p className="rounded-2xl border border-dashed border-zinc-300 bg-white px-6 py-8 text-sm text-zinc-500">
-                Aucun appareil pour l&apos;instant : activez les notifications
+                Aucun appareil pour l&apos;instant : active les notifications
                 ci-dessus, depuis le téléphone qui doit sonner.
               </p>
             ) : (
@@ -126,7 +128,7 @@ export default async function NotificationsPage({
         </div>
 
         <section className="flex flex-col gap-3">
-          <TitreSection>Ce qui vous réveillera</TitreSection>
+          <TitreSection>Ce qui te réveillera</TitreSection>
           <ul className="grid gap-3">
             {[
               {
@@ -135,7 +137,7 @@ export default async function NotificationsPage({
               },
               {
                 titre: "Une annulation client",
-                texte: "La table se libère : vous pouvez la revendre.",
+                texte: "La table se libère : tu peux la revendre.",
               },
             ].map((n) => (
               <li
