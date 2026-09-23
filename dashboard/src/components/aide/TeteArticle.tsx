@@ -32,10 +32,12 @@ export function TeteArticle({
 
   return (
     <div className="flex flex-col gap-2">
-      <h1 className="font-serif text-4xl leading-[1.1] text-ink">
+      <h1 className="font-serif text-4xl leading-[1.1] text-ink sm:text-5xl">
         {traduit?.titre ?? titre}
       </h1>
-      <p className="text-[15px] text-ink-soft">{traduit?.resume ?? resume}</p>
+      <p className="text-base text-ink-soft sm:text-lg">
+        {traduit?.resume ?? resume}
+      </p>
       {traduit && (
         <p className="text-[13px] text-zinc-400">
           {AIDE[langue].articleEnFrancais}

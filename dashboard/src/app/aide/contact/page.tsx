@@ -36,7 +36,7 @@ export default async function ContactAidePage() {
   return (
     <div className="flex min-h-screen flex-col bg-brand-cream">
       <header className="border-b border-zinc-200/70 bg-white px-6 py-4">
-        <div className="mx-auto flex w-full max-w-3xl items-center gap-2">
+        <div className="mx-auto flex w-full max-w-7xl items-center gap-2">
           <Link href="/" className="flex items-center gap-2">
             <KlarrMark size={20} />
             <KlarrWordmark className="text-zinc-700" />
@@ -56,10 +56,12 @@ export default async function ContactAidePage() {
         </div>
       </header>
 
-      <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-6 py-10">
+      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-6 py-12 sm:py-16">
         <div className="flex flex-col gap-2">
-          <h1 className="font-serif text-4xl text-ink">{a.ecrireAKlarr}</h1>
-          <p className="text-sm text-zinc-500">
+          <h1 className="font-serif text-5xl text-ink sm:text-6xl">
+            {a.ecrireAKlarr}
+          </h1>
+          <p className="text-base leading-relaxed text-zinc-600">
             {user ? a.contactConnecte : a.contactVisiteur}
           </p>
         </div>
@@ -79,7 +81,7 @@ export default async function ContactAidePage() {
       </main>
 
       <footer className="border-t border-zinc-200/70 px-6 py-6">
-        <div className="mx-auto flex max-w-3xl flex-wrap items-center gap-x-4 gap-y-2 text-sm text-zinc-400">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-4 gap-y-2 text-sm text-zinc-400">
           <Link href="/aide" className="hover:text-zinc-700">
             {a.retourALAide}
           </Link>

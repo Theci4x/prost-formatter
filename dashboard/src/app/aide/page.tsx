@@ -7,6 +7,8 @@ import { DonneesStructurees } from "@/components/seo/DonneesStructurees";
 import { siteUrl } from "@/lib/site-url";
 import { langueIndexable } from "@/lib/i18n/langue";
 import { AIDE, entreeArticle } from "@/lib/i18n/aide";
+import { mots } from "@/lib/aide/texte";
+import { CentreAide, type RubriqueIndexee } from "@/components/aide/CentreAide";
 import { ChoixLangueSite } from "@/components/landing/ChoixLangueSite";
 
 // La page porte du référencement : elle lit `langueIndexable`, jamais
@@ -26,10 +28,42 @@ export default async function AidePage() {
   const sections = rubriques();
   const articles = tousLesArticles();
 
+  // Ce que le navigateur reçoit pour chercher : les mots, pas le texte.
+  // Le titre traduit s'y ajoute au français, pour qu'une recherche en
+  // anglais trouve aussi quelque chose.
+  const index: RubriqueIndexee[] = sections.map((rubrique) => ({
+    cle: rubrique.cle,
+    titre: a.rubriques[rubrique.cle].titre,
+    resume: a.rubriques[rubrique.cle].resume,
+    articles: rubrique.articles.map((article) => {
+      const entree = entreeArticle(article, langue);
+      const forts = new Set(
+        mots(
+          [
+            article.titre,
+            entree.titre,
+            article.resume,
+            entree.resume,
+            ...article.questions,
+          ].join(" "),
+        ),
+      );
+      return {
+        slug: article.slug,
+        titre: entree.titre,
+        resume: entree.resume,
+        motsForts: [...forts],
+        motsCorps: [...new Set(mots(article.markdown))].filter(
+          (mot) => mot.length > 2 && !forts.has(mot),
+        ),
+      };
+    }),
+  }));
+
   return (
     <div className="flex min-h-screen flex-col bg-brand-cream">
       <header className="border-b border-zinc-200/70 bg-white px-6 py-4">
-        <div className="mx-auto flex w-full max-w-3xl items-center gap-2">
+        <div className="mx-auto flex w-full max-w-[1600px] items-center gap-2">
           <Link href="/" className="flex items-center gap-2">
             <KlarrMark size={20} />
             <KlarrWordmark className="text-zinc-700" />
@@ -42,7 +76,7 @@ export default async function AidePage() {
         </div>
       </header>
 
-      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-10 px-6 py-10">
+      <main className="mx-auto flex w-full max-w-[1600px] flex-1 flex-col gap-12 px-6 py-12 sm:py-16">
         <DonneesStructurees
           donnees={{
             "@context": "https://schema.org",
@@ -65,51 +99,28 @@ export default async function AidePage() {
           }}
         />
 
-        <div className="flex flex-col gap-2">
-          <h1 className="font-serif text-4xl text-ink">{a.aide}</h1>
-          <p className="max-w-xl text-base text-zinc-500">{a.chapo}</p>
+        <div className="flex flex-col gap-3">
+          <h1 className="font-serif text-5xl text-ink sm:text-6xl">{a.aide}</h1>
+          <p className="max-w-3xl text-base leading-relaxed text-zinc-600 sm:text-lg">
+            {a.chapo}
+          </p>
         </div>
 
-        {sections.map((rubrique) => (
-          <section key={rubrique.cle} className="flex flex-col gap-4">
-            <div className="flex flex-col gap-1">
-              <h2 className="font-serif text-2xl text-ink">
-                {a.rubriques[rubrique.cle].titre}
-              </h2>
-              <p className="text-base text-zinc-500">
-                {a.rubriques[rubrique.cle].resume}
-              </p>
-            </div>
-            <ul className="flex flex-col divide-y divide-zinc-100 overflow-hidden rounded-2xl border border-zinc-200/70 bg-white shadow-sm">
-              {rubrique.articles.map((article) => (
-                <li key={article.slug}>
-                  <Link
-                    href={`/aide/${article.slug}`}
-                    className="flex flex-col gap-1 px-5 py-4 transition-colors hover:bg-zinc-50"
-                  >
-                    <span className="text-base font-medium text-zinc-900">
-                      {entreeArticle(article, langue).titre}
-                    </span>
-                    <span className="text-base text-zinc-500">
-                      {entreeArticle(article, langue).resume}
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </section>
-        ))}
+        <CentreAide langue={langue} rubriques={index} />
+
         {/* Ce que le mode d'emploi ne couvre pas doit avoir une porte,
             sinon il ne reste qu'un formulaire de contact perdu en pied de
             page — ou rien du tout. */}
-        <section className="flex flex-col gap-2 rounded-2xl border border-zinc-200/70 bg-white px-5 py-6 shadow-sm">
-          <h2 className="font-serif text-2xl text-ink">
-            {a.vousNeTrouvezPas}
-          </h2>
-          <p className="text-base text-zinc-500">{a.ecrivezNous}</p>
+        <section className="flex flex-col items-start justify-between gap-5 rounded-3xl bg-brand-navy px-6 py-8 text-white shadow-sm sm:flex-row sm:items-center sm:px-10 sm:py-10">
+          <div className="flex flex-col gap-2">
+            <h2 className="font-serif text-3xl sm:text-4xl">
+              {a.vousNeTrouvezPas}
+            </h2>
+            <p className="max-w-2xl text-base text-white/75">{a.ecrivezNous}</p>
+          </div>
           <Link
             href="/aide/contact"
-            className="self-start text-base font-medium text-brand-orange hover:underline"
+            className="shrink-0 rounded-lg bg-white px-6 py-3 text-base font-semibold text-brand-navy transition-colors hover:bg-brand-orange-soft"
           >
             {a.ecrireAKlarr}
           </Link>
@@ -117,7 +128,7 @@ export default async function AidePage() {
       </main>
 
       <footer className="border-t border-zinc-200/70 px-6 py-6">
-        <div className="mx-auto flex max-w-3xl flex-wrap items-center gap-x-4 gap-y-2 text-base text-zinc-400">
+        <div className="mx-auto flex max-w-[1600px] flex-wrap items-center gap-x-4 gap-y-2 text-sm text-zinc-400">
           <Link href="/" className="hover:text-zinc-700">
             {a.accueil}
           </Link>

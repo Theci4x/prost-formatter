@@ -56,6 +56,14 @@ export type ClesAide = {
   articleEnFrancais: string;
 
   rubriques: Record<CategorieAide, { titre: string; resume: string }>;
+
+  /** La recherche en tête du centre d'aide. */
+  rechercher: string;
+  effacer: string;
+  resultats(n: number): string;
+  aucunResultat: string;
+  nombreArticles(n: number): string;
+  mentionneAussi: string;
 };
 
 const fr: ClesAide = {
@@ -102,6 +110,14 @@ const fr: ClesAide = {
 
   articleEnFrancais: "",
 
+  rechercher: "Chercher : acompte, plan de salle, fermer un jour…",
+  effacer: "Effacer",
+  resultats: (n) => `${n} article${n > 1 ? "s" : ""} trouvé${n > 1 ? "s" : ""}`,
+  aucunResultat:
+    "Aucun article ne répond à cette recherche. Essayez un autre mot, ou écrivez-nous.",
+  mentionneAussi: "Mentionné aussi dans",
+  nombreArticles: (n) => `${n} article${n > 1 ? "s" : ""}`,
+
   rubriques: {
     decouvrir: {
       titre: "Découvrir Klarr",
@@ -113,8 +129,7 @@ const fr: ClesAide = {
     },
     reservations: {
       titre: "Réservations",
-      resume:
-        "Prendre, confirmer et suivre les réservations, jour après jour.",
+      resume: "Prendre, confirmer et suivre les réservations, jour après jour.",
     },
     salle: {
       titre: "Salle et plan de table",
@@ -171,8 +186,7 @@ const en: ClesAide = {
   exempleQuestion: "What you are trying to do, and what is blocking you.",
   envoi: "Sending…",
   cestEnvoye: "Sent.",
-  reponseDansLaJournee:
-    "We answer the same day, to your account's address.",
+  reponseDansLaJournee: "We answer the same day, to your account's address.",
   erreursDemande: {
     missing: "Write your question first.",
     email: "We need an address to reply to.",
@@ -182,6 +196,14 @@ const en: ClesAide = {
 
   articleEnFrancais:
     "This article is in French. Its page is pre-generated, which is what makes it findable; the summary above tells you what it covers.",
+
+  rechercher: "Search: deposit, floor plan, closing a day…",
+  effacer: "Clear",
+  resultats: (n) => `${n} article${n > 1 ? "s" : ""} found`,
+  aucunResultat:
+    "No article matches this search. Try another word, or write to us.",
+  mentionneAussi: "Also mentioned in",
+  nombreArticles: (n) => `${n} article${n > 1 ? "s" : ""}`,
 
   rubriques: {
     decouvrir: {
@@ -239,10 +261,8 @@ const zh: ClesAide = {
   conditionsGenerales: "使用条款",
   confidentialite: "隐私政策",
 
-  contactMetaDescription:
-    "帮助中心没写到的问题？写信给我们：当天回复。",
-  contactConnecte:
-    "您的餐厅和您所在的界面会随消息一起发来：这些都不用您解释。",
+  contactMetaDescription: "帮助中心没写到的问题？写信给我们：当天回复。",
+  contactConnecte: "您的餐厅和您所在的界面会随消息一起发来：这些都不用您解释。",
   contactVisiteur:
     "关于 Klarr 的问题，注册前后都可以问。我们当天回复，一封手写的真回答。",
   preferezVotreMessagerie: "更习惯用自己的邮箱？",
@@ -261,6 +281,13 @@ const zh: ClesAide = {
 
   articleEnFrancais:
     "这篇文章是法语的。它的页面是预先生成的，这正是它能被搜到的原因；上面的摘要说明了它讲什么。",
+
+  rechercher: "搜索：定金、平面图、某天不营业……",
+  effacer: "清除",
+  resultats: (n) => `找到 ${n} 篇文章`,
+  aucunResultat: "没有文章符合这个搜索。换个词试试，或者给我们写信。",
+  mentionneAussi: "也提到于",
+  nombreArticles: (n) => `${n} 篇文章`,
 
   rubriques: {
     decouvrir: {
@@ -396,13 +423,11 @@ const TITRES: Record<Exclude<Langue, "fr">, Record<string, Entree>> = {
     },
     "connecter-stripe": {
       titre: "Connecting your Stripe account",
-      resume:
-        "Take deposits into your own account, with no Klarr commission.",
+      resume: "Take deposits into your own account, with no Klarr commission.",
     },
     "acompte-privatisation": {
       titre: "Asking for a deposit",
-      resume:
-        "Charge an advance on a private hire, and know where it stands.",
+      resume: "Charge an advance on a private hire, and know where it stands.",
     },
     "caution-carte": {
       titre: "Asking for a card hold",

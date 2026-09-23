@@ -1,4 +1,7 @@
 import { CATEGORIES, type Article, type CategorieAide } from "@/types/aide";
+import { mots, normaliser, racine } from "@/lib/aide/texte";
+
+export { mots, normaliser, racine };
 
 import { article as abonnement } from "@/contenu/aide/abonnement";
 import { article as ceQueKlarrNeFaitPas } from "@/contenu/aide/ce-que-klarr-ne-fait-pas";
@@ -85,33 +88,6 @@ export function rubriques(): Rubrique[] {
     ...categorie,
     articles: TOUS.filter((a) => a.categorie === categorie.cle).sort(parOrdre),
   })).filter((rubrique) => rubrique.articles.length > 0);
-}
-
-/** Sans accents ni casse : « acompte » doit trouver « Acomptes ». */
-export function normaliser(texte: string): string {
-  return texte
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .replace(/[^a-z0-9]+/g, " ")
-    .trim();
-}
-
-/**
- * La racine d'un mot, grossièrement : ses cinq premières lettres.
- *
- * Sans ça, « fermeture » ne trouve pas l'article « Fermer un jour » — les
- * deux mots n'ont aucun préfixe commun au sens strict, alors qu'ils parlent
- * évidemment de la même chose. Cinq lettres suffisent en français pour
- * rapprocher fermer/fermeture ou réserver/réservation, sans confondre carte
- * et carton.
- */
-export function racine(mot: string): string {
-  return mot.length <= 5 ? mot : mot.slice(0, 5);
-}
-
-export function mots(texte: string): string[] {
-  return normaliser(texte).split(" ").filter(Boolean);
 }
 
 type Champ = { mots: Set<string>; racines: Set<string>; poids: number };
