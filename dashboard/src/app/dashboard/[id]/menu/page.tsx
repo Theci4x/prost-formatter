@@ -10,6 +10,7 @@ import {
 } from "./actions";
 import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
 import { Compteur } from "@/components/dashboard/Compteur";
+import { Depliable } from "@/components/dashboard/Depliable";
 import { PlatForm } from "@/components/menu/PlatForm";
 import { PhotoPlat } from "@/components/menu/PhotoPlat";
 import { AllergenesPlat } from "@/components/menu/AllergenesPlat";
@@ -108,10 +109,10 @@ export default async function MenuPage({
   const qr = visibilite && publique && slug ? await qrSvg(slug) : null;
 
   return (
-    <div className="flex flex-1 flex-col gap-6 px-6 py-8">
+    <div className="flex flex-1 flex-col gap-8 px-6 py-8">
       <PageHeader icon={dashboardIcons.menu} title={c.titre(restaurant.nom)} />
 
-      <p className="max-w-4xl text-sm text-zinc-500">{c.chapo}</p>
+      <p className="max-w-4xl text-sm text-zinc-600">{c.chapo}</p>
 
       <div className="grid grid-cols-3 gap-3 sm:gap-4">
         <Compteur valeur={visibles} libelle={c.compteurALaCarte(visibles)} />
@@ -119,11 +120,13 @@ export default async function MenuPage({
           valeur={items.length - visibles}
           libelle={c.compteurDecroches(items.length - visibles)}
         />
-        <Compteur
-          valeur={sansAllergenes}
-          libelle={c.compteurSansAllergenes(sansAllergenes)}
-          accent={sansAllergenes > 0}
-        />
+        <a href="#plats" className="block">
+          <Compteur
+            valeur={sansAllergenes}
+            libelle={c.compteurSansAllergenes(sansAllergenes)}
+            accent={sansAllergenes > 0}
+          />
+        </a>
       </div>
 
       {/* La déclaration des allergènes n'est pas un confort : pour un plat
@@ -148,7 +151,7 @@ export default async function MenuPage({
           rien à faire sur une adresse publique. */}
         <div className="flex flex-col items-start justify-between gap-4 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm">
           <div className="flex flex-col gap-1">
-            <span className="text-sm font-medium text-zinc-900">
+            <span className="font-serif text-xl text-ink">
               {publique ? c.visible : c.privee}
             </span>
             <span className="text-sm text-zinc-500">
@@ -173,8 +176,8 @@ export default async function MenuPage({
             libelle={publique ? c.retirerCarte : c.publierCarte}
             classe={
               publique
-                ? "rounded-md border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
-                : "rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover"
+                ? "rounded-lg border border-zinc-200 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
+                : "rounded-lg bg-brand-navy px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover"
             }
           >
             {publique ? c.retirerDeMaPage : c.publierSurMaPage}
@@ -184,7 +187,7 @@ export default async function MenuPage({
         {visibilite && items.length > 0 && (
           <div className="flex flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm">
             <div className="flex flex-col gap-2">
-              <span className="text-sm font-medium text-zinc-900">
+              <span className="font-serif text-xl text-ink">
                 {c.traductionTitre}
               </span>
               <span className="text-sm text-zinc-500">{c.traductionChapo}</span>
@@ -217,9 +220,7 @@ export default async function MenuPage({
             />
             <div className="flex flex-col gap-3">
               <div className="flex flex-col gap-1">
-                <span className="text-sm font-medium text-zinc-900">
-                  {c.qrTitre}
-                </span>
+                <span className="font-serif text-xl text-ink">{c.qrTitre}</span>
                 <span className="text-sm text-zinc-500">{c.qrChapo}</span>
                 <a
                   href={urlCarte(slug)}
@@ -233,13 +234,13 @@ export default async function MenuPage({
               <div className="flex flex-wrap items-center gap-2">
                 <a
                   href={`/api/carte/${slug}/qr`}
-                  className="rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover"
+                  className="rounded-lg bg-brand-navy px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover"
                 >
                   {c.qrPng}
                 </a>
                 <a
                   href={`/api/carte/${slug}/qr?format=svg`}
-                  className="rounded-md border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
+                  className="rounded-lg border border-zinc-200 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
                 >
                   {c.qrSvg}
                 </a>
@@ -255,13 +256,36 @@ export default async function MenuPage({
         )}
       </div>
 
-      <section className="flex flex-col gap-3">
-        <h2 className="font-serif text-2xl text-ink">{c.titreAjouter}</h2>
-        <PlatForm restaurantId={id} categories={categories} langue={langue} />
-      </section>
+      <section id="plats" className="flex scroll-mt-8 flex-col gap-4">
+        <div className="flex flex-wrap items-baseline justify-between gap-3">
+          <h2 className="font-serif text-2xl text-ink">{c.titrePlats}</h2>
+          {/* Une catégorie par bloc : les raccourcis évitent de faire
+              défiler toute la carte pour atteindre les desserts. */}
+          {blocs.length > 1 && (
+            <nav className="flex flex-wrap gap-2">
+              {blocs.map((bloc, rang) => (
+                <a
+                  key={bloc.categorie}
+                  href={`#categorie-${rang}`}
+                  className="rounded-full border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:border-ink hover:text-ink"
+                >
+                  {bloc.categorie}
+                </a>
+              ))}
+            </nav>
+          )}
+        </div>
 
-      <section className="flex flex-col gap-3">
-        <h2 className="font-serif text-2xl text-ink">{c.titrePlats}</h2>
+        {/* L'ajout se range derrière son bouton dès que la carte a des
+            plats : on vient surtout relire et corriger ce qui existe. */}
+        <Depliable
+          libelle={c.titreAjouter}
+          fermer={c.fermerFormulaire}
+          ouvertParDefaut={items.length === 0}
+        >
+          <PlatForm restaurantId={id} categories={categories} langue={langue} />
+        </Depliable>
+
         {blocs.length === 0 ? (
           <p className="rounded-2xl border border-zinc-200/70 bg-white p-5 text-sm text-zinc-500 shadow-sm">
             {c.aucunPlat}
@@ -271,7 +295,8 @@ export default async function MenuPage({
             {blocs.map((bloc, rang) => (
               <section
                 key={bloc.categorie}
-                className="flex flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm"
+                id={`categorie-${rang}`}
+                className="flex scroll-mt-8 flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm"
               >
                 <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-100 pb-3">
                   <h3 className="flex items-baseline gap-3">

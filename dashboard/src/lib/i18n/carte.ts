@@ -50,6 +50,7 @@ export type ClesCarte = {
   compteurDecroches(n: number): string;
   compteurSansAllergenes(n: number): string;
   titreAjouter: string;
+  fermerFormulaire: string;
   titrePlats: string;
   nombrePlats(n: number): string;
   deplacerCategorie: string;
@@ -147,6 +148,7 @@ const fr: ClesCarte = {
   compteurALaCarte: (n) => `plat${s(n)} à la carte`,
   compteurDecroches: (n) => `décroché${s(n)}`,
   compteurSansAllergenes: (n) => `sans allergènes déclarés`,
+  fermerFormulaire: "Fermer",
   titreAjouter: "Ajouter un plat",
   titrePlats: "Votre carte",
   nombrePlats: (n) => `${n} plat${s(n)}`,
@@ -238,9 +240,11 @@ const en: ClesCarte = {
     "Open your booking page in the settings first: that is what gives the address the QR code will encode.",
   aucunPlat:
     "No dish yet. Start with your starters: categories will appear in the order you add them.",
-  compteurALaCarte: (n) => (n === 1 ? "dish on the menu" : "dishes on the menu"),
+  compteurALaCarte: (n) =>
+    n === 1 ? "dish on the menu" : "dishes on the menu",
   compteurDecroches: () => "taken off",
   compteurSansAllergenes: () => "without declared allergens",
+  fermerFormulaire: "Close",
   titreAjouter: "Add a dish",
   titrePlats: "Your menu",
   nombrePlats: (n) => `${n} dish${n === 1 ? "" : "es"}`,
@@ -333,6 +337,7 @@ const zh: ClesCarte = {
   compteurALaCarte: () => "道菜在菜单上",
   compteurDecroches: () => "道已下架",
   compteurSansAllergenes: () => "道未标注过敏原",
+  fermerFormulaire: "收起",
   titreAjouter: "添加菜品",
   titrePlats: "您的菜单",
   nombrePlats: (n) => `${n} 道菜`,
