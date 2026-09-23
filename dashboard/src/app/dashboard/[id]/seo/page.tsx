@@ -72,6 +72,7 @@ export default async function SeoPage({
     id,
     (restaurant as Restaurant & { search_console_site?: string | null })
       .search_console_site ?? null,
+    restaurant.slug_reservation,
   );
 
   return (

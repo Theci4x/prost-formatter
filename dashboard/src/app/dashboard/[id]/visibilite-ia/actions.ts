@@ -39,7 +39,7 @@ async function getOwnedRestaurant(restaurantId: string) {
   const { data } = await supabase
     .from("restaurants")
     .select(
-      "id, nom, adresse, description, type_cuisine, site_web, search_console_site",
+      "id, nom, adresse, description, type_cuisine, site_web, search_console_site, slug_reservation",
     )
     .eq("id", restaurantId)
     .maybeSingle();
@@ -54,6 +54,7 @@ async function getOwnedRestaurant(restaurantId: string) {
       type_cuisine: string | null;
       site_web: string | null;
       search_console_site: string | null;
+      slug_reservation: string | null;
     } | null,
   };
 }
@@ -198,6 +199,7 @@ export async function suggestQuestions(
     supabase,
     restaurantId,
     restaurant.search_console_site,
+    restaurant.slug_reservation,
   );
   const requetes = mesure.requetes.slice(0, 15).map((r) => r.requete);
 
@@ -294,7 +296,6 @@ export async function suggestQuestions(
   return RIEN_A_SIGNALER;
 }
 
-
 /**
  * Écrit le plan d'action à partir des analyses et de la fiche.
  *
@@ -366,6 +367,7 @@ export async function genererPlan(
     supabase,
     restaurantId,
     restaurant.search_console_site,
+    restaurant.slug_reservation,
   );
 
   const inventaire: Inventaire = {
@@ -476,7 +478,11 @@ export async function genererPlan(
     const { error } = await supabase
       .from("ai_visibility_plans")
       .upsert(
-        { restaurant_id: restaurantId, actions, genere_le: new Date().toISOString() },
+        {
+          restaurant_id: restaurantId,
+          actions,
+          genere_le: new Date().toISOString(),
+        },
         { onConflict: "restaurant_id" },
       );
     if (error) {
@@ -485,7 +491,9 @@ export async function genererPlan(
     }
   } catch (err) {
     console.error("[genererPlan]", err);
-    return { error: "Le plan n'a pas pu être écrit. Réessaie dans un instant." };
+    return {
+      error: "Le plan n'a pas pu être écrit. Réessaie dans un instant.",
+    };
   }
 
   revalidatePath(`/dashboard/${restaurantId}/visibilite-ia`);

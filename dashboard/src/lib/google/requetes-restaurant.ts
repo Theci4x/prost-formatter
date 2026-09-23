@@ -2,6 +2,8 @@ import "server-only";
 import type { createClient } from "@/lib/supabase/server";
 import { getValidAccessToken } from "@/lib/google/connection";
 import { expliquerSearchConsole } from "@/lib/google/erreurs";
+import { estNotreSite, filtrePagesDe } from "@/lib/seo/filtre-pages";
+import { siteUrl } from "@/lib/site-url";
 import {
   listerProprietes,
   requetesDeLaPeriode,
@@ -45,6 +47,12 @@ export async function etatSearchConsole(
   supabase: SupabaseClient,
   restaurantId: string,
   siteChoisi: string | null,
+  /**
+   * Le slug public de l'établissement. Quand la propriété choisie est
+   * notre propre site, seules ses pages comptent : sans ça, l'écran d'un
+   * restaurant afficherait les requêtes de la page d'accueil de Klarr.
+   */
+  slug: string | null,
 ): Promise<EtatSearchConsole> {
   try {
     const { data } = await supabase
@@ -82,7 +90,11 @@ export async function etatSearchConsole(
       };
     }
 
-    const requetes = await requetesDeLaPeriode({ accessToken, site });
+    // Notre site, et un slug : on ne compte que les pages de la maison.
+    // Le site du restaurateur : tout est à lui, pas de filtre.
+    const pages =
+      slug && estNotreSite(site, siteUrl()) ? filtrePagesDe(slug) : null;
+    const requetes = await requetesDeLaPeriode({ accessToken, site, pages });
     return { connecte: true, proprietes, site, requetes, erreur: null };
   } catch (erreur) {
     console.error("[search-console]", erreur);

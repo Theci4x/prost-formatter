@@ -75,7 +75,7 @@ export async function analyzeKeywords(
 
   const { data: restaurantData } = await supabase
     .from("restaurants")
-    .select("nom, adresse, search_console_site")
+    .select("nom, adresse, search_console_site, slug_reservation")
     .eq("id", restaurantId)
     .maybeSingle();
 
@@ -83,6 +83,7 @@ export async function analyzeKeywords(
     nom: string;
     adresse: string | null;
     search_console_site: string | null;
+    slug_reservation: string | null;
   } | null;
 
   if (!restaurant) {
@@ -105,6 +106,7 @@ export async function analyzeKeywords(
     supabase,
     restaurantId,
     restaurant.search_console_site,
+    restaurant.slug_reservation,
   );
   const requetesReelles = mesure.requetes
     .slice(0, 20)

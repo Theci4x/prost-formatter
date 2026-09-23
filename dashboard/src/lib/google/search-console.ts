@@ -66,19 +66,35 @@ function jour(decalageJours: number): string {
   return date.toISOString().slice(0, 10);
 }
 
+/**
+ * Restreindre aux pages d'un établissement.
+ *
+ * Deux formes, essayées dans l'ordre. L'expression régulière est précise
+ * — « /restaurant/bar » n'attrape pas « /restaurant/bar-a-vin ». Le
+ * « contient » est plus large, mais il rend des chiffres là où l'écran
+ * n'en aurait aucun si Search Console refusait l'expression. On ne
+ * vérifie pas ce refus d'ici : un essai puis un repli valent mieux qu'un
+ * pari sur la grammaire de Google.
+ */
+export type FiltrePage = { motif: string; repli: string };
+
+function filtre(operator: string, expression: string) {
+  return [{ filters: [{ dimension: "page", operator, expression }] }];
+}
+
 export async function requetesDeLaPeriode({
   accessToken,
   site,
   jours = 28,
   combien = 25,
-  cheminContient,
+  pages,
 }: {
   accessToken: string;
   site: string;
   jours?: number;
   combien?: number;
-  /** Restreint à une page : la vitrine, la carte… Facultatif. */
-  cheminContient?: string | null;
+  /** Ne compter que ces pages. Facultatif : sans, c'est tout le site. */
+  pages?: FiltrePage | null;
 }): Promise<RequeteMesuree[]> {
   const corps: Record<string, unknown> = {
     // Search Console accuse trois jours de retard sur les données : partir
@@ -90,31 +106,37 @@ export async function requetesDeLaPeriode({
     rowLimit: combien,
   };
 
-  if (cheminContient) {
-    corps.dimensionFilterGroups = [
+  const interroger = async (groupes?: unknown[]) => {
+    const res = await fetch(
+      `${SC_BASE_URL}/sites/${encodeURIComponent(site)}/searchAnalytics/query`,
       {
-        filters: [
-          {
-            dimension: "page",
-            operator: "contains",
-            expression: cheminContient,
-          },
-        ],
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(
+          groupes ? { ...corps, dimensionFilterGroups: groupes } : corps,
+        ),
       },
-    ];
-  }
+    );
+    return res;
+  };
 
-  const res = await fetch(
-    `${SC_BASE_URL}/sites/${encodeURIComponent(site)}/searchAnalytics/query`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(corps),
-    },
-  );
+  let res = pages
+    ? await interroger(filtre("includingRegex", pages.motif))
+    : await interroger();
+
+  // Un 400 sur l'expression, et seulement sur elle : on retombe sur le
+  // « contient ». Toute autre erreur — droits, quota — remonte telle
+  // quelle, le repli ne la changerait pas.
+  if (pages && res.status === 400) {
+    console.warn(
+      "[search-console] expression refusée, repli sur « contient »",
+      pages.motif,
+    );
+    res = await interroger(filtre("contains", pages.repli));
+  }
 
   if (!res.ok) {
     throw new Error(
