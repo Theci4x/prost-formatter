@@ -45,6 +45,13 @@ export type ClesCarte = {
   qrPasDeSlug: string;
 
   aucunPlat: string;
+  /** Les compteurs en tête d'écran, et les titres des deux sections. */
+  compteurALaCarte(n: number): string;
+  compteurDecroches(n: number): string;
+  compteurSansAllergenes(n: number): string;
+  titreAjouter: string;
+  titrePlats: string;
+  nombrePlats(n: number): string;
   deplacerCategorie: string;
   monter(quoi: string): string;
   descendre(quoi: string): string;
@@ -137,6 +144,12 @@ const fr: ClesCarte = {
     "Ouvre d'abord ta page de réservation dans la configuration : c'est elle qui donne l'adresse que le QR code encodera.",
   aucunPlat:
     "Aucun plat pour l'instant. Commence par tes entrées : les catégories s'afficheront dans l'ordre où tu les ajoutes.",
+  compteurALaCarte: (n) => `plat${s(n)} à la carte`,
+  compteurDecroches: (n) => `décroché${s(n)}`,
+  compteurSansAllergenes: (n) => `sans allergènes déclarés`,
+  titreAjouter: "Ajouter un plat",
+  titrePlats: "Votre carte",
+  nombrePlats: (n) => `${n} plat${s(n)}`,
   deplacerCategorie: "Déplacer la catégorie",
   monter: (q) => `Monter ${q}`,
   descendre: (q) => `Descendre ${q}`,
@@ -225,6 +238,12 @@ const en: ClesCarte = {
     "Open your booking page in the settings first: that is what gives the address the QR code will encode.",
   aucunPlat:
     "No dish yet. Start with your starters: categories will appear in the order you add them.",
+  compteurALaCarte: (n) => (n === 1 ? "dish on the menu" : "dishes on the menu"),
+  compteurDecroches: () => "taken off",
+  compteurSansAllergenes: () => "without declared allergens",
+  titreAjouter: "Add a dish",
+  titrePlats: "Your menu",
+  nombrePlats: (n) => `${n} dish${n === 1 ? "" : "es"}`,
   deplacerCategorie: "Move the category",
   monter: (q) => `Move ${q} up`,
   descendre: (q) => `Move ${q} down`,
@@ -311,6 +330,12 @@ const zh: ClesCarte = {
     "先发布菜单才能生成二维码：三十张桌上贴着一个通向空白页的二维码，比没有二维码还糟。",
   qrPasDeSlug: "请先在设置里开通您的订位页：二维码要编码的网址来自那里。",
   aucunPlat: "目前还没有菜品。先从前菜开始：分类会按您添加的顺序出现。",
+  compteurALaCarte: () => "道菜在菜单上",
+  compteurDecroches: () => "道已下架",
+  compteurSansAllergenes: () => "道未标注过敏原",
+  titreAjouter: "添加菜品",
+  titrePlats: "您的菜单",
+  nombrePlats: (n) => `${n} 道菜`,
   deplacerCategorie: "移动分类",
   monter: (q) => `将${q}上移`,
   descendre: (q) => `将${q}下移`,

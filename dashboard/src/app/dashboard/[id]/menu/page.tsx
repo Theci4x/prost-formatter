@@ -112,6 +112,19 @@ export default async function MenuPage({
 
       <p className="max-w-4xl text-sm text-zinc-500">{c.chapo}</p>
 
+      <div className="grid grid-cols-3 gap-3 sm:gap-4">
+        <Compteur valeur={visibles} libelle={c.compteurALaCarte(visibles)} />
+        <Compteur
+          valeur={items.length - visibles}
+          libelle={c.compteurDecroches(items.length - visibles)}
+        />
+        <Compteur
+          valeur={sansAllergenes}
+          libelle={c.compteurSansAllergenes(sansAllergenes)}
+          accent={sansAllergenes > 0}
+        />
+      </div>
+
       {/* La déclaration des allergènes n'est pas un confort : pour un plat
           non préemballé, l'information doit être écrite et lisible sans que
           le client ait à la demander. On le dit là où se corrige le
@@ -126,289 +139,330 @@ export default async function MenuPage({
         </div>
       )}
 
-      {/* Publier est un choix explicite : une carte saisie pour essayer n'a
+      {/* Publication, traduction et QR côte à côte : trois réglages
+          qu'on fait une fois, qui n'ont pas à pousser la carte elle-même
+          trois écrans plus bas. */}
+      <div className="grid gap-4 lg:grid-cols-2 2xl:grid-cols-3">
+        {/* Publier est un choix explicite : une carte saisie pour essayer n'a
           rien à faire sur une adresse publique. */}
-      <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm">
-        <div className="flex flex-col gap-1">
-          <span className="text-sm font-medium text-zinc-900">
-            {publique ? c.visible : c.privee}
-          </span>
-          <span className="text-sm text-zinc-500">
-            {c.platsALaCarte(visibles)}
-            {items.length > visibles && c.decroches(items.length - visibles)}
-            {publique && restaurant.slug_reservation && (
-              <>
-                {" · "}
-                <Link
-                  href={`/reserver/${restaurant.slug_reservation}`}
-                  className="text-brand-navy underline-offset-2 hover:underline"
-                >
-                  {c.voirMaPage}
-                </Link>
-              </>
-            )}
-          </span>
-        </div>
-        <Action
-          action={basculerCartePublique}
-          champs={{ restaurant_id: id, publique: publique ? "0" : "1" }}
-          libelle={publique ? c.retirerCarte : c.publierCarte}
-          classe={
-            publique
-              ? "rounded-md border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
-              : "rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover"
-          }
-        >
-          {publique ? c.retirerDeMaPage : c.publierSurMaPage}
-        </Action>
-      </div>
-
-      {visibilite && items.length > 0 && (
-        <div className="flex flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm sm:flex-row sm:items-start sm:justify-between">
-          <div className="flex flex-col gap-2">
+        <div className="flex flex-col items-start justify-between gap-4 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm">
+          <div className="flex flex-col gap-1">
             <span className="text-sm font-medium text-zinc-900">
-              {c.traductionTitre}
+              {publique ? c.visible : c.privee}
             </span>
-            <span className="max-w-md text-sm text-zinc-500">
-              {c.traductionChapo}
+            <span className="text-sm text-zinc-500">
+              {c.platsALaCarte(visibles)}
+              {items.length > visibles && c.decroches(items.length - visibles)}
+              {publique && restaurant.slug_reservation && (
+                <>
+                  {" · "}
+                  <Link
+                    href={`/reserver/${restaurant.slug_reservation}`}
+                    className="text-brand-navy underline-offset-2 hover:underline"
+                  >
+                    {c.voirMaPage}
+                  </Link>
+                </>
+              )}
             </span>
           </div>
-          <TraduireCarte
-            restaurantId={id}
-            aTraduire={restantATraduire}
-            langue={langue}
-          />
+          <Action
+            action={basculerCartePublique}
+            champs={{ restaurant_id: id, publique: publique ? "0" : "1" }}
+            libelle={publique ? c.retirerCarte : c.publierCarte}
+            classe={
+              publique
+                ? "rounded-md border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
+                : "rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover"
+            }
+          >
+            {publique ? c.retirerDeMaPage : c.publierSurMaPage}
+          </Action>
         </div>
-      )}
 
-      {/* Le QR : ce qu'on pose sur les tables et au comptoir. */}
-      {/* Le QR et la traduction sont les produits de visibilité de la
+        {visibilite && items.length > 0 && (
+          <div className="flex flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm">
+            <div className="flex flex-col gap-2">
+              <span className="text-sm font-medium text-zinc-900">
+                {c.traductionTitre}
+              </span>
+              <span className="text-sm text-zinc-500">{c.traductionChapo}</span>
+            </div>
+            <TraduireCarte
+              restaurantId={id}
+              aTraduire={restantATraduire}
+              langue={langue}
+            />
+          </div>
+        )}
+
+        {/* Le QR : ce qu'on pose sur les tables et au comptoir. */}
+        {/* Le QR et la traduction sont les produits de visibilité de la
           carte : ils mènent à la page « la carte de X », qui est référencée
           et qui exige le module. La saisie, elle, sert la page de
           réservation et reste ouverte au carnet seul. */}
-      {!visibilite ? (
-        items.length > 0 && (
-          <p className="rounded-2xl border border-dashed border-zinc-200 bg-brand-cream p-5 text-sm text-zinc-600 shadow-sm">
-            {c.qrReserve(LIBELLE_MODULE.visibilite, PRIX_MODULE.visibilite)}
-          </p>
-        )
-      ) : qr && slug ? (
-        <div className="flex flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm sm:flex-row sm:items-center">
-          <div
-            className="h-36 w-36 shrink-0 [&>svg]:h-full [&>svg]:w-full"
-            aria-hidden="true"
-            dangerouslySetInnerHTML={{ __html: qr }}
-          />
-          <div className="flex flex-col gap-3">
-            <div className="flex flex-col gap-1">
-              <span className="text-sm font-medium text-zinc-900">
-                {c.qrTitre}
-              </span>
-              <span className="text-sm text-zinc-500">{c.qrChapo}</span>
-              <a
-                href={urlCarte(slug)}
-                target="_blank"
-                rel="noreferrer"
-                className="break-all text-sm text-brand-navy underline-offset-2 hover:underline"
-              >
-                {urlCarte(slug)}
-              </a>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <a
-                href={`/api/carte/${slug}/qr`}
-                className="rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover"
-              >
-                {c.qrPng}
-              </a>
-              <a
-                href={`/api/carte/${slug}/qr?format=svg`}
-                className="rounded-md border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
-              >
-                {c.qrSvg}
-              </a>
+        {!visibilite ? (
+          items.length > 0 && (
+            <p className="rounded-2xl border border-dashed border-zinc-200 bg-brand-cream p-5 text-sm text-zinc-600 shadow-sm">
+              {c.qrReserve(LIBELLE_MODULE.visibilite, PRIX_MODULE.visibilite)}
+            </p>
+          )
+        ) : qr && slug ? (
+          <div className="flex flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm sm:flex-row sm:items-center">
+            <div
+              className="h-36 w-36 shrink-0 [&>svg]:h-full [&>svg]:w-full"
+              aria-hidden="true"
+              dangerouslySetInnerHTML={{ __html: qr }}
+            />
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-1">
+                <span className="text-sm font-medium text-zinc-900">
+                  {c.qrTitre}
+                </span>
+                <span className="text-sm text-zinc-500">{c.qrChapo}</span>
+                <a
+                  href={urlCarte(slug)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="break-all text-sm text-brand-navy underline-offset-2 hover:underline"
+                >
+                  {urlCarte(slug)}
+                </a>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <a
+                  href={`/api/carte/${slug}/qr`}
+                  className="rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover"
+                >
+                  {c.qrPng}
+                </a>
+                <a
+                  href={`/api/carte/${slug}/qr?format=svg`}
+                  className="rounded-md border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
+                >
+                  {c.qrSvg}
+                </a>
+              </div>
             </div>
           </div>
-        </div>
-      ) : (
-        items.length > 0 && (
+        ) : (
+          items.length > 0 && (
+            <p className="rounded-2xl border border-zinc-200/70 bg-white p-5 text-sm text-zinc-500 shadow-sm">
+              {slug ? c.qrPublieDabord : c.qrPasDeSlug}
+            </p>
+          )
+        )}
+      </div>
+
+      <section className="flex flex-col gap-3">
+        <h2 className="font-serif text-2xl text-ink">{c.titreAjouter}</h2>
+        <PlatForm restaurantId={id} categories={categories} langue={langue} />
+      </section>
+
+      <section className="flex flex-col gap-3">
+        <h2 className="font-serif text-2xl text-ink">{c.titrePlats}</h2>
+        {blocs.length === 0 ? (
           <p className="rounded-2xl border border-zinc-200/70 bg-white p-5 text-sm text-zinc-500 shadow-sm">
-            {slug ? c.qrPublieDabord : c.qrPasDeSlug}
+            {c.aucunPlat}
           </p>
-        )
-      )}
-
-      <PlatForm restaurantId={id} categories={categories} langue={langue} />
-
-      {blocs.length === 0 ? (
-        <p className="rounded-2xl border border-zinc-200/70 bg-white p-5 text-sm text-zinc-500 shadow-sm">
-          {c.aucunPlat}
-        </p>
-      ) : (
-        <div className="flex flex-col gap-6">
-          {blocs.map((bloc, rang) => (
-            <section
-              key={bloc.categorie}
-              className="flex flex-col gap-3 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm"
-            >
-              <div className="flex items-center justify-between gap-3">
-                <h2 className="text-sm font-semibold uppercase tracking-wide text-brand-navy">
-                  {bloc.categorie}
-                </h2>
-                {/* Deux flèches nues à côté d'un titre ne disent pas ce
+        ) : (
+          <div className="grid items-start gap-6 2xl:grid-cols-2">
+            {blocs.map((bloc, rang) => (
+              <section
+                key={bloc.categorie}
+                className="flex flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-100 pb-3">
+                  <h3 className="flex items-baseline gap-3">
+                    <span className="font-serif text-2xl text-ink">
+                      {bloc.categorie}
+                    </span>
+                    <span className="text-xs text-zinc-400">
+                      {c.nombrePlats(bloc.plats.length)}
+                    </span>
+                  </h3>
+                  {/* Deux flèches nues à côté d'un titre ne disent pas ce
                     qu'elles déplacent : on les lit comme le tri d'une
                     colonne, ou on ne les voit pas du tout. Le mot dit que
                     c'est le bloc entier qui bouge, plats compris — et il
                     n'apparaît que s'il y a quelque chose à réordonner. */}
-                {blocs.length > 1 && (
-                  <div className="flex items-center gap-1">
-                    <span className="text-xs text-zinc-400">
-                      {c.deplacerCategorie}
-                    </span>
-                    {rang > 0 && (
-                      <Action
-                        action={monterCategorie}
-                        champs={{
-                          restaurant_id: id,
-                          categorie: bloc.categorie,
-                          sens: "haut",
-                        }}
-                        libelle={c.monter(bloc.categorie)}
-                      >
-                        ↑
-                      </Action>
-                    )}
-                    {rang < blocs.length - 1 && (
-                      <Action
-                        action={monterCategorie}
-                        champs={{
-                          restaurant_id: id,
-                          categorie: bloc.categorie,
-                          sens: "bas",
-                        }}
-                        libelle={c.descendre(bloc.categorie)}
-                      >
-                        ↓
-                      </Action>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              <ul className="flex flex-col divide-y divide-zinc-100">
-                {bloc.plats.map((plat, index) => (
-                  <li
-                    key={plat.id}
-                    className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-3 first:pt-0 last:pb-0"
-                  >
-                    <PhotoPlat
-                      restaurantId={id}
-                      platId={plat.id}
-                      nom={plat.nom}
-                      photoUrl={plat.photo_url}
-                      langue={langue}
-                    />
-                    <span
-                      className={`flex min-w-0 flex-1 flex-col ${
-                        plat.actif ? "" : "opacity-50"
-                      }`}
-                    >
-                      <span className="text-sm font-medium text-zinc-900">
-                        {plat.nom}
-                        {!plat.actif && (
-                          <span className="ml-2 rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-500">
-                            {c.decroche}
-                          </span>
-                        )}
-                        {traductionCaduque(plat, "en") && (
-                          <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
-                            {c.anglaisARefaire}
-                          </span>
-                        )}
+                  {blocs.length > 1 && (
+                    <div className="flex items-center gap-1">
+                      <span className="text-xs text-zinc-400">
+                        {c.deplacerCategorie}
                       </span>
-                      {plat.description && (
-                        <span className="text-sm text-zinc-500">
-                          {plat.description}
-                        </span>
+                      {rang > 0 && (
+                        <Action
+                          action={monterCategorie}
+                          champs={{
+                            restaurant_id: id,
+                            categorie: bloc.categorie,
+                            sens: "haut",
+                          }}
+                          libelle={c.monter(bloc.categorie)}
+                        >
+                          ↑
+                        </Action>
                       )}
-                      <AllergenesPlat restaurantId={id} plat={plat} c={c} />
-                      <FormatsPlat
+                      {rang < blocs.length - 1 && (
+                        <Action
+                          action={monterCategorie}
+                          champs={{
+                            restaurant_id: id,
+                            categorie: bloc.categorie,
+                            sens: "bas",
+                          }}
+                          libelle={c.descendre(bloc.categorie)}
+                        >
+                          ↓
+                        </Action>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <ul className="flex flex-col divide-y divide-zinc-100">
+                  {bloc.plats.map((plat, index) => (
+                    <li
+                      key={plat.id}
+                      className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-3 first:pt-0 last:pb-0"
+                    >
+                      <PhotoPlat
                         restaurantId={id}
-                        plat={plat}
+                        platId={plat.id}
+                        nom={plat.nom}
+                        photoUrl={plat.photo_url}
                         langue={langue}
                       />
-                    </span>
+                      <span
+                        className={`flex min-w-0 flex-1 flex-col ${
+                          plat.actif ? "" : "opacity-50"
+                        }`}
+                      >
+                        <span className="text-[15px] font-semibold text-ink">
+                          {plat.nom}
+                          {!plat.actif && (
+                            <span className="ml-2 rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-500">
+                              {c.decroche}
+                            </span>
+                          )}
+                          {traductionCaduque(plat, "en") && (
+                            <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+                              {c.anglaisARefaire}
+                            </span>
+                          )}
+                        </span>
+                        {plat.description && (
+                          <span className="text-sm text-zinc-500">
+                            {plat.description}
+                          </span>
+                        )}
+                        <AllergenesPlat restaurantId={id} plat={plat} c={c} />
+                        <FormatsPlat
+                          restaurantId={id}
+                          plat={plat}
+                          langue={langue}
+                        />
+                      </span>
 
-                    <span className="flex items-center gap-3">
-                      {/* Les formats l'emportent sur le prix unique :
+                      <span className="flex items-center gap-3">
+                        {/* Les formats l'emportent sur le prix unique :
                           c'est ce que le client verra, donc c'est ce que
                           le restaurateur doit relire ici. */}
-                      <span className="text-sm font-medium tabular-nums text-zinc-700">
-                        {formatsDe(plat)
-                          ? formatsLisibles(formatsDe(plat)!)
-                          : plat.prix_centimes === null
-                            ? "—"
-                            : formatPrix(plat.prix_centimes)}
+                        <span className="text-base font-semibold tabular-nums text-ink">
+                          {formatsDe(plat)
+                            ? formatsLisibles(formatsDe(plat)!)
+                            : plat.prix_centimes === null
+                              ? "—"
+                              : formatPrix(plat.prix_centimes)}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          {index > 0 && (
+                            <Action
+                              action={monterPlat}
+                              champs={{
+                                restaurant_id: id,
+                                id: plat.id,
+                                sens: "haut",
+                              }}
+                              libelle={c.monter(plat.nom)}
+                            >
+                              ↑
+                            </Action>
+                          )}
+                          {index < bloc.plats.length - 1 && (
+                            <Action
+                              action={monterPlat}
+                              champs={{
+                                restaurant_id: id,
+                                id: plat.id,
+                                sens: "bas",
+                              }}
+                              libelle={c.descendre(plat.nom)}
+                            >
+                              ↓
+                            </Action>
+                          )}
+                        </span>
+                        <Action
+                          action={basculerPlat}
+                          champs={{
+                            restaurant_id: id,
+                            id: plat.id,
+                            actif: plat.actif ? "0" : "1",
+                          }}
+                          libelle={
+                            plat.actif
+                              ? c.decrocherPlat(plat.nom)
+                              : c.remettrePlat(plat.nom)
+                          }
+                        >
+                          {plat.actif ? c.decrocher : c.remettre}
+                        </Action>
+                        <Action
+                          action={supprimerPlat}
+                          champs={{ restaurant_id: id, id: plat.id }}
+                          libelle={c.supprimerPlat(plat.nom)}
+                          classe="text-xs text-zinc-400 transition-colors hover:text-red-600"
+                        >
+                          {c.supprimer}
+                        </Action>
                       </span>
-                      <span className="flex items-center gap-1">
-                        {index > 0 && (
-                          <Action
-                            action={monterPlat}
-                            champs={{
-                              restaurant_id: id,
-                              id: plat.id,
-                              sens: "haut",
-                            }}
-                            libelle={c.monter(plat.nom)}
-                          >
-                            ↑
-                          </Action>
-                        )}
-                        {index < bloc.plats.length - 1 && (
-                          <Action
-                            action={monterPlat}
-                            champs={{
-                              restaurant_id: id,
-                              id: plat.id,
-                              sens: "bas",
-                            }}
-                            libelle={c.descendre(plat.nom)}
-                          >
-                            ↓
-                          </Action>
-                        )}
-                      </span>
-                      <Action
-                        action={basculerPlat}
-                        champs={{
-                          restaurant_id: id,
-                          id: plat.id,
-                          actif: plat.actif ? "0" : "1",
-                        }}
-                        libelle={
-                          plat.actif
-                            ? c.decrocherPlat(plat.nom)
-                            : c.remettrePlat(plat.nom)
-                        }
-                      >
-                        {plat.actif ? c.decrocher : c.remettre}
-                      </Action>
-                      <Action
-                        action={supprimerPlat}
-                        champs={{ restaurant_id: id, id: plat.id }}
-                        libelle={c.supprimerPlat(plat.nom)}
-                        classe="text-xs text-zinc-400 transition-colors hover:text-red-600"
-                      >
-                        {c.supprimer}
-                      </Action>
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ))}
-        </div>
-      )}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ))}
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}
+
+function Compteur({
+  valeur,
+  libelle,
+  accent = false,
+}: {
+  valeur: number;
+  libelle: string;
+  accent?: boolean;
+}) {
+  return (
+    <div
+      className={`flex flex-col gap-1 rounded-2xl border px-4 py-4 sm:px-6 sm:py-5 ${
+        accent
+          ? "border-brand-orange/60 bg-brand-orange-soft"
+          : "border-zinc-200/70 bg-white shadow-sm"
+      }`}
+    >
+      <span className="font-serif text-3xl leading-none text-ink sm:text-5xl">
+        {valeur}
+      </span>
+      <span className="text-xs leading-snug text-zinc-600 sm:text-sm">
+        {libelle}
+      </span>
     </div>
   );
 }

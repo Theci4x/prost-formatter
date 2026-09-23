@@ -134,7 +134,7 @@ export function PlatForm({
   return (
     <form
       action={action}
-      className="flex flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm"
+      className="flex flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm"
     >
       {/* Voir EspaceForm : React vide le formulaire après l'action, la clé le
           remonte avec les valeurs renvoyées. */}
@@ -151,7 +151,7 @@ export function PlatForm({
       <button
         type="submit"
         disabled={pending}
-        className="w-fit rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover disabled:opacity-50"
+        className="w-fit rounded-lg bg-brand-navy px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover disabled:opacity-50"
       >
         {pending ? c.ajoutEnCours : c.ajouterALaCarte}
       </button>
