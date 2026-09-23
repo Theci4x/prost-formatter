@@ -8,7 +8,6 @@ import { FRAICHEUR_ECRAN } from "@/lib/reviews/fraicheur";
 import {
   searchPlace,
   getPlaceDetails,
-  getPlaceReviews,
   type StatutGoogle,
 } from "@/lib/google/places";
 
@@ -159,10 +158,10 @@ export async function fetchGooglePlatformReviews(
       };
     }
 
-    const [details, reviews] = await Promise.all([
-      getPlaceDetails(place.id, fraicheur),
-      getPlaceReviews(place.id, fraicheur),
-    ]);
+    // Un seul appel : la fiche rend déjà les avis. En faire un second pour
+    // les mêmes avis, c'était payer deux fois au palier le plus cher.
+    const details = await getPlaceDetails(place.id, fraicheur);
+    const reviews = details.avis;
 
     return {
       platform: "google",

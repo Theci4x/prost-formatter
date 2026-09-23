@@ -42,8 +42,16 @@ export function PlatformReviewsCard({
         </p>
       )}
 
+      {/* Deux silences différents. Aucun avis du tout : il n'y a rien à
+          dire. Des centaines de notes et aucun avis transmis : c'est la
+          plateforme qui retient quelque chose, et « aucun avis récupéré »
+          à côté de « 1 228 avis » se lisait comme une panne de Klarr. */}
       {data.found && data.reviews.length === 0 && (
-        <p className="text-sm text-zinc-500">Aucun avis récupéré.</p>
+        <p className="text-sm text-zinc-500">
+          {(data.reviewCount ?? 0) > 0
+            ? `${label} affiche ${data.reviewCount} avis mais n'en transmet aucun pour le moment. Ils restent lisibles directement sur la fiche.`
+            : `Aucun avis sur ${label} pour le moment.`}
+        </p>
       )}
 
       {data.found && data.reviews.length > 0 && (

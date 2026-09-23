@@ -48,6 +48,13 @@ export type StatutGoogle =
   | "CLOSED_PERMANENTLY";
 
 export type PlaceDetails = {
+  /**
+   * Les avis tels que Google les rend — cinq au plus, les plus pertinents
+   * selon lui. Ils arrivent avec le reste de la fiche : l'appel demandait
+   * déjà le champ `reviews`, et un second appel pour les mêmes avis était
+   * facturé une deuxième fois au palier le plus cher de Places.
+   */
+  avis: PlaceReview[];
   displayName: string;
   /**
    * Null quand Google ne le dit pas — ce qui arrive, et ne veut surtout
@@ -154,38 +161,21 @@ export type PlaceReview = {
 };
 
 // L'API Places (New) plafonne à cinq avis, les plus pertinents selon Google.
-// Répondre aux avis demande en revanche l'API Business Profile, soumise à
-// une demande d'accès — d'où la lecture seule ici.
-export async function getPlaceReviews(
-  placeId: string,
-  fraicheur: number = FRAICHEUR_ECRAN,
-): Promise<PlaceReview[]> {
-  const res = await fetch(`${PLACES_BASE_URL}/places/${placeId}`, {
-    headers: {
-      "X-Goog-Api-Key": apiKey(),
-      "X-Goog-FieldMask": "reviews",
-    },
-    ...optionsFraicheur(fraicheur),
-  });
+// Ils arrivent avec la fiche, dans `getPlaceDetails`. Répondre aux avis
+// demande en revanche l'API Business Profile, soumise à une demande
+// d'accès — d'où la lecture seule ici.
 
-  if (!res.ok) {
-    throw new Error(
-      `Places reviews a échoué : ${res.status} ${await res.text()}`,
-    );
-  }
+type AvisBrut = {
+  rating?: number;
+  text?: { text?: string };
+  originalText?: { text?: string };
+  publishTime?: string;
+  googleMapsUri?: string;
+  authorAttribution?: { displayName?: string };
+};
 
-  const data = (await res.json()) as {
-    reviews?: {
-      rating?: number;
-      text?: { text?: string };
-      originalText?: { text?: string };
-      publishTime?: string;
-      googleMapsUri?: string;
-      authorAttribution?: { displayName?: string };
-    }[];
-  };
-
-  return (data.reviews ?? []).map((review) => ({
+function lireAvis(bruts: AvisBrut[] | undefined): PlaceReview[] {
+  return (bruts ?? []).map((review) => ({
     author: review.authorAttribution?.displayName ?? "Anonyme",
     rating: review.rating ?? 0,
     // "text" est la version traduite dans la langue demandée ; on retombe sur
@@ -195,6 +185,15 @@ export async function getPlaceReviews(
     url: review.googleMapsUri ?? null,
   }));
 }
+
+/**
+ * La langue des avis et des libellés.
+ *
+ * La recherche la précisait déjà ; les deux lectures de fiche non. Sans
+ * elle, Google choisit — l'anglais de préférence —, et le restaurateur
+ * lit la traduction automatique d'un avis écrit en français.
+ */
+const LANGUE = "languageCode=fr&regionCode=FR";
 
 export async function getPlaceDetails(
   placeId: string,
@@ -216,7 +215,7 @@ export async function getPlaceDetails(
     "reviews",
   ].join(",");
 
-  const res = await fetch(`${PLACES_BASE_URL}/places/${placeId}`, {
+  const res = await fetch(`${PLACES_BASE_URL}/places/${placeId}?${LANGUE}`, {
     headers: {
       "X-Goog-Api-Key": apiKey(),
       "X-Goog-FieldMask": fields,
@@ -241,10 +240,24 @@ export async function getPlaceDetails(
     businessStatus?: string;
     currentOpeningHours?: unknown;
     photos?: unknown[];
-    reviews?: { publishTime?: string }[];
+    reviews?: AvisBrut[];
   };
 
+  // Une note portée par des centaines d'avis et aucun avis rendu : ce n'est
+  // pas « rien à dire », c'est Google qui retient quelque chose. On ne peut
+  // pas le deviner d'ici ; on le note, avec ce que la réponse contenait,
+  // pour que la cause se lise dans le journal au lieu de se supposer.
+  if ((data.userRatingCount ?? 0) > 0 && !data.reviews?.length) {
+    console.warn("[places] note sans avis", {
+      placeId,
+      nombreDeNotes: data.userRatingCount,
+      statut: data.businessStatus ?? null,
+      champsRendus: Object.keys(data),
+    });
+  }
+
   return {
+    avis: lireAvis(data.reviews),
     displayName: data.displayName?.text ?? "",
     businessStatus: statutConnu(data.businessStatus),
     primaryType: data.primaryTypeDisplayName?.text ?? null,
@@ -256,7 +269,9 @@ export async function getPlaceDetails(
     hasOpeningHours: Boolean(data.currentOpeningHours),
     photoCount: data.photos?.length ?? 0,
     reviews: (data.reviews ?? [])
-      .filter((r): r is { publishTime: string } => Boolean(r.publishTime))
+      .filter((r): r is AvisBrut & { publishTime: string } =>
+        Boolean(r.publishTime),
+      )
       .map((r) => ({ publishTime: r.publishTime })),
   };
 }
