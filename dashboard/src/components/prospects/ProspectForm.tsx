@@ -49,7 +49,7 @@ export function ProspectForm({
       );
     }
     return (
-      <div className="rounded-2xl border border-brand-orange/30 bg-brand-orange-soft px-6 py-8 text-center">
+      <div className="mx-auto w-full max-w-lg rounded-2xl border border-brand-orange/30 bg-brand-orange-soft px-6 py-8 text-center">
         <p className="font-serif text-2xl text-ink">{t.successTitle}</p>
         <p className="mt-2 text-sm text-ink-soft">{t.successBody}</p>
       </div>
@@ -60,25 +60,27 @@ export function ProspectForm({
   // autre, on lui demande. Ses coordonnées sont déjà enregistrées.
   if (state.status === "choix" && state.candidats) {
     return (
-      <ChoixEtablissement
-        t={t}
-        action={confirmerAction}
-        enCours={confirmationEnCours}
-        candidats={state.candidats}
-        prospectId={state.prospectId ?? ""}
-        entreprise={state.entreprise ?? ""}
-        ville={state.ville ?? ""}
-        email={state.email ?? ""}
-        prenom={state.prenom ?? ""}
-        langue={state.langue ?? langue}
-      />
+      <div className="mx-auto w-full max-w-2xl">
+        <ChoixEtablissement
+          t={t}
+          action={confirmerAction}
+          enCours={confirmationEnCours}
+          candidats={state.candidats}
+          prospectId={state.prospectId ?? ""}
+          entreprise={state.entreprise ?? ""}
+          ville={state.ville ?? ""}
+          email={state.email ?? ""}
+          prenom={state.prenom ?? ""}
+          langue={state.langue ?? langue}
+        />
+      </div>
     );
   }
 
   return (
     <form
       action={formAction}
-      className="flex flex-col gap-4 rounded-2xl border border-line bg-paper p-6 shadow-[0_24px_60px_-40px_oklch(20%_0.02_60/35%)] sm:p-7"
+      className="mx-auto flex w-full max-w-xl flex-col gap-4 rounded-2xl border border-line bg-paper p-6 shadow-[0_24px_60px_-40px_oklch(20%_0.02_60/35%)] sm:p-8"
     >
       <input type="hidden" name="langue" value={langue} />
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

@@ -24,7 +24,12 @@ export function TestPresencePage({ initiale = "fr" }: { initiale?: Lang }) {
 
   return (
     <div className="flex flex-1 flex-col items-center bg-brand-cream px-6 py-16 sm:py-20 print:bg-white print:px-0 print:py-0">
-      <div className="flex w-full max-w-lg flex-col gap-8 print:max-w-none print:gap-6">
+      {/* Large, parce que le rapport d'audit en a besoin : il tenait dans
+          cinq cents pixels au milieu d'un écran de dix-neuf cents. Le texte
+          d'accueil et le formulaire, eux, gardent une largeur de lecture —
+          un formulaire de six champs étalé sur toute la page se remplit
+          plus mal, pas mieux. */}
+      <div className="flex w-full max-w-7xl flex-col gap-10 print:max-w-none print:gap-6">
         <Link
           href="/"
           className="flex items-center justify-center gap-2 text-ink"
@@ -50,27 +55,30 @@ export function TestPresencePage({ initiale = "fr" }: { initiale?: Lang }) {
           ))}
         </div>
 
-        <div className="flex flex-col gap-3 text-center print:hidden">
+        <div className="mx-auto flex max-w-2xl flex-col gap-3 text-center print:hidden">
           <span className="text-xs font-bold uppercase tracking-[0.08em] text-brand-orange-dark">
             {t.badge}
           </span>
-          <h1 className="font-serif text-[2.4rem] leading-[1.08] text-ink sm:text-[2.9rem]">
+          <h1 className="font-serif text-[2.4rem] leading-[1.08] text-ink sm:text-[3.4rem]">
             {t.title}
           </h1>
-          <p className="text-[15px] leading-relaxed text-ink-soft">
+          <p className="text-base leading-relaxed text-ink-soft sm:text-lg">
             {t.subtitle}
           </p>
         </div>
 
         <ProspectForm t={t.form} auditT={t.audit} langue={lang} />
 
-        <div className="flex flex-col gap-3 print:hidden">
-          <h2 className="text-center font-serif text-2xl text-ink">
+        <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 print:hidden">
+          <h2 className="text-center font-serif text-3xl text-ink">
             {t.faqTitle}
           </h2>
-          <div className="flex flex-col divide-y divide-line rounded-2xl border border-line bg-paper shadow-sm">
+          <div className="grid gap-3 md:grid-cols-2">
             {t.faq.map((item) => (
-              <details key={item.question} className="group px-5 py-4">
+              <details
+                key={item.question}
+                className="group rounded-2xl border border-line bg-paper px-5 py-4 shadow-sm"
+              >
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-sm font-semibold text-ink">
                   {item.question}
                   <span className="text-ink-soft transition-transform group-open:rotate-45">
