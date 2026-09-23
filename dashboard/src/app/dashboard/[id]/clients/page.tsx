@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
 import { Compteur } from "@/components/dashboard/Compteur";
+import { campagnesOuvertes } from "@/lib/campagnes/message";
 import { exiger } from "@/lib/equipe/roles";
 import { exigerModule } from "@/lib/abonnement/acces";
 import { lireFiches, FICHES_PAR_PAGE, type Tri } from "@/lib/contacts/fiches";
@@ -69,18 +70,38 @@ export default async function ClientsPage({
   };
 
   return (
-    <div className="flex flex-1 flex-col gap-6 px-6 py-8">
+    <div className="flex flex-1 flex-col gap-8 px-6 py-8">
       <PageHeader
         icon={dashboardIcons.reservations}
         title={`Fichier client — ${restaurant.nom}`}
         backHref="/dashboard"
       />
 
-      <p className="max-w-4xl text-sm text-zinc-600">
-        Reconstitué à partir du carnet : une personne, quelle que soit le nombre
-        de fois qu&apos;elle a réservé. Les venues comptent les tables honorées,
-        pas les demandes annulées.
-      </p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="max-w-4xl text-sm text-zinc-600">
+          Reconstitué à partir du carnet : une personne, quel que soit le nombre
+          de fois qu&apos;elle a réservé. Les venues comptent les tables
+          honorées, pas les demandes annulées.
+        </p>
+        <div className="flex flex-wrap items-center gap-2">
+          {campagnesOuvertes() && joignables > 0 && (
+            <Link
+              href={`/dashboard/${id}/campagnes`}
+              className="rounded-lg bg-brand-navy px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover"
+            >
+              Écrire à mes clients
+            </Link>
+          )}
+          {total > 0 && (
+            <a
+              href={`/dashboard/${id}/clients/export`}
+              className="rounded-lg border border-zinc-200 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
+            >
+              Exporter en CSV
+            </a>
+          )}
+        </div>
+      </div>
 
       {/* Le chiffre qui compte n'est pas le total, c'est l'écart. Un
           fichier de huit cents personnes dont vingt acceptent les e-mails
@@ -89,17 +110,17 @@ export default async function ClientsPage({
         <Compteur valeur={total} libelle="clients au fichier" />
         <Compteur
           valeur={joignables}
-          libelle="acceptent vos e-mails"
-          accent={joignables > 0}
+          libelle="acceptent tes e-mails"
+          accent={total > 0 && joignables === 0}
         />
         <Compteur valeur={muets} libelle="n'ont pas coché la case" />
       </div>
 
       {total > 0 && joignables === 0 && (
         <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900">
-          <strong>Personne n&apos;a encore accepté vos e-mails.</strong> La case
-          est proposée, décochée, sur votre page de réservation — c&apos;est la
-          loi : on ne peut pas déduire d&apos;une table réservée l&apos;envie de
+          <strong>Personne n&apos;a encore accepté tes e-mails.</strong> La case
+          est proposée, décochée, sur ta page de réservation — c&apos;est la loi
+          : on ne peut pas déduire d&apos;une table réservée l&apos;envie de
           recevoir une newsletter. Elle se remplit avec les prochaines
           réservations.
         </p>
@@ -110,7 +131,7 @@ export default async function ClientsPage({
           <strong>
             L&apos;historique des venues n&apos;a pas pu être calculé.
           </strong>{" "}
-          Voici vos clients tels qu&apos;ils sont enregistrés ; le nombre de
+          Voici tes clients tels qu&apos;ils sont enregistrés ; le nombre de
           venues et les dates reviendront dès que le calcul répondra.
         </p>
       )}
@@ -148,7 +169,7 @@ export default async function ClientsPage({
           </label>
           <button
             type="submit"
-            className="rounded-lg bg-brand-navy px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover"
+            className="rounded-lg bg-brand-navy px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover"
           >
             Chercher
           </button>
@@ -184,7 +205,7 @@ export default async function ClientsPage({
             {q
               ? `Personne ne correspond à « ${q} ».`
               : total > 0
-                ? "La liste n'a pas pu être lue. Rechargez la page dans un instant."
+                ? "La liste n'a pas pu être lue. Recharge la page dans un instant."
                 : "Le fichier est vide : il se remplira à la première réservation."}
           </p>
         ) : (
@@ -320,7 +341,7 @@ export default async function ClientsPage({
                   surprendrait au pire moment. */}
               <a
                 href={`/dashboard/${id}/clients/export`}
-                className="ml-auto inline-flex items-center gap-2 rounded-lg border border-zinc-200 px-3.5 py-2 text-sm font-medium text-ink transition-colors hover:border-ink"
+                className="ml-auto inline-flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-ink transition-colors hover:border-ink"
               >
                 <svg
                   aria-hidden="true"
