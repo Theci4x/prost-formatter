@@ -2,6 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Compteur, TitreSection } from "@/components/dashboard/Compteur";
+import { Depliable } from "@/components/dashboard/Depliable";
+import { BoutonCopier } from "@/components/dashboard/BoutonCopier";
 import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
 import { LotForm, LotModifiable } from "@/components/roue/LotForm";
 import { ReglagesRoue } from "@/components/roue/ReglagesRoue";
@@ -107,19 +109,31 @@ export default async function RouePage({
   const qr = adresseJeu ? await qrSvgDe(adresseJeu) : null;
 
   return (
-    <div className="flex flex-1 flex-col gap-6 px-6 py-8">
+    <div className="flex flex-1 flex-col gap-8 px-6 py-8">
       <PageHeader
         icon={dashboardIcons.roue}
         title={`Roue de la fortune — ${restaurant.nom}`}
         backHref="/dashboard"
       />
 
-      <p className="max-w-4xl text-sm text-zinc-500">
-        Un panneau sur la table, avec son propre QR code : le client scanne,
-        tourne la roue, et son lot part par e-mail pour la visite suivante —
-        c&apos;est une raison de revenir autant qu&apos;un cadeau. Le totem des
-        avis reste à part, il ne change pas.
-      </p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="max-w-4xl text-sm text-zinc-600">
+          Un panneau sur la table, avec son propre QR code : le client scanne,
+          tourne la roue, et son lot part par e-mail pour la visite suivante —
+          c&apos;est une raison de revenir autant qu&apos;un cadeau. Le totem
+          des avis reste à part, il ne change pas.
+        </p>
+        {/* Pendant le service, c'est le seul geste qu'on vient faire ici :
+          il passe en tête dès que la roue tourne. */}
+        {roue.active && (
+          <Link
+            href={`/dashboard/${id}/roue/retirer`}
+            className="rounded-lg bg-brand-navy px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover"
+          >
+            Retirer un lot
+          </Link>
+        )}
+      </div>
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <Compteur
@@ -166,7 +180,7 @@ export default async function RouePage({
         <section className="flex flex-col gap-4">
           <div className="flex flex-col gap-1">
             <TitreSection>Les cases</TitreSection>
-            <p className="text-sm text-zinc-500">
+            <p className="text-sm text-zinc-600">
               Ce que la roue peut donner, et à quelle fréquence. Deux cases
               minimum, dont une gagnante.
             </p>
@@ -185,7 +199,7 @@ export default async function RouePage({
                   >
                     <LotModifiable restaurantId={id} lot={lot}>
                       <div className="flex min-w-0 flex-col gap-2">
-                        <span className="font-medium text-zinc-900">
+                        <span className="font-serif text-xl text-ink">
                           {lot.libelle}
                         </span>
                         {lot.precision_interne && (
@@ -238,7 +252,13 @@ export default async function RouePage({
           )}
 
           {lots.length < LOTS_MAX ? (
-            <LotForm restaurantId={id} />
+            <Depliable
+              libelle="Ajouter une case"
+              fermer="Fermer"
+              ouvertParDefaut={lots.length < 2}
+            >
+              <LotForm restaurantId={id} />
+            </Depliable>
           ) : (
             <p className="text-sm text-zinc-500">
               Douze cases, c&apos;est le maximum : au-delà, la roue devient
@@ -283,10 +303,13 @@ export default async function RouePage({
                         href={`/jeu/${slug}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="w-fit break-all font-medium text-brand-orange hover:underline"
+                        className="w-fit break-all font-medium text-brand-orange-dark hover:underline"
                       >
                         {adresseJeu}
                       </a>
+                      <div className="w-fit">
+                        <BoutonCopier texte={adresseJeu} />
+                      </div>
                       {/* Le QR en vectoriel : un panneau s'imprime, et un QR en
                       pixels grossis ne se scanne plus. */}
                       {qr && (
@@ -297,7 +320,7 @@ export default async function RouePage({
                       )}
                       <Link
                         href={`/dashboard/${id}/roue/panneau`}
-                        className="w-fit rounded-md border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy active:border-brand-navy"
+                        className="w-fit rounded-lg border border-zinc-200 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy active:border-brand-navy"
                       >
                         Le panneau à imprimer, avec les avis
                       </Link>
@@ -332,7 +355,7 @@ export default async function RouePage({
               ) : (
                 <p className="text-sm text-zinc-500">
                   Il faut au moins deux cases, dont une gagnante, pour que la
-                  roue ait un sens. Ajoute-les plus haut.
+                  roue ait un sens. Ajoute-les dans « Les cases ».
                 </p>
               )}
 
@@ -344,7 +367,7 @@ export default async function RouePage({
                   salle.{" "}
                   <Link
                     href={`/dashboard/${id}/roue/retirer`}
-                    className="font-medium text-brand-orange hover:underline"
+                    className="font-medium text-brand-orange-dark hover:underline"
                   >
                     Retirer un lot
                   </Link>
