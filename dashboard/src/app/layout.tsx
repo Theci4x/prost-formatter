@@ -32,19 +32,19 @@ export const metadata: Metadata = {
   // aucun réseau social ne sait les résoudre.
   metadataBase: new URL(siteUrl()),
   title: {
-    default: "Klarr — la clarté pour votre restaurant",
+    default: "Klarr — logiciel de réservation et de visibilité pour restaurants",
     // Chaque page complète son propre titre ; « Klarr — Dashboard » partout
     // était faux dès que la page n'était pas le tableau de bord.
     template: "%s · Klarr",
   },
   description:
-    "Votre fiche Google, vos avis, votre visibilité dans les réponses des IA et vos réservations, au même endroit. Sans commission par couvert.",
+    "Klarr, le logiciel des restaurateurs : réservations sans commission, fiche Google, avis et visibilité dans les réponses des IA, au même endroit.",
   applicationName: "Klarr",
   openGraph: {
     type: "website",
     siteName: "Klarr",
     locale: "fr_FR",
-    title: "Klarr — la clarté pour votre restaurant",
+    title: "Klarr — logiciel de réservation et de visibilité pour restaurants",
     description:
       "Ce que voient vraiment vos clients : votre fiche Google, vos avis, votre visibilité dans les IA. Et vos réservations, sans commission.",
   },

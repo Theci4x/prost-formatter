@@ -295,9 +295,13 @@ const RELEVE: Record<Langue, string> = {
 
 const fr: ClesAccueilPublic = {
   meta: {
-    titre: "Klarr — la clarté pour votre restaurant",
+    // « Logiciel » dans le titre et dans la page : c'est le mot qu'un
+    // restaurateur tape. Google l'a signalé comme « terme manquant » sur
+    // une recherche de la marque — absent du titre, de la description et
+    // de tout le texte visible, il ne pouvait pas le trouver.
+    titre: "Klarr — logiciel de réservation et de visibilité pour restaurants",
     description:
-      "Votre fiche Google, vos avis, votre visibilité dans les réponses des IA et vos réservations, au même endroit. Sans commission par couvert.",
+      "Klarr, le logiciel des restaurateurs : réservations sans commission, fiche Google, avis et visibilité dans les réponses des IA, au même endroit.",
   },
   nav: {
     outils: "Outils gratuits",
@@ -312,7 +316,7 @@ const fr: ClesAccueilPublic = {
     langue: "Langue",
   },
   hero: {
-    badge: "Pensé pour les restaurateurs indépendants et petits groupes",
+    badge: "Le logiciel des restaurateurs indépendants et petits groupes",
     titreDebut: "Vos réservations sans commission.",
     titreAccent: "Votre visibilité sans y penser",
     titreFin: ".",
@@ -684,9 +688,9 @@ const ttc = (valeur: number, langue: Langue) =>
 
 const en: ClesAccueilPublic = {
   meta: {
-    titre: "Klarr — clarity for your restaurant",
+    titre: "Klarr — booking and visibility software for restaurants",
     description:
-      "Your Google listing, your reviews, your visibility in AI answers and your bookings, all in one place. No commission per cover.",
+      "Klarr, the software for restaurant owners: commission-free bookings, your Google listing, reviews and visibility in AI answers, in one place.",
   },
   nav: {
     outils: "Free tools",
@@ -701,7 +705,7 @@ const en: ClesAccueilPublic = {
     langue: "Language",
   },
   hero: {
-    badge: "Built for independent restaurants and small groups",
+    badge: "Software for independent restaurants and small groups",
     titreDebut: "Bookings with no commission.",
     titreAccent: "Visibility without thinking about it",
     titreFin: ".",
@@ -1056,9 +1060,9 @@ const en: ClesAccueilPublic = {
 
 const zh: ClesAccueilPublic = {
   meta: {
-    titre: "Klarr — 让餐厅一目了然",
+    titre: "Klarr — 餐厅订位与曝光管理软件",
     description:
-      "Google 商家资料、顾客评价、AI 回答中的曝光度和订位，全部集中在一处。不按每位客人抽成。",
+      "Klarr 餐厅管理软件：零佣金订位、Google 商家资料、顾客评价和 AI 回答中的曝光度，全部集中在一处。",
   },
   nav: {
     outils: "免费工具",
@@ -1073,7 +1077,7 @@ const zh: ClesAccueilPublic = {
     langue: "语言",
   },
   hero: {
-    badge: "为独立餐厅和小型餐饮集团而设",
+    badge: "专为独立餐厅和小型餐饮集团打造的软件",
     titreDebut: "订位不抽成。",
     titreAccent: "曝光度无需操心",
     titreFin: "。",
