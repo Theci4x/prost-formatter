@@ -8,9 +8,12 @@ const SC_BASE_URL = "https://searchconsole.googleapis.com/webmasters/v3";
  * conseil d'une IA, l'intuition du restaurateur — relève de la supposition
  * tant que ces chiffres ne sont pas là.
  *
- * Nécessite que le restaurateur possède une propriété vérifiée, donc un
- * site à lui. La vitrine Klarr vit sur klarr.net, qu'il ne peut pas
- * vérifier : ce cas-là se traitera un jour côté plateforme, pas ici.
+ * Deux cas. Le restaurateur a un site à lui, donc une propriété vérifiée
+ * à son nom : tout ce qu'elle contient est à lui. Ou sa vitrine vit sur
+ * klarr.net, et la propriété est la nôtre : elle couvre aussi la page
+ * d'accueil de Klarr et le journal, et il faut ne compter que ses pages
+ * à lui — voir `filtrePagesDe`, et l'endroit où `etatSearchConsole` le
+ * décide.
  */
 
 export type ProprieteSearchConsole = {
