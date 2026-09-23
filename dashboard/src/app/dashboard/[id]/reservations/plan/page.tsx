@@ -9,6 +9,7 @@ import type { Repere, TableSalle } from "@/types/plan";
 import type { Espace } from "@/types/reservation";
 import type { Restaurant } from "@/types/restaurant";
 import { exigerModule } from "@/lib/abonnement/acces";
+import { Compteur } from "@/components/dashboard/Compteur";
 
 export default async function PlanPage({
   params,
@@ -46,6 +47,14 @@ export default async function PlanPage({
   const privatisationSeule = toutesLesSalles.filter(
     (salle) => !salle.accepte_table,
   );
+  // Ce qui est dessiné, comparé à ce qui est déclaré : l'écart dit s'il
+  // reste des tables à poser avant que le plan serve en plein service.
+  const idsDessines = new Set(espaces.map((espace) => espace.id));
+  const tablesDessinees = tables.filter((table) =>
+    idsDessines.has(table.espace_id),
+  );
+  const places = tablesDessinees.reduce((t, table) => t + table.places, 0);
+  const couvertsDeclares = espaces.reduce((t, e) => t + e.capacite, 0);
 
   return (
     <div className="flex flex-1 flex-col gap-8 px-6 py-8">
@@ -57,7 +66,7 @@ export default async function PlanPage({
           ← Réservations
         </Link>
         <h1 className="font-serif text-4xl text-ink">Plan de salle</h1>
-        <p className="max-w-4xl text-sm text-zinc-500">
+        <p className="max-w-4xl text-sm text-zinc-600">
           Dessine ta salle comme elle est — ta salle du bas, ton premier étage,
           ta terrasse. Pose tes tables où tu veux, à la bonne taille, tournées
           comme il faut, et ajoute le bar, l&apos;entrée ou un poteau pour
@@ -68,8 +77,46 @@ export default async function PlanPage({
         </p>
       </div>
 
+      {espaces.length > 0 && (
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+          <Compteur
+            valeur={espaces.length}
+            libelle={`salle${espaces.length > 1 ? "s" : ""} avec un plan`}
+          />
+          <Compteur
+            valeur={tablesDessinees.length}
+            libelle={`table${tablesDessinees.length > 1 ? "s" : ""} posée${tablesDessinees.length > 1 ? "s" : ""}`}
+            accent={tablesDessinees.length === 0}
+          />
+          <Compteur
+            valeur={places}
+            libelle={`place${places > 1 ? "s" : ""} dessinée${places > 1 ? "s" : ""}`}
+          />
+          <Compteur
+            valeur={couvertsDeclares}
+            libelle="couverts déclarés dans la configuration"
+          />
+        </div>
+      )}
+
+      {/* Une salle par carte, parfois trois ou quatre : les raccourcis
+          évitent de faire défiler un plan entier pour atteindre le suivant. */}
+      {espaces.length > 1 && (
+        <nav className="flex flex-wrap gap-2">
+          {espaces.map((espace) => (
+            <a
+              key={espace.id}
+              href={`#salle-${espace.id}`}
+              className="rounded-full border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:border-ink hover:text-ink"
+            >
+              {espace.nom}
+            </a>
+          ))}
+        </nav>
+      )}
+
       {espaces.length === 0 ? (
-        <p className="rounded-2xl border border-zinc-200/70 bg-white p-5 text-sm text-zinc-500 shadow-sm">
+        <p className="rounded-2xl border border-dashed border-zinc-300 bg-white px-6 py-10 text-center text-sm text-zinc-600">
           {toutesLesSalles.length === 0 ? (
             <>
               Crée d&apos;abord une salle dans{" "}

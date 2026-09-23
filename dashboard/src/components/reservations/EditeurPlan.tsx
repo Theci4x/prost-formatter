@@ -256,9 +256,12 @@ export function EditeurPlan({
       : undefined;
 
   return (
-    <section className="flex flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm">
+    <section
+      id={`salle-${espace.id}`}
+      className="flex scroll-mt-8 flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm sm:p-6"
+    >
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="text-base font-semibold text-zinc-900">{espace.nom}</h2>
+        <h2 className="font-serif text-2xl text-ink">{espace.nom}</h2>
         <span className="text-sm tabular-nums text-zinc-500">
           {brouillon.tables.length} tables · {places} places dessinées sur{" "}
           {espace.capacite} couverts déclarés
