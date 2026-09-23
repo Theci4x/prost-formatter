@@ -29,6 +29,11 @@ function quand(iso: string): string {
   });
 }
 
+/** Reçu dans les `jours` derniers jours. */
+function recent(iso: string, jours: number): boolean {
+  return new Date(iso).getTime() >= Date.now() - jours * 24 * 3600 * 1000;
+}
+
 export default async function RetoursPage({
   params,
   searchParams,
@@ -64,10 +69,7 @@ export default async function RetoursPage({
   const qr = adresse ? await qrSvgDe(adresse) : null;
 
   const aTraiter = retours.filter((r) => !r.traite).length;
-  const ilYA30Jours = Date.now() - 30 * 24 * 3600 * 1000;
-  const recents = retours.filter(
-    (r) => new Date(r.created_at).getTime() >= ilYA30Jours,
-  ).length;
+  const recents = retours.filter((r) => recent(r.created_at, 30)).length;
   const filtres = [
     { cle: "", libelle: `Tous · ${retours.length}` },
     { cle: "a-traiter", libelle: `À traiter · ${aTraiter}` },
