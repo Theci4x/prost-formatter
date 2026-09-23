@@ -52,9 +52,11 @@ export default async function AvisPage({
     ),
   ]);
 
+  const plateformes = [google, yelp, tripadvisor].filter((p) => p.configured);
+
   // Toutes plateformes confondues, du plus récent au plus ancien : c'est
   // l'ordre dans lequel on répond. Sans date, en dernier.
-  const avis: AvisAffiche[] = [google, yelp, tripadvisor]
+  const avis: AvisAffiche[] = plateformes
     .filter((p) => p.found)
     .flatMap((p) =>
       p.reviews.map((r) => ({
@@ -78,22 +80,34 @@ export default async function AvisPage({
         réponse se copie en un clic.
       </p>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <TuilePlateforme data={google} />
-        <TuilePlateforme data={yelp} />
-        <TuilePlateforme
-          data={tripadvisor}
-          pied={
-            tripadvisor.configured ? (
-              <ConfirmationTripadvisor
-                restaurantId={id}
-                nomTrouve={tripadvisor.businessName ?? null}
-                requeteInitiale={`${restaurant.nom} ${location}`.trim()}
-                epingle={Boolean(tripadvisor.epingle)}
-              />
-            ) : null
-          }
-        />
+      {/* Une plateforme sans clé API n'est pas montrée : « ajoutez une clé
+          Yelp » s'adresse à nous, et le restaurateur n'y peut rien. Elle
+          apparaîtra le jour où la clé sera posée. */}
+      <div
+        className={`grid gap-4 ${
+          plateformes.length >= 3
+            ? "md:grid-cols-3"
+            : plateformes.length === 2
+              ? "md:grid-cols-2"
+              : ""
+        }`}
+      >
+        {plateformes.map((p) => (
+          <TuilePlateforme
+            key={p.platform}
+            data={p}
+            pied={
+              p.platform === "tripadvisor" ? (
+                <ConfirmationTripadvisor
+                  restaurantId={id}
+                  nomTrouve={p.businessName ?? null}
+                  requeteInitiale={`${restaurant.nom} ${location}`.trim()}
+                  epingle={Boolean(p.epingle)}
+                />
+              ) : null
+            }
+          />
+        ))}
       </div>
 
       <section className="flex flex-col gap-4">
