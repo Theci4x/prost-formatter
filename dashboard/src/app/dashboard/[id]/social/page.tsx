@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getPageDetails, type PageDetails } from "@/lib/facebook/oauth";
@@ -8,6 +9,17 @@ import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
 import type { Restaurant } from "@/types/restaurant";
 import { exiger } from "@/lib/equipe/roles";
 import { exigerModule } from "@/lib/abonnement/acces";
+
+/** « 20 septembre », ou rien si Facebook renvoie une date illisible. */
+function jour(iso: string): string | null {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toLocaleDateString("fr-FR", {
+    day: "numeric",
+    month: "long",
+    timeZone: "Europe/Paris",
+  });
+}
 
 export default async function SocialPage({
   params,
@@ -60,19 +72,55 @@ export default async function SocialPage({
     }
   }
 
+  const instagram = details?.instagramUsername ?? null;
+
   return (
-    <div className="flex flex-1 flex-col gap-6 px-6 py-8">
-      <PageHeader
-        icon={dashboardIcons.social}
-        title={`Réseaux sociaux — ${restaurant.nom}`}
-        backHref={`/dashboard/${id}/connexions`}
-      />
+    <div className="flex flex-1 flex-col gap-8 px-6 py-8">
+      <div className="flex flex-col gap-3">
+        <PageHeader
+          icon={dashboardIcons.social}
+          title={`Réseaux sociaux — ${restaurant.nom}`}
+          backHref={`/dashboard/${id}/connexions`}
+        />
+        <p className="max-w-4xl text-sm text-zinc-600">
+          Ta page Facebook et ton compte Instagram professionnel, reliés
+          ensemble : Klarr suit tes abonnés et tes derniers posts, et ton flux
+          Instagram s&apos;affiche sur ton site vitrine sans rien recopier.
+        </p>
+      </div>
 
       {connected && (
-        <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+        <p className="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-800">
           Compte Facebook connecté avec succès.
         </p>
       )}
+
+      {/* Les trois mêmes cases, reliée ou non : sans page, elles disent
+          ce qui manque au lieu de disparaître. */}
+      <div className="grid grid-cols-3 gap-3 sm:gap-4">
+        <Compteur
+          valeur={
+            details?.followersCount != null
+              ? details.followersCount.toLocaleString("fr-FR")
+              : "—"
+          }
+          libelle={connection ? "abonnés Facebook" : "page Facebook à relier"}
+          accent={!connection}
+        />
+        <Compteur
+          valeur={details ? details.posts.length : "—"}
+          libelle="publications récentes"
+        />
+        <Compteur
+          valeur={instagram ? "Relié" : "—"}
+          libelle={
+            instagram
+              ? `Instagram : @${instagram}`
+              : "Instagram pas encore relié"
+          }
+          accent={Boolean(details) && !instagram}
+        />
+      </div>
 
       {!connection ? (
         <section className="flex flex-col items-start gap-5 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm">
@@ -85,40 +133,17 @@ export default async function SocialPage({
               Aucune page reliée
             </span>
           </div>
-          <p className="text-sm leading-relaxed text-zinc-600">
+          <p className="max-w-2xl text-sm leading-relaxed text-zinc-600">
             Relie ta page Facebook : ton compte Instagram professionnel suit
             avec elle, et ton flux Instagram apparaît sur ton site vitrine.
           </p>
           <FacebookConnectButton restaurantId={id} />
         </section>
       ) : (
-        <>
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
-            <Compteur
-              valeur={
-                details?.followersCount != null
-                  ? details.followersCount.toLocaleString("fr-FR")
-                  : "—"
-              }
-              libelle="abonnés Facebook"
-            />
-            <Compteur
-              valeur={details ? details.posts.length : "—"}
-              libelle="publications récentes"
-            />
-            <Compteur
-              valeur={details?.instagramUsername ? "Oui" : "Non"}
-              libelle={
-                details?.instagramUsername
-                  ? `Instagram relié : @${details.instagramUsername}`
-                  : "Instagram pas encore relié"
-              }
-              accent={Boolean(details) && !details?.instagramUsername}
-            />
-          </div>
-
-          <div className="grid items-start gap-6 xl:grid-cols-[22rem_minmax(0,1fr)]">
-            <section className="flex flex-col gap-4 rounded-2xl border border-emerald-200 bg-emerald-50/60 p-6 shadow-sm">
+        <div className="grid items-start gap-8 xl:grid-cols-[22rem_minmax(0,1fr)]">
+          <section className="flex flex-col gap-4">
+            <TitreSection>Ta page</TitreSection>
+            <div className="flex flex-col gap-4 rounded-2xl border border-emerald-200 bg-emerald-50/60 p-6 shadow-sm">
               <div className="flex items-center gap-3">
                 <span
                   aria-hidden="true"
@@ -128,56 +153,87 @@ export default async function SocialPage({
                   Page reliée
                 </span>
               </div>
-              <span className="rounded-xl bg-white px-4 py-3 text-lg font-semibold text-ink">
-                {connection.facebook_page_name ?? "Page Facebook"}
-              </span>
+              <div className="flex flex-col gap-0.5 rounded-xl bg-white px-4 py-3">
+                <span className="text-lg font-semibold text-ink">
+                  {connection.facebook_page_name ?? "Page Facebook"}
+                </span>
+                {instagram && (
+                  <span className="text-sm text-zinc-500">@{instagram}</span>
+                )}
+              </div>
               {fetchError && (
-                <p className="text-sm text-red-600">
+                <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                   Impossible de récupérer les données Facebook pour le moment.
                 </p>
               )}
-              <form action={disconnectSocial}>
-                <input type="hidden" name="restaurant_id" value={id} />
-                <button
-                  type="submit"
-                  className="text-sm font-medium text-zinc-500 hover:text-red-600"
-                >
-                  Déconnecter
-                </button>
-              </form>
-            </section>
-
-            <section className="flex min-w-0 flex-col gap-3">
-              <TitreSection>Derniers posts</TitreSection>
-              {!details || details.posts.length === 0 ? (
-                <p className="rounded-2xl border border-dashed border-zinc-300 bg-white px-6 py-10 text-center text-sm text-zinc-500">
-                  Aucun post récent.
+              {/* Instagram ne se relie pas seul : Meta ne le rend visible
+                  que s'il est professionnel et rattaché à la page. */}
+              {details && !instagram && (
+                <p className="rounded-xl bg-white/70 px-4 py-3 text-sm leading-relaxed text-ink">
+                  Pour qu&apos;Instagram suive, passe ton compte en
+                  professionnel et rattache-le à cette page dans Meta Business
+                  Suite, puis reconnecte-toi ici.
                 </p>
-              ) : (
-                <ul className="grid gap-3 md:grid-cols-2 2xl:grid-cols-3">
-                  {details.posts.map((post, i) => (
-                    <li
-                      key={i}
-                      className="flex flex-col gap-3 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm"
-                    >
-                      <p className="line-clamp-4 text-[15px] leading-relaxed text-ink">
-                        {post.message ?? "(sans texte)"}
-                      </p>
-                      <a
-                        href={post.permalinkUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="mt-auto text-sm font-semibold text-brand-orange-dark hover:underline"
-                      >
-                        Voir le post ↗
-                      </a>
-                    </li>
-                  ))}
-                </ul>
               )}
-            </section>
-          </div>
-        </>
+              <div className="flex flex-wrap items-center gap-4 border-t border-emerald-200/70 pt-4">
+                <Link
+                  href={`/dashboard/${id}/vitrine`}
+                  className="rounded-lg border border-zinc-200 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
+                >
+                  Voir ma vitrine
+                </Link>
+                <form action={disconnectSocial}>
+                  <input type="hidden" name="restaurant_id" value={id} />
+                  <button
+                    type="submit"
+                    className="text-sm font-medium text-zinc-500 hover:text-red-600"
+                  >
+                    Déconnecter
+                  </button>
+                </form>
+              </div>
+            </div>
+          </section>
+
+          <section className="flex min-w-0 flex-col gap-4">
+            <TitreSection
+              aside={details ? `${details.posts.length} récents` : undefined}
+            >
+              Derniers posts
+            </TitreSection>
+            {!details || details.posts.length === 0 ? (
+              <p className="rounded-2xl border border-dashed border-zinc-300 bg-white/60 px-6 py-10 text-center text-sm text-zinc-600">
+                Aucun post récent sur ta page.
+              </p>
+            ) : (
+              <ul className="grid gap-3 sm:gap-4 md:grid-cols-2 2xl:grid-cols-3">
+                {details.posts.map((post, i) => (
+                  <li
+                    key={i}
+                    className="flex flex-col gap-3 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm"
+                  >
+                    {jour(post.createdTime) && (
+                      <span className="text-xs text-zinc-400">
+                        {jour(post.createdTime)}
+                      </span>
+                    )}
+                    <p className="line-clamp-4 text-[15px] leading-relaxed text-ink">
+                      {post.message ?? "(sans texte)"}
+                    </p>
+                    <a
+                      href={post.permalinkUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-auto w-fit text-sm font-semibold text-brand-orange-dark hover:underline"
+                    >
+                      Voir le post ↗
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        </div>
       )}
     </div>
   );
