@@ -18,6 +18,7 @@ import { MenuMobile } from "@/components/accueil/MenuMobile";
 import { HeroBackdrop } from "@/components/landing/HeroBackdrop";
 import { HeroProduit } from "@/components/landing/HeroProduit";
 import { Showcase } from "@/components/landing/Showcase";
+import { Nouveautes } from "@/components/landing/Nouveautes";
 import { Reveal } from "@/components/landing/Reveal";
 
 import type { Metadata } from "next";
@@ -226,6 +227,21 @@ export default async function Home() {
           >
             {t.nav.fonctionnement}
           </a>
+          {/* Seulement sur grand écran : à 1024 pixels, sept entrées
+              et le bouton d'essai ne tiennent plus sur une ligne. Le
+              menu replié, lui, l'a toujours. */}
+          <a
+            href="#nouveautes"
+            className="hidden xl:inline"
+            style={{
+              fontSize: 14,
+              fontWeight: 500,
+              color: "var(--ink-soft)",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {t.nav.nouveautes}
+          </a>
           <a
             href="#test-presence"
             style={{
@@ -295,6 +311,7 @@ export default async function Home() {
                 accent: true,
               },
               { libelle: t.nav.fonctionnement, href: "#benefices" },
+              { libelle: t.nav.nouveautes, href: "#nouveautes" },
               { libelle: t.nav.test, href: "#test-presence" },
               { libelle: t.nav.tarifs, href: "#tarifs" },
               { libelle: t.nav.journal, href: "/blog" },
@@ -522,6 +539,13 @@ export default async function Home() {
         langue={langue}
         icones={ICONES_BENEFICES}
         lieu={t.produit.lieu}
+      />
+
+      {/* Ce qui vient d'arriver, juste après ce qui a toujours été là. */}
+      <Nouveautes
+        t={t.nouveautes}
+        exemple={t.vitrine.exemple}
+        langue={langue}
       />
 
       <Reveal>

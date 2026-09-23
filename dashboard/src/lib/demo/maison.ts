@@ -82,3 +82,53 @@ export const MATIN = {
   note: 4.6,
   avis: 412,
 } as const;
+
+/**
+ * Les fiches de la maison, ailleurs que sur Google. Les noms sont ceux
+ * des plateformes et ne se traduisent pas — sauf Apple Plans, que la
+ * maquette nomme dans la langue du visiteur.
+ */
+export const PRESENCE: {
+  nom: string | null;
+  statut: "a_jour" | "a_corriger" | "absente";
+}[] = [
+  { nom: "Google", statut: "a_jour" },
+  { nom: null, statut: "a_corriger" },
+  { nom: "Bing", statut: "a_corriger" },
+  { nom: "Tripadvisor", statut: "a_jour" },
+  { nom: "PagesJaunes", statut: "a_jour" },
+  { nom: "Waze", statut: "absente" },
+];
+export const PRESENCE_A_JOUR = 14;
+export const PRESENCE_TOTAL = 20;
+
+/**
+ * Un avis laissé en italien, et la réponse proposée dans sa langue.
+ *
+ * L'italien plutôt que l'anglais : le visiteur anglophone doit voir, lui
+ * aussi, une réponse qui n'est pas dans la langue du tableau de bord.
+ * Vouvoiement de politesse (« Lei ») d'un bout à l'autre, et l'accord
+ * fait sur le nom : « della Table d'Anselme ».
+ */
+export const AVIS_ETRANGER = {
+  auteur: "Giulia R.",
+  plateforme: "Google",
+  note: 4,
+  texte:
+    "Cena splendida, le migliori quenelle di Lione. Servizio un po' lento il sabato sera.",
+  reponse:
+    "Grazie mille, Giulia! Siamo felici che Le siano piaciute le nostre quenelle. Ha ragione sul sabato sera: stiamo rinforzando la sala. Speriamo di rivederLa presto! — Lo staff della Table d'Anselme",
+} as const;
+
+/**
+ * L'en-tête d'un export venu d'un autre outil, tel qu'on le trouve :
+ * des noms de colonnes qui ne sont pas les nôtres, et que l'assistant
+ * d'import reconnaît seul.
+ */
+export const COLONNES_EXPORT = [
+  "Nom complet",
+  "E-mail",
+  "Date",
+  "Heure",
+  "Pax",
+];

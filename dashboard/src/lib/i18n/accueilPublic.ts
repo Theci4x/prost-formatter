@@ -31,6 +31,7 @@ export type ClesAccueilPublic = {
   nav: {
     outils: string;
     fonctionnement: string;
+    nouveautes: string;
     test: string;
     tarifs: string;
     journal: string;
@@ -64,6 +65,68 @@ export type ClesAccueilPublic = {
     surtitre: string;
     titre: string;
     cartes: { titre: string; texte: string }[];
+  };
+  /**
+   * Ce qui vient d'arriver dans le produit, montré sur la même maison
+   * fictive que « Comment ça marche ». Chaque carte promet seulement ce
+   * que l'écran tient : la présence ailleurs que sur Google se vérifie
+   * avec le restaurateur, elle ne se synchronise pas ; une réponse à un
+   * avis se relit et se publie à la main.
+   */
+  nouveautes: {
+    surtitre: string;
+    titre: string;
+    chapo: string;
+    presence: {
+      titre: string;
+      texte: string;
+      points: string[];
+      maquette: {
+        surtitre: string;
+        /** « {n} sur {total} à jour » */
+        compte: string;
+        /** Le nom d'Apple Plans change avec la langue ; les autres non. */
+        apple: string;
+        aJour: string;
+        aCorriger: string;
+        absente: string;
+        alerte: string;
+      };
+    };
+    avis: {
+      titre: string;
+      texte: string;
+      maquette: {
+        surtitre: string;
+        proposee: string;
+        langue: string;
+        copier: string;
+        publiee: string;
+      };
+    };
+    bilan: {
+      titre: string;
+      texte: string;
+      maquette: {
+        surtitre: string;
+        objet: string;
+        tuiles: { valeur: string; libelle: string }[];
+        aFaire: string;
+      };
+    };
+    import: {
+      titre: string;
+      texte: string;
+      maquette: {
+        surtitre: string;
+        colonnes: string;
+        /** Les champs de Klarr, dans l'ordre des colonnes du fichier. */
+        champs: string[];
+        clients: string;
+        reservations: string;
+        dejaLa: string;
+      };
+    };
   };
   difference: {
     surtitre: string;
@@ -306,6 +369,7 @@ const fr: ClesAccueilPublic = {
   nav: {
     outils: "Outils gratuits",
     fonctionnement: "Comment ça marche",
+    nouveautes: "Nouveautés",
     test: "Tester ma présence Google",
     tarifs: "Tarifs",
     journal: "Le journal",
@@ -361,6 +425,72 @@ const fr: ClesAccueilPublic = {
       },
     ],
   },
+  nouveautes: {
+    surtitre: "Nouveau sur Klarr",
+    titre: "Ce qui vient d'arriver.",
+    chapo:
+      "Vos fiches au-delà de Google, une réponse à chaque avis, un bilan chaque mois — et, si vous venez d'un autre outil, vos clients repris en quelques minutes.",
+    presence: {
+      titre: "Des informations justes, partout où l'on vous cherche",
+      texte:
+        "Apple Plans, Bing, Tripadvisor, PagesJaunes, Waze, les annuaires : vingt plateformes où vos horaires peuvent être faux sans que vous le sachiez. Klarr les passe en revue avec vous, une par une.",
+      points: [
+        "Pour chacune, le lien, le pas-à-pas et votre fiche prête à copier",
+        "Un mode guidé qui les enchaîne, sans rien oublier",
+        "Vos horaires changent ? Klarr vous dit quelles fiches revoir",
+      ],
+      maquette: {
+        surtitre: "Présence en ligne",
+        compte: "{n} sur {total} à jour",
+        apple: "Apple Plans",
+        aJour: "À jour",
+        aCorriger: "À corriger",
+        absente: "Absente",
+        alerte: "Vos horaires ont changé hier — 5 fiches à revoir",
+      },
+    },
+    avis: {
+      titre: "Une réponse à chaque avis, dans la langue du client",
+      texte:
+        "Klarr propose une réponse signée au nom de la maison, en italien pour une cliente italienne. Vous la relisez, vous la publiez, et Klarr garde la trace de ce qui a déjà sa réponse.",
+      maquette: {
+        surtitre: "Avis · ce matin",
+        proposee: "Réponse proposée",
+        langue: "En italien, comme l'avis",
+        copier: "Copier",
+        publiee: "J'ai publié",
+      },
+    },
+    bilan: {
+      titre: "Le bilan du mois, le 1er au matin",
+      texte:
+        "Couverts, no-show, note Google, nouveaux clients, et ce qui vous attend. Dans votre boîte, sans vous connecter — et un clic pour ne plus le recevoir.",
+      maquette: {
+        surtitre: "E-mail · 1er septembre",
+        objet: "Votre bilan d'août",
+        tuiles: [
+          { valeur: "1 284", libelle: "couverts" },
+          { valeur: "4,6 ★", libelle: "sur Google, +0,1" },
+          { valeur: "212", libelle: "nouveaux clients" },
+          { valeur: "3", libelle: "no-show" },
+        ],
+        aFaire: "À faire ce mois-ci : 2 avis sans réponse",
+      },
+    },
+    import: {
+      titre: "Vous venez de TheFork ou de Zenchef ?",
+      texte:
+        "Déposez l'export de votre ancien outil : Klarr reconnaît les colonnes, vous montre l'aperçu, et reprend vos clients et vos réservations à venir. Rien n'est dédoublé, et personne n'est réabonné sans son accord.",
+      maquette: {
+        surtitre: "Import · export.csv",
+        colonnes: "Colonnes reconnues",
+        champs: ["Nom", "E-mail", "Date", "Heure", "Couverts"],
+        clients: "clients ajoutés",
+        reservations: "réservations à venir",
+        dejaLa: "déjà au fichier, laissés tels quels",
+      },
+    },
+  },
   difference: {
     surtitre: "La différence",
     titre: "Ce que ça change, concrètement.",
@@ -369,10 +499,11 @@ const fr: ClesAccueilPublic = {
     oui: [
       "Fiche Google, avis, réseaux sociaux et menu au même endroit",
       "Des mots-clés choisis à partir d'une analyse, pas au hasard",
-      "Les avis Google, Yelp et Tripadvisor centralisés",
-      "Photos et carte mises à jour en quelques clics",
+      "Les avis centralisés, et une réponse proposée dans la langue du client",
+      "Photos, carte et horaires à jour — et vingt plateformes vérifiées avec vous",
       "Les allergènes déclarés une fois, affichés sous chaque plat et tenus à jour tout seuls",
       "Les questions qu'on vous pose au téléphone, répondues une fois et reprises par Google et les IA",
+      "Le bilan du mois dans votre boîte, le 1er au matin",
       "Vous restez autonome, sans dépendre de personne",
     ],
     non: [
@@ -382,6 +513,7 @@ const fr: ClesAccueilPublic = {
       "Des informations périmées sur la moitié des sites",
       "Un classeur allergènes à refaire à la main à chaque changement de carte",
       "Les mêmes questions, posées une par une au téléphone en plein service",
+      "Aucune vue d'ensemble, à moins de tout rouvrir un par un",
       "Une agence à payer, ou des heures perdues chaque semaine",
     ],
     comparatif: "Voir le comparatif avec TheFork, Zenchef et Guestonline",
@@ -474,6 +606,8 @@ const fr: ClesAccueilPublic = {
           "Les mots-clés sur lesquels vous sortez vraiment",
           "Ce que répondent ChatGPT, Gemini et les autres quand on cherche où manger",
           "Une alerte quand un avis tombe ou que la note bouge",
+          "Une réponse proposée à chaque avis, dans la langue du client",
+          "Vos fiches sur vingt plateformes, vérifiées avec vous",
         ],
       },
       {
@@ -487,6 +621,7 @@ const fr: ClesAccueilPublic = {
           "Jauges par service : jamais deux groupes dans la même salle",
           "Photos de vos espaces, vues avant de réserver",
           "Votre fichier client, et des e-mails à lui envoyer",
+          "Vos clients et vos réservations repris de TheFork ou Zenchef",
         ],
       },
     ],
@@ -550,6 +685,23 @@ const fr: ClesAccueilPublic = {
         question: "Peut-on écrire à ses clients avec Klarr ?",
         reponse:
           "Oui. Klarr reconstitue le fichier client à partir du carnet — qui est venu, combien de fois, quand pour la dernière fois — et permet d'écrire aux personnes qui ont accepté de recevoir des e-mails au moment de réserver. Les messages se programment à l'avance, se destinent à un groupe choisi (les habitués, ceux qu'on n'a pas revus depuis six mois) et portent tous un lien de désinscription. Klarr n'envoie rien à quelqu'un qui n'a pas coché la case.",
+      },
+      {
+        question:
+          "Je suis sur TheFork ou Zenchef : est-ce que je perds mes clients en passant à Klarr ?",
+        reponse:
+          "Non. Exportez le fichier clients et les réservations à venir depuis votre outil actuel, puis déposez-les dans Klarr : les colonnes sont reconnues automatiquement et vous vérifiez l'aperçu avant de valider. Rien n'est dédoublé. Un client importé ne reçoit de campagne que si le fichier indique qu'il a accepté les e-mails et que vous le certifiez ; les réservations importées ne déclenchent ni confirmation ni rappel, puisqu'elles ont été prises ailleurs.",
+      },
+      {
+        question:
+          "Klarr s'occupe-t-il de ma présence ailleurs que sur Google ?",
+        reponse:
+          "Oui, avec vous. Klarr liste les vingt plateformes qui comptent pour un restaurant — Apple Plans, Bing, Tripadvisor, PagesJaunes, Waze, Yelp et les principaux annuaires — avec pour chacune le lien, le pas-à-pas et la fiche prête à copier. Un mode guidé les passe une par une, et quand vous modifiez vos horaires ou votre adresse, Klarr signale les fiches à revoir. La modification se fait sur chaque plateforme : Klarr ne la publie pas à votre place.",
+      },
+      {
+        question: "Klarr répond-il aux avis ?",
+        reponse:
+          "Klarr propose une réponse à chaque avis, rédigée dans la langue du client et signée au nom de l'établissement. Vous la relisez, la modifiez si besoin, puis la publiez sur la plateforme. Klarr garde la trace des avis déjà répondus, pour qu'aucun ne reste sans réponse.",
       },
       {
         question: "Klarr est-il sans engagement ?",
@@ -695,6 +847,7 @@ const en: ClesAccueilPublic = {
   nav: {
     outils: "Free tools",
     fonctionnement: "How it works",
+    nouveautes: "What's new",
     test: "Test my Google presence",
     tarifs: "Pricing",
     journal: "Journal",
@@ -746,6 +899,72 @@ const en: ClesAccueilPublic = {
       },
     ],
   },
+  nouveautes: {
+    surtitre: "New in Klarr",
+    titre: "Just arrived.",
+    chapo:
+      "Your listings beyond Google, a reply to every review, a report every month — and, if you're coming from another tool, your guests brought over in minutes.",
+    presence: {
+      titre: "Your restaurant, correct wherever people look",
+      texte:
+        "Apple Maps, Bing, Tripadvisor, PagesJaunes, Waze, the directories: twenty platforms where your opening hours can be wrong without you knowing. Klarr goes through them with you, one by one.",
+      points: [
+        "For each one, the link, the steps, and your details ready to copy",
+        "A guided mode that takes you through them all, nothing missed",
+        "Changed your hours? Klarr tells you which listings to update",
+      ],
+      maquette: {
+        surtitre: "Online presence",
+        compte: "{n} of {total} up to date",
+        apple: "Apple Maps",
+        aJour: "Up to date",
+        aCorriger: "To fix",
+        absente: "Missing",
+        alerte: "Your hours changed yesterday — 5 listings to update",
+      },
+    },
+    avis: {
+      titre: "A reply to every review, in the guest's language",
+      texte:
+        "Klarr drafts a reply signed in your restaurant's name — in Italian for an Italian guest. You read it, you post it, and Klarr keeps track of which reviews already have their answer.",
+      maquette: {
+        surtitre: "Reviews · this morning",
+        proposee: "Suggested reply",
+        langue: "In Italian, like the review",
+        copier: "Copy",
+        publiee: "I've posted it",
+      },
+    },
+    bilan: {
+      titre: "The month's report, on the 1st",
+      texte:
+        "Covers, no-shows, Google rating, new guests, and what's coming up. In your inbox, nothing to log into — and one click to stop receiving it.",
+      maquette: {
+        surtitre: "Email · 1 September",
+        objet: "Your August report",
+        tuiles: [
+          { valeur: "1,284", libelle: "covers" },
+          { valeur: "4.6 ★", libelle: "on Google, +0.1" },
+          { valeur: "212", libelle: "new guests" },
+          { valeur: "3", libelle: "no-shows" },
+        ],
+        aFaire: "To do this month: 2 reviews without a reply",
+      },
+    },
+    import: {
+      titre: "Coming from TheFork or Zenchef?",
+      texte:
+        "Drop in the export from your old tool: Klarr recognises the columns, shows you a preview, and brings over your guests and upcoming bookings. Nothing is duplicated, and nobody is resubscribed without their consent.",
+      maquette: {
+        surtitre: "Import · export.csv",
+        colonnes: "Columns recognised",
+        champs: ["Name", "Email", "Date", "Time", "Covers"],
+        clients: "guests added",
+        reservations: "upcoming bookings",
+        dejaLa: "already on file, left as they were",
+      },
+    },
+  },
   difference: {
     surtitre: "The difference",
     titre: "What it changes, in practice.",
@@ -754,10 +973,11 @@ const en: ClesAccueilPublic = {
     oui: [
       "Google listing, reviews, social accounts and menu in one place",
       "Keywords chosen from an analysis, not at random",
-      "Google, Yelp and Tripadvisor reviews in a single inbox",
-      "Photos and menu updated in a few clicks",
+      "Reviews in a single inbox, with a reply drafted in the guest's language",
+      "Photos, menu and hours up to date — and twenty platforms checked with you",
       "Allergens declared once, shown under every dish and kept current on their own",
       "The questions you get by phone, answered once and picked up by Google and AI assistants",
+      "The month's report in your inbox, on the morning of the 1st",
       "You stay independent, with nobody to depend on",
     ],
     non: [
@@ -767,6 +987,7 @@ const en: ClesAccueilPublic = {
       "Out-of-date information on half the sites you're listed on",
       "An allergen binder to redo by hand every time the menu changes",
       "The same questions, asked one at a time by phone in the middle of service",
+      "No overview, unless you reopen everything one by one",
       "An agency to pay, or hours lost every week",
     ],
     comparatif: "See the comparison with TheFork, Zenchef and Guestonline",
@@ -859,6 +1080,8 @@ const en: ClesAccueilPublic = {
           "The keywords you actually come up on",
           "What ChatGPT, Gemini and the rest answer when someone asks where to eat",
           "An alert when a review lands or your rating moves",
+          "A suggested reply to every review, in the guest's language",
+          "Your listings on twenty platforms, checked with you",
         ],
       },
       {
@@ -872,6 +1095,7 @@ const en: ClesAccueilPublic = {
           "Limits per service: never two parties in the same room",
           "Photos of your spaces, seen before booking",
           "Your customer list, and emails to send it",
+          "Your guests and bookings brought over from TheFork or Zenchef",
         ],
       },
     ],
@@ -934,6 +1158,22 @@ const en: ClesAccueilPublic = {
         question: "Can you email your customers with Klarr?",
         reponse:
           "Yes. Klarr builds the customer list from the booking book — who came, how often, when they last did — and lets you write to the people who agreed to receive emails when they booked. Messages can be scheduled ahead, aimed at a chosen group (regulars, customers not seen for six months) and all carry an unsubscribe link. Klarr sends nothing to anyone who did not tick the box.",
+      },
+      {
+        question:
+          "I'm on TheFork or Zenchef: do I lose my guests if I switch to Klarr?",
+        reponse:
+          "No. Export your guest list and upcoming bookings from your current tool, then drop them into Klarr: the columns are recognised automatically and you check the preview before confirming. Nothing is duplicated. An imported guest only receives campaigns if the file says they agreed to emails and you confirm it; imported bookings trigger no confirmation or reminder, since they were taken elsewhere.",
+      },
+      {
+        question: "Does Klarr handle my presence beyond Google?",
+        reponse:
+          "Yes, together with you. Klarr lists the twenty platforms that matter for a restaurant — Apple Maps, Bing, Tripadvisor, PagesJaunes, Waze, Yelp and the main directories — each with its link, step-by-step instructions and your details ready to copy. A guided mode takes you through them one by one, and when you change your hours or address, Klarr flags the listings to update. The change is made on each platform: Klarr does not publish it for you.",
+      },
+      {
+        question: "Does Klarr reply to reviews?",
+        reponse:
+          "Klarr suggests a reply to every review, written in the guest's language and signed in your restaurant's name. You read it, edit it if needed, then post it on the platform. Klarr keeps track of which reviews already have a reply, so none is left unanswered.",
       },
       {
         question: "Is Klarr contract-free?",
@@ -1067,6 +1307,7 @@ const zh: ClesAccueilPublic = {
   nav: {
     outils: "免费工具",
     fonctionnement: "运作方式",
+    nouveautes: "新功能",
     test: "检测我的 Google 曝光",
     tarifs: "价格",
     journal: "专栏",
@@ -1117,6 +1358,72 @@ const zh: ClesAccueilPublic = {
       },
     ],
   },
+  nouveautes: {
+    surtitre: "Klarr 新功能",
+    titre: "刚刚上线。",
+    chapo:
+      "Google 之外的商家资料、每条评价都有回复、每月一份总结——如果您从别的工具转过来，几分钟就能把顾客迁过来。",
+    presence: {
+      titre: "顾客在哪儿找您，信息就在哪儿准确",
+      texte:
+        "Apple 地图、Bing、Tripadvisor、PagesJaunes、Waze 以及各类目录：二十个平台，您的营业时间可能早已出错而您并不知道。Klarr 陪您逐个核对。",
+      points: [
+        "每个平台都附链接、操作步骤，以及可直接复制的商家信息",
+        "引导模式带您逐个完成，一个不漏",
+        "营业时间改了？Klarr 告诉您哪些平台需要更新",
+      ],
+      maquette: {
+        surtitre: "线上存在",
+        compte: "{total} 个中 {n} 个已更新",
+        apple: "Apple 地图",
+        aJour: "已更新",
+        aCorriger: "待修正",
+        absente: "未收录",
+        alerte: "您的营业时间昨天有变——5 个平台需要更新",
+      },
+    },
+    avis: {
+      titre: "每条评价都有回复，用顾客的语言",
+      texte:
+        "Klarr 以餐厅的名义拟好回复——意大利顾客就用意大利语。您读一遍、发布，Klarr 会记下哪些评价已经回复。",
+      maquette: {
+        surtitre: "评价 · 今天早上",
+        proposee: "建议回复",
+        langue: "与评价同为意大利语",
+        copier: "复制",
+        publiee: "我已发布",
+      },
+    },
+    bilan: {
+      titre: "每月 1 日早上，送上月度总结",
+      texte:
+        "接待人数、爽约、Google 评分、新顾客，以及接下来要做的事。直接发到您的邮箱，无需登录——不想收也只需点一下。",
+      maquette: {
+        surtitre: "邮件 · 9 月 1 日",
+        objet: "您的 8 月总结",
+        tuiles: [
+          { valeur: "1,284", libelle: "位客人" },
+          { valeur: "4.6 ★", libelle: "Google 评分，+0.1" },
+          { valeur: "212", libelle: "位新顾客" },
+          { valeur: "3", libelle: "次爽约" },
+        ],
+        aFaire: "本月待办：2 条评价尚未回复",
+      },
+    },
+    import: {
+      titre: "您在用 TheFork 或 Zenchef？",
+      texte:
+        "上传旧工具导出的文件：Klarr 自动识别各列，先给您预览，再导入顾客和即将到来的预订。不会重复，未经顾客同意也不会重新订阅。",
+      maquette: {
+        surtitre: "导入 · export.csv",
+        colonnes: "已识别的列",
+        champs: ["姓名", "邮箱", "日期", "时间", "人数"],
+        clients: "位顾客已添加",
+        reservations: "条即将到来的预订",
+        dejaLa: "已在名单中，保持不变",
+      },
+    },
+  },
   difference: {
     surtitre: "差别",
     titre: "具体带来什么改变。",
@@ -1125,10 +1432,11 @@ const zh: ClesAccueilPublic = {
     oui: [
       "Google 商家资料、评价、社交账号和菜单集中在一处",
       "关键词来自分析，而不是凭感觉",
-      "Google、Yelp、Tripadvisor 的评价统一汇总",
-      "照片和菜单几次点击即可更新",
+      "评价统一汇总，并按顾客的语言拟好回复",
+      "照片、菜单和营业时间保持最新——二十个平台与您一起核对",
       "过敏原只需申报一次，自动显示在每道菜下方，并始终保持最新",
       "客人常问的问题，回答一次，之后由 Google 和 AI 直接引用",
+      "每月 1 日早上，月度总结直接发到邮箱",
       "您保持自主，不依赖任何人",
     ],
     non: [
@@ -1138,6 +1446,7 @@ const zh: ClesAccueilPublic = {
       "一半的网站上挂着过期信息",
       "换一次菜单，过敏原清单就得手工重做一遍",
       "同样的问题，在出餐高峰一通一通打电话来问",
+      "没有全局概览，除非把每个工具逐一打开",
       "要么花钱请代运营，要么每周搭进大量时间",
     ],
     comparatif: "查看与 TheFork、Zenchef、Guestonline 的对比",
@@ -1223,6 +1532,8 @@ const zh: ClesAccueilPublic = {
           "您真正能排上的关键词",
           "顾客问「去哪儿吃」时，ChatGPT、Gemini 等给出的回答",
           "有新评价或评分变动时立即提醒",
+          "每条评价都有建议回复，用顾客的语言",
+          "二十个平台上的商家资料，与您一起核对",
         ],
       },
       {
@@ -1236,6 +1547,7 @@ const zh: ClesAccueilPublic = {
           "按餐市设上限：同一空间不会撞团",
           "空间照片，订位前就能看到",
           "顾客档案，以及发给他们的邮件",
+          "从 TheFork 或 Zenchef 迁入顾客和预订",
         ],
       },
     ],
@@ -1297,6 +1609,21 @@ const zh: ClesAccueilPublic = {
         question: "可以用 Klarr 给顾客发邮件吗？",
         reponse:
           "可以。Klarr 从预订簿整理出顾客档案——谁来过、来过几次、最近一次是什么时候——并且可以写信给那些在订位时同意接收邮件的人。邮件可以提前安排发送日期，也可以只发给选定的人群（熟客，或者超过六个月没再来的顾客），每一封都带退订链接。没有勾选同意的人，Klarr 一封也不会发。",
+      },
+      {
+        question: "我在用 TheFork 或 Zenchef：换成 Klarr 会丢掉顾客吗？",
+        reponse:
+          "不会。从现有工具导出顾客名单和即将到来的预订，再上传到 Klarr：各列会被自动识别，确认前您可以先查看预览。数据不会重复。导入的顾客只有在文件显示其同意接收邮件、且经您确认后，才会收到营销邮件；导入的预订不会触发确认或提醒邮件，因为它们是在别处接下的。",
+      },
+      {
+        question: "Klarr 会管理 Google 以外的线上信息吗？",
+        reponse:
+          "会，与您一起。Klarr 列出对餐厅重要的二十个平台——Apple 地图、Bing、Tripadvisor、PagesJaunes、Waze、Yelp 以及主要目录——每个平台都附链接、操作步骤和可直接复制的商家信息。引导模式带您逐个完成；当您修改营业时间或地址时，Klarr 会提示哪些平台需要更新。修改需在各平台上完成，Klarr 不会代您发布。",
+      },
+      {
+        question: "Klarr 会回复评价吗？",
+        reponse:
+          "Klarr 为每条评价拟好回复，使用顾客的语言，并以餐厅的名义署名。您读一遍、按需修改，再发布到对应平台。Klarr 会记录哪些评价已回复，确保没有一条被遗漏。",
       },
       {
         question: "Klarr 需要签约吗？",
