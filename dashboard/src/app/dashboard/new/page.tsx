@@ -32,10 +32,10 @@ export default function NewRestaurantPage() {
       <div className="flex flex-col gap-3">
         <PageHeader icon={dashboardIcons.new} title="Ajouter un restaurant" />
         <p className="max-w-4xl text-sm text-zinc-600">
-          Le nom suffit pour commencer : tout le reste se complète ou se
-          corrige plus tard, depuis « Modifier ». Ces informations
-          alimentent ton site vitrine, ta page de réservation et ce que les
-          assistants IA savent de toi.
+          Le nom suffit pour commencer : tout le reste se complète ou se corrige
+          plus tard, depuis « Modifier ». Ces informations alimentent ton site
+          vitrine, ta page de réservation et ce que les assistants IA savent de
+          toi.
         </p>
       </div>
 
