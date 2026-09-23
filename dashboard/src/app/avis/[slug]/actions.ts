@@ -3,6 +3,7 @@
 import { headers } from "next/headers";
 import { createServiceClient } from "@/lib/supabase/service";
 import { envoyerCourriel } from "@/lib/courriel/envoyer";
+import { echapper, enveloppe, type Bloc } from "@/lib/courriel/messages";
 import {
   adresseIp,
   consommer,
@@ -94,12 +95,22 @@ export async function envoyerRetour(
   // Prévenir tout de suite : un retour lu trois jours plus tard ne rattrape
   // plus rien, et c'est justement ce qu'on cherchait à rattraper.
   if (restaurant.email_contact) {
+    const suite = contact
+      ? `Il laisse ce contact : ${contact}`
+      : "Il n'a pas laissé de contact.";
+    // Le message du client dans l'encadré, tel quel, ligne par ligne :
+    // c'est lui qu'on vient lire, le reste n'est que le cadre.
+    const blocs: Bloc[] = [
+      `<strong>Un client de ${echapper(restaurant.nom)} vous écrit.</strong>`,
+      { encadre: message.split(/\r?\n/).filter(Boolean) },
+      echapper(suite),
+    ];
     await envoyerCourriel({
       destinataire: restaurant.email_contact,
       repondreA: contact.includes("@") ? contact : undefined,
       sujet: `Un client vous écrit — ${restaurant.nom}`,
-      texte: `${message}\n\n${contact ? `Il laisse ce contact : ${contact}` : "Il n'a pas laissé de contact."}`,
-      html: `<p>${message.replace(/[<>&]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;" })[c]!)}</p><p>${contact ? `Il laisse ce contact : ${contact}` : "Il n'a pas laissé de contact."}</p>`,
+      texte: `${message}\n\n${suite}`,
+      html: enveloppe(blocs, "Klarr"),
     });
   }
 

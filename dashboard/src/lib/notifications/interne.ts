@@ -1,5 +1,6 @@
 import "server-only";
 import { envoyerCourriel } from "@/lib/courriel/envoyer";
+import { echapper, enveloppe, type Bloc } from "@/lib/courriel/messages";
 import {
   crochetDu,
   veutCourriel,
@@ -75,22 +76,19 @@ function versTexte({ titre, lignes, lien }: Notification): string {
   return corps.join("\n");
 }
 
-function versHtml({ titre, lignes, lien }: Notification): string {
-  const items = lignes
-    .map(
-      (ligne) =>
-        `<p style="margin:0 0 6px;font-size:15px;color:#3f3f46;">${ligne}</p>`,
-    )
-    .join("");
-  const bouton = lien
-    ? `<p style="margin:18px 0 0;"><a href="${lien.url}" style="font-size:15px;color:#E8763A;">${lien.libelle}</a></p>`
-    : "";
-  return (
-    `<div style="font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;` +
-    `max-width:520px;padding:24px;">` +
-    `<p style="margin:0 0 14px;font-size:17px;font-weight:600;color:#1B2A41;">${titre}</p>` +
-    `${items}${bouton}</div>`
-  );
+/**
+ * La même carte que les autres messages de la maison. Elle ne part qu'à
+ * nous, mais c'est nous qui la lisons vingt fois par jour, et un
+ * paragraphe nu sous un objet en gras se lit comme une alerte de
+ * serveur — pas comme une nouvelle.
+ */
+export function versHtml({ titre, lignes, lien }: Notification): string {
+  const blocs: Bloc[] = [
+    `<strong>${echapper(titre)}</strong>`,
+    { encadre: lignes },
+  ];
+  if (lien) blocs.push({ bouton: lien });
+  return enveloppe(blocs, "Klarr");
 }
 
 /**

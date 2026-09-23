@@ -69,7 +69,13 @@ export type Message = { sujet: string; texte: string; html: string };
 export type Bloc =
   | string
   | { bouton: { libelle: string; url: string } }
-  | { encadre: string[] };
+  | { encadre: string[] }
+  /**
+   * Un code à montrer au comptoir : gros, espacé, centré. Le lot de la
+   * roue en a un, et c'est la seule chose de la lettre qu'on cherche
+   * trois semaines plus tard.
+   */
+  | { code: { libelle: string; valeur: string } };
 
 const ENCRE = "#1f1b17";
 const ENCRE_DOUCE = "#7a7168";
@@ -188,6 +194,16 @@ function encadreHtml(lignes: string[]): string {
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px"><tr><td style="padding:16px 18px;background:${FOND};border-radius:10px;border-left:3px solid ${MARQUE}">${contenu}</td></tr></table>`;
 }
 
+function codeHtml(libelle: string, valeur: string): string {
+  return [
+    `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px"><tr>`,
+    `<td align="center" bgcolor="${FOND}" style="padding:18px 16px;background:${FOND};border-radius:12px">`,
+    `<div style="font-size:11px;letter-spacing:0.14em;text-transform:uppercase;font-weight:700;color:${ENCRE_DOUCE}">${echapper(libelle)}</div>`,
+    `<div style="margin-top:6px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:32px;font-weight:700;letter-spacing:0.18em;color:${MARQUE}">${echapper(valeur)}</div>`,
+    `</td></tr></table>`,
+  ].join("");
+}
+
 /**
  * L'enveloppe : une carte claire sur fond chaud, le nom qui signe en
  * tête plutôt qu'en pied. Tout est en tableaux et en styles en ligne —
@@ -212,6 +228,7 @@ export function enveloppe(
       if (typeof bloc === "string") return paragraphe(bloc);
       if ("bouton" in bloc)
         return boutonHtml(bloc.bouton.libelle, bloc.bouton.url);
+      if ("code" in bloc) return codeHtml(bloc.code.libelle, bloc.code.valeur);
       return encadreHtml(bloc.encadre);
     })
     .join("");
@@ -476,6 +493,7 @@ export function texteNu(
       if (typeof bloc === "string") return deshtml(bloc, langue);
       if ("bouton" in bloc)
         return m.lienTexte(bloc.bouton.libelle, bloc.bouton.url);
+      if ("code" in bloc) return m.lienTexte(bloc.code.libelle, bloc.code.valeur);
       return bloc.encadre.join("\n");
     });
   const corps = `${nu.join("\n\n")}\n\n— ${signature}`;

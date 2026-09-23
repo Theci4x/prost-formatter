@@ -6,6 +6,7 @@ import {
   MODULES,
 } from "@/lib/abonnement/modules";
 import { notifierInterne } from "@/lib/notifications/interne";
+import { dateJour } from "@/lib/i18n/dates";
 import { siteUrl } from "@/lib/site-url";
 
 /**
@@ -120,10 +121,14 @@ export async function prevenirDesEssaisQuiFinissent({
         .catch(() => null);
       const courriel = compte?.data?.user?.email ?? "adresse inconnue";
 
+      // « Klarr — visibilité » sous un objet qui commence déjà par
+      // « Klarr — » : on garde le mot qui distingue.
+      const libelle = LIBELLE_MODULE[cle].replace(/^Klarr — /, "");
+      const jours = essai.joursRestants;
       await notifierInterne({
-        titre: `Essai bientôt fini — ${ligne.nom} (${LIBELLE_MODULE[cle]})`,
+        titre: `Essai bientôt fini — ${ligne.nom} · ${libelle}`,
         lignes: [
-          `Il reste ${essai.joursRestants} jour(s), jusqu'au ${essai.jusquau}.`,
+          `Il reste ${jours} jour${jours > 1 ? "s" : ""}, jusqu'au ${dateJour(essai.jusquau, "fr")}.`,
           `Propriétaire : ${courriel}`,
           "Aucun abonnement en cours.",
         ],
