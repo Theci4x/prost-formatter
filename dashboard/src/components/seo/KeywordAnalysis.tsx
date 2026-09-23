@@ -46,7 +46,7 @@ export function KeywordAnalysis({
     <section className="flex flex-col gap-4" aria-labelledby="analyse-titre">
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
         <div className="flex flex-col gap-0.5">
-          <h2 id="analyse-titre" className="text-sm font-medium text-ink">
+          <h2 id="analyse-titre" className="font-serif text-2xl text-ink">
             Analyse SEO par Klarr Tool
           </h2>
           <p className="text-xs text-ink-soft">
@@ -94,7 +94,7 @@ export function KeywordAnalysis({
       {enCours ? (
         <Patience aUneAnalyse={Boolean(analyse)} />
       ) : analyse?.analysis ? (
-        <div className="rounded-xl border border-line bg-paper p-5 text-sm text-zinc-700 sm:p-7">
+        <div className="rounded-2xl border border-line bg-paper shadow-sm p-5 text-sm text-zinc-700 sm:p-7">
           <Markdown texte={analyse.analysis} />
         </div>
       ) : (

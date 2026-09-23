@@ -50,7 +50,7 @@ export function AvantLesChiffres({
       );
     }
     return (
-      <div className="flex flex-col gap-3 rounded-xl border border-line bg-paper p-5">
+      <div className="flex flex-col gap-3 rounded-2xl border border-line bg-paper shadow-sm p-5">
         <p className="text-sm font-medium text-ink">Quel site suivre ?</p>
         <ul className="grid gap-2 sm:grid-cols-2">
           {etat.proprietes.map((propriete) => (
@@ -126,7 +126,7 @@ export function SourceSuivie({
  */
 export function TableauRequetes({ requetes }: { requetes: RequeteMesuree[] }) {
   return (
-    <details className="group rounded-xl border border-line bg-paper">
+    <details className="group rounded-2xl border border-line bg-paper shadow-sm">
       <summary className="flex cursor-pointer list-none items-center justify-between px-5 py-3 text-sm font-medium text-ink [&::-webkit-details-marker]:hidden">
         <span>
           Toutes les requêtes{" "}

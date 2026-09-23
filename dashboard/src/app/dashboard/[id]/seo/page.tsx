@@ -101,13 +101,13 @@ export default async function SeoPage({
   const dessin = aDessiner(mesure.requetes);
 
   return (
-    <div className="flex flex-1 flex-col gap-10 px-6 py-8">
+    <div className="flex flex-1 flex-col gap-8 px-6 py-8">
       <PageHeader icon={dashboardIcons.seo} title={`SEO — ${restaurant.nom}`} />
 
       {/* ── Le constat ─────────────────────────────────────────────── */}
       <section className="flex flex-col gap-5" aria-labelledby="constat-titre">
         <div className="flex flex-col gap-1">
-          <h2 id="constat-titre" className="text-base font-semibold text-ink">
+          <h2 id="constat-titre" className="font-serif text-2xl text-ink">
             Ce que les gens tapent vraiment
           </h2>
           <SourceSuivie etat={mesure} restaurantId={id} />
@@ -121,17 +121,17 @@ export default async function SeoPage({
 
         {aDesChiffres && mesure.requetes.length > 0 && (
           <>
-            <Kpis s={synthese(mesure.requetes)} />
+            <Kpis s={synthese(mesure.requetes)} tuiles />
 
             {/* Les deux graphiques partagent leurs lignes : même ordre,
                 même hauteur de ligne. Côte à côte sur un grand écran, ils
                 se lisent comme un tableau à deux colonnes ; l'un sous
                 l'autre sur un petit, l'ordre reste. */}
             <div className="grid gap-5 xl:grid-cols-5">
-              <div className="rounded-xl border border-line bg-paper p-5 xl:col-span-3">
+              <div className="rounded-2xl border border-line bg-paper shadow-sm p-5 xl:col-span-3">
                 <GraphiqueRequetes requetes={dessin} />
               </div>
-              <div className="rounded-xl border border-line bg-paper p-5 xl:col-span-2">
+              <div className="rounded-2xl border border-line bg-paper shadow-sm p-5 xl:col-span-2">
                 <GraphiquePositions requetes={dessin} />
               </div>
             </div>
@@ -154,7 +154,7 @@ export default async function SeoPage({
           aria-labelledby="mots-cles-titre"
         >
           <div className="flex flex-col gap-0.5">
-            <h2 id="mots-cles-titre" className="text-sm font-medium text-ink">
+            <h2 id="mots-cles-titre" className="font-serif text-2xl text-ink">
               Mots-clés ciblés
             </h2>
             <p className="text-xs text-ink-soft">
@@ -162,7 +162,7 @@ export default async function SeoPage({
             </p>
           </div>
 
-          <div className="flex flex-col gap-4 rounded-xl border border-line bg-paper p-4">
+          <div className="flex flex-col gap-4 rounded-2xl border border-line bg-paper p-5 shadow-sm">
             <form action={addKeyword} className="flex gap-2">
               <input type="hidden" name="restaurant_id" value={id} />
               <input
@@ -170,7 +170,7 @@ export default async function SeoPage({
                 type="text"
                 required
                 placeholder="ex : restaurant italien Lyon"
-                className="min-w-0 flex-1 rounded-lg border border-line px-3 py-2 text-sm outline-none focus:border-brand-navy"
+                className="min-w-0 flex-1 rounded-lg border border-zinc-200 bg-zinc-50 px-3.5 py-2.5 text-sm outline-none transition-colors focus:border-brand-navy focus:bg-white"
               />
               <button
                 type="submit"
