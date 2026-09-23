@@ -160,6 +160,14 @@ export async function epinglerTripadvisor(formData: FormData): Promise<void> {
       reputation_relevee_le: null,
     })
     .eq("id", restaurantId);
+  // La devinette s'efface à part : la colonne n'existe qu'après la
+  // migration 0078, et son absence ne doit pas faire échouer la
+  // confirmation elle-même. Effacée, elle laisse la place à l'établissement
+  // confirmé — ou à une nouvelle recherche si l'on revient en arrière.
+  await supabase
+    .from("restaurants")
+    .update({ tripadvisor_location_devine: null })
+    .eq("id", restaurantId);
 
   revalidatePath(`/dashboard/${restaurantId}/avis`);
 }

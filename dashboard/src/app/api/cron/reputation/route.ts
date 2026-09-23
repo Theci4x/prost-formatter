@@ -38,6 +38,10 @@ type RestaurantRow = {
   // nuit doit l'honorer comme l'écran : sinon il enregistrerait chaque nuit
   // la note d'un homonyme par-dessus celle qu'on lui a désignée.
   tripadvisor_location_id: string | null;
+  // Celui que la recherche automatique a trouvé un soir précédent : on ne
+  // repaie pas la recherche pour retrouver le même. Absent tant que la
+  // migration 0078 n'est pas passée — d'où la lecture de toute la ligne.
+  tripadvisor_location_devine?: string | null;
 };
 
 export async function GET(request: Request) {
@@ -86,7 +90,7 @@ export async function GET(request: Request) {
 
   const { data, error } = await supabase
     .from("restaurants")
-    .select("id, nom, adresse, tripadvisor_location_id")
+    .select("*")
     // Les plus anciennement relevés d'abord, et les jamais relevés avant
     // tous les autres : une fois le parc à jour, un établissement inscrit ce
     // soir a donc sa note dès demain matin.
@@ -124,14 +128,33 @@ export async function GET(request: Request) {
     const platforms = await Promise.all([
       fetchGooglePlatformReviews(restaurant.nom, location, TOUJOURS_FRAIS),
       fetchYelpPlatformReviews(restaurant.nom, location, TOUJOURS_FRAIS),
-      fetchTripadvisorPlatformReviews(
-        restaurant.nom,
-        location,
-        restaurant.tripadvisor_location_id,
-        TOUJOURS_FRAIS,
-        false,
-      ),
+      fetchTripadvisorPlatformReviews(restaurant.nom, location, {
+        epingle: restaurant.tripadvisor_location_id,
+        devine: restaurant.tripadvisor_location_devine ?? null,
+        fraicheur: TOUJOURS_FRAIS,
+        avecAvis: false,
+      }),
     ]);
+
+    // Trouvé par la recherche : on garde l'identifiant, la semaine
+    // prochaine ne la refera pas. Rien à garder quand le restaurateur a
+    // confirmé le sien, ni quand on le connaissait déjà.
+    const trouveTripadvisor = platforms.find(
+      (platform) => platform.platform === "tripadvisor",
+    )?.locationId;
+    if (
+      trouveTripadvisor &&
+      !restaurant.tripadvisor_location_id &&
+      trouveTripadvisor !== restaurant.tripadvisor_location_devine
+    ) {
+      const { error: devineError } = await supabase
+        .from("restaurants")
+        .update({ tripadvisor_location_devine: trouveTripadvisor })
+        .eq("id", restaurant.id);
+      if (devineError) {
+        console.error("[cron/reputation] tripadvisor", devineError.message);
+      }
+    }
 
     // Tracé dans les logs : sans ça, une tâche qui n'enregistre rien est
     // indiscernable d'une tâche qui n'a pas tourné.

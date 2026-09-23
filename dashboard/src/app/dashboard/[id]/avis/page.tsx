@@ -48,6 +48,7 @@ export default async function AvisPage({
   const location = restaurant.adresse ?? "";
   const suivi = restaurant as Restaurant & {
     tripadvisor_location_id?: string | null;
+    tripadvisor_location_devine?: string | null;
     reputation_relevee_le?: string | null;
   };
   const epingleTripadvisor = suivi.tripadvisor_location_id;
@@ -57,12 +58,11 @@ export default async function AvisPage({
     fetchYelpPlatformReviews(restaurant.nom, location),
     tripadvisorDuReleve(supabase, suivi),
     chargerTripadvisor
-      ? fetchTripadvisorPlatformReviews(
-          restaurant.nom,
-          location,
-          epingleTripadvisor,
-          FRAICHEUR_DEMANDE,
-        )
+      ? fetchTripadvisorPlatformReviews(restaurant.nom, location, {
+          epingle: epingleTripadvisor,
+          devine: suivi.tripadvisor_location_devine ?? null,
+          fraicheur: FRAICHEUR_DEMANDE,
+        })
       : Promise.resolve(null),
   ]);
   // Chargé à la demande, l'appel direct l'emporte : il porte les avis, le

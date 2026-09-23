@@ -42,6 +42,11 @@ export type PlatformReviews = {
    * relevé, ou établissement qu'on vient de confirmer.
    */
   releveAttendu?: boolean;
+  /**
+   * L'identifiant de l'établissement chez la plateforme, quand elle en a
+   * un et qu'on l'a trouvé : le relevé le garde pour ne plus le chercher.
+   */
+  locationId?: string | null;
   reviews: {
     author: string;
     rating: number;
@@ -87,15 +92,28 @@ export async function fetchYelpPlatformReviews(
 export async function fetchTripadvisorPlatformReviews(
   name: string,
   location: string,
-  /** L'identifiant confirmé, s'il y en a un : on ne redevine alors plus. */
-  locationIdEpingle?: string | null,
-  fraicheur: number = FRAICHEUR_ECRAN,
-  /**
-   * Faux pour le relevé de nuit, qui n'enregistre que la note et le
-   * nombre d'avis : les textes lui coûteraient un appel facturé par
-   * établissement et par semaine, pour rien.
-   */
-  avecAvis = true,
+  {
+    epingle: locationIdEpingle = null,
+    devine = null,
+    fraicheur = FRAICHEUR_ECRAN,
+    avecAvis = true,
+  }: {
+    /** L'identifiant confirmé par le restaurateur : il passe avant tout. */
+    epingle?: string | null;
+    /**
+     * Celui qu'une recherche précédente a trouvé. Tripadvisor facture
+     * chaque établissement qu'une recherche renvoie — jusqu'à dix : on ne
+     * la refait pas quand on connaît déjà la réponse.
+     */
+    devine?: string | null;
+    fraicheur?: number;
+    /**
+     * Faux pour le relevé de nuit, qui n'enregistre que la note et le
+     * nombre d'avis : les textes lui coûteraient un appel facturé par
+     * établissement et par semaine, pour rien.
+     */
+    avecAvis?: boolean;
+  } = {},
 ): Promise<PlatformReviews> {
   if (!process.env.TRIPADVISOR_API_KEY) {
     return {
@@ -109,6 +127,7 @@ export async function fetchTripadvisorPlatformReviews(
   try {
     const locationId =
       locationIdEpingle ??
+      devine ??
       (await searchTripadvisorLocation(`${name} ${location}`, fraicheur))
         ?.locationId ??
       null;
@@ -135,6 +154,7 @@ export async function fetchTripadvisorPlatformReviews(
       configured: true,
       found: true,
       epingle: Boolean(locationIdEpingle),
+      locationId,
       businessName: details.nom ?? name,
       businessUrl: details.webUrl,
       rating: details.rating,
