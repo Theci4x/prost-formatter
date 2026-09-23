@@ -84,14 +84,16 @@ export default async function DashboardPage() {
 
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-serif text-3xl text-ink sm:text-4xl">
+          <h1 className="font-serif text-4xl text-ink sm:text-5xl">
             {d.titreListe(restaurants.length)}
           </h1>
-          <p className="text-sm text-ink-soft">{dateDuJour(langue)}</p>
+          <p className="mt-1 text-sm text-ink-soft first-letter:capitalize sm:text-base">
+            {dateDuJour(langue)}
+          </p>
         </div>
         <Link
           href="/dashboard/new"
-          className="rounded-lg border border-line bg-paper px-4 py-2 text-sm font-semibold text-ink transition-colors hover:border-ink"
+          className="rounded-lg bg-brand-navy px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover"
         >
           {d.ajouterRestaurant}
         </Link>
@@ -106,28 +108,27 @@ export default async function DashboardPage() {
       )}
 
       {restaurants.length === 0 ? (
-        <div className="flex flex-col items-center gap-4 rounded-2xl border border-dashed border-zinc-300 bg-white px-6 py-16 text-center shadow-sm">
+        <div className="flex flex-col items-center gap-5 rounded-2xl border border-dashed border-zinc-300 bg-white px-6 py-20 text-center shadow-sm">
           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-brand-orange-soft to-white text-brand-navy shadow-sm">
             {dashboardIcons.menu}
           </div>
           <div className="flex flex-col gap-1">
-            <p className="text-sm font-medium text-zinc-900">
-              Aucun restaurant pour le moment.
+            <p className="font-serif text-3xl text-ink">
+              {d.aucunRestaurantTitre}
             </p>
-            <p className="text-sm text-zinc-500">
-              Ajoute ton premier restaurant pour commencer à gérer sa présence
-              en ligne.
+            <p className="max-w-md text-sm text-zinc-500">
+              {d.aucunRestaurantTexte}
             </p>
           </div>
           <Link
             href="/dashboard/new"
-            className="rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-brand-navy-hover hover:shadow"
+            className="rounded-lg bg-brand-navy px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-navy-hover"
           >
-            Ajouter un restaurant
+            {d.ajouterRestaurant}
           </Link>
         </div>
       ) : (
-        <ul className="flex flex-col gap-6">
+        <ul className="flex flex-col gap-8">
           {restaurants.map((restaurant) => (
             <CarteRestaurant
               t={t}

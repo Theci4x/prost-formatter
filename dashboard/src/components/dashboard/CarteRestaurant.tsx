@@ -330,22 +330,14 @@ function groupes(t: ClesAccueil, d: DetailsAccueil, langue: Langue): Groupe[] {
           resume: t.entrees.avis.resume,
           icone: ICONES.avis,
           minimum: "gerant",
-          // L'incohérence passe devant la note. Un restaurateur qui rouvre
-          // après des travaux rouvre sa salle et son carnet, et oublie sa
-          // fiche Google pendant trois semaines — pendant lesquelles
-          // Google ne propose plus la maison à personne. Ce jour-là,
-          // savoir qu'on est à 4,7 étoiles ne sert à rien.
           detail: (p) =>
-            p.ficheFermeeAlorsQuOnOuvre
-              ? d.ficheFermee
-              : p.note != null
-                ? d.note(
-                    p.note.toFixed(1).replace(".", ","),
-                    p.nombreAvis ?? 0,
-                    p.avisCetteSemaine ?? null,
-                  )
-                : d.premierReleve,
-          attention: (p) => p.ficheFermeeAlorsQuOnOuvre,
+            p.note != null
+              ? d.note(
+                  p.note.toFixed(1).replace(".", ","),
+                  p.nombreAvis ?? 0,
+                  p.avisCetteSemaine ?? null,
+                )
+              : d.premierReleve,
         },
         {
           href: "retours",
@@ -454,12 +446,29 @@ function groupes(t: ClesAccueil, d: DetailsAccueil, langue: Langue): Groupe[] {
   ];
 }
 
+/**
+ * Sur grand écran, autant de colonnes que de cases (cinq au plus) : une
+ * rangée pleine plutôt qu'une case orpheline sur la ligne du dessous.
+ * Les classes sont écrites en entier pour que Tailwind les trouve.
+ */
+const COLONNES_LARGES: Record<number, string> = {
+  1: "2xl:grid-cols-3",
+  2: "2xl:grid-cols-3",
+  3: "2xl:grid-cols-3",
+  4: "2xl:grid-cols-4",
+  5: "2xl:grid-cols-5",
+};
+
 function accessible(minimum: Minimum, role: Role | null): boolean {
   if (!minimum) return true;
   if (minimum === "proprietaire") return role === "proprietaire";
   return peutGerer(role);
 }
 
+/**
+ * Un grand chiffre du jour, au format des compteurs des autres écrans —
+ * mais cliquable : il mène à l'écran qui le détaille.
+ */
 function Chiffre({
   valeur,
   libelle,
@@ -474,20 +483,16 @@ function Chiffre({
   return (
     <Link
       href={href}
-      className="group flex min-w-0 flex-col gap-1 rounded-xl px-4 py-3 transition-colors hover:bg-brand-sand active:bg-brand-sand"
+      className={`group flex min-w-0 flex-col gap-1 rounded-2xl border px-4 py-4 transition-[border-color,transform,box-shadow] hover:-translate-y-px sm:px-6 sm:py-5 ${
+        attention
+          ? "border-brand-orange/60 bg-brand-orange-soft hover:border-brand-orange"
+          : "border-zinc-200/70 bg-white shadow-sm hover:border-ink hover:shadow-md"
+      }`}
     >
-      <span className="flex items-baseline gap-2">
-        <span className="font-serif text-[2.1rem] leading-none text-ink">
-          {valeur}
-        </span>
-        {attention && (
-          <span
-            aria-hidden="true"
-            className="h-2 w-2 shrink-0 rounded-full bg-brand-orange"
-          />
-        )}
+      <span className="font-serif text-3xl leading-none text-ink sm:text-5xl">
+        {valeur}
       </span>
-      <span className="text-[13px] leading-snug text-ink-soft group-hover:text-ink">
+      <span className="text-xs leading-snug text-zinc-600 group-hover:text-ink sm:text-sm">
         {libelle}
       </span>
     </Link>
@@ -515,19 +520,20 @@ export function CarteRestaurant({
   // Les phrases qui comptent quelque chose. Voir `detailsAccueil.ts` :
   // elles ne peuvent pas vivre dans le même dictionnaire que les autres.
   const d = DETAILS[langue];
+  const photo = Boolean(pouls.couvertureUrl);
 
   return (
-    <li className="flex flex-col overflow-hidden rounded-3xl border border-line bg-paper shadow-[0_24px_60px_-40px_oklch(20%_0.02_60/35%)]">
+    <li className="flex flex-col overflow-hidden rounded-3xl border border-zinc-200/70 bg-white shadow-sm">
       {/* L'en-tête : la maison, pas une initiale dans un rond. Avec la
           photo de couverture quand il y en a une, un dégradé crème sinon. */}
-      <div className="relative flex min-h-[150px] flex-col justify-end overflow-hidden px-6 pb-5 pt-10 sm:px-8">
+      <div className="relative flex min-h-[180px] flex-col justify-end overflow-hidden px-5 pb-6 pt-12 sm:px-8 lg:min-h-[240px]">
         {pouls.couvertureUrl ? (
           <>
             <Image
               src={pouls.couvertureUrl}
               alt=""
               fill
-              sizes="(min-width: 1024px) 1100px, 100vw"
+              sizes="100vw"
               className="object-cover"
               priority={false}
             />
@@ -544,47 +550,47 @@ export function CarteRestaurant({
         )}
         <div
           className={`relative flex flex-wrap items-end justify-between gap-4 ${
-            pouls.couvertureUrl ? "text-white" : "text-ink"
+            photo ? "text-white" : "text-ink"
           }`}
         >
-          <div className="flex min-w-0 flex-col gap-1">
-            <h2 className="font-serif text-4xl leading-none sm:text-5xl">
+          <div className="flex min-w-0 flex-col gap-2">
+            <h2 className="font-serif text-4xl leading-none sm:text-6xl">
               {restaurant.nom}
             </h2>
             {restaurant.adresse && (
               <p
-                className={`text-sm ${pouls.couvertureUrl ? "text-white/80" : "text-ink-soft"}`}
+                className={`text-sm sm:text-base ${photo ? "text-white/80" : "text-ink-soft"}`}
               >
                 {restaurant.adresse}
               </p>
             )}
           </div>
-          <div className="flex items-center gap-4 text-sm">
+          <div className="flex flex-wrap items-center gap-3 text-sm">
             {pouls.note != null && (
               <span
-                className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-[13px] font-semibold ${
-                  pouls.couvertureUrl
+                className={`flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm font-semibold ${
+                  photo
                     ? "bg-white/15 text-white backdrop-blur"
-                    : "bg-paper text-ink shadow-sm"
+                    : "bg-white text-ink shadow-sm"
                 }`}
               >
                 <span className="text-brand-orange">★</span>
                 {pouls.note.toFixed(1).replace(".", ",")}
                 <span className="font-normal opacity-75">
-                  · {pouls.nombreAvis ?? 0} avis
+                  · {d.nombreAvis(pouls.nombreAvis ?? 0)}
                 </span>
               </span>
             )}
             {peutGerer(role) && (
               <Link
                 href={`${base}/edit`}
-                className={`font-medium ${
-                  pouls.couvertureUrl
-                    ? "text-white/85 hover:text-white active:text-white"
-                    : "text-ink-soft hover:text-ink active:text-ink"
+                className={`rounded-lg border px-4 py-2 font-semibold transition-colors ${
+                  photo
+                    ? "border-white/40 bg-white/10 text-white backdrop-blur hover:bg-white/20"
+                    : "border-zinc-200 bg-white text-ink hover:border-ink"
                 }`}
               >
-                Modifier
+                {d.modifier}
               </Link>
             )}
             {role === "proprietaire" && (
@@ -599,7 +605,7 @@ export function CarteRestaurant({
       {pouls.sansEmailContact && (
         <Link
           href={`${base}/reservations/configuration`}
-          className="flex items-start gap-3 border-b border-line bg-brand-orange-soft px-6 py-3 transition-colors hover:bg-brand-orange-soft/70 active:bg-brand-orange-soft/70 sm:px-8"
+          className="flex items-start gap-3 border-b border-brand-orange/30 bg-brand-orange-soft px-5 py-4 transition-colors hover:bg-brand-orange-soft/70 active:bg-brand-orange-soft/70 sm:px-8"
         >
           <span
             aria-hidden="true"
@@ -607,61 +613,61 @@ export function CarteRestaurant({
           />
           <span className="flex flex-col gap-0.5">
             <span className="text-sm font-semibold text-ink">
-              Aucune adresse e-mail de contact
+              {d.sansEmailTitre}
             </span>
-            <span className="text-[13px] leading-relaxed text-ink-soft">
-              Vous ne recevez pas les alertes de réservation par e-mail, et un
-              client qui répond à sa confirmation écrit dans le vide.
-              Renseignez-la en deux minutes.
+            <span className="text-sm leading-relaxed text-ink-soft">
+              {d.sansEmailTexte}
             </span>
           </span>
         </Link>
       )}
 
-      {/* Aujourd'hui : les quatre chiffres qui changent chaque jour. */}
-      <div className="border-b border-line px-4 py-3 sm:px-6">
-        <p className="px-4 pb-1 pt-1 text-[11px] font-bold uppercase tracking-[0.08em] text-brand-orange-dark">
-          Aujourd&apos;hui
-        </p>
-        <div className="grid grid-cols-2 lg:grid-cols-4">
-          <Chiffre
-            valeur={
-              couverts > 0
-                ? `${pouls.couvertsMidi} · ${pouls.couvertsSoir}`
-                : "—"
-            }
-            libelle={couverts > 0 ? d.couvertsMidiSoir : d.aucunCouvertConfirme}
-            href={`${base}/service`}
-          />
-          <Chiffre
-            valeur={String(pouls.aConfirmer)}
-            libelle={d.demandesAConfirmer(pouls.aConfirmer)}
-            href={`${base}/reservations`}
-            attention={pouls.aConfirmer > 0}
-          />
-          <Chiffre
-            valeur={String(pouls.retoursALire)}
-            libelle={d.retoursClientsALire(pouls.retoursALire)}
-            href={`${base}/retours`}
-            attention={pouls.retoursALire > 0}
-          />
-          <Chiffre
-            valeur={
-              pouls.note != null ? pouls.note.toFixed(1).replace(".", ",") : "—"
-            }
-            libelle={
-              pouls.note != null
-                ? pouls.avisCetteSemaine
-                  ? d.surGoogleSemaine(pouls.avisCetteSemaine)
-                  : d.surGoogleAvis(pouls.nombreAvis ?? 0)
-                : "note Google, premier relevé cette nuit"
-            }
-            href={`${base}/avis`}
-          />
-        </div>
-      </div>
+      <div className="flex flex-col gap-10 px-5 py-7 sm:px-8 sm:py-8">
+        {/* Aujourd'hui : les quatre chiffres qui changent chaque jour. */}
+        <section className="flex flex-col gap-4">
+          <h3 className="font-serif text-2xl text-ink">{d.aujourdhui}</h3>
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+            <Chiffre
+              valeur={
+                couverts > 0
+                  ? `${pouls.couvertsMidi} · ${pouls.couvertsSoir}`
+                  : "—"
+              }
+              libelle={
+                couverts > 0 ? d.couvertsMidiSoir : d.aucunCouvertConfirme
+              }
+              href={`${base}/service`}
+            />
+            <Chiffre
+              valeur={String(pouls.aConfirmer)}
+              libelle={d.demandesAConfirmer(pouls.aConfirmer)}
+              href={`${base}/reservations`}
+              attention={pouls.aConfirmer > 0}
+            />
+            <Chiffre
+              valeur={String(pouls.retoursALire)}
+              libelle={d.retoursClientsALire(pouls.retoursALire)}
+              href={`${base}/retours`}
+              attention={pouls.retoursALire > 0}
+            />
+            <Chiffre
+              valeur={
+                pouls.note != null
+                  ? pouls.note.toFixed(1).replace(".", ",")
+                  : "—"
+              }
+              libelle={
+                pouls.note != null
+                  ? pouls.avisCetteSemaine
+                    ? d.surGoogleSemaine(pouls.avisCetteSemaine)
+                    : d.surGoogleAvis(pouls.nombreAvis ?? 0)
+                  : d.noteEnAttente
+              }
+              href={`${base}/avis`}
+            />
+          </div>
+        </section>
 
-      <div className="flex flex-col gap-7 px-6 py-6 sm:px-8">
         {groupes(t, d, langue).map((groupe) => {
           const entrees = groupe.entrees.filter((entree) =>
             accessible(entree.minimum, role),
@@ -669,18 +675,12 @@ export function CarteRestaurant({
           if (entrees.length === 0) return null;
 
           return (
-            <section key={groupe.titre} className="flex flex-col gap-3">
-              <h3 className="text-[11px] font-bold uppercase tracking-[0.08em] text-ink-soft">
-                {groupe.titre}
-              </h3>
+            <section key={groupe.titre} className="flex flex-col gap-4">
+              <h3 className="font-serif text-2xl text-ink">{groupe.titre}</h3>
               <div
-                className={
-                  groupe.compact
-                    ? "flex flex-wrap gap-2"
-                    : groupe.entrees.length === 2
-                      ? "grid gap-3 sm:grid-cols-2"
-                      : "grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4"
-                }
+                className={`grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 ${
+                  groupe.compact ? "grid-cols-2" : ""
+                } ${COLONNES_LARGES[Math.min(entrees.length, 5)]}`}
               >
                 {entrees.map((entree) => {
                   // Une section ouverte par deux modules reste accessible
@@ -699,18 +699,18 @@ export function CarteRestaurant({
                         key={entree.href}
                         aria-disabled="true"
                         title={`Inclus dans ${LIBELLE_MODULE[requis!]} — ${PRIX_MODULE[requis!]}`}
-                        className={`flex cursor-not-allowed items-start gap-3 rounded-2xl border border-dashed border-line bg-brand-cream ${
-                          groupe.compact ? "px-3 py-2" : "p-4"
+                        className={`flex cursor-not-allowed items-start gap-3 rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 ${
+                          groupe.compact ? "p-4" : "p-5"
                         }`}
                       >
-                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-sand text-ink-soft/60">
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-zinc-100 text-zinc-400">
                           {entree.icone}
                         </span>
                         <span className="flex min-w-0 flex-col gap-0.5">
-                          <span className="text-sm font-medium text-ink-soft/70">
+                          <span className="text-[15px] font-semibold text-zinc-500">
                             {entree.label}
                           </span>
-                          <span className="text-xs text-ink-soft/70">
+                          <span className="text-sm text-zinc-500">
                             {LIBELLE_MODULE[requis!]} — {PRIX_MODULE[requis!]}
                           </span>
                         </span>
@@ -718,45 +718,31 @@ export function CarteRestaurant({
                     );
                   }
 
-                  if (groupe.compact) {
-                    return (
-                      <Link
-                        key={entree.href}
-                        href={`${base}/${entree.href}`}
-                        className="group flex items-center gap-2.5 rounded-full border border-line bg-paper py-1.5 pl-1.5 pr-4 text-sm transition-colors hover:border-ink active:border-ink active:bg-brand-sand"
-                      >
-                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-sand text-ink [&_svg]:h-4 [&_svg]:w-4">
-                          {entree.icone}
-                        </span>
-                        <span className="font-medium text-ink">
-                          {entree.label}
-                        </span>
-                        {detail && (
-                          <span className="hidden text-ink-soft sm:inline">
-                            · {detail}
-                          </span>
-                        )}
-                        {alerte && (
-                          <span
-                            aria-hidden="true"
-                            className="h-2 w-2 rounded-full bg-brand-orange"
-                          />
-                        )}
-                      </Link>
-                    );
-                  }
-
                   return (
                     <Link
                       key={entree.href}
                       href={`${base}/${entree.href}`}
-                      className="group relative flex items-start gap-3 rounded-2xl border border-line bg-paper p-4 transition-[border-color,transform,box-shadow,background-color] hover:-translate-y-px hover:border-ink hover:shadow-[0_14px_30px_-20px_oklch(20%_0.02_60/50%)] active:border-ink active:bg-brand-sand"
+                      className={`group relative flex rounded-2xl border bg-white shadow-sm transition-[border-color,transform,box-shadow,background-color] hover:-translate-y-px hover:border-ink hover:shadow-md active:bg-brand-sand ${
+                        alerte ? "border-brand-orange/60" : "border-zinc-200/70"
+                      } ${groupe.compact ? "items-center gap-2.5 p-3 sm:items-start sm:gap-3.5 sm:p-4" : "items-start gap-3.5 p-5"}`}
                     >
-                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-orange-soft text-brand-navy transition-colors group-hover:bg-ink group-hover:text-white">
+                      <span
+                        className={`flex shrink-0 items-center justify-center rounded-xl bg-brand-orange-soft text-brand-navy transition-colors group-hover:bg-ink group-hover:text-white ${
+                          groupe.compact
+                            ? "h-9 w-9 sm:h-10 sm:w-10"
+                            : "h-11 w-11"
+                        }`}
+                      >
                         {entree.icone}
                       </span>
-                      <span className="flex min-w-0 flex-col gap-0.5">
-                        <span className="flex items-center gap-2 text-[15px] font-semibold text-ink">
+                      <span className="flex min-w-0 flex-col gap-1">
+                        <span
+                          className={`flex items-center gap-2 font-semibold text-ink ${
+                            groupe.compact
+                              ? "text-sm sm:text-base"
+                              : "text-base"
+                          }`}
+                        >
                           {entree.label}
                           {alerte && (
                             <span
@@ -765,12 +751,14 @@ export function CarteRestaurant({
                             />
                           )}
                         </span>
+                        {/* Sur téléphone, les réglages tiennent à deux par
+                            rangée : leur nom suffit, le détail attendra. */}
                         <span
-                          className={`text-[13px] leading-relaxed ${
+                          className={`text-sm leading-relaxed ${
                             detail
                               ? "font-medium text-ink-soft"
                               : "text-ink-soft/80"
-                          }`}
+                          } ${groupe.compact ? "hidden sm:block" : ""}`}
                         >
                           {detail ?? entree.resume}
                         </span>

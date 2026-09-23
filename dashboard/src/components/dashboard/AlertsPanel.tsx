@@ -20,11 +20,9 @@ export function AlertsPanel({
   surveillanceActive: boolean;
 }) {
   return (
-    <section className="flex flex-col gap-3 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm">
+    <section className="flex flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm">
       <div className="flex items-baseline justify-between gap-4">
-        <h2 className="text-base font-semibold text-zinc-900">
-          Ce qui a changé
-        </h2>
+        <h2 className="font-serif text-2xl text-ink">Ce qui a changé</h2>
         <span className="text-xs text-zinc-400">sur {FENETRE_JOURS} jours</span>
       </div>
 
@@ -39,11 +37,11 @@ export function AlertsPanel({
           Rien de neuf : ni nouvel avis, ni variation de note cette semaine.
         </p>
       ) : (
-        <ul className="flex flex-col gap-2">
+        <ul className="grid gap-2 xl:grid-cols-2">
           {alerts.map((alert, index) => (
             <li
               key={`${alert.restaurantId}-${alert.plateforme}-${index}`}
-              className={`flex flex-wrap items-center justify-between gap-x-4 gap-y-1 rounded-xl border px-4 py-2.5 text-sm ${TON_STYLES[alert.ton]}`}
+              className={`flex flex-wrap items-center justify-between gap-x-4 gap-y-1 rounded-xl border px-4 py-3 text-sm ${TON_STYLES[alert.ton]}`}
             >
               <span>
                 <span className="font-medium">

@@ -39,12 +39,6 @@ export type DetailsAccueil = {
   avancement(faites: number, total: number): string;
   premierReleve: string;
   note(note: string, avis: number, semaine: number | null): string;
-  /**
-   * Le seul détail de cet écran qui ne rapporte pas un chiffre mais une
-   * incohérence. Il passe devant la note : ce jour-là, savoir qu'on est
-   * à 4,7 étoiles ne sert à rien si Google ne montre plus la maison.
-   */
-  ficheFermee: string;
   rienDeNouveau: string;
   aLire(n: number): string;
   aucuneProgrammee: string;
@@ -62,6 +56,15 @@ export type DetailsAccueil = {
   /** L'en-tête de la page : le titre et le bouton d'ajout. */
   titreListe(n: number): string;
   ajouterRestaurant: string;
+  /** Le reste de la carte : en-tête, bandeau, état vide. */
+  aujourdhui: string;
+  modifier: string;
+  nombreAvis(n: number): string;
+  noteEnAttente: string;
+  sansEmailTitre: string;
+  sansEmailTexte: string;
+  aucunRestaurantTitre: string;
+  aucunRestaurantTexte: string;
 };
 
 /**
@@ -111,7 +114,6 @@ const fr: DetailsAccueil = {
   photos: (n, c) => `${n} photo${s(n)}${c ? " · couverture choisie" : ""}`,
   avancement: (f, t) => `${f} sur ${t}`,
   premierReleve: "Premier relevé la nuit prochaine",
-  ficheFermee: "Google vous affiche « fermé » alors que des clients ont réservé",
   note: (note, avis, semaine) =>
     `${note} ★ · ${avis} avis${semaine ? ` · ${VARIATION.fr(semaine).replace(" avis", "")}` : ""}`,
   rienDeNouveau: "Rien de nouveau",
@@ -129,6 +131,16 @@ const fr: DetailsAccueil = {
   surGoogleSemaine: (n) => `sur Google · ${VARIATION.fr(n)}`,
   titreListe: (n) => (n === 1 ? "Votre restaurant" : "Vos restaurants"),
   ajouterRestaurant: "Ajouter un restaurant",
+  aujourdhui: "Aujourd'hui",
+  modifier: "Modifier",
+  nombreAvis: (n) => `${n} avis`,
+  noteEnAttente: "note Google, premier relevé cette nuit",
+  sansEmailTitre: "Aucune adresse e-mail de contact",
+  sansEmailTexte:
+    "Vous ne recevez pas les alertes de réservation par e-mail, et un client qui répond à sa confirmation écrit dans le vide. Renseignez-la en deux minutes.",
+  aucunRestaurantTitre: "Aucun restaurant pour le moment.",
+  aucunRestaurantTexte:
+    "Ajoute ton premier restaurant pour commencer à gérer ses réservations et sa présence en ligne.",
 };
 
 const en: DetailsAccueil = {
@@ -149,7 +161,6 @@ const en: DetailsAccueil = {
   photos: (n, c) => `${n} photo${s(n)}${c ? " · cover chosen" : ""}`,
   avancement: (f, t) => `${f} of ${t}`,
   premierReleve: "First reading tonight",
-  ficheFermee: "Google shows you as “closed” while guests have booked",
   note: (note, avis, semaine) =>
     `${note} ★ · ${avis} review${s(avis)}${semaine ? ` · ${VARIATION.en(semaine).replace(/ reviews? /, " ")}` : ""}`,
   rienDeNouveau: "Nothing new",
@@ -167,6 +178,16 @@ const en: DetailsAccueil = {
   surGoogleSemaine: (n) => `on Google · ${VARIATION.en(n)}`,
   titreListe: (n) => (n === 1 ? "Your restaurant" : "Your restaurants"),
   ajouterRestaurant: "Add a restaurant",
+  aujourdhui: "Today",
+  modifier: "Edit",
+  nombreAvis: (n) => `${n} review${s(n)}`,
+  noteEnAttente: "Google rating, first reading tonight",
+  sansEmailTitre: "No contact email address",
+  sansEmailTexte:
+    "You don't get booking alerts by email, and a guest replying to their confirmation writes into the void. It takes two minutes to fill in.",
+  aucunRestaurantTitre: "No restaurant yet.",
+  aucunRestaurantTexte:
+    "Add your first restaurant to start managing its bookings and online presence.",
 };
 
 const zh: DetailsAccueil = {
@@ -187,7 +208,6 @@ const zh: DetailsAccueil = {
   photos: (n, c) => `${n} 张照片${c ? " · 已选封面" : ""}`,
   avancement: (f, t) => `${t} 项已完成 ${f} 项`,
   premierReleve: "今晚首次采集",
-  ficheFermee: "Google 显示您「已关闭」，但已有客人订位",
   note: (note, avis, semaine) =>
     // « 条评价 » est déjà dit juste avant : on le laisse tomber ici,
     // comme le français abrège « 1 retiré » et l'anglais « 1 removed ».
@@ -207,6 +227,15 @@ const zh: DetailsAccueil = {
   surGoogleSemaine: (n) => `Google 上${VARIATION.zh(n)}`,
   titreListe: () => "您的餐厅",
   ajouterRestaurant: "添加餐厅",
+  aujourdhui: "今天",
+  modifier: "编辑",
+  nombreAvis: (n) => `${n} 条评价`,
+  noteEnAttente: "Google 评分，今晚首次采集",
+  sansEmailTitre: "没有联系邮箱",
+  sansEmailTexte:
+    "您收不到订位的邮件提醒，客人回复确认邮件也无人接收。两分钟就能填好。",
+  aucunRestaurantTitre: "还没有餐厅。",
+  aucunRestaurantTexte: "添加第一家餐厅，开始管理订位和线上形象。",
 };
 
 export const DETAILS: Record<Langue, DetailsAccueil> = { fr, en, zh };
