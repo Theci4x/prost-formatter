@@ -20,20 +20,15 @@ import {
   type EtatBon,
 } from "@/lib/bons/regles";
 import type { Bon } from "@/lib/bons/serveur";
+import { langueUtilisateur } from "@/lib/i18n/langue";
+import { BONS_CAISSE } from "@/lib/i18n/bonsCaisse";
+import { localeDe } from "@/lib/i18n/seo";
 import { annulerBon, prolongerBon } from "./actions";
 
 /**
  * Les bons cadeaux, côté maison : la page à partager, les réglages, et
  * surtout la caisse — taper un code, voir ce qu'il reste, déduire.
  */
-
-const LIBELLE_ETAT: Record<EtatBon, string> = {
-  attente: "Paiement en cours",
-  valide: "Valable",
-  epuise: "Utilisé",
-  expire: "Expiré",
-  annule: "Annulé",
-};
 
 const COULEUR_ETAT: Record<EtatBon, string> = {
   attente: "border-zinc-200 bg-zinc-50 text-zinc-500",
@@ -57,9 +52,9 @@ function dansJours(n: number): string {
   return new Date(Date.now() + n * 24 * 3600 * 1000).toISOString().slice(0, 10);
 }
 
-const jour = (iso: string) =>
+const jourEn = (iso: string, locale: string) =>
   new Date(iso.length === 10 ? `${iso}T12:00:00Z` : iso).toLocaleDateString(
-    "fr-FR",
+    locale,
     {
       day: "numeric",
       month: "short",
@@ -90,6 +85,10 @@ export default async function BonsCadeauxPage({
     : "tous";
   await exiger(id, "gerant");
   await exigerModule(id, "reservations");
+  const ui = await langueUtilisateur();
+  const t = BONS_CAISSE[ui];
+  const LIBELLE_ETAT = t.etats;
+  const jour = (iso: string) => jourEn(iso, localeDe(ui));
 
   const supabase = await createClient();
   const [{ data: restaurantData }, { data: connexion }, bonsResult] =
@@ -182,23 +181,19 @@ export default async function BonsCadeauxPage({
   const compte = (etat: EtatBon) =>
     avecEtat.filter((x) => x.etat === etat).length;
   const chiffres = [
-    { libelle: "À servir", valeur: prixBon(aHonorer) },
-    { libelle: "Valables", valeur: valables },
-    { libelle: "Utilisés", valeur: compte("epuise") },
+    { libelle: t.aServir, valeur: prixBon(aHonorer) },
+    { libelle: t.valables, valeur: valables },
+    { libelle: t.utilises, valeur: compte("epuise") },
     {
-      libelle: "Offerts par toi",
+      libelle: t.offertsParToi,
       valeur: bons.filter((b) => b.origine === "offert").length,
     },
   ];
   const affiches =
     filtre === "tous" ? avecEtat : avecEtat.filter((x) => x.etat === filtre);
-  const FILTRES: { cle: EtatBon | "tous"; libelle: string }[] = [
-    { cle: "tous", libelle: "Tous" },
-    { cle: "valide", libelle: "Valables" },
-    { cle: "epuise", libelle: "Utilisés" },
-    { cle: "expire", libelle: "Expirés" },
-    { cle: "annule", libelle: "Annulés" },
-  ];
+  const FILTRES: { cle: EtatBon | "tous"; libelle: string }[] = (
+    ["tous", "valide", "epuise", "expire", "annule"] as const
+  ).map((cle) => ({ cle, libelle: t.filtres[cle] }));
   const lienFiltre = (cle: EtatBon | "tous") =>
     cle === "tous"
       ? `/dashboard/${id}/bons-cadeaux#bons`
@@ -209,32 +204,25 @@ export default async function BonsCadeauxPage({
       <div className="flex flex-col gap-3">
         <PageHeader
           icon={dashboardIcons.cadeau}
-          title={`Bons cadeaux — ${restaurant.nom}`}
+          title={t.titre(restaurant.nom)}
         />
-        <p className="max-w-4xl text-sm text-zinc-600">
-          Tes clients offrent un repas chez toi depuis une page à ton nom. Le
-          paiement arrive sur ton compte Stripe, sans commission Klarr ; le
-          bénéficiaire montre son code à l&apos;addition, et tu le déduis ici.
-        </p>
+        <p className="max-w-4xl text-sm text-zinc-600">{t.chapo}</p>
       </div>
 
       {migrationManquante && (
         <p className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm leading-relaxed text-amber-900">
-          <strong>Migration à passer :</strong>{" "}
-          supabase/migrations/0085_bons_cadeaux.sql n&apos;est pas encore en
-          place. La page s&apos;ouvrira une fois la migration passée.
+          {t.migration}
         </p>
       )}
 
       {!migrationManquante && !stripePret && (
         <p className="max-w-4xl rounded-2xl border border-brand-orange/30 bg-brand-orange-soft px-5 py-4 text-sm text-ink">
-          Pour vendre des bons, relie d&apos;abord ton compte Stripe :
-          c&apos;est lui qui reçoit l&apos;argent.{" "}
+          {t.sansStripe}{" "}
           <Link
             href={`/dashboard/${id}/paiements`}
             className="font-semibold underline"
           >
-            Relier mon compte Stripe
+            {t.relierStripe}
           </Link>
         </p>
       )}
@@ -251,16 +239,14 @@ export default async function BonsCadeauxPage({
               {prixBon(encaisse)}
             </span>
             <span className="text-sm text-zinc-600">
-              encaissés sur {vendus.length} bon{vendus.length > 1 ? "s" : ""}{" "}
-              vendu{vendus.length > 1 ? "s" : ""}
+              {t.encaisses(vendus.length)}
             </span>
           </span>
           <p className="max-w-xl text-base leading-relaxed text-zinc-700">
             {valables > 0
-              ? `Il reste ${prixBon(aHonorer)} à servir sur ${valables} bon${valables > 1 ? "s" : ""} valable${valables > 1 ? "s" : ""}.`
-              : "Aucun bon en cours : tout ce qui a été vendu a été servi."}
-            {bientotExpires > 0 &&
-              ` ${bientotExpires} expire${bientotExpires > 1 ? "nt" : ""} dans les 30 jours.`}
+              ? t.reste(prixBon(aHonorer), valables)
+              : t.aucunEnCours}
+            {bientotExpires > 0 && t.expirent(bientotExpires)}
           </p>
           <dl className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
             {chiffres.map((c) => (
@@ -285,7 +271,7 @@ export default async function BonsCadeauxPage({
               className={`h-2.5 w-2.5 rounded-full ${enVente ? "bg-emerald-500" : "bg-zinc-300"}`}
             />
             <span className="font-semibold text-ink">
-              {enVente ? "En vente en ligne" : "Pas en vente"}
+              {enVente ? t.enVente : t.pasEnVente}
             </span>
           </span>
           {lienPublic ? (
@@ -297,27 +283,26 @@ export default async function BonsCadeauxPage({
                 {lienPublic}
               </code>
               <div className="flex flex-wrap items-center gap-3">
-                <BoutonCopier texte={lienPublic} />
+                <BoutonCopier
+                  texte={lienPublic}
+                  libelle={t.copierAdresse}
+                  copie={t.adresseCopiee}
+                />
                 <a
                   href={lienPublic}
                   target="_blank"
                   rel="noopener"
                   className="text-sm font-semibold text-brand-navy hover:underline"
                 >
-                  Voir la page ↗
+                  {t.voirPage}
                 </a>
               </div>
               <span className="text-xs leading-relaxed text-zinc-500">
-                À coller dans ta bio Instagram, sur ta vitrine et ta fiche
-                Google. C&apos;est en novembre et décembre que les bons se
-                vendent.
+                {t.aPartager}
               </span>
             </>
           ) : (
-            <span className="text-sm text-zinc-600">
-              Ta page de réservation n&apos;a pas encore d&apos;adresse : la
-              page de bons cadeaux utilisera la même.
-            </span>
+            <span className="text-sm text-zinc-600">{t.sansAdresse}</span>
           )}
         </div>
       </section>
@@ -330,7 +315,7 @@ export default async function BonsCadeauxPage({
             className="flex scroll-mt-8 flex-col gap-4 rounded-2xl border border-brand-navy/15 bg-brand-navy p-6 text-white shadow-sm"
           >
             <span className="flex items-center gap-2 font-serif text-2xl">
-              Encaisser un bon
+              {t.caisse}
             </span>
             <form
               action={`/dashboard/${id}/bons-cadeaux#encaisser`}
@@ -341,22 +326,21 @@ export default async function BonsCadeauxPage({
                 defaultValue={code ?? ""}
                 placeholder="ABCD-EFGH"
                 autoComplete="off"
-                aria-label="Code du bon"
+                aria-label={t.codeAria}
                 className="w-full rounded-xl border border-white/20 bg-white/10 px-4 py-3 font-mono text-xl uppercase tracking-[0.2em] text-white outline-none transition-colors placeholder:text-white/40 focus:border-white/60 focus:bg-white/15 sm:w-72"
               />
               <button
                 type="submit"
                 className="rounded-xl bg-white px-6 py-3 text-sm font-semibold text-brand-navy transition-colors hover:bg-zinc-100"
               >
-                Chercher
+                {t.chercher}
               </button>
             </form>
 
             {code && !trouve && (
               <p className="text-sm text-white/80">
-                Aucun bon <span className="font-mono">{code}</span> chez toi.
-                Vérifie les lettres : le code n&apos;a ni 0, ni O, ni 1, ni I,
-                ni L.
+                {t.introuvableAvant} <span className="font-mono">{code}</span>{" "}
+                {t.introuvableApres}
               </p>
             )}
 
@@ -369,11 +353,11 @@ export default async function BonsCadeauxPage({
                     </span>
                     <span className="text-sm text-zinc-600">
                       {trouve.bon.beneficiaire_nom
-                        ? `Pour ${trouve.bon.beneficiaire_nom}`
-                        : "Sans nom"}
+                        ? t.pour(trouve.bon.beneficiaire_nom)
+                        : t.sansNom}
                       {trouve.bon.origine === "vente"
-                        ? ` · offert par ${trouve.bon.acheteur_nom}`
-                        : " · offert par la maison"}
+                        ? t.offertPar(trouve.bon.acheteur_nom)
+                        : t.offertParMaison}
                     </span>
                   </div>
                   <span
@@ -384,19 +368,19 @@ export default async function BonsCadeauxPage({
                 </div>
                 <dl className="grid grid-cols-3 gap-3 text-sm">
                   <div>
-                    <dt className="text-zinc-500">Valeur</dt>
+                    <dt className="text-zinc-500">{t.valeur}</dt>
                     <dd className="font-semibold">
                       {prixBon(trouve.bon.montant_centimes)}
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-zinc-500">Reste</dt>
+                    <dt className="text-zinc-500">{t.resteCol}</dt>
                     <dd className="font-serif text-2xl leading-none text-ink">
                       {prixBon(trouve.bon.solde_centimes)}
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-zinc-500">Jusqu&apos;au</dt>
+                    <dt className="text-zinc-500">{t.jusquau}</dt>
                     <dd className="font-semibold">
                       {trouve.bon.expire_le ? jour(trouve.bon.expire_le) : "—"}
                     </dd>
@@ -407,6 +391,7 @@ export default async function BonsCadeauxPage({
                     restaurantId={id}
                     bonId={trouve.bon.id}
                     soldeEuros={enEuros(trouve.bon.solde_centimes)}
+                    langue={ui}
                   />
                 ) : trouve.etat === "expire" ? (
                   <form
@@ -416,13 +401,13 @@ export default async function BonsCadeauxPage({
                     <input type="hidden" name="restaurant_id" value={id} />
                     <input type="hidden" name="bon_id" value={trouve.bon.id} />
                     <span className="text-sm text-zinc-600">
-                      Expiré. Tu peux lui accorder trois mois de plus.
+                      {t.expireProlonger}
                     </span>
                     <button
                       type="submit"
                       className="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
                     >
-                      Prolonger de 3 mois
+                      {t.prolonger}
                     </button>
                   </form>
                 ) : null}
@@ -430,8 +415,10 @@ export default async function BonsCadeauxPage({
                   <ul className="flex flex-col gap-1 border-t border-zinc-100 pt-3 text-sm text-zinc-600">
                     {utilisations.map((u) => (
                       <li key={u.utilise_le}>
-                        {prixBon(u.montant_centimes)} déduits le{" "}
-                        {jour(u.utilise_le)}
+                        {t.deduitLe(
+                          prixBon(u.montant_centimes),
+                          jour(u.utilise_le),
+                        )}
                       </li>
                     ))}
                   </ul>
@@ -443,9 +430,9 @@ export default async function BonsCadeauxPage({
           {/* ── Tous les bons ─────────────────────────────────────────── */}
           <section id="bons" className="flex scroll-mt-8 flex-col gap-4">
             <TitreSection
-              aside={bons.length > 0 ? `${bons.length} bons` : undefined}
+              aside={bons.length > 0 ? t.nbBons(bons.length) : undefined}
             >
-              Tous les bons
+              {t.tousTitre}
             </TitreSection>
             {bons.length > 0 && (
               <nav className="flex flex-wrap gap-2">
@@ -480,9 +467,7 @@ export default async function BonsCadeauxPage({
             )}
             {affiches.length === 0 ? (
               <p className="rounded-2xl border border-zinc-200/70 bg-white p-6 text-sm text-zinc-600 shadow-sm">
-                {bons.length === 0
-                  ? "Aucun bon pour l'instant. Les bons vendus et offerts apparaîtront ici."
-                  : "Aucun bon dans ce filtre."}
+                {bons.length === 0 ? t.aucunBon : t.aucunFiltre}
               </p>
             ) : (
               <ul className="flex flex-col overflow-hidden rounded-2xl border border-zinc-200/70 bg-white shadow-sm">
@@ -525,7 +510,7 @@ export default async function BonsCadeauxPage({
                         <span className="truncate text-sm text-zinc-600">
                           {bon.origine === "vente"
                             ? bon.acheteur_nom
-                            : "La maison"}
+                            : t.laMaison}
                           {bon.beneficiaire_nom
                             ? ` → ${bon.beneficiaire_nom}`
                             : ""}
@@ -553,8 +538,8 @@ export default async function BonsCadeauxPage({
                             />
                           </span>
                           {bon.expire_le && (
-                            <span className="text-[11px] text-zinc-500">
-                              jusqu&apos;au {jour(bon.expire_le)}
+                            <span className="whitespace-nowrap text-[11px] text-zinc-500">
+                              {t.jusquauDate(jour(bon.expire_le))}
                             </span>
                           )}
                         </span>
@@ -565,14 +550,14 @@ export default async function BonsCadeauxPage({
                             rel="noopener"
                             className="text-sm font-semibold text-brand-navy hover:underline"
                           >
-                            Voir
+                            {t.voir}
                           </a>
                           {etat === "valide" && (
                             // Deux gestes, pas un : un bon annulé par
                             // erreur est un client refusé en caisse.
                             <details className="relative">
                               <summary className="cursor-pointer list-none text-xs text-zinc-400 hover:text-red-600">
-                                Annuler
+                                {t.annuler}
                               </summary>
                               <form
                                 action={annulerBon}
@@ -589,15 +574,13 @@ export default async function BonsCadeauxPage({
                                   value={bon.id}
                                 />
                                 <span className="text-xs text-zinc-600">
-                                  Rembourse-le d&apos;abord dans Stripe si le
-                                  client l&apos;a payé. Le bon ne sera plus
-                                  accepté.
+                                  {t.annulerAvertissement}
                                 </span>
                                 <button
                                   type="submit"
                                   className="rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white hover:bg-red-700"
                                 >
-                                  Annuler ce bon
+                                  {t.annulerCe}
                                 </button>
                               </form>
                             </details>
@@ -609,12 +592,7 @@ export default async function BonsCadeauxPage({
                 })}
               </ul>
             )}
-            <p className="max-w-3xl text-xs text-zinc-500">
-              Rembourser un bon se fait dans ton tableau de bord Stripe ;
-              annule-le ensuite ici pour qu&apos;il ne soit plus accepté. Côté
-              TVA, un bon utilisable sur toute ta carte se déclare quand il est
-              utilisé, pas à l&apos;achat — ton comptable te le confirmera.
-            </p>
+            <p className="max-w-3xl text-xs text-zinc-500">{t.piedTva}</p>
           </section>
         </div>
 
@@ -622,7 +600,7 @@ export default async function BonsCadeauxPage({
         {!migrationManquante && (
           <aside className="flex flex-col gap-6 lg:sticky lg:top-6">
             <section className="flex flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm">
-              <span className="font-serif text-2xl text-ink">Réglages</span>
+              <span className="font-serif text-2xl text-ink">{t.reglages}</span>
               <ReglagesBons
                 restaurantId={id}
                 actifs={Boolean(restaurant.bons_cadeaux_actifs)}
@@ -634,17 +612,16 @@ export default async function BonsCadeauxPage({
                   .join(", ")}
                 validite={restaurant.bons_cadeaux_validite_mois ?? 12}
                 texte={restaurant.bons_cadeaux_texte ?? ""}
+                langue={ui}
               />
             </section>
             <details className="group rounded-2xl border border-zinc-200/70 bg-white shadow-sm">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-5 [&::-webkit-details-marker]:hidden">
                 <span className="flex flex-col gap-0.5">
                   <span className="font-serif text-2xl text-ink">
-                    Offrir un bon
+                    {t.offrir}
                   </span>
-                  <span className="text-xs text-zinc-500">
-                    Un geste, un concours : sans paiement.
-                  </span>
+                  <span className="text-xs text-zinc-500">{t.offrirChapo}</span>
                 </span>
                 <span
                   aria-hidden="true"
@@ -654,7 +631,7 @@ export default async function BonsCadeauxPage({
                 </span>
               </summary>
               <div className="border-t border-zinc-100 p-5">
-                <OffrirBon restaurantId={id} />
+                <OffrirBon restaurantId={id} langue={ui} />
               </div>
             </details>
           </aside>

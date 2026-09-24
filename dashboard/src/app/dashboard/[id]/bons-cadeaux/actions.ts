@@ -14,6 +14,13 @@ import {
   lireMontants,
 } from "@/lib/bons/regles";
 import { messagesDuBon, type Bon } from "@/lib/bons/serveur";
+import { langueUtilisateur } from "@/lib/i18n/langue";
+import { BONS_CAISSE } from "@/lib/i18n/bonsCaisse";
+
+/** Les messages dans la langue de l'écran. */
+async function textes() {
+  return BONS_CAISSE[await langueUtilisateur()];
+}
 
 const chemin = (id: string) => `/dashboard/${id}/bons-cadeaux`;
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -25,15 +32,15 @@ export async function enregistrerReglagesBons(
   _prev: BonState,
   formData: FormData,
 ): Promise<BonState> {
+  const t = await textes();
   const restaurantId = String(formData.get("restaurant_id") ?? "");
-  if (!restaurantId) return { erreur: "Établissement inconnu.", succes: null };
+  if (!restaurantId) return { erreur: t.inconnu, succes: null };
   await exiger(restaurantId, "gerant");
 
   const montants = lireMontants(String(formData.get("montants") ?? ""));
   if (montants.length === 0) {
     return {
-      erreur:
-        "Indique au moins un montant entre 20 et 500 €, par exemple « 50, 80, 100 ».",
+      erreur: t.montantsInvalides,
       succes: null,
     };
   }
@@ -61,13 +68,13 @@ export async function enregistrerReglagesBons(
     return {
       erreur:
         error.code === "42703" || error.code === "PGRST204"
-          ? "La migration 0085 n'est pas encore passée."
-          : "Enregistrement impossible. Réessaie.",
+          ? t.migration85
+          : t.impossible,
       succes: null,
     };
   }
   revalidatePath(chemin(restaurantId));
-  return { erreur: null, succes: "Enregistré." };
+  return { erreur: null, succes: t.enregistre };
 }
 
 /** Déduire un montant d'un bon, au moment de l'addition. */
@@ -75,9 +82,10 @@ export async function utiliserBon(
   _prev: BonState,
   formData: FormData,
 ): Promise<BonState> {
+  const t = await textes();
   const restaurantId = String(formData.get("restaurant_id") ?? "");
   const bonId = String(formData.get("bon_id") ?? "");
-  if (!restaurantId || !bonId) return { erreur: "Bon inconnu.", succes: null };
+  if (!restaurantId || !bonId) return { erreur: t.bonInconnu, succes: null };
   await exiger(restaurantId, "gerant");
 
   const centimes = Math.round(
@@ -85,7 +93,7 @@ export async function utiliserBon(
       100,
   );
   if (!Number.isFinite(centimes) || centimes <= 0) {
-    return { erreur: "Indique le montant à déduire.", succes: null };
+    return { erreur: t.montantManquant, succes: null };
   }
 
   const supabase = await createClient();
@@ -96,8 +104,8 @@ export async function utiliserBon(
   if (error) {
     return {
       erreur: error.message.includes("non utilisable")
-        ? "Ce montant dépasse le solde, ou le bon n'est plus valable."
-        : "Encaissement impossible. Réessaie.",
+        ? t.depasse
+        : t.encaissementImpossible,
       succes: null,
     };
   }
@@ -107,8 +115,8 @@ export async function utiliserBon(
     erreur: null,
     succes:
       reste > 0
-        ? `C'est noté. Il reste ${(reste / 100).toLocaleString("fr-FR")} € sur ce bon.`
-        : "C'est noté. Le bon est entièrement utilisé.",
+        ? t.noteReste(`${(reste / 100).toLocaleString("fr-FR")} €`)
+        : t.noteEpuise,
   };
 }
 
@@ -117,8 +125,9 @@ export async function creerBonOffert(
   _prev: BonState,
   formData: FormData,
 ): Promise<BonState> {
+  const t = await textes();
   const restaurantId = String(formData.get("restaurant_id") ?? "");
-  if (!restaurantId) return { erreur: "Établissement inconnu.", succes: null };
+  if (!restaurantId) return { erreur: t.inconnu, succes: null };
   await exiger(restaurantId, "gerant");
 
   const centimes = lireMontantLibre(String(formData.get("montant") ?? ""));
@@ -133,14 +142,14 @@ export async function creerBonOffert(
     .trim()
     .slice(0, 300);
   if (!centimes) {
-    return { erreur: "Choisis un montant entre 20 et 500 €.", succes: null };
+    return { erreur: t.montantLibre, succes: null };
   }
   if (!beneficiaire) {
-    return { erreur: "Indique le nom du bénéficiaire.", succes: null };
+    return { erreur: t.nomManquant, succes: null };
   }
   if (email && !EMAIL.test(email)) {
     return {
-      erreur: "Cette adresse e-mail ne semble pas valide.",
+      erreur: t.emailInvalide,
       succes: null,
     };
   }
@@ -156,7 +165,7 @@ export async function creerBonOffert(
     email_contact: string | null;
     bons_cadeaux_validite_mois?: number | null;
   } | null;
-  if (!maison) return { erreur: "Établissement inconnu.", succes: null };
+  if (!maison) return { erreur: t.inconnu, succes: null };
 
   const maintenant = new Date();
   let bon: Bon | null = null;
@@ -186,11 +195,11 @@ export async function creerBonOffert(
       .single();
     if (error && error.code !== "23505") {
       console.error("[bons/offert]", error.message);
-      return { erreur: "Création impossible. Réessaie.", succes: null };
+      return { erreur: t.creationImpossible, succes: null };
     }
     bon = (data as Bon | null) ?? null;
   }
-  if (!bon) return { erreur: "Création impossible. Réessaie.", succes: null };
+  if (!bon) return { erreur: t.creationImpossible, succes: null };
 
   if (email) {
     const { beneficiaire: courriel } = messagesDuBon(bon, maison.nom);
@@ -206,9 +215,7 @@ export async function creerBonOffert(
   revalidatePath(chemin(restaurantId));
   return {
     erreur: null,
-    succes: email
-      ? `Bon ${bon.code} créé et envoyé à ${email}.`
-      : `Bon ${bon.code} créé. Tu peux l'ouvrir dans la liste pour l'imprimer.`,
+    succes: email ? t.creeEnvoye(bon.code, email) : t.cree(bon.code),
   };
 }
 

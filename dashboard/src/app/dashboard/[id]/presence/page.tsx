@@ -10,10 +10,7 @@ import { LogoPlateforme } from "@/components/presence/LogoPlateforme";
 import { exiger } from "@/lib/equipe/roles";
 import { exigerModule } from "@/lib/abonnement/acces";
 import {
-  ETAPES_MISE_A_JOUR,
-  LIBELLE_GROUPE,
-  LIBELLE_STATUT,
-  PLATEFORMES,
+  PLATEFORMES as PLATEFORMES_FR,
   STATUTS,
   type GroupePresence,
   type Plateforme,
@@ -27,6 +24,9 @@ import {
   type EtatPlateforme,
   type Relie,
 } from "@/lib/presence/etat";
+import { langueUtilisateur } from "@/lib/i18n/langue";
+import { PRESENCE, plateformeEn, type ClesPresence } from "@/lib/i18n/presence";
+import { localeDe } from "@/lib/i18n/seo";
 import { majPresence } from "./actions";
 
 /**
@@ -40,8 +40,8 @@ import { majPresence } from "./actions";
  * trouvé. Le mode guidé reprend les mêmes, une à la fois.
  */
 
-function jourCourt(iso: string): string {
-  return new Date(iso).toLocaleDateString("fr-FR", {
+function jourCourt(iso: string, locale = "fr-FR"): string {
+  return new Date(iso).toLocaleDateString(locale, {
     day: "numeric",
     month: "short",
     timeZone: "Europe/Paris",
@@ -50,11 +50,11 @@ function jourCourt(iso: string): string {
 
 type Filtre = "toutes" | "a-traiter" | "a-verifier" | "en-ordre";
 
-const FILTRES: { cle: Filtre; libelle: string }[] = [
-  { cle: "toutes", libelle: "Toutes" },
-  { cle: "a-traiter", libelle: "À traiter" },
-  { cle: "a-verifier", libelle: "Pas vérifiées" },
-  { cle: "en-ordre", libelle: "En ordre" },
+const CLES_FILTRES: Filtre[] = [
+  "toutes",
+  "a-traiter",
+  "a-verifier",
+  "en-ordre",
 ];
 
 function dansLeFiltre(filtre: Filtre, etat: EtatPlateforme): boolean {
@@ -84,16 +84,32 @@ export default async function PresencePage({
 }) {
   const { id } = await params;
   const { filtre: filtreDemande } = await searchParams;
-  const filtre: Filtre = FILTRES.some((f) => f.cle === filtreDemande)
+  const filtre: Filtre = CLES_FILTRES.some((f) => f === filtreDemande)
     ? (filtreDemande as Filtre)
     : "toutes";
   await exiger(id, "gerant");
   await exigerModule(id, "visibilite");
+  const langue = await langueUtilisateur();
+  const t = PRESENCE[langue];
+  const locale = localeDe(langue);
+  const PLATEFORMES = PLATEFORMES_FR.map((p) => plateformeEn(p, langue));
+  const FILTRES = CLES_FILTRES.map((cle) => ({ cle, libelle: t.filtres[cle] }));
+  const LIBELLE_GROUPE = t.groupes;
 
   const supabase = await createClient();
   const etat = await chargerPresence(supabase, id);
   if (!etat) notFound();
-  const { restaurant, relies, constats, champs, tableAbsente } = etat;
+  const { restaurant, relies: reliesFr, constats, tableAbsente } = etat;
+  const champs = etat.champs.map((c) => ({
+    ...c,
+    libelle: t.champs[c.libelle] ?? c.libelle,
+  }));
+  const relies = Object.fromEntries(
+    Object.entries(reliesFr).map(([cle, r]) => [
+      cle,
+      r ? { ...r, texte: t.relies[r.texte] ?? r.texte } : r,
+    ]),
+  ) as typeof reliesFr;
 
   const etats = new Map(PLATEFORMES.map((p) => [p.cle, etatDe(p, etat)]));
   const essentielles = PLATEFORMES.filter((p) => p.niveau === 1);
@@ -111,7 +127,7 @@ export default async function PresencePage({
     estReglee(etats.get(p.cle) ?? null),
   ).length;
   const remplis = champs.filter((c) => c.valeur && c.valeur.trim()).length;
-  const file = fileGuidee(etat);
+  const file = fileGuidee(etat).map((p) => plateformeEn(p, langue));
   const minutesRestantes = file.reduce((total, p) => total + p.minutes, 0);
 
   const adresseRecherche = restaurant.adresse ?? "";
@@ -123,22 +139,14 @@ export default async function PresencePage({
       <div className="flex flex-col gap-3">
         <PageHeader
           icon={dashboardIcons.presence}
-          title={`Présence en ligne — ${restaurant.nom}`}
+          title={t.titre(restaurant.nom)}
         />
-        <p className="max-w-4xl text-sm text-zinc-600">
-          Les plateformes où tes clients — et les assistants IA qui répondent à
-          leur place — vont chercher où manger. Recopie partout la même fiche,
-          au caractère près : un nom ou un téléphone qui diffère d&apos;un site
-          à l&apos;autre fait douter Google comme les IA.
-        </p>
+        <p className="max-w-4xl text-sm text-zinc-600">{t.chapo}</p>
       </div>
 
       {tableAbsente && (
         <p className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm leading-relaxed text-amber-900">
-          <strong>Migration à passer :</strong> la table de cet écran
-          n&apos;existe pas encore (supabase/migrations/0079_presence.sql). Tu
-          peux déjà vérifier tes fiches et copier la tienne ; les statuts
-          s&apos;enregistreront une fois la migration passée.
+          {t.migration}
         </p>
       )}
 
@@ -147,20 +155,19 @@ export default async function PresencePage({
       {aRevoir.length > 0 && restaurant.fiche_modifiee_le && (
         <div className="flex flex-col gap-3 rounded-2xl border border-brand-orange/60 bg-brand-orange-soft p-6">
           <p className="text-base font-semibold text-ink">
-            Tu as modifié ta fiche le {jourCourt(restaurant.fiche_modifiee_le)}{" "}
-            : {aRevoir.length} plateforme{aRevoir.length > 1 ? "s" : ""} à
-            mettre à jour.
+            {t.ficheModifiee(
+              jourCourt(restaurant.fiche_modifiee_le, locale),
+              aRevoir.length,
+            )}
           </p>
           <p className="text-sm leading-relaxed text-zinc-700">
-            {aRevoir.map((p) => p.nom).join(", ")}. Klarr ne peut pas encore les
-            modifier à ta place : reporte-y les changements, puis coche «
-            C&apos;est à jour ».
+            {t.ficheModifieeSuite(aRevoir.map((p) => p.nom).join(", "))}
           </p>
           <Link
             href={guide}
             className="w-fit rounded-lg bg-brand-navy px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover"
           >
-            Mettre à jour en mode guidé
+            {t.majGuidee}
           </Link>
         </div>
       )}
@@ -176,9 +183,7 @@ export default async function PresencePage({
                   /{PLATEFORMES.length}
                 </span>
               </span>
-              <span className="text-sm text-zinc-600">
-                plateformes en ordre
-              </span>
+              <span className="text-sm text-zinc-600">{t.enOrdre}</span>
             </span>
             {/* Une barre en trois : en ordre, à traiter, pas vérifiée. */}
             <div
@@ -199,22 +204,21 @@ export default async function PresencePage({
                 <strong className="text-ink">
                   {regleesEssentielles}/{essentielles.length}
                 </strong>{" "}
-                essentielles
+                {t.essentielles}
               </span>
               <span>
                 <strong className="text-brand-orange-dark">{aReprendre}</strong>{" "}
-                à traiter
+                {t.aTraiter}
               </span>
               <span>
-                <strong className="text-ink">{pasVerifiees}</strong> pas
-                vérifiée{pasVerifiees > 1 ? "s" : ""}
+                <strong className="text-ink">{pasVerifiees}</strong>{" "}
+                {t.pasVerifiees(pasVerifiees)}
               </span>
               <a href="#fiche" className="hover:underline">
-                fiche{" "}
                 <strong className="text-ink">
                   {remplis}/{champs.length}
                 </strong>{" "}
-                champs
+                {t.ficheChamps}
               </a>
             </span>
           </div>
@@ -223,23 +227,19 @@ export default async function PresencePage({
               tout et n'indiquent pas par où commencer. */}
           <div className="flex flex-col gap-3 rounded-xl bg-zinc-50 p-5 lg:max-w-sm">
             <span className="font-semibold text-ink">
-              {file.length === 0
-                ? "Tout est en ordre"
-                : "Une plateforme à la fois"}
+              {file.length === 0 ? t.toutEnOrdre : t.uneALaFois}
             </span>
             <span className="text-sm leading-relaxed text-zinc-600">
               {file.length === 0
-                ? "Reviens ici quand tu modifies ta fiche : Klarr te dira quoi reprendre."
-                : `De la plus utile à la moins utile, ta fiche sous les yeux. Il en reste ${file.length}, environ ${minutesRestantes} min.`}
+                ? t.toutEnOrdreTexte
+                : t.resteTexte(file.length, minutesRestantes)}
             </span>
             {file.length > 0 && (
               <Link
                 href={guide}
                 className="w-fit rounded-lg bg-brand-navy px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover"
               >
-                {file.length === PLATEFORMES.length
-                  ? "Commencer le mode guidé"
-                  : "Continuer le mode guidé"}
+                {file.length === PLATEFORMES.length ? t.commencer : t.continuer}
               </Link>
             )}
           </div>
@@ -252,7 +252,7 @@ export default async function PresencePage({
               <li key={p.cle}>
                 <a
                   href={`#${p.cle}`}
-                  title={`${p.nom} — ${libelleEtat(e)}`}
+                  title={`${p.nom} — ${libelleEtat(e, t)}`}
                   className="relative block transition-transform hover:-translate-y-0.5"
                 >
                   <LogoPlateforme cle={p.cle} taille={44} />
@@ -263,7 +263,7 @@ export default async function PresencePage({
                     }`}
                   />
                   <span className="sr-only">
-                    {p.nom} : {libelleEtat(e)}
+                    {p.nom} : {libelleEtat(e, t)}
                   </span>
                 </a>
               </li>
@@ -326,14 +326,12 @@ export default async function PresencePage({
                 id={groupe}
                 className="flex scroll-mt-8 flex-col gap-3"
               >
-                <TitreSection aside={`${reglees}/${duGroupe.length} en ordre`}>
+                <TitreSection aside={t.enOrdreGroupe(reglees, duGroupe.length)}>
                   {LIBELLE_GROUPE[groupe]}
                 </TitreSection>
                 {groupe === "annuaires" && filtre === "toutes" && (
                   <p className="max-w-3xl text-sm text-zinc-600">
-                    Moins consultés directement, mais GPS, assistants vocaux et
-                    applications puisent dans leurs données. Fais d&apos;abord
-                    les essentielles.
+                    {t.annuairesNote}
                   </p>
                 )}
                 <ul className="flex flex-col overflow-hidden rounded-2xl border border-zinc-200/70 bg-white shadow-sm">
@@ -349,6 +347,8 @@ export default async function PresencePage({
                       ficheModifieeLe={restaurant.fiche_modifiee_le ?? null}
                       nom={restaurant.nom}
                       adresse={adresseRecherche}
+                      t={t}
+                      locale={locale}
                     />
                   ))}
                 </ul>
@@ -365,7 +365,7 @@ export default async function PresencePage({
               ).length === 0,
           ) && (
             <p className="rounded-2xl border border-zinc-200/70 bg-white p-6 text-sm text-zinc-600 shadow-sm">
-              Aucune plateforme dans ce filtre.
+              {t.aucuneFiltre}
             </p>
           )}
         </div>
@@ -376,27 +376,20 @@ export default async function PresencePage({
           className="flex scroll-mt-8 flex-col gap-3 lg:sticky lg:top-6"
         >
           <div className="flex items-center justify-between gap-3">
-            <h2 className="font-serif text-2xl text-ink">Ta fiche à copier</h2>
+            <h2 className="font-serif text-2xl text-ink">{t.ficheACopier}</h2>
             <BoutonCopier
               texte={texteFiche(champs)}
-              libelle="Tout copier"
-              copie="Copiée ✓"
+              libelle={t.toutCopier}
+              copie={t.copiee}
             />
           </div>
-          <p className="text-xs leading-relaxed text-zinc-500">
-            Les mêmes mots partout, au caractère près.
-          </p>
-          <FicheACopier restaurantId={id} champs={champs} compact />
+          <p className="text-xs leading-relaxed text-zinc-500">{t.memesMots}</p>
+          <FicheACopier restaurantId={id} champs={champs} compact t={t} />
         </aside>
       </div>
 
       <p className="max-w-4xl text-xs leading-relaxed text-zinc-400">
-        Klarr ne lit pas lui-même ces plateformes : Apple, Bing ou PagesJaunes
-        n&apos;ouvrent leurs données qu&apos;aux logiciels qui ont obtenu un
-        accès. Les statuts disent donc ce que tu as constaté en vérifiant, à la
-        date indiquée. Google, Facebook, Instagram, TripAdvisor et ta vitrine
-        apparaissent reliés d&apos;eux-mêmes quand ils le sont dans Klarr ;
-        seule la vitrine suit tes modifications toute seule.
+        {t.pied}
       </p>
     </div>
   );
@@ -410,11 +403,11 @@ const TON_ETAT: Record<Exclude<EtatPlateforme, null>, string> = {
   absente: "bg-brand-orange-soft text-brand-orange-dark",
 };
 
-function libelleEtat(etat: EtatPlateforme): string {
-  if (etat === "relie") return "Reliée à Klarr";
-  if (etat === "a_revoir") return "À revoir";
-  if (etat) return LIBELLE_STATUT[etat];
-  return "Pas vérifiée";
+function libelleEtat(etat: EtatPlateforme, t: ClesPresence): string {
+  if (etat === "relie") return t.etatRelie;
+  if (etat === "a_revoir") return t.etatARevoir;
+  if (etat) return t.statuts[etat];
+  return t.etatPasVerifiee;
 }
 
 function LignePlateforme({
@@ -427,6 +420,8 @@ function LignePlateforme({
   nom,
   adresse,
   premier,
+  t,
+  locale,
 }: {
   plateforme: Plateforme;
   restaurantId: string;
@@ -437,11 +432,12 @@ function LignePlateforme({
   nom: string;
   adresse: string;
   premier: boolean;
+  t: ClesPresence;
+  locale: string;
 }) {
   const aFaire =
     etat === "a_revoir" || etat === "a_corriger" || etat === "absente";
-  const etapes =
-    etat === "a_revoir" ? ETAPES_MISE_A_JOUR : (plateforme.etapes ?? []);
+  const etapes = etat === "a_revoir" ? t.miseAJour : (plateforme.etapes ?? []);
   const avecEtapes =
     etat === "a_revoir" ||
     (!relie && plateforme.etapes && plateforme.etapes.length > 0);
@@ -474,7 +470,7 @@ function LignePlateforme({
                 etat ? TON_ETAT[etat] : "bg-zinc-100 text-zinc-500"
               }`}
             >
-              {libelleEtat(etat)}
+              {libelleEtat(etat, t)}
             </span>
           </span>
           <span
@@ -482,7 +478,7 @@ function LignePlateforme({
               etat ? TON_ETAT[etat] : "bg-zinc-100 text-zinc-500"
             }`}
           >
-            {libelleEtat(etat)}
+            {libelleEtat(etat, t)}
           </span>
           <span
             aria-hidden="true"
@@ -505,8 +501,7 @@ function LignePlateforme({
 
           {etat === "a_revoir" && ficheModifieeLe && (
             <p className="rounded-lg bg-brand-orange-soft px-3 py-2 text-sm leading-relaxed text-ink">
-              Ta fiche a changé le {jourCourt(ficheModifieeLe)} dans Klarr :
-              reporte les changements ici.
+              {t.ficheAChange(jourCourt(ficheModifieeLe, locale))}
             </p>
           )}
 
@@ -524,7 +519,7 @@ function LignePlateforme({
                 rel="noopener noreferrer"
                 className="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
               >
-                Vérifier ma fiche ↗
+                {t.verifier}
               </a>
             )}
             {plateforme.creer && (!relie || etat === "a_revoir") && (
@@ -534,7 +529,7 @@ function LignePlateforme({
                 rel="noopener noreferrer"
                 className="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
               >
-                {relie ? "Modifier ma fiche ↗" : "Créer ou revendiquer ↗"}
+                {relie ? t.modifier : t.creer}
               </a>
             )}
             {plateforme.ecranKlarr && (
@@ -542,7 +537,7 @@ function LignePlateforme({
                 href={`/dashboard/${restaurantId}/${relie?.ecran ?? plateforme.ecranKlarr}`}
                 className="rounded-lg bg-brand-navy px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover"
               >
-                {relie ? "Gérer dans Klarr →" : "Relier dans Klarr →"}
+                {relie ? t.gerer : t.relier}
               </Link>
             )}
           </div>
@@ -550,7 +545,7 @@ function LignePlateforme({
           {avecEtapes && (
             <div className="flex flex-col gap-2">
               <span className="text-xs font-semibold uppercase tracking-[0.08em] text-zinc-500">
-                Pas à pas · {etapes.length} étapes
+                {t.pasAPas(etapes.length)}
               </span>
               <Etapes etapes={etapes} />
             </div>
@@ -567,8 +562,8 @@ function LignePlateforme({
               <input type="hidden" name="plateforme" value={plateforme.cle} />
               <span className="text-xs text-zinc-500">
                 {constat
-                  ? `Vérifié le ${jourCourt(constat.verifieLe)} — ce que tu as trouvé :`
-                  : "Après vérification, ce que tu as trouvé :"}
+                  ? t.verifieLe(jourCourt(constat.verifieLe, locale))
+                  : t.apresVerif}
               </span>
               <div className="flex flex-wrap gap-2">
                 {(relie ? (["a_jour"] as const) : STATUTS).map((valeur) => (
@@ -587,8 +582,8 @@ function LignePlateforme({
                     }`}
                   >
                     {etat === "a_revoir" && valeur === "a_jour"
-                      ? "C'est à jour"
-                      : LIBELLE_STATUT[valeur]}
+                      ? t.cestAJour
+                      : t.statuts[valeur]}
                   </button>
                 ))}
                 {constat && !relie && (
@@ -598,7 +593,7 @@ function LignePlateforme({
                     value="effacer"
                     className="px-2 py-1.5 text-sm text-zinc-400 transition-colors hover:text-zinc-700"
                   >
-                    Effacer
+                    {t.effacer}
                   </button>
                 )}
               </div>

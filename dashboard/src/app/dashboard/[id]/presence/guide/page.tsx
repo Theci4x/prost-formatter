@@ -7,17 +7,16 @@ import { FicheACopier, texteFiche } from "@/components/presence/FicheACopier";
 import { Etapes } from "@/components/presence/Etapes";
 import { exiger } from "@/lib/equipe/roles";
 import { exigerModule } from "@/lib/abonnement/acces";
-import {
-  ETAPES_MISE_A_JOUR,
-  PLATEFORMES,
-  estPlateforme,
-} from "@/lib/presence/plateformes";
+import { PLATEFORMES, estPlateforme } from "@/lib/presence/plateformes";
 import {
   chargerPresence,
   estReglee,
   etatDe,
   fileGuidee,
 } from "@/lib/presence/etat";
+import { langueUtilisateur } from "@/lib/i18n/langue";
+import { PRESENCE, plateformeEn } from "@/lib/i18n/presence";
+import { localeDe } from "@/lib/i18n/seo";
 import { majPresence } from "../actions";
 
 /**
@@ -33,8 +32,8 @@ import { majPresence } from "../actions";
  * qu'un rechargement ne ramène pas celle qu'on vient d'écarter.
  */
 
-function jourCourt(iso: string): string {
-  return new Date(iso).toLocaleDateString("fr-FR", {
+function jourCourt(iso: string, locale: string): string {
+  return new Date(iso).toLocaleDateString(locale, {
     day: "numeric",
     month: "short",
     timeZone: "Europe/Paris",
@@ -56,15 +55,22 @@ export default async function GuidePresencePage({
   const { id } = await params;
   await exiger(id, "gerant");
   await exigerModule(id, "visibilite");
+  const langue = await langueUtilisateur();
+  const t = PRESENCE[langue];
+  const locale = localeDe(langue);
   const { passees: brut } = await searchParams;
   const passees = (brut ?? "").split(",").filter(estPlateforme);
 
   const supabase = await createClient();
   const etat = await chargerPresence(supabase, id);
   if (!etat) notFound();
-  const { restaurant, relies, champs } = etat;
+  const { restaurant, relies } = etat;
+  const champs = etat.champs.map((c) => ({
+    ...c,
+    libelle: t.champs[c.libelle] ?? c.libelle,
+  }));
 
-  const file = fileGuidee(etat, passees);
+  const file = fileGuidee(etat, passees).map((p) => plateformeEn(p, langue));
   const toutesAFaire = fileGuidee(etat);
   const courante = file[0] ?? null;
   const reglees = PLATEFORMES.filter((p) => estReglee(etatDe(p, etat))).length;
@@ -78,19 +84,18 @@ export default async function GuidePresencePage({
       <div className="flex flex-col gap-3">
         <PageHeader
           icon={dashboardIcons.presence}
-          title={`Mode guidé — ${restaurant.nom}`}
+          title={t.guideTitre(restaurant.nom)}
           backHref={retour}
         />
         <div className="flex max-w-4xl flex-col gap-2">
           <div className="flex items-baseline justify-between gap-3 text-sm text-zinc-600">
-            <span>
-              {reglees} plateforme{reglees > 1 ? "s" : ""} réglée
-              {reglees > 1 ? "s" : ""} sur {PLATEFORMES.length}
-            </span>
+            <span>{t.reglees(reglees, PLATEFORMES.length)}</span>
             {courante && (
               <span>
-                encore {file.length} · environ{" "}
-                {file.reduce((total, p) => total + p.minutes, 0)} min
+                {t.encore(
+                  file.length,
+                  file.reduce((total, p) => total + p.minutes, 0),
+                )}
               </span>
             )}
           </div>
@@ -106,25 +111,23 @@ export default async function GuidePresencePage({
       {!courante ? (
         <section className="flex max-w-3xl flex-col items-start gap-4 rounded-2xl border border-emerald-200 bg-emerald-50/60 p-6">
           <span className="font-serif text-3xl text-ink">
-            {toutesAFaire.length === 0
-              ? "Tout est en ordre"
-              : "Fin du parcours pour aujourd'hui"}
+            {toutesAFaire.length === 0 ? t.finTout : t.finAujourdhui}
           </span>
           <p className="text-sm leading-relaxed text-zinc-700">
             {toutesAFaire.length === 0
-              ? "Chaque plateforme est reliée ou vérifiée. Si tu modifies ton nom, ton adresse, ton téléphone ou tes horaires dans Klarr, Klarr te dira lesquelles reprendre."
-              : `Tu as passé ${toutesAFaire.length} plateforme${toutesAFaire.length > 1 ? "s" : ""}. Elles t'attendent pour la prochaine fois.`}
+              ? t.finToutTexte
+              : t.finPassees(toutesAFaire.length)}
           </p>
           <div className="flex flex-wrap gap-3">
             <Link href={retour} className={BOUTON_PRIMAIRE}>
-              Revenir à la présence en ligne
+              {t.revenir}
             </Link>
             {toutesAFaire.length > 0 && (
               <Link
                 href={`/dashboard/${id}/presence/guide`}
                 className={BOUTON_SECONDAIRE}
               >
-                Reprendre les plateformes passées
+                {t.reprendre}
               </Link>
             )}
           </div>
@@ -140,10 +143,8 @@ export default async function GuidePresencePage({
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="flex flex-col gap-1">
                       <span className="text-xs font-semibold uppercase tracking-[0.08em] text-zinc-400">
-                        {courante.niveau === 1
-                          ? "Essentielle"
-                          : "Pour aller plus loin"}{" "}
-                        · environ {courante.minutes} min
+                        {courante.niveau === 1 ? t.essentielle : t.plusLoin}
+                        {t.environ(courante.minutes)}
                       </span>
                       <h2 className="font-serif text-4xl leading-tight text-ink">
                         {courante.nom}
@@ -151,7 +152,7 @@ export default async function GuidePresencePage({
                     </div>
                     {e === "a_revoir" && (
                       <span className="rounded-full bg-brand-orange-soft px-3 py-1 text-xs font-semibold text-brand-orange-dark">
-                        À mettre à jour
+                        {t.aMettreAJour}
                       </span>
                     )}
                   </div>
@@ -166,15 +167,15 @@ export default async function GuidePresencePage({
                     href="#fiche"
                     className="w-fit text-sm font-semibold text-brand-orange-dark hover:underline lg:hidden"
                   >
-                    Ta fiche à copier ↓
+                    {t.ficheACopierBas}
                   </a>
 
                   {e === "a_revoir" && restaurant.fiche_modifiee_le && (
                     <p className="rounded-xl bg-brand-orange-soft px-4 py-3 text-sm leading-relaxed text-ink">
-                      Ta fiche a changé le{" "}
-                      {jourCourt(restaurant.fiche_modifiee_le)} dans Klarr :
-                      ouvre ta fiche {courante.nom} et reporte-y les
-                      changements.
+                      {t.ficheAChangeGuide(
+                        jourCourt(restaurant.fiche_modifiee_le, locale),
+                        courante.nom,
+                      )}
                     </p>
                   )}
                   {courante.conseil && e !== "a_revoir" && (
@@ -194,7 +195,7 @@ export default async function GuidePresencePage({
                         rel="noopener noreferrer"
                         className={BOUTON_SECONDAIRE}
                       >
-                        Vérifier ma fiche ↗
+                        {t.verifier}
                       </a>
                     )}
                     {courante.creer && (
@@ -204,9 +205,7 @@ export default async function GuidePresencePage({
                         rel="noopener noreferrer"
                         className={BOUTON_SECONDAIRE}
                       >
-                        {relie
-                          ? "Modifier ma fiche ↗"
-                          : "Créer ou revendiquer ↗"}
+                        {relie ? t.modifier : t.creer}
                       </a>
                     )}
                     {courante.ecranKlarr && !relie && (
@@ -214,7 +213,7 @@ export default async function GuidePresencePage({
                         href={`/dashboard/${id}/${courante.ecranKlarr}`}
                         className={BOUTON_SECONDAIRE}
                       >
-                        Relier dans Klarr →
+                        {t.relier}
                       </Link>
                     )}
                   </div>
@@ -222,12 +221,12 @@ export default async function GuidePresencePage({
                   {(e === "a_revoir" || (courante.etapes?.length ?? 0) > 0) && (
                     <div className="flex flex-col gap-3 rounded-xl border border-zinc-200 bg-zinc-50/60 p-5">
                       <span className="text-sm font-semibold text-ink">
-                        Pas à pas
+                        {t.pasAPasSeul}
                       </span>
                       <Etapes
                         etapes={
                           e === "a_revoir"
-                            ? ETAPES_MISE_A_JOUR
+                            ? t.miseAJour
                             : (courante.etapes ?? [])
                         }
                       />
@@ -257,7 +256,7 @@ export default async function GuidePresencePage({
                         value="a_jour"
                         className={BOUTON_PRIMAIRE}
                       >
-                        C&apos;est fait : ma fiche est à jour
+                        {t.cestFait}
                       </button>
                       <button
                         type="submit"
@@ -265,18 +264,17 @@ export default async function GuidePresencePage({
                         value="a_corriger"
                         className={BOUTON_SECONDAIRE}
                       >
-                        À terminer plus tard
+                        {t.plusTard}
                       </button>
                       <Link
                         href={passer}
                         className="px-2 py-2.5 text-sm font-medium text-zinc-500 transition-colors hover:text-ink"
                       >
-                        Passer pour l&apos;instant
+                        {t.passer}
                       </Link>
                     </div>
                     <span className="text-xs text-zinc-500">
-                      « À terminer plus tard » garde une trace : la plateforme
-                      reviendra au prochain passage du guide.
+                      {t.plusTardAide}
                     </span>
                   </form>
                 </>
@@ -290,15 +288,15 @@ export default async function GuidePresencePage({
           >
             <div className="flex items-center justify-between gap-3">
               <span className="font-serif text-2xl text-ink">
-                Ta fiche à copier
+                {t.ficheACopier}
               </span>
               <BoutonCopier
                 texte={texteFiche(champs)}
-                libelle="Tout copier"
-                copie="Copiée ✓"
+                libelle={t.toutCopier}
+                copie={t.copiee}
               />
             </div>
-            <FicheACopier restaurantId={id} champs={champs} compact />
+            <FicheACopier restaurantId={id} champs={champs} compact t={t} />
           </aside>
         </div>
       )}

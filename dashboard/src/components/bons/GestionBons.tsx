@@ -7,6 +7,8 @@ import {
   utiliserBon,
   type BonState,
 } from "@/app/dashboard/[id]/bons-cadeaux/actions";
+import { BONS_CAISSE } from "@/lib/i18n/bonsCaisse";
+import type { Langue } from "@/lib/i18n/langues";
 
 const initial: BonState = { erreur: null, succes: null };
 
@@ -39,6 +41,7 @@ export function ReglagesBons({
   montants,
   validite,
   texte,
+  langue = "fr",
 }: {
   restaurantId: string;
   actifs: boolean;
@@ -46,7 +49,9 @@ export function ReglagesBons({
   montants: string;
   validite: number;
   texte: string;
+  langue?: Langue;
 }) {
+  const t = BONS_CAISSE[langue];
   const [state, action, pending] = useActionState(
     enregistrerReglagesBons,
     initial,
@@ -62,19 +67,14 @@ export function ReglagesBons({
           className="mt-0.5 h-4 w-4 accent-brand-navy"
         />
         <span className="flex flex-col gap-0.5">
-          <span className="font-semibold">
-            Vendre des bons cadeaux en ligne
-          </span>
-          <span className="text-zinc-500">
-            Décoché, la page reste en ligne mais n&apos;accepte plus
-            d&apos;achat.
-          </span>
+          <span className="font-semibold">{t.vendreEnLigne}</span>
+          <span className="text-zinc-500">{t.vendreAide}</span>
         </span>
       </label>
       <div className="grid gap-4">
         <label className="flex min-w-0 flex-col gap-1.5">
           <span className="text-sm font-medium text-ink">
-            Montants proposés
+            {t.montantsProposes}
           </span>
           <input
             name="montants"
@@ -82,41 +82,34 @@ export function ReglagesBons({
             className={CHAMP}
             placeholder="50, 80, 100"
           />
-          <span className="text-xs text-zinc-500">
-            En euros, séparés par des virgules. Le client peut aussi choisir un
-            montant libre entre 20 et 500 €.
-          </span>
+          <span className="text-xs text-zinc-500">{t.montantsAide}</span>
         </label>
         <label className="flex min-w-0 flex-col gap-1.5">
-          <span className="text-sm font-medium text-ink">
-            Durée de validité
-          </span>
+          <span className="text-sm font-medium text-ink">{t.duree}</span>
           <select name="validite" defaultValue={validite} className={CHAMP}>
-            <option value={6}>6 mois</option>
-            <option value={12}>12 mois</option>
-            <option value={24}>24 mois</option>
+            {[6, 12, 24].map((n) => (
+              <option key={n} value={n}>
+                {t.mois(n)}
+              </option>
+            ))}
           </select>
-          <span className="text-xs text-zinc-500">
-            À partir du jour de l&apos;achat.
-          </span>
+          <span className="text-xs text-zinc-500">{t.dureeAide}</span>
         </label>
       </div>
       <label className="flex flex-col gap-1.5">
-        <span className="text-sm font-medium text-ink">
-          Un mot sur la page (facultatif)
-        </span>
+        <span className="text-sm font-medium text-ink">{t.motPage}</span>
         <textarea
           name="texte"
           rows={3}
           maxLength={600}
           defaultValue={texte}
-          placeholder="Valable midi et soir, boissons comprises. Pas valable le soir du 31 décembre."
+          placeholder={t.motExemple}
           className={CHAMP}
         />
       </label>
       <div className="flex flex-wrap items-center gap-4">
         <button type="submit" disabled={pending} className={PRIMAIRE}>
-          {pending ? "Enregistrement…" : "Enregistrer"}
+          {pending ? t.enregistrement : t.enregistrer}
         </button>
         <Retour state={state} />
       </div>
@@ -128,11 +121,14 @@ export function EncaisserBon({
   restaurantId,
   bonId,
   soldeEuros,
+  langue = "fr",
 }: {
   restaurantId: string;
   bonId: string;
   soldeEuros: string;
+  langue?: Langue;
 }) {
+  const t = BONS_CAISSE[langue];
   const [state, action, pending] = useActionState(utiliserBon, initial);
   return (
     <form action={action} className="flex flex-col gap-3">
@@ -141,7 +137,7 @@ export function EncaisserBon({
       <div className="flex flex-wrap items-end gap-3">
         <label className="flex flex-col gap-1.5">
           <span className="text-sm font-medium text-ink">
-            Montant à déduire
+            {t.montantADeduire}
           </span>
           <span className="flex items-center gap-2">
             <input
@@ -154,7 +150,7 @@ export function EncaisserBon({
           </span>
         </label>
         <button type="submit" disabled={pending} className={PRIMAIRE}>
-          {pending ? "Un instant…" : "Déduire du bon"}
+          {pending ? t.unInstant : t.deduire}
         </button>
       </div>
       <Retour state={state} />
@@ -162,24 +158,29 @@ export function EncaisserBon({
   );
 }
 
-export function OffrirBon({ restaurantId }: { restaurantId: string }) {
+export function OffrirBon({
+  restaurantId,
+  langue = "fr",
+}: {
+  restaurantId: string;
+  langue?: Langue;
+}) {
+  const t = BONS_CAISSE[langue];
   const [state, action, pending] = useActionState(creerBonOffert, initial);
   return (
     <form action={action} className="flex flex-col gap-4">
       <input type="hidden" name="restaurant_id" value={restaurantId} />
       <div className="grid gap-4">
         <label className="flex min-w-0 flex-col gap-1.5">
-          <span className="text-sm font-medium text-ink">Montant (€)</span>
+          <span className="text-sm font-medium text-ink">{t.montantEuros}</span>
           <input name="montant" inputMode="decimal" className={CHAMP} />
         </label>
         <label className="flex min-w-0 flex-col gap-1.5">
-          <span className="text-sm font-medium text-ink">Pour qui</span>
+          <span className="text-sm font-medium text-ink">{t.pourQui}</span>
           <input name="beneficiaire_nom" maxLength={120} className={CHAMP} />
         </label>
         <label className="flex min-w-0 flex-col gap-1.5">
-          <span className="text-sm font-medium text-ink">
-            Son e-mail (facultatif)
-          </span>
+          <span className="text-sm font-medium text-ink">{t.sonEmail}</span>
           <input
             name="beneficiaire_email"
             type="email"
@@ -189,14 +190,12 @@ export function OffrirBon({ restaurantId }: { restaurantId: string }) {
         </label>
       </div>
       <label className="flex flex-col gap-1.5">
-        <span className="text-sm font-medium text-ink">
-          Un mot (facultatif)
-        </span>
+        <span className="text-sm font-medium text-ink">{t.unMot}</span>
         <input name="message" maxLength={300} className={CHAMP} />
       </label>
       <div className="flex flex-wrap items-center gap-4">
         <button type="submit" disabled={pending} className={PRIMAIRE}>
-          {pending ? "Création…" : "Créer le bon"}
+          {pending ? t.creation : t.creer}
         </button>
         <Retour state={state} />
       </div>

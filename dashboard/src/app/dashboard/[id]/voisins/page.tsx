@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { langueUtilisateur } from "@/lib/i18n/langue";
+import { VOISINS } from "@/lib/i18n/voisins";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
@@ -75,6 +77,7 @@ export default async function VoisinsPage({
   const { q } = await searchParams;
   await exiger(id, "gerant");
   await exigerModule(id, "visibilite");
+  const t = VOISINS[await langueUtilisateur()];
 
   const supabase = await createClient();
   const { data: restaurantData } = await supabase
@@ -127,8 +130,7 @@ export default async function VoisinsPage({
       }
     } catch (cause) {
       console.error("[voisins/propositions]", cause);
-      erreurGoogle =
-        "Google ne répond pas pour le moment. Réessaie dans quelques minutes.";
+      erreurGoogle = t.googleMuet;
     }
   }
 
@@ -137,9 +139,7 @@ export default async function VoisinsPage({
     .sort((a, b) => (b.gain ?? 0) - (a.gain ?? 0));
   const partiel = lignes.some((l) => l.gainPartiel);
 
-  const rangTexte = comparaison?.rang
-    ? `${comparaison.rang}${comparaison.rang === 1 ? "re" : "e"}`
-    : "—";
+  const rangTexte = comparaison?.rang ? t.rang(comparaison.rang) : "—";
   const notees = lignes.filter((l) => l.note != null).length;
   const maxGain = Math.max(1, ...lignes.map((l) => l.gain ?? 0));
   const moyenneGain = comparaison?.moyenneGain ?? null;
@@ -150,11 +150,11 @@ export default async function VoisinsPage({
   const constat =
     nousGain != null && moyenneGain != null
       ? nousGain > moyenneGain
-        ? `Tu gagnes des avis plus vite que tes voisins : ${gain(nousGain)} en 30 jours, contre +${moyenne(moyenneGain, 0)} en moyenne.`
+        ? t.constatDevant(gain(nousGain), moyenne(moyenneGain, 0))
         : nousGain < moyenneGain
-          ? `Tes voisins gagnent des avis plus vite que toi : +${moyenne(moyenneGain, 0)} en moyenne en 30 jours, contre ${gain(nousGain)} pour toi.`
-          : `Tu gagnes des avis au même rythme que tes voisins : ${gain(nousGain)} en 30 jours.`
-      : "Le rythme des avis s'affichera après deux relevés, le lundi matin.";
+          ? t.constatDerriere(gain(nousGain), moyenne(moyenneGain, 0))
+          : t.constatEgal(gain(nousGain))
+      : t.constatAttente;
   const enRetard =
     nousGain != null && moyenneGain != null && nousGain < moyenneGain;
 
@@ -189,7 +189,7 @@ export default async function VoisinsPage({
                 <span className="truncate text-xs text-zinc-500">
                   {p.distance != null && `${distanceLisible(p.distance)} · `}★{" "}
                   {note(p.note)} · {p.nombreAvis?.toLocaleString("fr-FR") ?? 0}{" "}
-                  avis
+                  {t.avis}
                 </span>
               </span>
             </label>
@@ -200,12 +200,9 @@ export default async function VoisinsPage({
         type="submit"
         className="w-fit rounded-lg bg-brand-navy px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover"
       >
-        Suivre la sélection
+        {t.suivreSelection}
       </button>
-      <p className="text-xs text-zinc-500">
-        {reste} place{reste > 1 ? "s" : ""} sur {VOISINS_MAX} : au-delà, les
-        suivants sont ignorés.
-      </p>
+      <p className="text-xs text-zinc-500">{t.places(reste, VOISINS_MAX)}</p>
     </form>
   );
 
@@ -215,13 +212,11 @@ export default async function VoisinsPage({
       className="flex flex-wrap items-end gap-2"
     >
       <label className="flex min-w-0 flex-1 flex-col gap-1.5">
-        <span className="text-sm font-medium text-ink">
-          Chercher par son nom
-        </span>
+        <span className="text-sm font-medium text-ink">{t.chercherNom}</span>
         <input
           name="q"
           defaultValue={recherche}
-          placeholder="Le Bistrot d'à côté"
+          placeholder={t.exempleNom}
           className="rounded-lg border border-zinc-200 bg-zinc-50 px-3.5 py-2.5 text-sm outline-none transition-colors focus:border-brand-navy focus:bg-white"
         />
       </label>
@@ -229,14 +224,14 @@ export default async function VoisinsPage({
         type="submit"
         className="rounded-lg border border-zinc-200 bg-white px-4 py-2.5 text-sm font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
       >
-        Chercher
+        {t.chercher}
       </button>
       {recherche && (
         <Link
           href={`/dashboard/${id}/voisins`}
           className="w-full text-xs text-zinc-500 hover:text-ink"
         >
-          ← Revenir aux propositions
+          {t.revenir}
         </Link>
       )}
     </form>
@@ -247,9 +242,7 @@ export default async function VoisinsPage({
       {reste > 0 ? (
         <>
           <p className="text-sm text-zinc-600">
-            {recherche
-              ? `Résultats pour « ${recherche} », du plus proche au plus loin.`
-              : "Les restaurants les plus proches qui te ressemblent. Coche ceux qui te prennent vraiment des clients."}
+            {recherche ? t.resultats(recherche) : t.propositions}
           </p>
           {recherchePanneau}
           {erreurGoogle && (
@@ -257,15 +250,12 @@ export default async function VoisinsPage({
           )}
           {propositionsForm ||
             (!erreurGoogle && (
-              <p className="text-sm text-zinc-500">
-                Aucun restaurant trouvé. Essaie avec un autre nom.
-              </p>
+              <p className="text-sm text-zinc-500">{t.aucunTrouve}</p>
             ))}
         </>
       ) : (
         <p className="text-sm leading-relaxed text-zinc-600">
-          Tu suis {VOISINS_MAX} voisins, le maximum. Retire-en un avec la croix
-          pour en suivre un autre.
+          {t.maximum(VOISINS_MAX)}
         </p>
       )}
     </div>
@@ -276,31 +266,25 @@ export default async function VoisinsPage({
       <div className="flex flex-col gap-3">
         <PageHeader
           icon={dashboardIcons.voisins}
-          title={`Tes voisins — ${restaurant.nom}`}
+          title={t.titre(restaurant.nom)}
         />
-        <p className="max-w-4xl text-sm text-zinc-600">
-          Jusqu&apos;à cinq restaurants autour de toi, relevés chaque lundi sur
-          Google. Une note bouge peu ; le rythme des avis, beaucoup — c&apos;est
-          lui qui dit qui avance.
-        </p>
+        <p className="max-w-4xl text-sm text-zinc-600">{t.chapo}</p>
       </div>
 
       {migrationManquante && (
         <p className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm leading-relaxed text-amber-900">
-          <strong>Migration à passer :</strong>{" "}
-          supabase/migrations/0086_voisins.sql n&apos;est pas encore en place.
+          {t.migration}
         </p>
       )}
 
       {!migrationManquante && !restaurant.google_place_id && (
         <p className="max-w-4xl rounded-2xl border border-brand-orange/30 bg-brand-orange-soft px-5 py-4 text-sm text-ink">
-          Klarr doit d&apos;abord connaître ta fiche Google pour savoir où tu
-          es.{" "}
+          {t.sansFiche}{" "}
           <Link
             href={`/dashboard/${id}/google`}
             className="font-semibold underline"
           >
-            Ouvrir la page Fiche Google
+            {t.ouvrirFiche}
           </Link>
         </p>
       )}
@@ -309,9 +293,7 @@ export default async function VoisinsPage({
         !migrationManquante &&
         restaurant.google_place_id && (
           <section className="flex flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm sm:p-8">
-            <span className="font-serif text-3xl text-ink">
-              Choisis tes voisins
-            </span>
+            <span className="font-serif text-3xl text-ink">{t.choisir}</span>
             {ajout}
           </section>
         )
@@ -325,7 +307,7 @@ export default async function VoisinsPage({
                   {rangTexte}
                 </span>
                 <span className="text-sm text-zinc-600">
-                  à la note, sur {notees} dans ton quartier
+                  {t.aLaNote(notees)}
                 </span>
               </span>
               <p
@@ -338,27 +320,27 @@ export default async function VoisinsPage({
                   href={`/dashboard/${id}/apres-visite`}
                   className="w-fit text-sm font-semibold text-brand-orange-dark hover:underline"
                 >
-                  La demande d&apos;avis du lendemain est faite pour ça →
+                  {t.lienLendemain}
                 </Link>
               )}
             </div>
             <dl className="grid grid-cols-2 gap-3 sm:min-w-[22rem]">
               <div className="flex flex-col gap-1 rounded-xl bg-zinc-50 px-4 py-3">
-                <dt className="text-xs text-zinc-500">Ta note</dt>
+                <dt className="text-xs text-zinc-500">{t.taNote}</dt>
                 <dd className="font-serif text-3xl leading-none text-ink">
                   {note(nous?.note ?? null)}
                 </dd>
                 <dd className="text-xs text-zinc-500">
-                  voisins : {moyenne(comparaison?.moyenneNote ?? null, 1)}
+                  {t.voisins} {moyenne(comparaison?.moyenneNote ?? null, 1)}
                 </dd>
               </div>
               <div className="flex flex-col gap-1 rounded-xl bg-zinc-50 px-4 py-3">
-                <dt className="text-xs text-zinc-500">Avis en 30 jours</dt>
+                <dt className="text-xs text-zinc-500">{t.avis30}</dt>
                 <dd className="font-serif text-3xl leading-none text-ink">
                   {gain(nousGain)}
                 </dd>
                 <dd className="text-xs text-zinc-500">
-                  voisins :{" "}
+                  {t.voisins}{" "}
                   {moyenneGain != null ? `+${moyenne(moyenneGain, 0)}` : "—"}
                 </dd>
               </div>
@@ -369,11 +351,9 @@ export default async function VoisinsPage({
             {/* ── Le classement ─────────────────────────────────────── */}
             <section className="flex min-w-0 flex-col gap-3">
               <TitreSection
-                aside={
-                  gagnants[0] ? `le plus actif : ${gagnants[0].nom}` : undefined
-                }
+                aside={gagnants[0] ? t.plusActif(gagnants[0].nom) : undefined}
               >
-                Le classement
+                {t.classement}
               </TitreSection>
               <ul className="flex flex-col overflow-hidden rounded-2xl border border-zinc-200/70 bg-white shadow-sm">
                 {lignes.map((ligne: Ligne, rang) => (
@@ -396,15 +376,15 @@ export default async function VoisinsPage({
                         </span>
                         {ligne.nous && (
                           <span className="shrink-0 text-xs font-semibold text-brand-orange-dark">
-                            toi
+                            {t.toi}
                           </span>
                         )}
                       </span>
                       <span className="text-xs text-zinc-500">
                         {ligne.distance != null
-                          ? `à ${distanceLisible(ligne.distance)} · `
+                          ? t.a(distanceLisible(ligne.distance) ?? "")
                           : ""}
-                        {ligne.avis?.toLocaleString("fr-FR") ?? "—"} avis
+                        {ligne.avis?.toLocaleString("fr-FR") ?? "—"} {t.avis}
                       </span>
                     </span>
                     <span className="text-right text-lg font-semibold tabular-nums text-ink sm:text-left">
@@ -450,8 +430,8 @@ export default async function VoisinsPage({
                           />
                           <button
                             type="submit"
-                            aria-label={`Ne plus suivre ${ligne.nom}`}
-                            title="Ne plus suivre"
+                            aria-label={t.nePlusSuivreNom(ligne.nom)}
+                            title={t.nePlusSuivre}
                             className="rounded-md px-2 py-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-red-600"
                           >
                             ×
@@ -463,12 +443,9 @@ export default async function VoisinsPage({
                 ))}
               </ul>
               <p className="text-xs text-zinc-500">
-                La barre montre les avis gagnés en 30 jours. Relevé chaque lundi
-                matin sur Google.
-                {partiel &&
-                  " * Suivi depuis moins de 30 jours : le chiffre part du premier relevé."}
-                {nous?.note == null &&
-                  " Ta propre note arrive avec le relevé hebdomadaire de ta fiche Google."}
+                {t.legende}
+                {partiel && t.partiel}
+                {nous?.note == null && t.sansNote}
               </p>
             </section>
 
@@ -476,7 +453,7 @@ export default async function VoisinsPage({
             <aside className="flex flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm lg:sticky lg:top-6">
               <span className="flex items-baseline justify-between gap-3">
                 <span className="font-serif text-2xl text-ink">
-                  Ajouter un voisin
+                  {t.ajouter}
                 </span>
                 <span className="text-xs text-zinc-500">
                   {suivis.length}/{VOISINS_MAX}
@@ -487,7 +464,7 @@ export default async function VoisinsPage({
                   retire ici. */}
               <div className="flex flex-col gap-2 border-t border-zinc-100 pt-4 sm:hidden">
                 <span className="text-xs font-semibold uppercase tracking-[0.08em] text-zinc-500">
-                  Ne plus suivre
+                  {t.nePlusSuivre}
                 </span>
                 {suivis.map((v) => (
                   <form
@@ -502,7 +479,7 @@ export default async function VoisinsPage({
                       type="submit"
                       className="shrink-0 text-sm text-zinc-500 hover:text-red-600"
                     >
-                      Retirer
+                      {t.retirer}
                     </button>
                   </form>
                 ))}

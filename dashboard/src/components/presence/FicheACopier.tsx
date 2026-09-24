@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { BoutonCopier } from "@/components/dashboard/BoutonCopier";
 import type { ChampFiche } from "@/lib/presence/etat";
+import { PRESENCE, type ClesPresence } from "@/lib/i18n/presence";
 
 /**
  * La fiche du restaurant, champ par champ, chacun avec son bouton Copier.
@@ -13,10 +14,12 @@ export function FicheACopier({
   restaurantId,
   champs,
   compact = false,
+  t = PRESENCE.fr,
 }: {
   restaurantId: string;
   champs: ChampFiche[];
   compact?: boolean;
+  t?: ClesPresence;
 }) {
   return (
     <ul className="flex flex-col overflow-hidden rounded-2xl border border-zinc-200/70 bg-white shadow-sm">
@@ -41,7 +44,7 @@ export function FicheACopier({
                     rempli ? "text-ink" : "text-zinc-400"
                   }`}
                 >
-                  {rempli ? champ.valeur : "Pas renseigné"}
+                  {rempli ? champ.valeur : t.pasRenseigne}
                 </span>
               </span>
             ) : (
@@ -54,7 +57,7 @@ export function FicheACopier({
                     rempli ? "text-ink" : "text-zinc-400"
                   }`}
                 >
-                  {rempli ? champ.valeur : "Pas renseigné"}
+                  {rempli ? champ.valeur : t.pasRenseigne}
                 </span>
               </>
             )}
@@ -62,8 +65,8 @@ export function FicheACopier({
               <span className="w-fit">
                 <BoutonCopier
                   texte={champ.valeur!}
-                  libelle="Copier"
-                  copie="Copié ✓"
+                  libelle={t.copier}
+                  copie={t.copie}
                 />
               </span>
             ) : (
@@ -71,7 +74,7 @@ export function FicheACopier({
                 href={`/dashboard/${restaurantId}/${champ.ou}`}
                 className="w-fit text-sm font-semibold text-brand-orange-dark hover:underline"
               >
-                Compléter →
+                {t.completer}
               </Link>
             )}
           </li>
