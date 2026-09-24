@@ -16,6 +16,23 @@ import type { Restaurant } from "@/types/restaurant";
 import type { GoogleBusinessConnection } from "@/types/google";
 import { exiger } from "@/lib/equipe/roles";
 import { exigerModule } from "@/lib/abonnement/acces";
+import { langueUtilisateur } from "@/lib/i18n/langue";
+import { localeDe } from "@/lib/i18n/seo";
+import { VISIBILITE_GOOGLE } from "@/lib/i18n/visibiliteGoogle";
+import {
+  PERIODES,
+  VisibiliteGoogle,
+  type Periode,
+} from "@/components/google/VisibiliteGoogle";
+import {
+  lirePerformance,
+  regrouper,
+  regrouperComme,
+  totaux,
+  type Pas,
+  type Point,
+  type Totaux,
+} from "@/lib/google/performance";
 
 /**
  * Ce que Klarr fait de la fiche une fois reliée : sans ces liens, la page
@@ -56,17 +73,77 @@ function destinations(publications: boolean) {
   ];
 }
 
+/** Le jour ISO décalé de `n` jours : lu hors du rendu, comme toute horloge. */
+function decale(iso: string | null, n: number): string {
+  const d = iso ? new Date(`${iso}T12:00:00Z`) : new Date();
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0, 10);
+}
+
+/**
+ * Les bornes d'une période et de celle qui la précède, de même longueur.
+ * Google publie avec deux à trois jours de retard : la période s'arrête
+ * là, sinon ses derniers jours seraient des zéros qui n'en sont pas.
+ * Google ne garde que dix-huit mois : sur douze, pas de comparaison.
+ */
+function bornes(periode: Periode) {
+  let fin = decale(null, -3);
+  let debut: string;
+  let pas: Pas;
+  if (periode === "28") {
+    debut = decale(fin, -27);
+    pas = "jour";
+  } else if (periode === "90") {
+    // Treize semaines entières, du lundi au dimanche : une dernière
+    // semaine d'un jour ferait plonger la courbe sans raison.
+    const f = new Date(`${fin}T12:00:00Z`);
+    f.setUTCDate(f.getUTCDate() - (f.getUTCDay() % 7));
+    fin = f.toISOString().slice(0, 10);
+    debut = decale(fin, -90);
+    pas = "semaine";
+  } else {
+    // Douze mois entiers, pour la même raison.
+    const f = new Date(`${fin}T12:00:00Z`);
+    f.setUTCDate(0);
+    fin = f.toISOString().slice(0, 10);
+    debut = `${decale(fin, -334).slice(0, 7)}-01`;
+    pas = "mois";
+  }
+  const longueur =
+    Math.round(
+      (new Date(`${fin}T12:00:00Z`).getTime() -
+        new Date(`${debut}T12:00:00Z`).getTime()) /
+        86_400_000,
+    ) + 1;
+  const avant =
+    periode === "365"
+      ? null
+      : { debut: decale(debut, -longueur), fin: decale(debut, -1) };
+  return { debut, fin, pas, avant };
+}
+
 export default async function GoogleConnectionPage({
   params,
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ connected?: string; error?: string }>;
+  searchParams: Promise<{
+    connected?: string;
+    error?: string;
+    periode?: string;
+  }>;
 }) {
   const { id } = await params;
   await exiger(id, "gerant");
   await exigerModule(id, "visibilite");
-  const { connected, error } = await searchParams;
+  const { connected, error, periode: periodeDemandee } = await searchParams;
+  const langue = await langueUtilisateur();
+  const tv = VISIBILITE_GOOGLE[langue];
+  const periode: Periode = (PERIODES as readonly string[]).includes(
+    periodeDemandee ?? "",
+  )
+    ? (periodeDemandee as Periode)
+    : "90";
 
   const supabase = await createClient();
 
@@ -120,6 +197,43 @@ export default async function GoogleConnectionPage({
       // jamais seule : le quota de cette API reste à zéro tant que
       // Google n'a pas accordé le dossier d'accès.
       locationsError = expliquerBusinessProfile(err);
+    }
+  }
+
+  // Ce que Google compte sur la fiche, quand elle est choisie. Une seule
+  // lecture couvre les deux périodes : elles se touchent.
+  const b = bornes(periode);
+  let actuel: Point[] = [];
+  let precedent: Point[] = [];
+  let totalActuel: Totaux | null = null;
+  let totalAvant: Totaux | null = null;
+  let erreurVisibilite: string | null = null;
+  if (connection?.location_name) {
+    try {
+      const accessToken = await getValidAccessToken(supabase, connection);
+      const jours = await lirePerformance(
+        accessToken,
+        connection.location_name,
+        b.avant?.debut ?? b.debut,
+        b.fin,
+      );
+      const joursActuels = jours.filter((j) => j.jour >= b.debut);
+      const joursAvant = jours.filter((j) => j.jour < b.debut);
+      actuel = regrouper(joursActuels, b.pas);
+      totalActuel = totaux(joursActuels);
+      if (b.avant) {
+        precedent = regrouperComme(joursAvant, joursActuels, actuel, b.pas);
+        totalAvant = totaux(joursAvant);
+      }
+    } catch (err) {
+      console.error("[google/performance]", err);
+      const texte = String(err);
+      erreurVisibilite =
+        texte.includes("SERVICE_DISABLED") ||
+        texte.includes("has not been used") ||
+        texte.includes("is disabled")
+          ? tv.erreurActiver
+          : tv.erreur;
     }
   }
 
@@ -188,6 +302,21 @@ export default async function GoogleConnectionPage({
         <p className="rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">
           La connexion à Google a échoué. Réessaie.
         </p>
+      )}
+
+      {connection?.location_name && (
+        <VisibiliteGoogle
+          t={tv}
+          locale={localeDe(langue)}
+          periode={periode}
+          lienPeriode={(p) => `/dashboard/${id}/google?periode=${p}`}
+          pas={b.pas}
+          actuel={actuel}
+          precedent={precedent}
+          totalActuel={totalActuel}
+          totalAvant={totalAvant}
+          erreur={erreurVisibilite}
+        />
       )}
 
       {!connection ? (
