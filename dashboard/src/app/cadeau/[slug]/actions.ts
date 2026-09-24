@@ -18,6 +18,15 @@ import { chargerMaisonCadeau } from "@/lib/bons/maison";
 
 export type AchatState = { erreur: string | null };
 
+/**
+ * Une référence courte au bout du message : de quoi savoir, sur une
+ * capture d'écran, si c'est la base ou Stripe qui a refusé — et
+ * pourquoi — sans rien montrer de secret.
+ */
+function avecReference(message: string, reference: string): string {
+  return `${message} (réf. ${reference.replace(/[^a-z0-9_]/gi, "").slice(0, 60)})`;
+}
+
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const court = (valeur: FormDataEntryValue | null, max: number) =>
   String(valeur ?? "")
@@ -103,12 +112,12 @@ export async function acheterBon(
       .select("id")
       .single();
     if (error && error.code !== "23505") {
-      console.error("[cadeau/acheter]", error.message);
-      return { erreur: b.erreurPaiement };
+      console.error("[cadeau/acheter]", error.code, error.message);
+      return { erreur: avecReference(b.erreurPaiement, `base_${error.code}`) };
     }
     bon = (data as { id: string } | null) ?? null;
   }
-  if (!bon) return { erreur: b.erreurPaiement };
+  if (!bon) return { erreur: avecReference(b.erreurPaiement, "base_code") };
 
   let url: string;
   try {
@@ -129,7 +138,13 @@ export async function acheterBon(
       .eq("id", bon.id);
   } catch (cause) {
     console.error("[cadeau/stripe]", cause);
-    return { erreur: b.erreurPaiement };
+    const e = cause as { code?: string; type?: string };
+    return {
+      erreur: avecReference(
+        b.erreurPaiement,
+        `stripe_${e.code ?? e.type ?? "inconnu"}`,
+      ),
+    };
   }
 
   redirect(url);
