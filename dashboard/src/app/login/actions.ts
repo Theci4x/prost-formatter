@@ -109,6 +109,9 @@ export async function updatePassword(
 
 export async function signOut() {
   const supabase = await createClient();
-  await supabase.auth.signOut();
+  // « local » : seulement cet appareil. Par défaut Supabase révoque toutes
+  // les sessions de l'utilisateur — se déconnecter sur l'ordinateur
+  // déconnectait aussi le téléphone.
+  await supabase.auth.signOut({ scope: "local" });
   redirect("/login");
 }
