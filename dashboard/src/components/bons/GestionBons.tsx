@@ -71,7 +71,7 @@ export function ReglagesBons({
           </span>
         </span>
       </label>
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4">
         <label className="flex min-w-0 flex-col gap-1.5">
           <span className="text-sm font-medium text-ink">
             Montants proposés
@@ -167,7 +167,7 @@ export function OffrirBon({ restaurantId }: { restaurantId: string }) {
   return (
     <form action={action} className="flex flex-col gap-4">
       <input type="hidden" name="restaurant_id" value={restaurantId} />
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4">
         <label className="flex min-w-0 flex-col gap-1.5">
           <span className="text-sm font-medium text-ink">Montant (€)</span>
           <input name="montant" inputMode="decimal" className={CHAMP} />

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
-import { Compteur, TitreSection } from "@/components/dashboard/Compteur";
+import { TitreSection } from "@/components/dashboard/Compteur";
 import { BoutonCopier } from "@/components/dashboard/BoutonCopier";
 import {
   EncaisserBon,
@@ -79,10 +79,15 @@ export default async function BonsCadeauxPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ code?: string }>;
+  searchParams: Promise<{ code?: string; filtre?: string }>;
 }) {
   const { id } = await params;
-  const { code: codeCherche } = await searchParams;
+  const { code: codeCherche, filtre: filtreDemande } = await searchParams;
+  const filtre: EtatBon | "tous" = (
+    ["valide", "epuise", "expire", "annule"] as string[]
+  ).includes(filtreDemande ?? "")
+    ? (filtreDemande as EtatBon)
+    : "tous";
   await exiger(id, "gerant");
   await exigerModule(id, "reservations");
 
@@ -173,6 +178,32 @@ export default async function BonsCadeauxPage({
     : null;
   const enVente = Boolean(restaurant.bons_cadeaux_actifs) && stripePret;
 
+  const valables = avecEtat.filter((x) => x.etat === "valide").length;
+  const compte = (etat: EtatBon) =>
+    avecEtat.filter((x) => x.etat === etat).length;
+  const chiffres = [
+    { libelle: "À servir", valeur: prixBon(aHonorer) },
+    { libelle: "Valables", valeur: valables },
+    { libelle: "Utilisés", valeur: compte("epuise") },
+    {
+      libelle: "Offerts par toi",
+      valeur: bons.filter((b) => b.origine === "offert").length,
+    },
+  ];
+  const affiches =
+    filtre === "tous" ? avecEtat : avecEtat.filter((x) => x.etat === filtre);
+  const FILTRES: { cle: EtatBon | "tous"; libelle: string }[] = [
+    { cle: "tous", libelle: "Tous" },
+    { cle: "valide", libelle: "Valables" },
+    { cle: "epuise", libelle: "Utilisés" },
+    { cle: "expire", libelle: "Expirés" },
+    { cle: "annule", libelle: "Annulés" },
+  ];
+  const lienFiltre = (cle: EtatBon | "tous") =>
+    cle === "tous"
+      ? `/dashboard/${id}/bons-cadeaux#bons`
+      : `/dashboard/${id}/bons-cadeaux?filtre=${cle}#bons`;
+
   return (
     <div className="flex flex-1 flex-col gap-8 px-6 py-8">
       <div className="flex flex-col gap-3">
@@ -182,9 +213,8 @@ export default async function BonsCadeauxPage({
         />
         <p className="max-w-4xl text-sm text-zinc-600">
           Tes clients offrent un repas chez toi depuis une page à ton nom. Le
-          paiement arrive sur ton compte Stripe, sans commission Klarr. Le
-          bénéficiaire montre son code à l&apos;addition : tu le tapes ici et tu
-          déduis ce qu&apos;il consomme, en une ou plusieurs fois.
+          paiement arrive sur ton compte Stripe, sans commission Klarr ; le
+          bénéficiaire montre son code à l&apos;addition, et tu le déduis ici.
         </p>
       </div>
 
@@ -201,318 +231,435 @@ export default async function BonsCadeauxPage({
           Pour vendre des bons, relie d&apos;abord ton compte Stripe :
           c&apos;est lui qui reçoit l&apos;argent.{" "}
           <Link
-            href={`/dashboard/${id}/connexions`}
+            href={`/dashboard/${id}/paiements`}
             className="font-semibold underline"
           >
-            Aller aux connexions
+            Relier mon compte Stripe
           </Link>
         </p>
       )}
 
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-        <Compteur valeur={vendus.length} libelle="bons vendus" />
-        <Compteur valeur={prixBon(encaisse)} libelle="encaissés au total" />
-        <Compteur
-          valeur={prixBon(aHonorer)}
-          libelle="encore à servir sur les bons valables"
+      {/* ── L'essentiel : l'argent, et ce qu'il reste à servir ────────── */}
+      <section className="relative grid gap-6 overflow-hidden rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm sm:p-8 grid-cols-[minmax(0,1fr)] lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-brand-orange/10 blur-3xl"
         />
-        <Compteur
-          valeur={bientotExpires}
-          libelle="expirent dans les 30 jours"
-          accent={bientotExpires > 0}
-        />
-      </div>
-
-      <section
-        id="encaisser"
-        className="flex scroll-mt-8 flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm"
-      >
-        <TitreSection>Encaisser un bon</TitreSection>
-        <form
-          action={`/dashboard/${id}/bons-cadeaux#encaisser`}
-          className="flex flex-wrap items-end gap-3"
-        >
-          <label className="flex flex-col gap-1.5">
-            <span className="text-sm font-medium text-ink">Code du bon</span>
-            <input
-              name="code"
-              defaultValue={code ?? ""}
-              placeholder="ABCD-EFGH"
-              autoComplete="off"
-              className="w-48 rounded-lg border border-zinc-200 bg-zinc-50 px-3.5 py-2.5 font-mono text-sm uppercase tracking-[0.12em] outline-none transition-colors focus:border-brand-navy focus:bg-white"
-            />
-          </label>
-          <button
-            type="submit"
-            className="rounded-lg border border-zinc-200 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
-          >
-            Chercher
-          </button>
-        </form>
-
-        {code && !trouve && (
-          <p className="text-sm text-zinc-600">
-            Aucun bon <span className="font-mono">{code}</span> chez toi.
-            Vérifie les lettres : le code n&apos;a ni 0, ni O, ni 1, ni I, ni L.
-          </p>
-        )}
-
-        {trouve && (
-          <div className="flex flex-col gap-4 rounded-xl border border-zinc-200 bg-zinc-50/60 p-5">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div className="flex flex-col gap-1">
-                <span className="font-mono text-lg font-bold tracking-[0.14em] text-brand-navy">
-                  {trouve.bon.code}
-                </span>
-                <span className="text-sm text-zinc-600">
-                  {trouve.bon.beneficiaire_nom
-                    ? `Pour ${trouve.bon.beneficiaire_nom}`
-                    : "Sans nom"}
-                  {trouve.bon.origine === "vente"
-                    ? ` · offert par ${trouve.bon.acheteur_nom}`
-                    : " · offert par la maison"}
-                </span>
-              </div>
-              <span
-                className={`rounded-full border px-3 py-1 text-xs font-semibold ${COULEUR_ETAT[trouve.etat]}`}
-              >
-                {LIBELLE_ETAT[trouve.etat]}
-              </span>
-            </div>
-            <dl className="grid grid-cols-3 gap-3 text-sm">
-              <div>
-                <dt className="text-zinc-500">Valeur</dt>
-                <dd className="font-semibold text-ink">
-                  {prixBon(trouve.bon.montant_centimes)}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-zinc-500">Reste</dt>
-                <dd className="font-semibold text-ink">
-                  {prixBon(trouve.bon.solde_centimes)}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-zinc-500">Jusqu&apos;au</dt>
-                <dd className="font-semibold text-ink">
-                  {trouve.bon.expire_le ? jour(trouve.bon.expire_le) : "—"}
-                </dd>
-              </div>
-            </dl>
-            {trouve.etat === "valide" ? (
-              <EncaisserBon
-                restaurantId={id}
-                bonId={trouve.bon.id}
-                soldeEuros={enEuros(trouve.bon.solde_centimes)}
-              />
-            ) : trouve.etat === "expire" ? (
-              <form
-                action={prolongerBon}
-                className="flex flex-wrap items-center gap-3"
-              >
-                <input type="hidden" name="restaurant_id" value={id} />
-                <input type="hidden" name="bon_id" value={trouve.bon.id} />
-                <span className="text-sm text-zinc-600">
-                  Expiré. Tu peux lui accorder trois mois de plus.
-                </span>
-                <button
-                  type="submit"
-                  className="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
-                >
-                  Prolonger de 3 mois
-                </button>
-              </form>
-            ) : null}
-            {utilisations.length > 0 && (
-              <ul className="flex flex-col gap-1 border-t border-zinc-200 pt-3 text-sm text-zinc-600">
-                {utilisations.map((u) => (
-                  <li key={u.utilise_le}>
-                    {prixBon(u.montant_centimes)} déduits le{" "}
-                    {jour(u.utilise_le)}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        )}
-      </section>
-
-      <section className="flex flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm">
-        <TitreSection
-          aside={
-            <span
-              className={`rounded-full border px-3 py-1 text-xs font-semibold ${
-                enVente
-                  ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-                  : "border-zinc-200 bg-zinc-50 text-zinc-500"
-              }`}
-            >
-              {enVente ? "En vente" : "Pas en vente"}
+        <div className="relative flex flex-col gap-3">
+          <span className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <span className="font-serif text-6xl leading-none text-ink">
+              {prixBon(encaisse)}
             </span>
-          }
-        >
-          Ta page de bons cadeaux
-        </TitreSection>
-        {lienPublic ? (
-          <>
-            <div className="flex flex-wrap items-center gap-3">
-              <code className="min-w-0 break-all rounded-lg bg-zinc-50 px-3 py-2 text-sm text-ink">
+            <span className="text-sm text-zinc-600">
+              encaissés sur {vendus.length} bon{vendus.length > 1 ? "s" : ""}{" "}
+              vendu{vendus.length > 1 ? "s" : ""}
+            </span>
+          </span>
+          <p className="max-w-xl text-base leading-relaxed text-zinc-700">
+            {valables > 0
+              ? `Il reste ${prixBon(aHonorer)} à servir sur ${valables} bon${valables > 1 ? "s" : ""} valable${valables > 1 ? "s" : ""}.`
+              : "Aucun bon en cours : tout ce qui a été vendu a été servi."}
+            {bientotExpires > 0 &&
+              ` ${bientotExpires} expire${bientotExpires > 1 ? "nt" : ""} dans les 30 jours.`}
+          </p>
+          <dl className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {chiffres.map((c) => (
+              <div
+                key={c.libelle}
+                className="flex flex-col gap-1 rounded-xl border border-zinc-200/70 px-4 py-3"
+              >
+                <dt className="text-xs text-zinc-500">{c.libelle}</dt>
+                <dd className="font-serif text-2xl leading-none text-ink">
+                  {c.valeur}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+
+        {/* La vente : ouverte ou non, et l'adresse à partager. */}
+        <div className="relative flex min-w-0 flex-col gap-3 rounded-xl bg-zinc-50 p-5 lg:w-[22rem]">
+          <span className="flex items-center gap-2">
+            <span
+              aria-hidden="true"
+              className={`h-2.5 w-2.5 rounded-full ${enVente ? "bg-emerald-500" : "bg-zinc-300"}`}
+            />
+            <span className="font-semibold text-ink">
+              {enVente ? "En vente en ligne" : "Pas en vente"}
+            </span>
+          </span>
+          {lienPublic ? (
+            <>
+              <code
+                title={lienPublic}
+                className="truncate rounded-lg bg-white px-3 py-2 text-xs text-ink"
+              >
                 {lienPublic}
               </code>
-              <BoutonCopier texte={lienPublic} />
-              <a
-                href={lienPublic}
-                target="_blank"
-                rel="noopener"
-                className="text-sm font-semibold text-brand-navy hover:underline"
-              >
-                Voir la page →
-              </a>
-            </div>
-            <p className="text-sm text-zinc-600">
-              Colle-la dans ta bio Instagram, sur ta vitrine et dans ta fiche
-              Google, et parles-en avant les fêtes : c&apos;est en novembre et
-              décembre que les bons se vendent.
-            </p>
-          </>
-        ) : (
-          <p className="text-sm text-zinc-600">
-            Ta page de réservation n&apos;a pas encore d&apos;adresse : la page
-            de bons cadeaux utilisera la même.
-          </p>
-        )}
-        {!migrationManquante && (
-          <div className="border-t border-zinc-100 pt-5">
-            <ReglagesBons
-              restaurantId={id}
-              actifs={Boolean(restaurant.bons_cadeaux_actifs)}
-              montants={(restaurant.bons_cadeaux_montants?.length
-                ? restaurant.bons_cadeaux_montants
-                : MONTANTS_PAR_DEFAUT
-              )
-                .map(enEuros)
-                .join(", ")}
-              validite={restaurant.bons_cadeaux_validite_mois ?? 12}
-              texte={restaurant.bons_cadeaux_texte ?? ""}
-            />
-          </div>
-        )}
+              <div className="flex flex-wrap items-center gap-3">
+                <BoutonCopier texte={lienPublic} />
+                <a
+                  href={lienPublic}
+                  target="_blank"
+                  rel="noopener"
+                  className="text-sm font-semibold text-brand-navy hover:underline"
+                >
+                  Voir la page ↗
+                </a>
+              </div>
+              <span className="text-xs leading-relaxed text-zinc-500">
+                À coller dans ta bio Instagram, sur ta vitrine et ta fiche
+                Google. C&apos;est en novembre et décembre que les bons se
+                vendent.
+              </span>
+            </>
+          ) : (
+            <span className="text-sm text-zinc-600">
+              Ta page de réservation n&apos;a pas encore d&apos;adresse : la
+              page de bons cadeaux utilisera la même.
+            </span>
+          )}
+        </div>
       </section>
 
-      {!migrationManquante && (
-        <section className="flex flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm">
-          <TitreSection>Offrir un bon</TitreSection>
-          <p className="max-w-3xl text-sm text-zinc-600">
-            Un geste pour un client, un lot de concours, un partenaire : le bon
-            est créé tout de suite, sans paiement, et envoyé par e-mail si tu
-            donnes une adresse.
-          </p>
-          <OffrirBon restaurantId={id} />
-        </section>
-      )}
-
-      <section className="flex flex-col gap-4">
-        <TitreSection
-          aside={bons.length > 0 ? `${bons.length} bons` : undefined}
-        >
-          Tous les bons
-        </TitreSection>
-        {bons.length === 0 ? (
-          <p className="rounded-2xl border border-zinc-200/70 bg-white p-6 text-sm text-zinc-600 shadow-sm">
-            Aucun bon pour l&apos;instant. Les bons vendus et offerts
-            apparaîtront ici.
-          </p>
-        ) : (
-          <ul className="flex flex-col overflow-hidden rounded-2xl border border-zinc-200/70 bg-white shadow-sm">
-            {avecEtat.map(({ bon, etat }, rang) => (
-              <li
-                key={bon.id}
-                className={`flex flex-wrap items-center justify-between gap-x-6 gap-y-2 px-5 py-4 text-sm ${
-                  rang > 0 ? "border-t border-zinc-100" : ""
-                }`}
+      <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_22rem]">
+        <div className="flex min-w-0 flex-col gap-8">
+          {/* ── La caisse ─────────────────────────────────────────────── */}
+          <section
+            id="encaisser"
+            className="flex scroll-mt-8 flex-col gap-4 rounded-2xl border border-brand-navy/15 bg-brand-navy p-6 text-white shadow-sm"
+          >
+            <span className="flex items-center gap-2 font-serif text-2xl">
+              Encaisser un bon
+            </span>
+            <form
+              action={`/dashboard/${id}/bons-cadeaux#encaisser`}
+              className="flex flex-wrap items-center gap-3"
+            >
+              <input
+                name="code"
+                defaultValue={code ?? ""}
+                placeholder="ABCD-EFGH"
+                autoComplete="off"
+                aria-label="Code du bon"
+                className="w-full rounded-xl border border-white/20 bg-white/10 px-4 py-3 font-mono text-xl uppercase tracking-[0.2em] text-white outline-none transition-colors placeholder:text-white/40 focus:border-white/60 focus:bg-white/15 sm:w-72"
+              />
+              <button
+                type="submit"
+                className="rounded-xl bg-white px-6 py-3 text-sm font-semibold text-brand-navy transition-colors hover:bg-zinc-100"
               >
-                <div className="flex min-w-0 flex-col gap-0.5">
-                  <span className="flex flex-wrap items-center gap-2">
-                    <Link
-                      href={`/dashboard/${id}/bons-cadeaux?code=${bon.code}#encaisser`}
-                      className="font-mono font-bold tracking-[0.1em] text-brand-navy hover:underline"
-                    >
-                      {bon.code}
-                    </Link>
-                    <span
-                      className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold ${COULEUR_ETAT[etat]}`}
-                    >
-                      {LIBELLE_ETAT[etat]}
+                Chercher
+              </button>
+            </form>
+
+            {code && !trouve && (
+              <p className="text-sm text-white/80">
+                Aucun bon <span className="font-mono">{code}</span> chez toi.
+                Vérifie les lettres : le code n&apos;a ni 0, ni O, ni 1, ni I,
+                ni L.
+              </p>
+            )}
+
+            {trouve && (
+              <div className="flex flex-col gap-4 rounded-xl bg-white p-5 text-ink">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="flex flex-col gap-1">
+                    <span className="font-mono text-lg font-bold tracking-[0.14em] text-brand-navy">
+                      {trouve.bon.code}
                     </span>
-                  </span>
-                  <span className="truncate text-zinc-600">
-                    {bon.origine === "vente" ? bon.acheteur_nom : "La maison"}
-                    {bon.beneficiaire_nom ? ` → ${bon.beneficiaire_nom}` : ""}
-                    {" · "}
-                    {jour(bon.paye_le ?? bon.created_at)}
-                  </span>
-                </div>
-                <div className="flex items-center gap-5">
-                  <span className="text-right">
-                    <span className="block font-semibold text-ink">
-                      {prixBon(bon.solde_centimes)}
-                      <span className="font-normal text-zinc-500">
-                        {" "}
-                        / {prixBon(bon.montant_centimes)}
-                      </span>
+                    <span className="text-sm text-zinc-600">
+                      {trouve.bon.beneficiaire_nom
+                        ? `Pour ${trouve.bon.beneficiaire_nom}`
+                        : "Sans nom"}
+                      {trouve.bon.origine === "vente"
+                        ? ` · offert par ${trouve.bon.acheteur_nom}`
+                        : " · offert par la maison"}
                     </span>
-                    {bon.expire_le && (
-                      <span className="block text-xs text-zinc-500">
-                        jusqu&apos;au {jour(bon.expire_le)}
-                      </span>
-                    )}
-                  </span>
-                  <a
-                    href={`/bon/${bon.paiement_token}`}
-                    target="_blank"
-                    rel="noopener"
-                    className="text-sm font-semibold text-brand-navy hover:underline"
+                  </div>
+                  <span
+                    className={`rounded-full border px-3 py-1 text-xs font-semibold ${COULEUR_ETAT[trouve.etat]}`}
                   >
-                    Voir
-                  </a>
-                  {etat === "valide" && (
-                    // Deux gestes, pas un : un bon annulé par erreur est
-                    // un client refusé en caisse.
-                    <details className="relative">
-                      <summary className="cursor-pointer list-none text-sm text-zinc-500 hover:text-red-600">
-                        Annuler
-                      </summary>
-                      <form
-                        action={annulerBon}
-                        className="absolute right-0 z-10 mt-2 flex w-64 flex-col gap-2 rounded-xl border border-zinc-200 bg-white p-4 text-left shadow-lg"
-                      >
-                        <input type="hidden" name="restaurant_id" value={id} />
-                        <input type="hidden" name="bon_id" value={bon.id} />
-                        <span className="text-xs text-zinc-600">
-                          Rembourse-le d&apos;abord dans Stripe si le client
-                          l&apos;a payé. Le bon ne sera plus accepté.
-                        </span>
-                        <button
-                          type="submit"
-                          className="rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white hover:bg-red-700"
-                        >
-                          Annuler ce bon
-                        </button>
-                      </form>
-                    </details>
-                  )}
+                    {LIBELLE_ETAT[trouve.etat]}
+                  </span>
                 </div>
-              </li>
-            ))}
-          </ul>
+                <dl className="grid grid-cols-3 gap-3 text-sm">
+                  <div>
+                    <dt className="text-zinc-500">Valeur</dt>
+                    <dd className="font-semibold">
+                      {prixBon(trouve.bon.montant_centimes)}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-zinc-500">Reste</dt>
+                    <dd className="font-serif text-2xl leading-none text-ink">
+                      {prixBon(trouve.bon.solde_centimes)}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-zinc-500">Jusqu&apos;au</dt>
+                    <dd className="font-semibold">
+                      {trouve.bon.expire_le ? jour(trouve.bon.expire_le) : "—"}
+                    </dd>
+                  </div>
+                </dl>
+                {trouve.etat === "valide" ? (
+                  <EncaisserBon
+                    restaurantId={id}
+                    bonId={trouve.bon.id}
+                    soldeEuros={enEuros(trouve.bon.solde_centimes)}
+                  />
+                ) : trouve.etat === "expire" ? (
+                  <form
+                    action={prolongerBon}
+                    className="flex flex-wrap items-center gap-3"
+                  >
+                    <input type="hidden" name="restaurant_id" value={id} />
+                    <input type="hidden" name="bon_id" value={trouve.bon.id} />
+                    <span className="text-sm text-zinc-600">
+                      Expiré. Tu peux lui accorder trois mois de plus.
+                    </span>
+                    <button
+                      type="submit"
+                      className="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
+                    >
+                      Prolonger de 3 mois
+                    </button>
+                  </form>
+                ) : null}
+                {utilisations.length > 0 && (
+                  <ul className="flex flex-col gap-1 border-t border-zinc-100 pt-3 text-sm text-zinc-600">
+                    {utilisations.map((u) => (
+                      <li key={u.utilise_le}>
+                        {prixBon(u.montant_centimes)} déduits le{" "}
+                        {jour(u.utilise_le)}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+          </section>
+
+          {/* ── Tous les bons ─────────────────────────────────────────── */}
+          <section id="bons" className="flex scroll-mt-8 flex-col gap-4">
+            <TitreSection
+              aside={bons.length > 0 ? `${bons.length} bons` : undefined}
+            >
+              Tous les bons
+            </TitreSection>
+            {bons.length > 0 && (
+              <nav className="flex flex-wrap gap-2">
+                {FILTRES.map((f) => {
+                  const nombre =
+                    f.cle === "tous"
+                      ? bons.length
+                      : avecEtat.filter((x) => x.etat === f.cle).length;
+                  return (
+                    <Link
+                      key={f.cle}
+                      href={lienFiltre(f.cle)}
+                      scroll={false}
+                      className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
+                        filtre === f.cle
+                          ? "border-brand-navy bg-brand-navy text-white"
+                          : "border-zinc-200 bg-white text-zinc-700 hover:border-brand-navy hover:text-brand-navy"
+                      }`}
+                    >
+                      {f.libelle}{" "}
+                      <span
+                        className={
+                          filtre === f.cle ? "text-white/70" : "text-zinc-400"
+                        }
+                      >
+                        {nombre}
+                      </span>
+                    </Link>
+                  );
+                })}
+              </nav>
+            )}
+            {affiches.length === 0 ? (
+              <p className="rounded-2xl border border-zinc-200/70 bg-white p-6 text-sm text-zinc-600 shadow-sm">
+                {bons.length === 0
+                  ? "Aucun bon pour l'instant. Les bons vendus et offerts apparaîtront ici."
+                  : "Aucun bon dans ce filtre."}
+              </p>
+            ) : (
+              <ul className="flex flex-col overflow-hidden rounded-2xl border border-zinc-200/70 bg-white shadow-sm">
+                {affiches.map(({ bon, etat }, rang) => {
+                  const part =
+                    bon.montant_centimes > 0
+                      ? (bon.solde_centimes / bon.montant_centimes) * 100
+                      : 0;
+                  return (
+                    <li
+                      key={bon.id}
+                      className={`grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-4 gap-y-2 px-4 py-4 sm:px-5 ${
+                        rang > 0 ? "border-t border-zinc-100" : ""
+                      }`}
+                    >
+                      <span
+                        aria-hidden="true"
+                        className={`flex h-10 w-10 items-center justify-center rounded-xl ${
+                          etat === "valide"
+                            ? "bg-brand-orange-soft text-brand-orange-dark"
+                            : "bg-zinc-100 text-zinc-400"
+                        }`}
+                      >
+                        {dashboardIcons.cadeau}
+                      </span>
+                      <span className="flex min-w-0 flex-col gap-0.5">
+                        <span className="flex flex-wrap items-center gap-2">
+                          <Link
+                            href={`/dashboard/${id}/bons-cadeaux?code=${bon.code}#encaisser`}
+                            className="font-mono font-bold tracking-[0.1em] text-brand-navy hover:underline"
+                          >
+                            {bon.code}
+                          </Link>
+                          <span
+                            className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold ${COULEUR_ETAT[etat]}`}
+                          >
+                            {LIBELLE_ETAT[etat]}
+                          </span>
+                        </span>
+                        <span className="truncate text-sm text-zinc-600">
+                          {bon.origine === "vente"
+                            ? bon.acheteur_nom
+                            : "La maison"}
+                          {bon.beneficiaire_nom
+                            ? ` → ${bon.beneficiaire_nom}`
+                            : ""}
+                          {" · "}
+                          {jour(bon.paye_le ?? bon.created_at)}
+                        </span>
+                      </span>
+                      <span className="flex items-center gap-4">
+                        <span className="flex w-28 flex-col items-end gap-1">
+                          <span className="text-sm font-semibold tabular-nums text-ink">
+                            {prixBon(bon.solde_centimes)}
+                            <span className="font-normal text-zinc-400">
+                              {" "}
+                              / {prixBon(bon.montant_centimes)}
+                            </span>
+                          </span>
+                          {/* Ce qu'il reste sur le bon, d'un coup d'œil. */}
+                          <span
+                            aria-hidden="true"
+                            className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-100"
+                          >
+                            <span
+                              className={`block h-full rounded-full ${etat === "valide" ? "bg-brand-orange" : "bg-zinc-300"}`}
+                              style={{ width: `${part}%` }}
+                            />
+                          </span>
+                          {bon.expire_le && (
+                            <span className="text-[11px] text-zinc-500">
+                              jusqu&apos;au {jour(bon.expire_le)}
+                            </span>
+                          )}
+                        </span>
+                        <span className="hidden flex-col items-end gap-1 sm:flex">
+                          <a
+                            href={`/bon/${bon.paiement_token}`}
+                            target="_blank"
+                            rel="noopener"
+                            className="text-sm font-semibold text-brand-navy hover:underline"
+                          >
+                            Voir
+                          </a>
+                          {etat === "valide" && (
+                            // Deux gestes, pas un : un bon annulé par
+                            // erreur est un client refusé en caisse.
+                            <details className="relative">
+                              <summary className="cursor-pointer list-none text-xs text-zinc-400 hover:text-red-600">
+                                Annuler
+                              </summary>
+                              <form
+                                action={annulerBon}
+                                className="absolute right-0 z-10 mt-2 flex w-64 flex-col gap-2 rounded-xl border border-zinc-200 bg-white p-4 text-left shadow-lg"
+                              >
+                                <input
+                                  type="hidden"
+                                  name="restaurant_id"
+                                  value={id}
+                                />
+                                <input
+                                  type="hidden"
+                                  name="bon_id"
+                                  value={bon.id}
+                                />
+                                <span className="text-xs text-zinc-600">
+                                  Rembourse-le d&apos;abord dans Stripe si le
+                                  client l&apos;a payé. Le bon ne sera plus
+                                  accepté.
+                                </span>
+                                <button
+                                  type="submit"
+                                  className="rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white hover:bg-red-700"
+                                >
+                                  Annuler ce bon
+                                </button>
+                              </form>
+                            </details>
+                          )}
+                        </span>
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+            <p className="max-w-3xl text-xs text-zinc-500">
+              Rembourser un bon se fait dans ton tableau de bord Stripe ;
+              annule-le ensuite ici pour qu&apos;il ne soit plus accepté. Côté
+              TVA, un bon utilisable sur toute ta carte se déclare quand il est
+              utilisé, pas à l&apos;achat — ton comptable te le confirmera.
+            </p>
+          </section>
+        </div>
+
+        {/* ── Réglages et bons offerts, à côté ───────────────────────── */}
+        {!migrationManquante && (
+          <aside className="flex flex-col gap-6 lg:sticky lg:top-6">
+            <section className="flex flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm">
+              <span className="font-serif text-2xl text-ink">Réglages</span>
+              <ReglagesBons
+                restaurantId={id}
+                actifs={Boolean(restaurant.bons_cadeaux_actifs)}
+                montants={(restaurant.bons_cadeaux_montants?.length
+                  ? restaurant.bons_cadeaux_montants
+                  : MONTANTS_PAR_DEFAUT
+                )
+                  .map(enEuros)
+                  .join(", ")}
+                validite={restaurant.bons_cadeaux_validite_mois ?? 12}
+                texte={restaurant.bons_cadeaux_texte ?? ""}
+              />
+            </section>
+            <details className="group rounded-2xl border border-zinc-200/70 bg-white shadow-sm">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-5 [&::-webkit-details-marker]:hidden">
+                <span className="flex flex-col gap-0.5">
+                  <span className="font-serif text-2xl text-ink">
+                    Offrir un bon
+                  </span>
+                  <span className="text-xs text-zinc-500">
+                    Un geste, un concours : sans paiement.
+                  </span>
+                </span>
+                <span
+                  aria-hidden="true"
+                  className="text-zinc-400 transition-transform group-open:rotate-180"
+                >
+                  ⌄
+                </span>
+              </summary>
+              <div className="border-t border-zinc-100 p-5">
+                <OffrirBon restaurantId={id} />
+              </div>
+            </details>
+          </aside>
         )}
-        <p className="max-w-3xl text-xs text-zinc-500">
-          Rembourser un bon se fait dans ton tableau de bord Stripe ; annule-le
-          ensuite ici pour qu&apos;il ne soit plus accepté. Côté TVA, un bon
-          utilisable sur toute ta carte se déclare quand il est utilisé, pas à
-          l&apos;achat — ton comptable te le confirmera.
-        </p>
-      </section>
+      </div>
     </div>
   );
 }
