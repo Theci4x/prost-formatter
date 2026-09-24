@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import type Stripe from "stripe";
 import { createClient } from "@/lib/supabase/server";
 import { getStripe } from "@/lib/stripe/client";
+import { clientDuRestaurant } from "@/lib/stripe/facturation";
 import { siteUrl } from "@/lib/site-url";
 import {
   abonnementOuvrant,
@@ -101,6 +102,7 @@ export async function GET(request: NextRequest) {
   }
 
   const site = siteUrl();
+  const client = await clientDuRestaurant(supabase, restaurantId);
 
   // Stripe refuse pour des raisons qu'on ne devine pas d'ici : un tarif
   // d'un autre compte, une clé du mauvais mode, un produit archivé. Sans
@@ -120,7 +122,19 @@ export async function GET(request: NextRequest) {
       // de cumul et ses dates de validité — tout ce que Stripe fait déjà, et
       // qui se retrouverait sur la facture sans qu'on ait rien à écrire.
       allow_promotion_codes: true,
-      customer_email: user.email,
+      // Le client déjà connu — un ancien abonnement, ou les informations
+      // de facturation remplies pendant l'essai — plutôt qu'un nouveau :
+      // sa raison sociale et son adresse passent sur la facture.
+      ...(client
+        ? {
+            customer: client,
+            customer_update: { address: "auto", name: "auto" } as const,
+          }
+        : { customer_email: user.email }),
+      // Une facture de professionnel porte une adresse, et un numéro de
+      // TVA quand il en a un : Stripe les demande sur la page de paiement.
+      billing_address_collection: "required",
+      tax_id_collection: { enabled: true },
       client_reference_id: restaurantId,
       subscription_data: {
         // Le module voyage avec l'abonnement : c'est par cette étiquette

@@ -12,6 +12,15 @@ import { exiger } from "@/lib/equipe/roles";
 import { chargerAcces } from "@/lib/abonnement/acces";
 import { factureEnAttente } from "@/lib/stripe/factures";
 import {
+  INFOS_VIDES,
+  clientDuRestaurant,
+  lireFacturation,
+  listerFactures,
+  type Facture,
+} from "@/lib/stripe/facturation";
+import { FACTURATION } from "@/lib/i18n/facturation";
+import { enregistrerFacturation } from "./actions";
+import {
   LIBELLE_MODULE,
   MODULES,
   PRIX_MODULE,
@@ -58,11 +67,16 @@ export default async function AbonnementPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ stripe_error?: string; checkout?: string }>;
+  searchParams: Promise<{
+    stripe_error?: string;
+    checkout?: string;
+    facturation?: string;
+  }>;
 }) {
   const { id } = await params;
   const langue = await langueUtilisateur();
   const a = ABONNEMENT[langue];
+  const f = FACTURATION[langue];
   const query = await searchParams;
   await exiger(id, "proprietaire");
 
@@ -120,7 +134,44 @@ export default async function AbonnementPage({
   const clientStripe = payes
     .map((cle) => abonnements.get(cle)?.stripe_customer_id)
     .find(Boolean);
-  const facture = clientStripe ? await factureEnAttente(clientStripe) : null;
+  // Le client de facturation peut exister sans abonnement payé : un
+  // ancien abonnement, ou des informations remplies pendant l'essai.
+  const clientFacturation =
+    clientStripe ?? (await clientDuRestaurant(supabase, id));
+  const [facture, infos, factures] = await Promise.all([
+    clientStripe ? factureEnAttente(clientStripe) : null,
+    clientFacturation ? lireFacturation(clientFacturation) : null,
+    clientFacturation
+      ? listerFactures(clientFacturation)
+      : Promise.resolve([] as Facture[]),
+  ]);
+  const valeurs = infos ?? INFOS_VIDES;
+  const retourFacturation =
+    query.facturation && query.facturation in f.retours
+      ? (query.facturation as keyof typeof f.retours)
+      : null;
+  const locale =
+    langue === "zh" ? "zh-CN" : langue === "en" ? "en-GB" : "fr-FR";
+  const nomsPays = new Intl.DisplayNames([locale], { type: "region" });
+  const PAYS = ["FR", "BE", "LU", "CH", "MC", "DE", "ES", "IT", "NL", "PT"];
+  const dateFacture = (iso: string) =>
+    new Date(iso).toLocaleDateString(locale, {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      timeZone: "Europe/Paris",
+    });
+  const montantFacture = (x: Facture) =>
+    new Intl.NumberFormat(locale, {
+      style: "currency",
+      currency: x.devise,
+    }).format(x.montantCentimes / 100);
+  const COULEUR_STATUT: Record<Facture["statut"], string> = {
+    payee: "border-emerald-200 bg-emerald-50 text-emerald-800",
+    a_regler: "border-amber-300 bg-amber-50 text-amber-900",
+    annulee: "border-zinc-200 bg-zinc-100 text-zinc-500",
+    autre: "border-zinc-200 bg-zinc-50 text-zinc-600",
+  };
 
   // Les trois chiffres que l'on vient chercher ici : ce qui est payé,
   // combien de jours d'essai il reste, et quand part le prochain débit.
@@ -428,6 +479,237 @@ export default async function AbonnementPage({
             </a>
           </div>
         )}
+      </div>
+
+      {/* ── Les factures, et ce qu'elles portent ──────────────────────── */}
+      <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_26rem]">
+        <section className="flex min-w-0 flex-col gap-4">
+          <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+            <h2 className="font-serif text-2xl text-ink">{f.facturesTitre}</h2>
+            {factures.length > 0 && (
+              <span className="text-xs text-zinc-500">
+                {f.facturesAside(factures.length)}
+              </span>
+            )}
+          </div>
+          {factures.length > 0 ? (
+            <ul className="divide-y divide-zinc-100 overflow-hidden rounded-2xl border border-zinc-200/70 bg-white shadow-sm">
+              {factures.map((x) => (
+                <li
+                  key={x.id}
+                  className="flex flex-wrap items-center gap-x-5 gap-y-2 px-5 py-4"
+                >
+                  <span
+                    aria-hidden="true"
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-zinc-50 text-zinc-500"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      className="h-5 w-5"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={1.6}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M7 3h7l5 5v13H7z" />
+                      <path d="M14 3v5h5M10 13h6M10 17h6" />
+                    </svg>
+                  </span>
+                  <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                    <span className="flex flex-wrap items-center gap-2">
+                      <span className="text-sm font-semibold text-ink">
+                        {dateFacture(x.date)}
+                      </span>
+                      <span
+                        className={`rounded-full border px-2 py-0.5 text-xs font-medium ${COULEUR_STATUT[x.statut]}`}
+                      >
+                        {f.statuts[x.statut]}
+                      </span>
+                    </span>
+                    {x.numero && (
+                      <span className="font-mono text-xs text-zinc-500">
+                        {x.numero}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-sm font-semibold text-ink tabular-nums">
+                    {montantFacture(x)}
+                  </span>
+                  <span className="flex items-center gap-3">
+                    {x.statut === "a_regler" && x.page && (
+                      <a
+                        href={x.page}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="rounded-lg bg-amber-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-800"
+                      >
+                        {f.regler}
+                      </a>
+                    )}
+                    {x.pdf && (
+                      <a
+                        href={x.pdf}
+                        className="rounded-lg border border-zinc-200 px-3 py-1.5 text-xs font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
+                      >
+                        {f.telecharger} ↓
+                      </a>
+                    )}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="rounded-2xl border border-dashed border-zinc-300 bg-white/60 px-5 py-8 text-center text-sm text-zinc-600">
+              {acces.enEssai ? f.facturesVideEssai : f.facturesVide}
+            </p>
+          )}
+          <p className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-zinc-500">
+            <span>{f.facturesPied}</span>
+            {clientStripe && (
+              <a
+                href={`/api/stripe/portal?restaurant_id=${id}`}
+                className="font-semibold text-brand-navy hover:underline"
+              >
+                {f.moyenDePaiement} →
+              </a>
+            )}
+          </p>
+        </section>
+
+        <section
+          id="facturation"
+          className="flex scroll-mt-8 flex-col gap-5 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm lg:sticky lg:top-6"
+        >
+          <div className="flex flex-col gap-1">
+            <h2 className="font-serif text-2xl text-ink">{f.infosTitre}</h2>
+            <span className="text-sm text-zinc-600">{f.infosChapo}</span>
+          </div>
+
+          {retourFacturation && (
+            <p
+              role="status"
+              className={`rounded-xl border px-4 py-3 text-sm ${
+                retourFacturation === "ok"
+                  ? "border-emerald-200 bg-emerald-50 text-emerald-900"
+                  : "border-amber-300 bg-amber-50 text-amber-900"
+              }`}
+            >
+              {f.retours[retourFacturation]}
+            </p>
+          )}
+
+          <form action={enregistrerFacturation} className="flex flex-col gap-4">
+            <input type="hidden" name="restaurant_id" value={id} />
+            {(
+              [
+                ["nom", f.nom, valeurs.nom, f.nomAide, "organization", true],
+                ["email", f.email, valeurs.email, f.emailAide, "email", true],
+                [
+                  "ligne1",
+                  f.ligne1,
+                  valeurs.ligne1,
+                  null,
+                  "address-line1",
+                  true,
+                ],
+                [
+                  "ligne2",
+                  f.ligne2,
+                  valeurs.ligne2,
+                  null,
+                  "address-line2",
+                  false,
+                ],
+              ] as const
+            ).map(([nom, libelle, valeur, aide, auto, requis]) => (
+              <label key={nom} className="flex flex-col gap-1.5">
+                <span className="text-sm font-medium text-ink">{libelle}</span>
+                <input
+                  name={nom}
+                  type={nom === "email" ? "email" : "text"}
+                  defaultValue={valeur}
+                  autoComplete={auto}
+                  required={requis}
+                  className="rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm text-ink focus:border-brand-navy focus:outline-none"
+                />
+                {aide && <span className="text-xs text-zinc-500">{aide}</span>}
+              </label>
+            ))}
+            <div className="grid grid-cols-[8rem_minmax(0,1fr)] gap-3">
+              <label className="flex flex-col gap-1.5">
+                <span className="text-sm font-medium text-ink">
+                  {f.codePostal}
+                </span>
+                <input
+                  name="code_postal"
+                  defaultValue={valeurs.codePostal}
+                  autoComplete="postal-code"
+                  required
+                  className="rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm text-ink focus:border-brand-navy focus:outline-none"
+                />
+              </label>
+              <label className="flex flex-col gap-1.5">
+                <span className="text-sm font-medium text-ink">{f.ville}</span>
+                <input
+                  name="ville"
+                  defaultValue={valeurs.ville}
+                  autoComplete="address-level2"
+                  required
+                  className="rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm text-ink focus:border-brand-navy focus:outline-none"
+                />
+              </label>
+            </div>
+            <label className="flex flex-col gap-1.5">
+              <span className="text-sm font-medium text-ink">{f.pays}</span>
+              <select
+                name="pays"
+                defaultValue={valeurs.pays}
+                autoComplete="country"
+                className="rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm text-ink focus:border-brand-navy focus:outline-none"
+              >
+                {(PAYS.includes(valeurs.pays)
+                  ? PAYS
+                  : [...PAYS, valeurs.pays]
+                ).map((code) => (
+                  <option key={code} value={code}>
+                    {nomsPays.of(code) ?? code}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <div className="flex flex-col gap-4 border-t border-zinc-100 pt-4">
+              {(
+                [
+                  ["siret", f.siret, valeurs.siret, f.siretAide],
+                  ["tva", f.tva, valeurs.tva, f.tvaAide],
+                ] as const
+              ).map(([nom, libelle, valeur, aide]) => (
+                <label key={nom} className="flex flex-col gap-1.5">
+                  <span className="text-sm font-medium text-ink">
+                    {libelle}
+                  </span>
+                  <input
+                    name={nom}
+                    defaultValue={valeur}
+                    inputMode={nom === "siret" ? "numeric" : "text"}
+                    className="rounded-lg border border-zinc-200 bg-white px-3 py-2.5 font-mono text-sm tracking-wide text-ink focus:border-brand-navy focus:outline-none"
+                  />
+                  <span className="text-xs text-zinc-500">{aide}</span>
+                </label>
+              ))}
+            </div>
+            <button
+              type="submit"
+              className="w-fit rounded-lg bg-brand-navy px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-navy-hover"
+            >
+              {f.enregistrer}
+            </button>
+            <span className="text-xs leading-relaxed text-zinc-500">
+              {f.prochainesFactures}
+            </span>
+          </form>
+        </section>
       </div>
 
       <p className="max-w-4xl text-sm leading-relaxed text-zinc-500">
