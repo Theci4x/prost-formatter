@@ -1,6 +1,11 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { lireSession } from "@/lib/supabase/session";
+import {
+  COOKIE_SESSION,
+  genreDeRequete,
+  noterPerteDeSession,
+} from "@/lib/supabase/journal";
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -60,6 +65,22 @@ export async function updateSession(request: NextRequest) {
   };
   const user = verdict.etat === "connecte" ? verdict.user : null;
 
+  // Les cookies qui portent vraiment la session. Le vérificateur de code
+  // (« …-auth-token-code-verifier », laissé par une inscription ou un mot
+  // de passe oublié) contient lui aussi « auth-token » : le compter
+  // faisait croire à une session présente mais refusée, alors que le
+  // téléphone n'en avait plus aucune.
+  const nomsCookies = request.cookies.getAll().map((c) => c.name);
+  const cookiesSession = nomsCookies.filter((nom) => COOKIE_SESSION.test(nom));
+  const cookiesAuth = nomsCookies.filter((nom) => nom.startsWith("sb-"));
+  // Ce que la réponse s'apprête à effacer : Supabase vide les cookies de
+  // session quand il refuse le jeton. C'est souvent cette requête-là —
+  // un préchargement, une action — qui déconnecte, et la suivante qui le
+  // montre.
+  const cookiesEffaces = supabaseResponse.cookies
+    .getAll()
+    .some((c) => COOKIE_SESSION.test(c.name) && !c.value);
+
   const isAuthRoute =
     request.nextUrl.pathname.startsWith("/login") ||
     request.nextUrl.pathname.startsWith("/auth");
@@ -68,20 +89,35 @@ export async function updateSession(request: NextRequest) {
   // en page du tableau de bord sait le dire proprement, et renvoyer ici
   // vers l'écran de connexion ferait croire à une session perdue alors
   // qu'elle est intacte.
+  const versConnexion =
+    verdict.etat === "deconnecte" &&
+    request.nextUrl.pathname.startsWith("/dashboard");
+
+  // Toute session refusée par Supabase, sur n'importe quelle requête, et
+  // tout renvoi à l'écran de connexion laissent une ligne en base.
   if (
     verdict.etat === "deconnecte" &&
-    request.nextUrl.pathname.startsWith("/dashboard")
+    (versConnexion || verdict.code || cookiesEffaces)
   ) {
+    await noterPerteDeSession({
+      chemin: request.nextUrl.pathname,
+      genre: genreDeRequete(request.headers),
+      motif: verdict.motif ?? null,
+      code: verdict.code ?? null,
+      cookies: cookiesAuth,
+      cookiesEffaces,
+      redirige: versConnexion,
+      navigateur: request.headers.get("user-agent") ?? "",
+    });
+  }
+
+  if (versConnexion) {
     // Chaque renvoi à l'écran de connexion laisse une ligne dans les
     // journaux, avec sa cause. « Je suis encore déconnecté » ne se
     // diagnostique pas à l'aveugle : sans cookie de session, c'est le
     // téléphone qui a tout oublié ; avec, c'est Supabase qui a refusé le
     // jeton, et le motif dit pourquoi. Rien de secret ici — ni jeton, ni
     // adresse, seulement le nom des cookies et la réponse de Supabase.
-    const cookiesSession = request.cookies
-      .getAll()
-      .filter((c) => c.name.startsWith("sb-") && c.name.includes("auth-token"))
-      .map((c) => c.name);
     console.warn("[session] renvoyé à la connexion", {
       chemin: request.nextUrl.pathname,
       motif: verdict.motif ?? "aucune erreur (pas de session)",

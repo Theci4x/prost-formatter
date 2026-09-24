@@ -217,6 +217,28 @@ export default async function AdminPage() {
         .order("created_at", { ascending: false }),
     ]);
 
+  // Les sessions perdues : une table à part, lue seule, pour qu'une
+  // migration 0087 pas encore passée ne fasse pas tomber toute la page.
+  const { data: pertesData } = await supabase
+    .from("journal_sessions")
+    .select(
+      "id, survenu_le, chemin, genre, code, motif, cookies, cookies_effaces, redirige, navigateur",
+    )
+    .order("survenu_le", { ascending: false })
+    .limit(30);
+  const pertes = (pertesData ?? []) as {
+    id: number;
+    survenu_le: string;
+    chemin: string | null;
+    genre: string | null;
+    code: string | null;
+    motif: string | null;
+    cookies: string[] | null;
+    cookies_effaces: boolean;
+    redirige: boolean;
+    navigateur: string | null;
+  }[];
+
   const prospectRows = (prospects.data ?? []) as Prospect[];
   const auditRows = (audits.data ?? []) as Audit[];
   const restaurantRows = (restaurants.data ?? []) as RestaurantRow[];
@@ -266,6 +288,63 @@ export default async function AdminPage() {
           <Stat label="Restaurants" value={restaurantRows.length} />
           <Stat label="Abonnements actifs" value={activeSubscriptions} />
         </div>
+
+        <Section title="Sessions perdues (30 dernières)">
+          {pertes.length === 0 ? (
+            <p className="p-5 text-sm text-zinc-500">
+              Aucune session perdue enregistrée.
+            </p>
+          ) : (
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="border-b border-zinc-100 text-zinc-500">
+                  <th className="px-4 py-2 font-semibold">Quand</th>
+                  <th className="px-4 py-2 font-semibold">Requête</th>
+                  <th className="px-4 py-2 font-semibold">Réponse Supabase</th>
+                  <th className="px-4 py-2 font-semibold">Cookies présentés</th>
+                  <th className="px-4 py-2 font-semibold">Appareil</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pertes.map((p) => (
+                  <tr key={p.id} className="border-b border-zinc-100 align-top">
+                    <td className="whitespace-nowrap px-4 py-2">
+                      {new Date(p.survenu_le).toLocaleString("fr-FR", {
+                        timeZone: "Europe/Paris",
+                        day: "2-digit",
+                        month: "2-digit",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        second: "2-digit",
+                      })}
+                    </td>
+                    <td className="px-4 py-2">
+                      <span className="font-semibold">{p.genre}</span>{" "}
+                      {p.chemin}
+                      {p.redirige && (
+                        <span className="ml-1 text-red-600">
+                          → écran de connexion
+                        </span>
+                      )}
+                      {p.cookies_effaces && (
+                        <span className="ml-1 text-amber-700">
+                          · cookies effacés
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-4 py-2">{p.code ?? p.motif ?? "—"}</td>
+                    <td className="px-4 py-2">
+                      {p.cookies?.length ? p.cookies.join(", ") : "aucun"}
+                    </td>
+                    <td className="max-w-[260px] truncate px-4 py-2 text-zinc-500">
+                      {p.navigateur}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </Section>
 
         <Section title="Prospects (test de présence Google)">
           {prospectRows.length === 0 ? (
