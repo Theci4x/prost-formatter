@@ -2,10 +2,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
-import { Compteur, TitreSection } from "@/components/dashboard/Compteur";
+import { TitreSection } from "@/components/dashboard/Compteur";
 import { BoutonCopier } from "@/components/dashboard/BoutonCopier";
 import { FicheACopier, texteFiche } from "@/components/presence/FicheACopier";
 import { Etapes } from "@/components/presence/Etapes";
+import { LogoPlateforme } from "@/components/presence/LogoPlateforme";
 import { exiger } from "@/lib/equipe/roles";
 import { exigerModule } from "@/lib/abonnement/acces";
 import {
@@ -47,12 +48,45 @@ function jourCourt(iso: string): string {
   });
 }
 
+type Filtre = "toutes" | "a-traiter" | "a-verifier" | "en-ordre";
+
+const FILTRES: { cle: Filtre; libelle: string }[] = [
+  { cle: "toutes", libelle: "Toutes" },
+  { cle: "a-traiter", libelle: "À traiter" },
+  { cle: "a-verifier", libelle: "Pas vérifiées" },
+  { cle: "en-ordre", libelle: "En ordre" },
+];
+
+function dansLeFiltre(filtre: Filtre, etat: EtatPlateforme): boolean {
+  if (filtre === "a-traiter") {
+    return etat === "a_revoir" || etat === "a_corriger" || etat === "absente";
+  }
+  if (filtre === "a-verifier") return etat === null;
+  if (filtre === "en-ordre") return estReglee(etat);
+  return true;
+}
+
+/** La pastille d'état posée sur un logo du mur. */
+const POINT_ETAT: Record<Exclude<EtatPlateforme, null>, string> = {
+  relie: "bg-emerald-500",
+  a_jour: "bg-emerald-500",
+  a_revoir: "bg-brand-orange",
+  a_corriger: "bg-brand-orange",
+  absente: "bg-brand-orange",
+};
+
 export default async function PresencePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ filtre?: string }>;
 }) {
   const { id } = await params;
+  const { filtre: filtreDemande } = await searchParams;
+  const filtre: Filtre = FILTRES.some((f) => f.cle === filtreDemande)
+    ? (filtreDemande as Filtre)
+    : "toutes";
   await exiger(id, "gerant");
   await exigerModule(id, "visibilite");
 
@@ -72,6 +106,9 @@ export default async function PresencePage({
   ).length;
   const pasVerifiees = PLATEFORMES.filter(
     (p) => etats.get(p.cle) === null,
+  ).length;
+  const enOrdre = PLATEFORMES.filter((p) =>
+    estReglee(etats.get(p.cle) ?? null),
   ).length;
   const remplis = champs.filter((c) => c.valeur && c.valeur.trim()).length;
   const file = fileGuidee(etat);
@@ -128,143 +165,229 @@ export default async function PresencePage({
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-        <Compteur
-          valeur={`${regleesEssentielles}/${essentielles.length}`}
-          libelle="plateformes essentielles réglées"
-        />
-        <a href="#plateformes" className="block [&>div]:h-full">
-          <Compteur
-            valeur={aReprendre}
-            libelle={
-              aReprendre === 0
-                ? "rien à reprendre"
-                : "à revoir, corriger ou créer"
-            }
-            accent={aReprendre > 0}
-          />
-        </a>
-        <a href="#plateformes" className="block [&>div]:h-full">
-          <Compteur
-            valeur={pasVerifiees}
-            libelle={`pas encore vérifiée${pasVerifiees > 1 ? "s" : ""}`}
-            accent={pasVerifiees > 0}
-          />
-        </a>
-        <a href="#fiche" className="block [&>div]:h-full">
-          <Compteur
-            valeur={`${remplis}/${champs.length}`}
-            libelle="champs de ta fiche remplis"
-            accent={remplis < champs.length}
-          />
-        </a>
-      </div>
-
-      {/* L'entrée du mode guidé : sans elle, vingt cartes disent tout et
-          n'indiquent pas par où commencer. */}
-      <section className="flex flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-col gap-1">
-          <span className="font-serif text-2xl text-ink">
-            {file.length === 0
-              ? "Tout est en ordre"
-              : "Une plateforme à la fois"}
-          </span>
-          <span className="text-sm leading-relaxed text-zinc-600">
-            {file.length === 0
-              ? "Chaque plateforme est reliée ou vérifiée. Reviens ici quand tu modifies ta fiche."
-              : `Le mode guidé t'emmène de la plus utile à la moins utile, avec ta fiche à copier sous les yeux. Il en reste ${file.length}, environ ${minutesRestantes} min hors vérifications.`}
-          </span>
-        </div>
-        {file.length > 0 && (
-          <Link
-            href={guide}
-            className="w-fit shrink-0 rounded-lg bg-brand-navy px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover"
-          >
-            {file.length === PLATEFORMES.length ? "Commencer" : "Continuer"}
-          </Link>
-        )}
-      </section>
-
-      <nav className="flex flex-wrap gap-2">
-        <a
-          href="#fiche"
-          className="rounded-full border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:border-ink hover:text-ink"
-        >
-          Ta fiche à copier
-        </a>
-        {groupes.map((groupe) => (
-          <a
-            key={groupe}
-            href={`#${groupe}`}
-            className="rounded-full border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:border-ink hover:text-ink"
-          >
-            {LIBELLE_GROUPE[groupe]}
-          </a>
-        ))}
-      </nav>
-
-      {/* ── La fiche ─────────────────────────────────────────────────── */}
-      <section id="fiche" className="flex scroll-mt-8 flex-col gap-4">
-        <TitreSection
-          aside={
-            <span className="inline-block">
-              <BoutonCopier
-                texte={texteFiche(champs)}
-                libelle="Tout copier"
-                copie="Fiche copiée ✓"
-              />
+      {/* ── Le tableau d'ensemble : où on en est, et le mur des vingt ── */}
+      <section className="flex flex-col gap-6 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm sm:p-8">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex flex-col gap-3">
+            <span className="flex items-baseline gap-3">
+              <span className="font-serif text-5xl leading-none text-ink">
+                {enOrdre}
+                <span className="text-3xl text-zinc-400">
+                  /{PLATEFORMES.length}
+                </span>
+              </span>
+              <span className="text-sm text-zinc-600">
+                plateformes en ordre
+              </span>
             </span>
-          }
-        >
-          Ta fiche à copier
-        </TitreSection>
-        <FicheACopier restaurantId={id} champs={champs} />
+            {/* Une barre en trois : en ordre, à traiter, pas vérifiée. */}
+            <div
+              aria-hidden="true"
+              className="flex h-2 w-full max-w-md gap-0.5 overflow-hidden rounded-full bg-zinc-100"
+            >
+              <span
+                className="bg-emerald-500"
+                style={{ width: `${(enOrdre / PLATEFORMES.length) * 100}%` }}
+              />
+              <span
+                className="bg-brand-orange"
+                style={{ width: `${(aReprendre / PLATEFORMES.length) * 100}%` }}
+              />
+            </div>
+            <span className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-zinc-600">
+              <span>
+                <strong className="text-ink">
+                  {regleesEssentielles}/{essentielles.length}
+                </strong>{" "}
+                essentielles
+              </span>
+              <span>
+                <strong className="text-brand-orange-dark">{aReprendre}</strong>{" "}
+                à traiter
+              </span>
+              <span>
+                <strong className="text-ink">{pasVerifiees}</strong> pas
+                vérifiée{pasVerifiees > 1 ? "s" : ""}
+              </span>
+              <a href="#fiche" className="hover:underline">
+                fiche{" "}
+                <strong className="text-ink">
+                  {remplis}/{champs.length}
+                </strong>{" "}
+                champs
+              </a>
+            </span>
+          </div>
+
+          {/* L'entrée du mode guidé : sans elle, vingt plateformes disent
+              tout et n'indiquent pas par où commencer. */}
+          <div className="flex flex-col gap-3 rounded-xl bg-zinc-50 p-5 lg:max-w-sm">
+            <span className="font-semibold text-ink">
+              {file.length === 0
+                ? "Tout est en ordre"
+                : "Une plateforme à la fois"}
+            </span>
+            <span className="text-sm leading-relaxed text-zinc-600">
+              {file.length === 0
+                ? "Reviens ici quand tu modifies ta fiche : Klarr te dira quoi reprendre."
+                : `De la plus utile à la moins utile, ta fiche sous les yeux. Il en reste ${file.length}, environ ${minutesRestantes} min.`}
+            </span>
+            {file.length > 0 && (
+              <Link
+                href={guide}
+                className="w-fit rounded-lg bg-brand-navy px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover"
+              >
+                {file.length === PLATEFORMES.length
+                  ? "Commencer le mode guidé"
+                  : "Continuer le mode guidé"}
+              </Link>
+            )}
+          </div>
+        </div>
+
+        <ul className="flex flex-wrap gap-2.5 border-t border-zinc-100 pt-6">
+          {PLATEFORMES.map((p) => {
+            const e = etats.get(p.cle) ?? null;
+            return (
+              <li key={p.cle}>
+                <a
+                  href={`#${p.cle}`}
+                  title={`${p.nom} — ${libelleEtat(e)}`}
+                  className="relative block transition-transform hover:-translate-y-0.5"
+                >
+                  <LogoPlateforme cle={p.cle} taille={44} />
+                  <span
+                    aria-hidden="true"
+                    className={`absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-white ${
+                      e ? POINT_ETAT[e] : "bg-zinc-300"
+                    }`}
+                  />
+                  <span className="sr-only">
+                    {p.nom} : {libelleEtat(e)}
+                  </span>
+                </a>
+              </li>
+            );
+          })}
+        </ul>
       </section>
 
-      {/* ── Les plateformes ──────────────────────────────────────────── */}
-      <div id="plateformes" className="flex scroll-mt-8 flex-col gap-8">
-        {groupes.map((groupe) => {
-          const liste = PLATEFORMES.filter((p) => p.groupe === groupe);
-          return (
-            <section
-              key={groupe}
-              id={groupe}
-              className="flex scroll-mt-8 flex-col gap-4"
-            >
-              <TitreSection
-                aside={
-                  groupe === "annuaires"
-                    ? `${liste.filter((p) => estReglee(etats.get(p.cle) ?? null)).length} réglée${liste.filter((p) => estReglee(etats.get(p.cle) ?? null)).length > 1 ? "s" : ""} sur ${liste.length}`
-                    : undefined
-                }
+      <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_22rem]">
+        {/* ── Les plateformes ─────────────────────────────────────── */}
+        <div
+          id="plateformes"
+          className="flex min-w-0 scroll-mt-8 flex-col gap-8"
+        >
+          <nav className="flex flex-wrap gap-2">
+            {FILTRES.map((f) => {
+              const nombre = PLATEFORMES.filter((p) =>
+                dansLeFiltre(f.cle, etats.get(p.cle) ?? null),
+              ).length;
+              return (
+                <Link
+                  key={f.cle}
+                  href={
+                    f.cle === "toutes"
+                      ? `/dashboard/${id}/presence`
+                      : `/dashboard/${id}/presence?filtre=${f.cle}`
+                  }
+                  scroll={false}
+                  className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
+                    filtre === f.cle
+                      ? "border-brand-navy bg-brand-navy text-white"
+                      : "border-zinc-200 bg-white text-zinc-700 hover:border-brand-navy hover:text-brand-navy"
+                  }`}
+                >
+                  {f.libelle}{" "}
+                  <span
+                    className={
+                      filtre === f.cle ? "text-white/70" : "text-zinc-400"
+                    }
+                  >
+                    {nombre}
+                  </span>
+                </Link>
+              );
+            })}
+          </nav>
+
+          {groupes.map((groupe) => {
+            const duGroupe = PLATEFORMES.filter((p) => p.groupe === groupe);
+            const liste = duGroupe.filter((p) =>
+              dansLeFiltre(filtre, etats.get(p.cle) ?? null),
+            );
+            if (liste.length === 0) return null;
+            const reglees = duGroupe.filter((p) =>
+              estReglee(etats.get(p.cle) ?? null),
+            ).length;
+            return (
+              <section
+                key={groupe}
+                id={groupe}
+                className="flex scroll-mt-8 flex-col gap-3"
               >
-                {LIBELLE_GROUPE[groupe]}
-              </TitreSection>
-              {groupe === "annuaires" && (
-                <p className="max-w-4xl text-sm text-zinc-600">
-                  Moins consultés directement, mais d&apos;autres services —
-                  GPS, assistants vocaux, applications — puisent dans leurs
-                  données. Fais d&apos;abord les essentielles.
-                </p>
-              )}
-              <ul className="grid items-start gap-3 sm:gap-4 md:grid-cols-2 2xl:grid-cols-3">
-                {liste.map((plateforme) => (
-                  <CartePlateforme
-                    key={plateforme.cle}
-                    plateforme={plateforme}
-                    restaurantId={id}
-                    relie={relies[plateforme.cle] ?? null}
-                    constat={constats.get(plateforme.cle) ?? null}
-                    etat={etats.get(plateforme.cle) ?? null}
-                    ficheModifieeLe={restaurant.fiche_modifiee_le ?? null}
-                    nom={restaurant.nom}
-                    adresse={adresseRecherche}
-                  />
-                ))}
-              </ul>
-            </section>
-          );
-        })}
+                <TitreSection aside={`${reglees}/${duGroupe.length} en ordre`}>
+                  {LIBELLE_GROUPE[groupe]}
+                </TitreSection>
+                {groupe === "annuaires" && filtre === "toutes" && (
+                  <p className="max-w-3xl text-sm text-zinc-600">
+                    Moins consultés directement, mais GPS, assistants vocaux et
+                    applications puisent dans leurs données. Fais d&apos;abord
+                    les essentielles.
+                  </p>
+                )}
+                <ul className="flex flex-col overflow-hidden rounded-2xl border border-zinc-200/70 bg-white shadow-sm">
+                  {liste.map((plateforme, rang) => (
+                    <LignePlateforme
+                      key={plateforme.cle}
+                      premier={rang === 0}
+                      plateforme={plateforme}
+                      restaurantId={id}
+                      relie={relies[plateforme.cle] ?? null}
+                      constat={constats.get(plateforme.cle) ?? null}
+                      etat={etats.get(plateforme.cle) ?? null}
+                      ficheModifieeLe={restaurant.fiche_modifiee_le ?? null}
+                      nom={restaurant.nom}
+                      adresse={adresseRecherche}
+                    />
+                  ))}
+                </ul>
+              </section>
+            );
+          })}
+
+          {groupes.every(
+            (g) =>
+              PLATEFORMES.filter(
+                (p) =>
+                  p.groupe === g &&
+                  dansLeFiltre(filtre, etats.get(p.cle) ?? null),
+              ).length === 0,
+          ) && (
+            <p className="rounded-2xl border border-zinc-200/70 bg-white p-6 text-sm text-zinc-600 shadow-sm">
+              Aucune plateforme dans ce filtre.
+            </p>
+          )}
+        </div>
+
+        {/* ── La fiche, toujours sous la main ─────────────────────── */}
+        <aside
+          id="fiche"
+          className="flex scroll-mt-8 flex-col gap-3 lg:sticky lg:top-6"
+        >
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="font-serif text-2xl text-ink">Ta fiche à copier</h2>
+            <BoutonCopier
+              texte={texteFiche(champs)}
+              libelle="Tout copier"
+              copie="Copiée ✓"
+            />
+          </div>
+          <p className="text-xs leading-relaxed text-zinc-500">
+            Les mêmes mots partout, au caractère près.
+          </p>
+          <FicheACopier restaurantId={id} champs={champs} compact />
+        </aside>
       </div>
 
       <p className="max-w-4xl text-xs leading-relaxed text-zinc-400">
@@ -294,7 +417,7 @@ function libelleEtat(etat: EtatPlateforme): string {
   return "Pas vérifiée";
 }
 
-function CartePlateforme({
+function LignePlateforme({
   plateforme,
   restaurantId,
   relie,
@@ -303,6 +426,7 @@ function CartePlateforme({
   ficheModifieeLe,
   nom,
   adresse,
+  premier,
 }: {
   plateforme: Plateforme;
   restaurantId: string;
@@ -312,161 +436,176 @@ function CartePlateforme({
   ficheModifieeLe: string | null;
   nom: string;
   adresse: string;
+  premier: boolean;
 }) {
   const aFaire =
     etat === "a_revoir" || etat === "a_corriger" || etat === "absente";
   const etapes =
     etat === "a_revoir" ? ETAPES_MISE_A_JOUR : (plateforme.etapes ?? []);
+  const avecEtapes =
+    etat === "a_revoir" ||
+    (!relie && plateforme.etapes && plateforme.etapes.length > 0);
 
   return (
     <li
-      className={`flex min-w-0 flex-col gap-4 rounded-2xl border bg-white p-6 shadow-sm ${
-        aFaire
-          ? "border-brand-orange/60"
-          : etat
-            ? "border-emerald-200"
-            : "border-zinc-200/70"
-      }`}
+      id={plateforme.cle}
+      className={`scroll-mt-8 ${premier ? "" : "border-t border-zinc-100"}`}
     >
-      <div className="flex items-start justify-between gap-3">
-        <span className="flex flex-col gap-0.5">
-          <span className="font-serif text-2xl leading-tight text-ink">
-            {plateforme.nom}
+      {/* Repliée : le logo, le nom, l'état. Dépliée : de quoi agir.
+          Tout est replié au départ — le bandeau du haut et le mode guidé
+          disent déjà par où commencer. */}
+      <details className="group">
+        <summary className="flex cursor-pointer list-none items-center gap-3 px-4 py-4 sm:gap-4 sm:px-5 transition-colors hover:bg-zinc-50/70 [&::-webkit-details-marker]:hidden">
+          <LogoPlateforme cle={plateforme.cle} />
+          <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+            <span className="flex flex-wrap items-baseline gap-x-2">
+              <span className="font-semibold text-ink">{plateforme.nom}</span>
+              <span className="text-xs text-zinc-400">
+                ~{plateforme.minutes} min
+              </span>
+            </span>
+            <span className="hidden truncate text-sm text-zinc-500 sm:block">
+              {relie ? relie.texte : plateforme.pourquoi}
+            </span>
+            {/* Sur téléphone, l'état passe sous le nom : à droite, il
+                coupait le nom en trois lignes. */}
+            <span
+              className={`w-fit rounded-full px-2 py-0.5 text-[11px] font-semibold sm:hidden ${
+                etat ? TON_ETAT[etat] : "bg-zinc-100 text-zinc-500"
+              }`}
+            >
+              {libelleEtat(etat)}
+            </span>
           </span>
-          <span className="text-xs text-zinc-400">
-            environ {plateforme.minutes} min
+          <span
+            className={`hidden shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold sm:inline ${
+              etat ? TON_ETAT[etat] : "bg-zinc-100 text-zinc-500"
+            }`}
+          >
+            {libelleEtat(etat)}
           </span>
-        </span>
-        <span
-          className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${
-            etat ? TON_ETAT[etat] : "bg-zinc-100 text-zinc-500"
+          <span
+            aria-hidden="true"
+            className="shrink-0 text-zinc-400 transition-transform group-open:rotate-180"
+          >
+            ⌄
+          </span>
+        </summary>
+
+        <div
+          className={`flex flex-col gap-4 border-t px-5 py-5 sm:pl-[4.75rem] ${
+            aFaire
+              ? "border-brand-orange/30 bg-brand-orange-soft/30"
+              : "border-zinc-100 bg-zinc-50/40"
           }`}
         >
-          {libelleEtat(etat)}
-        </span>
-      </div>
-
-      <p className="text-sm leading-relaxed text-zinc-600">
-        {plateforme.pourquoi}
-      </p>
-
-      {etat === "a_revoir" && ficheModifieeLe && (
-        <p className="rounded-lg bg-brand-orange-soft px-3 py-2 text-sm leading-relaxed text-ink">
-          Ta fiche a changé le {jourCourt(ficheModifieeLe)} dans Klarr : reporte
-          les changements ici.
-        </p>
-      )}
-
-      {relie ? (
-        <span className="truncate rounded-lg bg-zinc-50 px-3 py-2 text-sm text-ink">
-          {relie.texte}
-        </span>
-      ) : (
-        plateforme.conseil && (
-          <p className="rounded-lg bg-zinc-50 px-3 py-2 text-sm leading-relaxed text-ink">
-            {plateforme.conseil}
+          <p className="text-sm leading-relaxed text-zinc-600">
+            {plateforme.pourquoi}
           </p>
-        )
-      )}
 
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        {plateforme.verifier && (
-          <a
-            href={plateforme.verifier(nom, adresse)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm font-semibold text-brand-orange-dark hover:underline"
-          >
-            Vérifier ma fiche ↗
-          </a>
-        )}
-        {plateforme.creer && (!relie || etat === "a_revoir") && (
-          <a
-            href={plateforme.creer}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm font-semibold text-brand-orange-dark hover:underline"
-          >
-            {relie ? "Modifier ma fiche ↗" : "Créer ou revendiquer ↗"}
-          </a>
-        )}
-        {plateforme.ecranKlarr && (
-          <Link
-            href={`/dashboard/${restaurantId}/${relie?.ecran ?? plateforme.ecranKlarr}`}
-            className="text-sm font-semibold text-brand-navy hover:underline"
-          >
-            {relie ? "Gérer dans Klarr →" : "Relier dans Klarr →"}
-          </Link>
-        )}
-      </div>
+          {etat === "a_revoir" && ficheModifieeLe && (
+            <p className="rounded-lg bg-brand-orange-soft px-3 py-2 text-sm leading-relaxed text-ink">
+              Ta fiche a changé le {jourCourt(ficheModifieeLe)} dans Klarr :
+              reporte les changements ici.
+            </p>
+          )}
 
-      {/* Replié par défaut, et absent quand la plateforme est déjà
-          reliée et à jour : la carte se lit d'un coup d'œil, et le
-          détail s'ouvre au moment de s'y mettre. */}
-      {(etat === "a_revoir" ||
-        (!relie && plateforme.etapes && plateforme.etapes.length > 0)) && (
-        <details className="group rounded-xl border border-zinc-200 bg-zinc-50/60">
-          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-semibold text-ink [&::-webkit-details-marker]:hidden">
-            Pas à pas · {etapes.length} étapes
-            <span
-              aria-hidden="true"
-              className="text-zinc-400 transition-transform group-open:rotate-180"
-            >
-              ⌄
-            </span>
-          </summary>
-          <div className="border-t border-zinc-200 px-4 py-4">
-            <Etapes etapes={etapes} />
-          </div>
-        </details>
-      )}
+          {!relie && plateforme.conseil && (
+            <p className="rounded-lg bg-white px-3 py-2 text-sm leading-relaxed text-ink">
+              {plateforme.conseil}
+            </p>
+          )}
 
-      {/* Relié et à jour, l'état se lit dans Klarr : rien à déclarer. À
-          revoir, un seul bouton suffit — la fiche existe, on confirme. */}
-      {(!relie || etat === "a_revoir") && (
-        <form
-          action={majPresence}
-          className="mt-auto flex flex-col gap-2 border-t border-zinc-100 pt-4"
-        >
-          <input type="hidden" name="restaurant_id" value={restaurantId} />
-          <input type="hidden" name="plateforme" value={plateforme.cle} />
-          <span className="text-xs text-zinc-500">
-            {constat
-              ? `Vérifié le ${jourCourt(constat.verifieLe)} — ce que tu as trouvé :`
-              : "Après vérification, ce que tu as trouvé :"}
-          </span>
-          <div className="flex flex-wrap gap-2">
-            {(relie ? (["a_jour"] as const) : STATUTS).map((valeur) => (
-              <button
-                key={valeur}
-                type="submit"
-                name="statut"
-                value={valeur}
-                aria-pressed={constat?.statut === valeur && etat !== "a_revoir"}
-                className={`rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors ${
-                  constat?.statut === valeur && etat !== "a_revoir"
-                    ? "border-brand-navy bg-brand-navy text-white"
-                    : "border-zinc-200 bg-white text-zinc-700 hover:border-brand-navy hover:text-brand-navy"
-                }`}
+          <div className="flex flex-wrap items-center gap-2">
+            {plateforme.verifier && (
+              <a
+                href={plateforme.verifier(nom, adresse)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
               >
-                {etat === "a_revoir" && valeur === "a_jour"
-                  ? "C'est à jour"
-                  : LIBELLE_STATUT[valeur]}
-              </button>
-            ))}
-            {constat && !relie && (
-              <button
-                type="submit"
-                name="statut"
-                value="effacer"
-                className="px-2 py-1.5 text-sm text-zinc-400 transition-colors hover:text-zinc-700"
+                Vérifier ma fiche ↗
+              </a>
+            )}
+            {plateforme.creer && (!relie || etat === "a_revoir") && (
+              <a
+                href={plateforme.creer}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
               >
-                Effacer
-              </button>
+                {relie ? "Modifier ma fiche ↗" : "Créer ou revendiquer ↗"}
+              </a>
+            )}
+            {plateforme.ecranKlarr && (
+              <Link
+                href={`/dashboard/${restaurantId}/${relie?.ecran ?? plateforme.ecranKlarr}`}
+                className="rounded-lg bg-brand-navy px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover"
+              >
+                {relie ? "Gérer dans Klarr →" : "Relier dans Klarr →"}
+              </Link>
             )}
           </div>
-        </form>
-      )}
+
+          {avecEtapes && (
+            <div className="flex flex-col gap-2">
+              <span className="text-xs font-semibold uppercase tracking-[0.08em] text-zinc-500">
+                Pas à pas · {etapes.length} étapes
+              </span>
+              <Etapes etapes={etapes} />
+            </div>
+          )}
+
+          {/* Relié et à jour, l'état se lit dans Klarr : rien à déclarer.
+              À revoir, un seul bouton suffit. */}
+          {(!relie || etat === "a_revoir") && (
+            <form
+              action={majPresence}
+              className="flex flex-col gap-2 border-t border-zinc-200/70 pt-4"
+            >
+              <input type="hidden" name="restaurant_id" value={restaurantId} />
+              <input type="hidden" name="plateforme" value={plateforme.cle} />
+              <span className="text-xs text-zinc-500">
+                {constat
+                  ? `Vérifié le ${jourCourt(constat.verifieLe)} — ce que tu as trouvé :`
+                  : "Après vérification, ce que tu as trouvé :"}
+              </span>
+              <div className="flex flex-wrap gap-2">
+                {(relie ? (["a_jour"] as const) : STATUTS).map((valeur) => (
+                  <button
+                    key={valeur}
+                    type="submit"
+                    name="statut"
+                    value={valeur}
+                    aria-pressed={
+                      constat?.statut === valeur && etat !== "a_revoir"
+                    }
+                    className={`rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors ${
+                      constat?.statut === valeur && etat !== "a_revoir"
+                        ? "border-brand-navy bg-brand-navy text-white"
+                        : "border-zinc-200 bg-white text-zinc-700 hover:border-brand-navy hover:text-brand-navy"
+                    }`}
+                  >
+                    {etat === "a_revoir" && valeur === "a_jour"
+                      ? "C'est à jour"
+                      : LIBELLE_STATUT[valeur]}
+                  </button>
+                ))}
+                {constat && !relie && (
+                  <button
+                    type="submit"
+                    name="statut"
+                    value="effacer"
+                    className="px-2 py-1.5 text-sm text-zinc-400 transition-colors hover:text-zinc-700"
+                  >
+                    Effacer
+                  </button>
+                )}
+              </div>
+            </form>
+          )}
+        </div>
+      </details>
     </li>
   );
 }
