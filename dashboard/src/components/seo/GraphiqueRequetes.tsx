@@ -39,11 +39,20 @@ export function GraphiqueRequetes({
   libelles = FRANCAIS,
   /** Sans infobulle ni survol : une maquette n'a rien à répondre. */
   statique = false,
+  infobulle,
 }: {
   requetes: RequeteMesuree[];
   id?: string;
   libelles?: LibellesGraphique;
   statique?: boolean;
+  /** Le détail au survol, dans la langue de l'écran ; français sinon. */
+  infobulle?: (
+    vus: string,
+    clics: string,
+    n: number,
+    ctr: number,
+    position: number,
+  ) => string;
 }) {
   const max = plafond(Math.max(0, ...requetes.map((r) => r.impressions)));
 
@@ -77,11 +86,20 @@ export function GraphiqueRequetes({
           // Le clic se mesure par rapport à la barre « vu » : même origine,
           // même échelle, et la proportion se lit d'un coup d'œil.
           const clic = r.impressions > 0 ? (r.clics / r.impressions) * 100 : 0;
-          const infobulle = `${r.requete}\n${nombre(r.impressions)} fois vu · ${nombre(r.clics)} clic${r.clics > 1 ? "s" : ""} · ${r.ctr} % · position ${r.position}`;
+          const detail = infobulle
+            ? infobulle(
+                nombre(r.impressions),
+                nombre(r.clics),
+                r.clics,
+                r.ctr,
+                r.position,
+              )
+            : `${nombre(r.impressions)} fois vu · ${nombre(r.clics)} clic${r.clics > 1 ? "s" : ""} · ${r.ctr} % · position ${r.position}`;
+          const bulle = `${r.requete}\n${detail}`;
           return (
             <li
               key={r.requete}
-              title={statique ? undefined : infobulle}
+              title={statique ? undefined : bulle}
               className="group flex flex-col gap-1 py-1.5 sm:grid sm:grid-cols-[minmax(0,13rem)_minmax(0,1fr)] sm:items-center sm:gap-x-3 sm:py-0"
             >
               <span className="truncate text-[13px] text-ink sm:h-[34px] sm:leading-[34px]">

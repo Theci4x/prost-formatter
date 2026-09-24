@@ -10,7 +10,9 @@
  * première chose qu'on vérifie devant un zéro, c'est qu'on regarde au bon
  * endroit.
  */
-export function EtatVide({ site }: { site: string }) {
+import type { ClesSeo } from "@/lib/i18n/seo";
+
+export function EtatVide({ site, t }: { site: string; t: ClesSeo }) {
   return (
     <div className="flex flex-col items-start gap-4 rounded-2xl border border-dashed border-zinc-300 bg-white/60 px-6 py-8 sm:flex-row sm:items-center sm:gap-6">
       <svg
@@ -61,17 +63,11 @@ export function EtatVide({ site }: { site: string }) {
         />
       </svg>
       <div className="flex flex-col gap-1.5">
-        <p className="text-sm font-medium text-ink">
-          Pas encore de requête mesurée sur tes pages
-        </p>
+        <p className="text-sm font-medium text-ink">{t.videTitre}</p>
         <p className="max-w-prose text-sm leading-relaxed text-ink-soft">
-          Google n&apos;a rien enregistré ces quatre dernières semaines pour les
-          pages de ton établissement. C&apos;est le cas d&apos;une page récente,
-          ou d&apos;une maison fermée. Les chiffres arriveront ici
-          d&apos;eux-mêmes, avec trois jours de retard — c&apos;est le rythme de
-          Search Console.
+          {t.videTexte}
         </p>
-        <p className="text-xs text-zinc-400">Site suivi : {site}</p>
+        <p className="text-xs text-zinc-400">{t.videSite(site)}</p>
       </div>
     </div>
   );

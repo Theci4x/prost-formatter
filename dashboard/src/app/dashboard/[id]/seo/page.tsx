@@ -24,16 +24,12 @@ import type { Restaurant } from "@/types/restaurant";
 import type { RestaurantKeyword } from "@/types/keyword";
 import { exiger } from "@/lib/equipe/roles";
 import { exigerModule } from "@/lib/abonnement/acces";
-
-const SOMMAIRE = [
-  { ancre: "constat", titre: "Ce que les gens tapent" },
-  { ancre: "analyse", titre: "Analyse Klarr Tool" },
-  { ancre: "mots-cles", titre: "Mots-clés ciblés" },
-];
+import { langueUtilisateur } from "@/lib/i18n/langue";
+import { SEO, localeDe } from "@/lib/i18n/seo";
 
 /** « 22 sept. » : la date d'une analyse, assez courte pour une tuile. */
-function jourCourt(iso: string): string {
-  return new Date(iso).toLocaleDateString("fr-FR", {
+function jourCourt(iso: string, locale: string): string {
+  return new Date(iso).toLocaleDateString(locale, {
     day: "numeric",
     month: "short",
     timeZone: "Europe/Paris",
@@ -60,6 +56,13 @@ export default async function SeoPage({
   const { id } = await params;
   await exiger(id, "gerant");
   await exigerModule(id, "visibilite");
+  const langue = await langueUtilisateur();
+  const t = SEO[langue];
+  const SOMMAIRE = [
+    { ancre: "constat", titre: t.sommaire.constat },
+    { ancre: "analyse", titre: t.sommaire.analyse },
+    { ancre: "mots-cles", titre: t.sommaire.motsCles },
+  ];
 
   const supabase = await createClient();
 
@@ -120,16 +123,8 @@ export default async function SeoPage({
   return (
     <div className="flex flex-1 flex-col gap-8 px-6 py-8">
       <div className="flex flex-col gap-3">
-        <PageHeader
-          icon={dashboardIcons.seo}
-          title={`SEO — ${restaurant.nom}`}
-        />
-        <p className="max-w-4xl text-sm text-zinc-600">
-          Ce qui te fait sortir sur Google quand quelqu&apos;un cherche où
-          manger. En haut, ce que Search Console a vraiment mesuré ; en dessous,
-          l&apos;analyse de Klarr Tool et les mots-clés sur lesquels tu veux
-          sortir.
-        </p>
+        <PageHeader icon={dashboardIcons.seo} title={t.titre(restaurant.nom)} />
+        <p className="max-w-4xl text-sm text-zinc-600">{t.chapo}</p>
       </div>
 
       {/* Sans chiffres Google, les tuiles de Search Console ne s'affichent
@@ -138,19 +133,21 @@ export default async function SeoPage({
         <div className="grid grid-cols-3 gap-3 sm:gap-4">
           <Compteur
             valeur={keywords.length}
-            libelle={`mot${keywords.length > 1 ? "s" : ""}-clé${keywords.length > 1 ? "s" : ""} ciblé${keywords.length > 1 ? "s" : ""}`}
+            libelle={t.compteurMotsCles(keywords.length)}
             accent={keywords.length === 0}
           />
           <Compteur
-            valeur={precedente ? jourCourt(precedente.analyseLe) : "—"}
-            libelle={precedente ? "dernière analyse" : "aucune analyse"}
+            valeur={
+              precedente
+                ? jourCourt(precedente.analyseLe, localeDe(langue))
+                : "—"
+            }
+            libelle={precedente ? t.derniereAnalyse : t.aucuneAnalyse}
             accent={!precedente}
           />
           <Compteur
-            valeur={aDesChiffres ? "Relié" : "—"}
-            libelle={
-              aDesChiffres ? "Search Console" : "Search Console à relier"
-            }
+            valeur={aDesChiffres ? t.relie : "—"}
+            libelle={aDesChiffres ? t.searchConsole : t.searchConsoleARelier}
             accent={!aDesChiffres}
           />
         </div>
@@ -176,20 +173,25 @@ export default async function SeoPage({
       >
         <div className="flex flex-col gap-1">
           <h2 id="constat-titre" className="font-serif text-2xl text-ink">
-            Ce que les gens tapent vraiment
+            {t.constatTitre}
           </h2>
-          <SourceSuivie etat={mesure} restaurantId={id} />
+          <SourceSuivie etat={mesure} restaurantId={id} t={t} />
         </div>
 
-        <AvantLesChiffres etat={mesure} restaurantId={id} />
+        <AvantLesChiffres etat={mesure} restaurantId={id} t={t} />
 
         {aDesChiffres && mesure.requetes.length === 0 && (
-          <EtatVide site={mesure.site!} />
+          <EtatVide site={mesure.site!} t={t} />
         )}
 
         {aDesChiffres && mesure.requetes.length > 0 && (
           <>
-            <Kpis s={synthese(mesure.requetes)} tuiles />
+            <Kpis
+              s={synthese(mesure.requetes)}
+              libelles={t.kpis}
+              locale={localeDe(langue)}
+              tuiles
+            />
 
             {/* Les deux graphiques partagent leurs lignes : même ordre,
                 même hauteur de ligne. Côte à côte sur un grand écran, ils
@@ -197,14 +199,18 @@ export default async function SeoPage({
                 l'autre sur un petit, l'ordre reste. */}
             <div className="grid gap-5 xl:grid-cols-5">
               <div className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm xl:col-span-3">
-                <GraphiqueRequetes requetes={dessin} />
+                <GraphiqueRequetes
+                  requetes={dessin}
+                  libelles={t.graphique}
+                  infobulle={t.infobulleRequete}
+                />
               </div>
               <div className="rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm xl:col-span-2">
-                <GraphiquePositions requetes={dessin} />
+                <GraphiquePositions requetes={dessin} t={t} />
               </div>
             </div>
 
-            <TableauRequetes requetes={mesure.requetes} />
+            <TableauRequetes requetes={mesure.requetes} t={t} />
           </>
         )}
       </section>
@@ -215,6 +221,7 @@ export default async function SeoPage({
           analyzeAction={analyzeKeywords.bind(null, id)}
           precedente={precedente}
           motsClesActuels={keywords.map((k) => k.keyword)}
+          langue={langue}
         />
 
         <aside
@@ -224,11 +231,9 @@ export default async function SeoPage({
         >
           <div className="flex flex-col gap-0.5">
             <h2 id="mots-cles-titre" className="font-serif text-2xl text-ink">
-              Mots-clés ciblés
+              {t.motsClesTitre}
             </h2>
-            <p className="text-sm text-zinc-600">
-              Ce sur quoi tu veux sortir. L&apos;analyse les commente.
-            </p>
+            <p className="text-sm text-zinc-600">{t.motsClesChapo}</p>
           </div>
 
           <div className="flex flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm">
@@ -238,21 +243,19 @@ export default async function SeoPage({
                 name="keyword"
                 type="text"
                 required
-                placeholder="ex : restaurant italien Lyon"
+                placeholder={t.motsClesExemple}
                 className="min-w-0 flex-1 rounded-lg border border-zinc-200 bg-zinc-50 px-3.5 py-2.5 text-sm outline-none transition-colors focus:border-brand-navy focus:bg-white"
               />
               <button
                 type="submit"
                 className="shrink-0 rounded-lg border border-zinc-200 bg-white px-4 py-2.5 text-sm font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
               >
-                Ajouter
+                {t.ajouter}
               </button>
             </form>
 
             {keywords.length === 0 ? (
-              <p className="text-sm text-ink-soft">
-                Aucun mot-clé pour le moment.
-              </p>
+              <p className="text-sm text-ink-soft">{t.aucunMotCle}</p>
             ) : (
               <ul className="flex flex-wrap gap-2">
                 {keywords.map((k) => (
@@ -266,7 +269,7 @@ export default async function SeoPage({
                       <input type="hidden" name="restaurant_id" value={id} />
                       <button
                         type="submit"
-                        aria-label={`Supprimer ${k.keyword}`}
+                        aria-label={t.supprimer(k.keyword)}
                         className="flex h-5 w-5 items-center justify-center rounded-full text-zinc-400 transition-colors hover:bg-red-50 hover:text-red-600"
                       >
                         ×

@@ -5,6 +5,8 @@ import Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@/lib/supabase/server";
 import { exiger } from "@/lib/equipe/roles";
 import { etatSearchConsole } from "@/lib/google/requetes-restaurant";
+import { langueUtilisateur } from "@/lib/i18n/langue";
+import { SEO } from "@/lib/i18n/seo";
 
 export async function addKeyword(formData: FormData) {
   const restaurantId = formData.get("restaurant_id") as string;
@@ -70,6 +72,9 @@ export async function analyzeKeywords(
   // n'importe quel compte relié peut faire dépenser un établissement qui
   // n'est pas le sien.
   await exiger(restaurantId, "gerant");
+  // L'analyse s'écrit dans la langue de l'écran : un gérant qui lit le
+  // tableau de bord en chinois la lit en chinois.
+  const t = SEO[await langueUtilisateur()];
 
   const supabase = await createClient();
 
@@ -87,7 +92,7 @@ export async function analyzeKeywords(
   } | null;
 
   if (!restaurant) {
-    return { error: "Restaurant introuvable." };
+    return { error: t.erreurIntrouvable };
   }
 
   const { data: keywordsData } = await supabase
@@ -125,7 +130,8 @@ export async function analyzeKeywords(
       max_tokens: 2000,
       system:
         "Tu es un consultant en référencement local (SEO) spécialisé dans " +
-        "la restauration. Réponds en français, de façon concise et actionnable.",
+        `la restauration. Réponds ${t.langueAnalyse}, de façon concise et ` +
+        "actionnable. Les requêtes et mots-clés cités restent tels quels.",
       messages: [
         {
           role: "user",
@@ -179,6 +185,6 @@ export async function analyzeKeywords(
     return { analysis, analyseLe, motsCles: keywords };
   } catch (err) {
     console.error("[analyzeKeywords]", err);
-    return { error: "L'analyse a échoué. Réessaie dans un instant." };
+    return { error: t.erreurAnalyse };
   }
 }

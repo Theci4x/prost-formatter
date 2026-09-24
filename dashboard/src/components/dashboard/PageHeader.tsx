@@ -1,6 +1,10 @@
 import Link from "next/link";
+import { langueUtilisateur } from "@/lib/i18n/langue";
 
-export function PageHeader({
+const RETOUR = { fr: "Retour", en: "Back", zh: "返回" } as const;
+
+/** L'en-tête des pages du tableau de bord ; le lien de retour suit la langue. */
+export async function PageHeader({
   icon,
   title,
   backHref = "/dashboard",
@@ -9,13 +13,14 @@ export function PageHeader({
   title: string;
   backHref?: string;
 }) {
+  const langue = await langueUtilisateur();
   return (
     <div className="flex flex-col gap-4">
       <Link
         href={backHref}
         className="text-sm text-zinc-500 hover:text-zinc-900"
       >
-        ← Retour
+        ← {RETOUR[langue]}
       </Link>
       <div className="flex items-center gap-3">
         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-brand-orange-soft to-white text-brand-navy shadow-sm">

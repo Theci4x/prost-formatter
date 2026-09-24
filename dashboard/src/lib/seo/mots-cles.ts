@@ -1,3 +1,6 @@
+import { SEO } from "@/lib/i18n/seo";
+import type { Langue } from "@/lib/i18n/langues";
+
 /**
  * Ce qui a changé dans les mots-clés depuis la dernière analyse.
  *
@@ -14,21 +17,10 @@
 export function ceQuiABouge(
   avant: string[],
   maintenant: string[],
+  langue: Langue = "fr",
 ): string | null {
   const ajoutes = maintenant.filter((m) => !avant.includes(m)).length;
   const retires = avant.filter((m) => !maintenant.includes(m)).length;
   if (!ajoutes && !retires) return null;
-
-  // « mots-clés » : les deux éléments du mot composé s'accordent, pas
-  // seulement le second.
-  const s = (n: number) => (n > 1 ? "s" : "");
-
-  const bouts: string[] = [];
-  if (ajoutes) {
-    bouts.push(
-      `${ajoutes} mot${s(ajoutes)}-clé${s(ajoutes)} ajouté${s(ajoutes)}`,
-    );
-  }
-  if (retires) bouts.push(`${retires} retiré${s(retires)}`);
-  return `${bouts.join(", ")} depuis cette analyse.`;
+  return SEO[langue].bouge(ajoutes, retires);
 }

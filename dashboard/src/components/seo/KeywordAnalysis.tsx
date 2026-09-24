@@ -5,10 +5,12 @@ import { Markdown } from "@/components/texte/Markdown";
 import { Patience } from "@/components/seo/Patience";
 import { ceQuiABouge } from "@/lib/seo/mots-cles";
 import type { Analyse, AnalyzeResult } from "@/app/dashboard/[id]/seo/actions";
+import { SEO, localeDe } from "@/lib/i18n/seo";
+import type { Langue } from "@/lib/i18n/langues";
 
 /** « le 22 septembre 2026 à 09:36 ». */
-function quand(iso: string): string {
-  return new Date(iso).toLocaleString("fr-FR", {
+function quand(iso: string, langue: Langue): string {
+  return new Date(iso).toLocaleString(localeDe(langue), {
     day: "numeric",
     month: "long",
     year: "numeric",
@@ -21,13 +23,16 @@ export function KeywordAnalysis({
   analyzeAction,
   precedente,
   motsClesActuels,
+  langue = "fr",
 }: {
   analyzeAction: () => Promise<AnalyzeResult>;
   /** La dernière analyse rangée en base, s'il y en a une. */
   precedente: Analyse | null;
   /** Les mots-clés ciblés maintenant, pour dire ce qui a bougé. */
   motsClesActuels: string[];
+  langue?: Langue;
 }) {
+  const t = SEO[langue];
   const [analyse, setAnalyse] = useState<Analyse | null>(precedente);
   const [erreur, setErreur] = useState<string | null>(null);
   const [enCours, demarrer] = useTransition();
@@ -40,7 +45,9 @@ export function KeywordAnalysis({
       else setAnalyse(r);
     });
 
-  const bouge = analyse ? ceQuiABouge(analyse.motsCles, motsClesActuels) : null;
+  const bouge = analyse
+    ? ceQuiABouge(analyse.motsCles, motsClesActuels, langue)
+    : null;
 
   return (
     <section
@@ -51,12 +58,12 @@ export function KeywordAnalysis({
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
         <div className="flex flex-col gap-0.5">
           <h2 id="analyse-titre" className="font-serif text-2xl text-ink">
-            Analyse SEO par Klarr Tool
+            {t.analyseTitre}
           </h2>
           <p className="text-sm text-zinc-600">
             {analyse && !enCours
-              ? `Analysée le ${quand(analyse.analyseLe)}`
-              : "Un audit local complet, écrit pour ton établissement."}
+              ? t.analyseLe(quand(analyse.analyseLe, langue))
+              : t.analyseChapo}
           </p>
         </div>
 
@@ -74,11 +81,7 @@ export function KeywordAnalysis({
           ) : (
             <Etincelle />
           )}
-          {enCours
-            ? "Analyse en cours…"
-            : analyse
-              ? "Relancer l'analyse"
-              : "Lancer l'analyse"}
+          {enCours ? t.analyseEnCours : analyse ? t.relancer : t.lancer}
         </button>
       </div>
 
@@ -96,17 +99,14 @@ export function KeywordAnalysis({
       )}
 
       {enCours ? (
-        <Patience aUneAnalyse={Boolean(analyse)} />
+        <Patience aUneAnalyse={Boolean(analyse)} langue={langue} />
       ) : analyse?.analysis ? (
         <div className="rounded-2xl border border-zinc-200/70 bg-white p-5 text-sm text-zinc-700 shadow-sm sm:p-7">
           <Markdown texte={analyse.analysis} />
         </div>
       ) : (
         <div className="rounded-2xl border border-dashed border-zinc-300 bg-white/60 px-6 py-8 text-sm leading-relaxed text-zinc-600">
-          Aucune analyse pour le moment. Elle s&apos;appuie sur ton nom, ton
-          adresse, tes mots-clés ciblés et — quand Search Console est relié —
-          sur ce que les gens tapent vraiment. Ajoute tes mots-clés d&apos;abord
-          : l&apos;analyse en sera meilleure.
+          {t.analyseVide}
         </div>
       )}
     </section>

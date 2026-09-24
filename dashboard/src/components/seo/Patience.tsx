@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { SEO } from "@/lib/i18n/seo";
+import type { Langue } from "@/lib/i18n/langues";
 
 /**
  * L'attente, pendant que l'analyse s'écrit.
@@ -18,21 +20,24 @@ import { useEffect, useState } from "react";
  * annoncer « terminé » avant que le texte arrive.
  */
 
-const ETAPES = [
-  "Lecture de la fiche et des requêtes mesurées",
-  "Repérage du quartier, des concurrents, des intentions",
-  "Croisement avec les mots-clés ciblés",
-  "Rédaction des recommandations",
-] as const;
+/** Quatre étapes, dans toutes les langues : le compte ne change pas. */
+const NB_ETAPES = SEO.fr.etapes.length;
 
 const CADENCE_MS = 5000;
 
-export function Patience({ aUneAnalyse }: { aUneAnalyse: boolean }) {
+export function Patience({
+  aUneAnalyse,
+  langue = "fr",
+}: {
+  aUneAnalyse: boolean;
+  langue?: Langue;
+}) {
+  const t = SEO[langue];
   const [etape, setEtape] = useState(0);
 
   useEffect(() => {
     const minuterie = setInterval(
-      () => setEtape((e) => Math.min(e + 1, ETAPES.length - 1)),
+      () => setEtape((e) => Math.min(e + 1, NB_ETAPES - 1)),
       CADENCE_MS,
     );
     return () => clearInterval(minuterie);
@@ -73,7 +78,7 @@ export function Patience({ aUneAnalyse }: { aUneAnalyse: boolean }) {
       {/* Les étapes. Celle en cours respire et porte l'accent ; les
           passées sont cochées ; les suivantes attendent, en retrait. */}
       <ol className="flex flex-col gap-2.5">
-        {ETAPES.map((libelle, i) => {
+        {t.etapes.map((libelle, i) => {
           const passee = i < etape;
           const enCours = i === etape;
           return (
@@ -113,7 +118,7 @@ export function Patience({ aUneAnalyse }: { aUneAnalyse: boolean }) {
                 )}
               </span>
               <span>{libelle}</span>
-              {enCours && <span className="sr-only"> (en cours)</span>}
+              {enCours && <span className="sr-only">{t.enCoursSr}</span>}
             </li>
           );
         })}
@@ -140,8 +145,8 @@ export function Patience({ aUneAnalyse }: { aUneAnalyse: boolean }) {
       </div>
 
       <p className="text-xs text-zinc-500">
-        Une analyse prend une vingtaine de secondes.
-        {aUneAnalyse ? " La précédente revient si celle-ci échoue." : ""}
+        {t.duree}
+        {aUneAnalyse ? t.precedenteRevient : ""}
       </p>
     </div>
   );

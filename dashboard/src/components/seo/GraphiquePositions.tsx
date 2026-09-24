@@ -5,6 +5,7 @@ import {
   PREMIERE_PAGE,
   pageDe,
 } from "@/lib/seo/synthese";
+import type { ClesSeo } from "@/lib/i18n/seo";
 
 /**
  * À quelle place on sort, requête par requête.
@@ -32,12 +33,6 @@ const COULEUR = {
   loin: "oklch(72% 0.01 60)",
 } as const;
 
-const LIBELLE = {
-  premiere: "en première page",
-  deuxieme: "en deuxième page",
-  loin: "plus loin",
-} as const;
-
 /** La position sur l'échelle, en pourcentage de la largeur. */
 function pct(position: number): number {
   const p = Math.min(position, POSITION_MAX);
@@ -46,16 +41,19 @@ function pct(position: number): number {
 
 export function GraphiquePositions({
   requetes,
+  t,
   id = "graphique-positions",
 }: {
   requetes: RequeteMesuree[];
+  t: ClesSeo;
   id?: string;
 }) {
+  const LIBELLE = t.positions;
   return (
     <figure className="flex flex-col gap-3" aria-labelledby={`${id}-titre`}>
       <figcaption className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
         <span id={`${id}-titre`} className="text-sm font-medium text-ink">
-          À quelle place tu sors
+          {t.positionsTitre}
         </span>
         <span className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-ink-soft">
           {(["premiere", "deuxieme", "loin"] as const).map((p) => (
@@ -99,7 +97,7 @@ export function GraphiquePositions({
               return (
                 <li
                   key={r.requete}
-                  title={`${r.requete}\nposition moyenne ${r.position} — ${LIBELLE[page]}`}
+                  title={`${r.requete}\n${t.infobullePosition(r.position, LIBELLE[page])}`}
                   className="group relative h-[34px]"
                 >
                   {/* Un filet gris de la marge au point : l'œil retrouve

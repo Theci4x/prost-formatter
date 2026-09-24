@@ -1,6 +1,7 @@
 import { choisirPropriete } from "@/app/dashboard/[id]/seo/actions";
 import type { EtatSearchConsole } from "@/lib/google/requetes-restaurant";
 import type { RequeteMesuree } from "@/lib/google/search-console";
+import type { ClesSeo } from "@/lib/i18n/seo";
 
 /**
  * Ce que les gens tapent vraiment — les cas où il n'y a rien à dessiner.
@@ -15,18 +16,14 @@ import type { RequeteMesuree } from "@/lib/google/search-console";
 export function AvantLesChiffres({
   etat,
   restaurantId,
+  t,
 }: {
   etat: EtatSearchConsole;
   restaurantId: string;
+  t: ClesSeo;
 }) {
   if (!etat.connecte) {
-    return (
-      <Encadre>
-        Relie ton compte Google depuis « Connexions » pour voir les requêtes
-        réellement tapées par ceux qui te trouvent. C&apos;est la seule mesure
-        qui ne soit pas une supposition.
-      </Encadre>
-    );
+    return <Encadre>{t.pasRelie}</Encadre>;
   }
 
   if (etat.erreur) {
@@ -42,16 +39,11 @@ export function AvantLesChiffres({
 
   if (!etat.site) {
     if (etat.proprietes.length === 0) {
-      return (
-        <Encadre>
-          Aucun site vérifié sur ce compte Google. Search Console suppose que tu
-          possèdes un site et que tu l&apos;y as fait vérifier.
-        </Encadre>
-      );
+      return <Encadre>{t.aucunSite}</Encadre>;
     }
     return (
       <div className="flex flex-col gap-3 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm">
-        <p className="text-sm font-medium text-ink">Quel site suivre ?</p>
+        <p className="text-sm font-medium text-ink">{t.quelSite}</p>
         <ul className="grid gap-2 sm:grid-cols-2">
           {etat.proprietes.map((propriete) => (
             <li key={propriete.site}>
@@ -91,14 +83,16 @@ function Encadre({ children }: { children: React.ReactNode }) {
 export function SourceSuivie({
   etat,
   restaurantId,
+  t,
 }: {
   etat: EtatSearchConsole;
   restaurantId: string;
+  t: ClesSeo;
 }) {
   if (!etat.site) return null;
   return (
     <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-xs text-ink-soft">
-      <span>{etat.site} · 28 derniers jours · pages de ton établissement</span>
+      <span>{t.source(etat.site)}</span>
       {etat.proprietes.length > 1 && (
         <form action={choisirPropriete}>
           <input type="hidden" name="restaurant_id" value={restaurantId} />
@@ -107,7 +101,7 @@ export function SourceSuivie({
             type="submit"
             className="underline underline-offset-2 hover:text-brand-navy"
           >
-            Changer de site
+            {t.changerDeSite}
           </button>
         </form>
       )}
@@ -122,12 +116,18 @@ export function SourceSuivie({
  * est la seule forme qu'un lecteur d'écran ou une feuille de calcul
  * puisse lire. Rien de ce qu'une infobulle montre ne doit manquer ici.
  */
-export function TableauRequetes({ requetes }: { requetes: RequeteMesuree[] }) {
+export function TableauRequetes({
+  requetes,
+  t,
+}: {
+  requetes: RequeteMesuree[];
+  t: ClesSeo;
+}) {
   return (
     <details className="group rounded-2xl border border-zinc-200/70 bg-white shadow-sm">
       <summary className="flex cursor-pointer list-none items-center justify-between px-5 py-3 text-sm font-medium text-ink [&::-webkit-details-marker]:hidden">
         <span>
-          Toutes les requêtes{" "}
+          {t.tableauTitre}{" "}
           <span className="font-normal text-ink-soft">({requetes.length})</span>
         </span>
         <span
@@ -141,11 +141,11 @@ export function TableauRequetes({ requetes }: { requetes: RequeteMesuree[] }) {
         <table className="w-full min-w-[32rem] text-sm">
           <thead>
             <tr className="text-left text-xs text-ink-soft">
-              <th className="py-2.5 font-medium">Requête</th>
-              <th className="py-2.5 text-right font-medium">Vu</th>
-              <th className="py-2.5 text-right font-medium">Clics</th>
-              <th className="py-2.5 text-right font-medium">Taux</th>
-              <th className="py-2.5 text-right font-medium">Position</th>
+              <th className="py-2.5 font-medium">{t.colRequete}</th>
+              <th className="py-2.5 text-right font-medium">{t.colVu}</th>
+              <th className="py-2.5 text-right font-medium">{t.colClics}</th>
+              <th className="py-2.5 text-right font-medium">{t.colTaux}</th>
+              <th className="py-2.5 text-right font-medium">{t.colPosition}</th>
             </tr>
           </thead>
           <tbody className="[&_td]:border-t [&_td]:border-line [&_td]:py-2">

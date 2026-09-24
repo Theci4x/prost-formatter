@@ -39,6 +39,7 @@ export function Kpis({
   s,
   libelles = FRANCAIS,
   tuiles: separees = false,
+  locale = "fr-FR",
 }: {
   s: Synthese;
   libelles?: LibellesKpis;
@@ -48,12 +49,14 @@ export function Kpis({
    * maquette de la page d'accueil, où la place manque.
    */
   tuiles?: boolean;
+  /** Pour écrire le taux à la façon de la langue affichée. */
+  locale?: string;
 }) {
   const tuiles: { valeur: string; libelle: string; detail?: string }[] = [
     { valeur: nombre(s.impressions), libelle: libelles.vus },
     { valeur: nombre(s.clics), libelle: libelles.clics },
     {
-      valeur: `${s.ctr.toLocaleString("fr-FR")} %`,
+      valeur: `${s.ctr.toLocaleString(locale)} %`,
       libelle: libelles.taux,
     },
     {
