@@ -219,6 +219,7 @@ export default async function ConnexionsPage({
       debloque: [
         "Ta note et tes avis",
         "Ta fiche et tes horaires",
+        "Tes statistiques : apparitions, appels, itinéraires",
         "Tes recherches Google (Search Console)",
       ],
       icon: platformIcons.google,
