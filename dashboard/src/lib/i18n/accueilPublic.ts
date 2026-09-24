@@ -129,6 +129,29 @@ export type ClesAccueilPublic = {
         vendu: string;
       };
     };
+    voisins: {
+      titre: string;
+      texte: string;
+      maquette: {
+        surtitre: string;
+        vous: string;
+        note: string;
+        gain: string;
+        signal: string;
+      };
+    };
+    integration: {
+      titre: string;
+      texte: string;
+      maquette: {
+        surtitre: string;
+        adresse: string;
+        accroche: string;
+        bouton: string;
+        creneau: string;
+        demander: string;
+      };
+    };
     lendemain: {
       titre: string;
       texte: string;
@@ -455,7 +478,7 @@ const fr: ClesAccueilPublic = {
     surtitre: "Nouveau sur Klarr",
     titre: "Ce qui vient d'arriver.",
     chapo:
-      "Vos fiches au-delà de Google, des bons cadeaux vendus en ligne, plus d'avis et une réponse à chacun, un bilan chaque mois — et, si vous venez d'un autre outil, vos clients repris en quelques minutes.",
+      "Vos fiches au-delà de Google, des bons cadeaux vendus en ligne, plus d'avis et une réponse à chacun, vos voisins suivis de près, la réservation sur votre propre site, un bilan chaque mois — et, si vous venez d'un autre outil, vos clients repris en quelques minutes.",
     presence: {
       titre: "Des informations justes, partout où l'on vous cherche",
       texte:
@@ -523,6 +546,31 @@ const fr: ClesAccueilPublic = {
         vendu: "80 € encaissés sur votre compte Stripe",
       },
     },
+    voisins: {
+      titre: "Vos voisins, suivis chaque semaine",
+      texte:
+        "Choisissez jusqu'à cinq restaurants autour de vous. Chaque lundi, Klarr relève leur note et leur nombre d'avis sur Google : vous voyez qui avance, et à quel rythme.",
+      maquette: {
+        surtitre: "Vos voisins · relevé lundi",
+        vous: "vous",
+        note: "Note",
+        gain: "En 30 j",
+        signal: "Le Bistrot Voltigeur a gagné 22 avis ce mois-ci",
+      },
+    },
+    integration: {
+      titre: "La réservation sur votre propre site",
+      texte:
+        "Vous avez déjà un site ? Une ligne de code à coller, et un bouton « Réserver » ouvre votre réservation Klarr par-dessus, sans quitter la page. WordPress, Wix, Squarespace : ça marche partout.",
+      maquette: {
+        surtitre: "Votre site · avec le bouton Klarr",
+        adresse: "www.latabledanselme.fr",
+        accroche: "Cuisine de marché, au cœur de Lyon.",
+        bouton: "Réserver une table",
+        creneau: "Samedi · 2 personnes · 20:30",
+        demander: "Demander une table",
+      },
+    },
     lendemain: {
       titre: "Un avis demandé le lendemain de la visite",
       texte:
@@ -564,6 +612,7 @@ const fr: ClesAccueilPublic = {
       "Les questions qu'on vous pose au téléphone, répondues une fois et reprises par Google et les IA",
       "Le bilan du mois dans votre boîte, le 1er au matin",
       "Des bons cadeaux vendus en ligne, payés sur votre compte",
+      "Vos voisins suivis chaque semaine, sans rien chercher",
       "Vous restez autonome, sans dépendre de personne",
     ],
     non: [
@@ -575,6 +624,7 @@ const fr: ClesAccueilPublic = {
       "Les mêmes questions, posées une par une au téléphone en plein service",
       "Aucune vue d'ensemble, à moins de tout rouvrir un par un",
       "Des bons cadeaux papier, suivis dans un carnet à souches",
+      "Aucune idée de ce que font les restaurants d'à côté",
       "Une agence à payer, ou des heures perdues chaque semaine",
     ],
     comparatif: "Voir le comparatif avec TheFork, Zenchef et Guestonline",
@@ -669,6 +719,7 @@ const fr: ClesAccueilPublic = {
           "Une alerte quand un avis tombe ou que la note bouge",
           "Une réponse proposée à chaque avis, dans la langue du client",
           "Vos fiches sur vingt plateformes, vérifiées avec vous",
+          "Vos voisins suivis chaque semaine : leur note, leurs avis",
         ],
       },
       {
@@ -685,6 +736,7 @@ const fr: ClesAccueilPublic = {
           "Vos clients et vos réservations repris de TheFork ou Zenchef",
           "Des bons cadeaux vendus en ligne, sans commission",
           "Une demande d'avis envoyée le lendemain de la visite",
+          "Un bouton « Réserver » à poser sur votre propre site",
         ],
       },
     ],
@@ -770,6 +822,16 @@ const fr: ClesAccueilPublic = {
         question: "Peut-on vendre des bons cadeaux avec Klarr ?",
         reponse:
           "Oui. Le restaurant dispose d'une page à son nom où l'on achète un bon cadeau en ligne : montants choisis par la maison ou montant libre, un mot pour le bénéficiaire, envoi par e-mail. Le paiement est encaissé directement sur le compte Stripe du restaurant, sans commission Klarr. Le bon porte un code que l'équipe saisit en caisse, et il s'utilise en une ou plusieurs fois jusqu'à sa date de validité.",
+      },
+      {
+        question: "J'ai déjà un site : puis-je y mettre la réservation Klarr ?",
+        reponse:
+          "Oui. Klarr fournit une ligne de code à coller dans votre site : un bouton « Réserver » ouvre la réservation par-dessus la page, sans que le client la quitte, et en plein écran sur téléphone. Pour les outils qui n'acceptent pas ce bouton, comme le bloc HTML de Wix, la réservation peut s'afficher directement dans une page, ou s'ouvrir par un simple lien. Les réservations arrivent dans le même carnet, sans commission.",
+      },
+      {
+        question: "Klarr permet-il de suivre les restaurants concurrents ?",
+        reponse:
+          "Oui. Le restaurateur choisit jusqu'à cinq restaurants autour de lui, proposés par Klarr ou cherchés par leur nom. Chaque semaine, Klarr relève leur note et leur nombre d'avis sur Google, et montre qui en gagne le plus sur un mois. Le bilan mensuel reprend la position de l'établissement dans son quartier.",
       },
       {
         question: "Klarr est-il sans engagement ?",
@@ -971,7 +1033,7 @@ const en: ClesAccueilPublic = {
     surtitre: "New in Klarr",
     titre: "Just arrived.",
     chapo:
-      "Your listings beyond Google, gift cards sold online, more reviews and a reply to each one, a report every month — and, if you're coming from another tool, your guests brought over in minutes.",
+      "Your listings beyond Google, gift cards sold online, more reviews and a reply to each one, your neighbours tracked closely, bookings on your own website, a report every month — and, if you're coming from another tool, your guests brought over in minutes.",
     presence: {
       titre: "Your restaurant, correct wherever people look",
       texte:
@@ -1039,6 +1101,31 @@ const en: ClesAccueilPublic = {
         vendu: "€80 paid into your Stripe account",
       },
     },
+    voisins: {
+      titre: "Your neighbours, tracked every week",
+      texte:
+        "Pick up to five restaurants around you. Every Monday, Klarr records their Google rating and review count: you see who is moving ahead, and how fast.",
+      maquette: {
+        surtitre: "Your neighbours · Monday check",
+        vous: "you",
+        note: "Rating",
+        gain: "30 days",
+        signal: "Le Bistrot Voltigeur gained 22 reviews this month",
+      },
+    },
+    integration: {
+      titre: "Bookings on your own website",
+      texte:
+        "Already have a website? Paste one line of code, and a “Book” button opens your Klarr booking on top of it, without leaving the page. WordPress, Wix, Squarespace: it works everywhere.",
+      maquette: {
+        surtitre: "Your website · with the Klarr button",
+        adresse: "www.latabledanselme.fr",
+        accroche: "Market cooking, in the heart of Lyon.",
+        bouton: "Book a table",
+        creneau: "Saturday · 2 people · 20:30",
+        demander: "Request a table",
+      },
+    },
     lendemain: {
       titre: "A review requested the day after the visit",
       texte:
@@ -1080,6 +1167,7 @@ const en: ClesAccueilPublic = {
       "The questions you get by phone, answered once and picked up by Google and AI assistants",
       "The month's report in your inbox, on the morning of the 1st",
       "Gift cards sold online, paid into your account",
+      "Your neighbours tracked every week, with no digging",
       "You stay independent, with nobody to depend on",
     ],
     non: [
@@ -1091,6 +1179,7 @@ const en: ClesAccueilPublic = {
       "The same questions, asked one at a time by phone in the middle of service",
       "No overview, unless you reopen everything one by one",
       "Paper gift vouchers, tracked in a stub book",
+      "No idea what the restaurants next door are doing",
       "An agency to pay, or hours lost every week",
     ],
     comparatif: "See the comparison with TheFork, Zenchef and Guestonline",
@@ -1185,6 +1274,7 @@ const en: ClesAccueilPublic = {
           "An alert when a review lands or your rating moves",
           "A suggested reply to every review, in the guest's language",
           "Your listings on twenty platforms, checked with you",
+          "Your neighbours tracked weekly: their rating, their reviews",
         ],
       },
       {
@@ -1201,6 +1291,7 @@ const en: ClesAccueilPublic = {
           "Your guests and bookings brought over from TheFork or Zenchef",
           "Gift cards sold online, with no commission",
           "A review request sent the day after the visit",
+          "A “Book” button to add to your own website",
         ],
       },
     ],
@@ -1284,6 +1375,16 @@ const en: ClesAccueilPublic = {
         question: "Can you sell gift cards with Klarr?",
         reponse:
           "Yes. The restaurant gets a page in its name where people buy a gift card online: amounts set by the restaurant or a custom amount, a note for the recipient, delivery by email. Payment goes straight to the restaurant's Stripe account, with no Klarr commission. The card carries a code the team enters at the till, and it can be used in one or several visits until it expires.",
+      },
+      {
+        question: "I already have a website: can I add Klarr bookings to it?",
+        reponse:
+          "Yes. Klarr gives you one line of code to paste into your site: a “Book” button opens the booking on top of the page, without the guest leaving it, and full screen on a phone. For tools that don't accept the button, such as Wix's HTML block, the booking can be shown directly inside a page, or opened through a simple link. Bookings land in the same book, with no commission.",
+      },
+      {
+        question: "Can Klarr track competing restaurants?",
+        reponse:
+          "Yes. The restaurant picks up to five restaurants nearby, suggested by Klarr or searched by name. Every week, Klarr records their Google rating and review count, and shows who gains the most over a month. The monthly report includes where the restaurant stands in its neighbourhood.",
       },
       {
         question: "Is Klarr contract-free?",
@@ -1472,7 +1573,7 @@ const zh: ClesAccueilPublic = {
     surtitre: "Klarr 新功能",
     titre: "刚刚上线。",
     chapo:
-      "Google 之外的商家资料、在线销售的礼品卡、更多评价且每条都有回复、每月一份总结——如果您从别的工具转过来，几分钟就能把顾客迁过来。",
+      "Google 之外的商家资料、在线销售的礼品卡、更多评价且每条都有回复、紧盯周边同行、在自己网站上订位、每月一份总结——如果您从别的工具转过来，几分钟就能把顾客迁过来。",
     presence: {
       titre: "顾客在哪儿找您，信息就在哪儿准确",
       texte:
@@ -1540,6 +1641,31 @@ const zh: ClesAccueilPublic = {
         vendu: "€80 已进入您的 Stripe 账户",
       },
     },
+    voisins: {
+      titre: "周边同行，每周跟踪",
+      texte:
+        "选择您周边最多五家餐厅。每周一，Klarr 记录它们在 Google 上的评分和评价数：谁在进步、进步多快，一目了然。",
+      maquette: {
+        surtitre: "周边同行 · 周一更新",
+        vous: "您",
+        note: "评分",
+        gain: "30 天",
+        signal: "Le Bistrot Voltigeur 本月新增 22 条评价",
+      },
+    },
+    integration: {
+      titre: "在您自己的网站上订位",
+      texte:
+        "已经有网站？粘贴一行代码，「订位」按钮就会在页面上直接打开 Klarr 订位，无需离开网站。WordPress、Wix、Squarespace 都适用。",
+      maquette: {
+        surtitre: "您的网站 · 加上 Klarr 按钮",
+        adresse: "www.latabledanselme.fr",
+        accroche: "市场时令料理，就在里昂市中心。",
+        bouton: "预订餐位",
+        creneau: "周六 · 2 人 · 20:30",
+        demander: "申请订位",
+      },
+    },
     lendemain: {
       titre: "用餐次日，邀请顾客留下评价",
       texte:
@@ -1581,6 +1707,7 @@ const zh: ClesAccueilPublic = {
       "客人常问的问题，回答一次，之后由 Google 和 AI 直接引用",
       "每月 1 日早上，月度总结直接发到邮箱",
       "在线销售礼品卡，款项直接进入您的账户",
+      "每周自动跟踪周边同行，无需自己查",
       "您保持自主，不依赖任何人",
     ],
     non: [
@@ -1592,6 +1719,7 @@ const zh: ClesAccueilPublic = {
       "同样的问题，在出餐高峰一通一通打电话来问",
       "没有全局概览，除非把每个工具逐一打开",
       "纸质礼品券，靠存根本手工记账",
+      "对隔壁餐厅的动向一无所知",
       "要么花钱请代运营，要么每周搭进大量时间",
     ],
     comparatif: "查看与 TheFork、Zenchef、Guestonline 的对比",
@@ -1679,6 +1807,7 @@ const zh: ClesAccueilPublic = {
           "有新评价或评分变动时立即提醒",
           "每条评价都有建议回复，用顾客的语言",
           "二十个平台上的商家资料，与您一起核对",
+          "每周跟踪周边同行：评分与评价数",
         ],
       },
       {
@@ -1695,6 +1824,7 @@ const zh: ClesAccueilPublic = {
           "从 TheFork 或 Zenchef 迁入顾客和预订",
           "在线销售礼品卡，零佣金",
           "用餐次日自动发送评价邀请",
+          "可放在您自己网站上的「订位」按钮",
         ],
       },
     ],
@@ -1776,6 +1906,16 @@ const zh: ClesAccueilPublic = {
         question: "可以用 Klarr 销售礼品卡吗？",
         reponse:
           "可以。餐厅拥有一个以自己名义的页面，顾客可在线购买礼品卡：金额由餐厅设定，也可自定义，可给收礼人留言，并通过邮件发送。款项直接进入餐厅的 Stripe 账户，Klarr 不收取佣金。礼品卡带有兑换码，结账时由店员输入，在有效期内可一次或分多次使用。",
+      },
+      {
+        question: "我已经有网站了：可以把 Klarr 订位放上去吗？",
+        reponse:
+          "可以。Klarr 提供一行代码，粘贴到您的网站即可：「订位」按钮会在页面上直接打开订位，顾客无需离开网站，手机上则全屏显示。对于不支持该按钮的工具（例如 Wix 的 HTML 模块），订位可以直接显示在页面中，或通过一个简单链接打开。订位都进入同一个订位簿，零佣金。",
+      },
+      {
+        question: "Klarr 能跟踪竞争对手吗？",
+        reponse:
+          "可以。餐厅可以选择周边最多五家餐厅，由 Klarr 推荐或按名称搜索。Klarr 每周记录它们在 Google 上的评分和评价数，并显示一个月内谁新增的评价最多。月度总结也会列出餐厅在所在街区的排名。",
       },
       {
         question: "Klarr 需要签约吗？",

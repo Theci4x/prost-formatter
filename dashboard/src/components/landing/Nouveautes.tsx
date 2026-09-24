@@ -18,7 +18,8 @@ import {
  * page : chaque nouveauté avec son écran, sur la maison fictive. Deux
  * prennent toute la largeur — la présence en ligne, qui répond à « et
  * ailleurs que sur Google ? », et les bons cadeaux, qui rapportent de
- * l'argent dès les fêtes. Les autres vont deux par deux.
+ * l'argent dès les fêtes. Les six autres vont deux par deux : les avis,
+ * le quartier et le bilan, puis ce qui relie Klarr aux autres sites.
  *
  * Les écrans ne promettent rien de plus que le produit : pas de bouton
  * « synchroniser » sur la présence, une réponse « proposée » et un
@@ -417,6 +418,139 @@ function MaquetteLendemain({
   );
 }
 
+function MaquetteVoisins({
+  t,
+  exemple,
+  langue,
+}: {
+  t: ClesAccueilPublic["nouveautes"]["voisins"]["maquette"];
+  exemple: string;
+  langue: Langue;
+}) {
+  const note = (n: number) =>
+    n.toLocaleString(LOCALE[langue], {
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1,
+    });
+  // Les mêmes voisins que la maquette « visibilité IA » : une seule
+  // maison fictive, un seul quartier, partout sur la page.
+  const lignes = [
+    { nom: "Le Bistrot Voltigeur", note: 4.7, gain: 22 },
+    { nom: MAISON.nom, note: 4.6, gain: 9, nous: true },
+    { nom: "Maison Corbière", note: 4.5, gain: 6 },
+    { nom: "Chez Odile", note: 4.4, gain: 3 },
+  ];
+  return (
+    <div aria-label={`${exemple} — ${t.surtitre}`} className={CADRE}>
+      <EnTete surtitre={t.surtitre} exemple={exemple} />
+      <table className="mx-5 mb-4 mt-3 w-[calc(100%-2.5rem)] text-[13px]">
+        <thead>
+          <tr className="text-[11px] uppercase tracking-[0.08em] text-ink-soft">
+            <th className="pb-2 text-left font-semibold" />
+            <th className="pb-2 text-right font-semibold">{t.note}</th>
+            <th className="pb-2 text-right font-semibold">{t.gain}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {lignes.map((l, rang) => (
+            <tr
+              key={l.nom}
+              className={`border-t border-line/70 ${l.nous ? "bg-brand-orange-soft/60" : ""}`}
+            >
+              <td className="py-2.5 pl-1 pr-2">
+                <span className="mr-2 text-xs text-ink-soft">{rang + 1}</span>
+                <span
+                  className={
+                    l.nous ? "font-bold text-ink" : "font-medium text-ink"
+                  }
+                >
+                  {l.nom}
+                </span>
+                {l.nous && (
+                  <span className="ml-1.5 text-[11px] font-semibold text-brand-orange-dark">
+                    {t.vous}
+                  </span>
+                )}
+              </td>
+              <td className="py-2.5 text-right font-semibold tabular-nums text-ink">
+                {note(l.note)}
+              </td>
+              <td className="py-2.5 pr-1 text-right font-semibold tabular-nums text-emerald-700">
+                +{l.gain}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <Signal>{t.signal}</Signal>
+    </div>
+  );
+}
+
+function MaquetteIntegration({
+  t,
+  exemple,
+}: {
+  t: ClesAccueilPublic["nouveautes"]["integration"]["maquette"];
+  exemple: string;
+}) {
+  return (
+    <div aria-label={`${exemple} — ${t.surtitre}`} className={CADRE}>
+      <EnTete surtitre={t.surtitre} exemple={exemple} />
+      {/* Un navigateur : le site du restaurant, et la fenêtre Klarr
+          ouverte par-dessus. */}
+      <div className="m-5 mt-3 overflow-hidden rounded-xl border border-line">
+        <div className="flex items-center gap-2 border-b border-line bg-[var(--bg-alt)] px-3 py-2">
+          <span aria-hidden="true" className="flex gap-1">
+            <span className="h-2 w-2 rounded-full bg-line" />
+            <span className="h-2 w-2 rounded-full bg-line" />
+            <span className="h-2 w-2 rounded-full bg-line" />
+          </span>
+          <span className="truncate rounded-md bg-paper px-2 py-0.5 font-mono text-[10.5px] text-ink-soft">
+            {t.adresse}
+          </span>
+        </div>
+        <div className="relative h-[210px] bg-[#f6f1ea] px-4 py-4">
+          <span className="font-serif text-lg text-ink">{MAISON.nom}</span>
+          <p className="m-0 mt-1 max-w-[60%] text-[12px] text-ink-soft">
+            {t.accroche}
+          </p>
+          <div
+            aria-hidden="true"
+            className="mt-3 flex max-w-[55%] flex-col gap-1.5"
+          >
+            <span className="h-1.5 w-full rounded bg-line" />
+            <span className="h-1.5 w-4/5 rounded bg-line" />
+            <span className="h-1.5 w-3/5 rounded bg-line" />
+          </div>
+          {/* La fenêtre de réservation. */}
+          <div className="absolute right-3 top-3 flex w-[48%] flex-col gap-2 rounded-lg border border-line bg-paper p-3 shadow-[0_12px_30px_-12px_oklch(20%_0.02_60/45%)]">
+            <span className="text-[11px] font-semibold text-ink">
+              {MAISON.nom}
+            </span>
+            <span className="rounded-md bg-[var(--bg-alt)] px-2 py-1.5 text-[11px] text-ink">
+              {t.creneau}
+            </span>
+            <span
+              aria-hidden="true"
+              className="rounded-md bg-brand-navy px-2 py-1.5 text-center text-[11px] font-semibold text-white"
+            >
+              {t.demander}
+            </span>
+          </div>
+          {/* Le bouton flottant, dessiné. */}
+          <span
+            aria-hidden="true"
+            className="absolute bottom-3 right-3 rounded-full bg-ink px-3.5 py-2 text-[11px] font-semibold text-white shadow-lg"
+          >
+            {t.bouton}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /** Une nouveauté en pleine largeur : le texte d'un côté, l'écran de l'autre. */
 function GrandeCarte({
   titre,
@@ -486,9 +620,27 @@ export function Nouveautes({
       ecran: <MaquetteLendemain t={t.lendemain.maquette} exemple={exemple} />,
     },
     {
+      titre: t.voisins.titre,
+      texte: t.voisins.texte,
+      ecran: (
+        <MaquetteVoisins
+          t={t.voisins.maquette}
+          exemple={exemple}
+          langue={langue}
+        />
+      ),
+    },
+    {
       titre: t.bilan.titre,
       texte: t.bilan.texte,
       ecran: <MaquetteBilan t={t.bilan.maquette} exemple={exemple} />,
+    },
+    {
+      titre: t.integration.titre,
+      texte: t.integration.texte,
+      ecran: (
+        <MaquetteIntegration t={t.integration.maquette} exemple={exemple} />
+      ),
     },
     {
       titre: t.import.titre,
