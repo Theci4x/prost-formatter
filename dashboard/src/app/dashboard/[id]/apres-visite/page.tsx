@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
-import { Compteur, TitreSection } from "@/components/dashboard/Compteur";
 import { exiger } from "@/lib/equipe/roles";
 import { exigerModule } from "@/lib/abonnement/acces";
 import { GENRE_AVIS, liensAvis, messageAvis } from "@/lib/courriel/apresVisite";
@@ -23,6 +22,31 @@ import { basculerAvisApresVisite } from "./actions";
 function ilYA(jours: number): string {
   return new Date(Date.now() - jours * 24 * 3600 * 1000).toISOString();
 }
+
+/** Les `n` derniers jours à Paris, du plus ancien à aujourd'hui. */
+function derniersJours(n: number): string[] {
+  const jours: string[] = [];
+  for (let i = n - 1; i >= 0; i--) {
+    jours.push(jourParis(new Date(Date.now() - i * 24 * 3600 * 1000)));
+  }
+  return jours;
+}
+
+function jourParis(d: Date): string {
+  return new Intl.DateTimeFormat("fr-CA", {
+    timeZone: "Europe/Paris",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(d);
+}
+
+const jourCourt = (iso: string) =>
+  new Date(`${iso}T12:00:00Z`).toLocaleDateString("fr-FR", {
+    day: "numeric",
+    month: "short",
+    timeZone: "Europe/Paris",
+  });
 
 const LANGUES: { cle: Langue; libelle: string }[] = [
   { cle: "fr", libelle: "Français" },
@@ -69,7 +93,7 @@ export default async function ApresVisitePage({
   const [envoisResult, retoursResult] = await Promise.all([
     service
       .from("reservation_courriels")
-      .select("erreur, restaurant_reservations!inner(restaurant_id)")
+      .select("erreur, envoye_le, restaurant_reservations!inner(restaurant_id)")
       .eq("genre", GENRE_AVIS)
       .eq("restaurant_reservations.restaurant_id", id)
       .gte("envoye_le", depuis),
@@ -79,9 +103,26 @@ export default async function ApresVisitePage({
       .eq("restaurant_id", id)
       .gte("created_at", depuis),
   ]);
-  const envois = (envoisResult.data ?? []) as { erreur: string | null }[];
+  const envois = (envoisResult.data ?? []) as {
+    erreur: string | null;
+    envoye_le: string;
+  }[];
   const partis = envois.filter((e) => !e.erreur).length;
   const echecs = envois.length - partis;
+  const retours = retoursResult.count ?? 0;
+
+  // Les envois jour par jour : le matin où rien n'est parti se voit.
+  const parJour = new Map<string, number>();
+  for (const e of envois) {
+    if (e.erreur) continue;
+    const j = jourParis(new Date(e.envoye_le));
+    parJour.set(j, (parJour.get(j) ?? 0) + 1);
+  }
+  const jours = derniersJours(30).map((j) => ({
+    jour: j,
+    n: parJour.get(j) ?? 0,
+  }));
+  const pic = Math.max(1, ...jours.map((j) => j.n));
 
   const message = liens
     ? messageAvis({
@@ -92,6 +133,37 @@ export default async function ApresVisitePage({
         lienDesabonnement: "#",
       })
     : null;
+
+  const PARCOURS: { quand: string; quoi: string }[] = [
+    {
+      quand: "Le soir",
+      quoi: "Le client dîne chez toi, sa table est dans le carnet.",
+    },
+    {
+      quand: "Le lendemain, vers 11 h",
+      quoi: "Il reçoit un merci, dans la langue où il a réservé.",
+    },
+    {
+      quand: "Un clic",
+      quoi: "Il laisse un avis sur ta fiche Google…",
+    },
+    {
+      quand: "… ou il t'écrit",
+      quoi: "Son message arrive dans tes retours, sans passer par Google.",
+    },
+  ];
+  const EXCLUS: { titre: string; detail: string }[] = [
+    { titre: "Les absents", detail: "notés comme tels dans le carnet" },
+    { titre: "Les tables importées", detail: "venues d'un autre outil" },
+    {
+      titre: "Les habitués déjà sollicités",
+      detail: "une demande tous les 90 jours au plus",
+    },
+    {
+      titre: "Les désinscrits",
+      detail: "le lien est en bas de chaque envoi",
+    },
+  ];
 
   return (
     <div className="flex flex-1 flex-col gap-8 px-6 py-8">
@@ -109,61 +181,100 @@ export default async function ApresVisitePage({
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-        <Compteur valeur={partis} libelle="envoyés ces 30 derniers jours" />
-        <Link
-          href={`/dashboard/${id}/retours`}
-          className="block [&>div]:h-full"
-        >
-          <Compteur
-            valeur={retoursResult.count ?? 0}
-            libelle="messages privés reçus ces 30 jours"
-          />
-        </Link>
-        {echecs > 0 && (
-          <Compteur
-            valeur={echecs}
-            libelle="non partis (adresse refusée)"
-            accent
-          />
-        )}
-      </div>
+      {/* ── L'essentiel : combien sont partis, et l'interrupteur ──────── */}
+      <section className="relative grid grid-cols-[minmax(0,1fr)] gap-6 overflow-hidden rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm sm:p-8 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full bg-brand-orange/10 blur-3xl"
+        />
+        <div className="relative flex min-w-0 flex-col gap-3">
+          <span className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <span className="font-serif text-6xl leading-none text-ink">
+              {partis}
+            </span>
+            <span className="text-sm text-zinc-600">
+              demande{partis > 1 ? "s" : ""} d&apos;avis envoyée
+              {partis > 1 ? "s" : ""} ces 30 derniers jours
+            </span>
+          </span>
+          <p className="max-w-xl text-base leading-relaxed text-zinc-700">
+            {partis === 0
+              ? actif
+                ? "Rien n'est encore parti : le premier envoi suivra le premier service noté dans le carnet."
+                : "L'envoi est coupé : aucun client ne reçoit la demande."
+              : `Et ${retours} message${retours > 1 ? "s" : ""} privé${retours > 1 ? "s" : ""} reçu${retours > 1 ? "s" : ""} sur la même période.`}
+            {echecs > 0 &&
+              ` ${echecs} adresse${echecs > 1 ? "s" : ""} refusée${echecs > 1 ? "s" : ""} : ces clients-là n'ont rien reçu.`}
+          </p>
 
-      <section className="flex flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-col gap-1">
-          <span className="flex items-center gap-2 font-serif text-2xl text-ink">
+          {/* Les envois jour par jour : le trou d'un matin se voit. */}
+          <figure className="mt-2 flex flex-col gap-2">
+            <div
+              className="flex h-16 items-end gap-[3px]"
+              role="img"
+              aria-label={`Envois par jour sur 30 jours, au plus ${pic} un même jour`}
+            >
+              {jours.map((j) => (
+                <span
+                  key={j.jour}
+                  title={`${jourCourt(j.jour)} : ${j.n} envoi${j.n > 1 ? "s" : ""}`}
+                  className={`flex-1 rounded-t-[3px] ${j.n > 0 ? "bg-brand-orange" : "bg-zinc-100"}`}
+                  style={{
+                    height:
+                      j.n > 0 ? `${Math.max(12, (j.n / pic) * 100)}%` : "4px",
+                  }}
+                />
+              ))}
+            </div>
+            <figcaption className="flex justify-between text-xs text-zinc-500">
+              <span>{jourCourt(jours[0].jour)}</span>
+              <span>Envois par jour</span>
+              <span>aujourd&apos;hui</span>
+            </figcaption>
+          </figure>
+        </div>
+
+        {/* L'interrupteur. */}
+        <div className="relative flex min-w-0 flex-col gap-3 rounded-xl bg-zinc-50 p-5 lg:w-[22rem]">
+          <span className="flex items-center gap-2">
             <span
               aria-hidden="true"
-              className={`h-2.5 w-2.5 rounded-full ${
-                actif ? "bg-emerald-500" : "bg-zinc-300"
-              }`}
+              className={`h-2.5 w-2.5 rounded-full ${actif ? "bg-emerald-500" : "bg-zinc-300"}`}
             />
-            {actif ? "Envoyée chaque matin" : "Coupée"}
+            <span className="font-semibold text-ink">
+              {actif ? "Envoyée chaque matin" : "Coupée"}
+            </span>
           </span>
-          <span className="text-sm text-zinc-600">
+          <span className="text-sm leading-relaxed text-zinc-600">
             {actif
               ? "Aux clients venus la veille, une fois par trimestre au plus pour un habitué."
               : "Plus aucun client ne la reçoit. Tu peux la remettre quand tu veux."}
           </span>
-        </div>
-        <form action={basculerAvisApresVisite}>
-          <input type="hidden" name="restaurant_id" value={id} />
-          <input type="hidden" name="actif" value={actif ? "0" : "1"} />
-          <button
-            type="submit"
-            className={
-              actif
-                ? "rounded-lg border border-zinc-200 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
-                : "rounded-lg bg-brand-navy px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover"
-            }
+          <form action={basculerAvisApresVisite}>
+            <input type="hidden" name="restaurant_id" value={id} />
+            <input type="hidden" name="actif" value={actif ? "0" : "1"} />
+            <button
+              type="submit"
+              className={
+                actif
+                  ? "rounded-lg border border-zinc-200 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
+                  : "rounded-lg bg-brand-navy px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover"
+              }
+            >
+              {actif ? "Couper l'envoi" : "Remettre l'envoi"}
+            </button>
+          </form>
+          <Link
+            href={`/dashboard/${id}/retours`}
+            className="text-sm font-semibold text-brand-navy hover:underline"
           >
-            {actif ? "Couper l'envoi" : "Remettre l'envoi"}
-          </button>
-        </form>
+            Lire les messages privés →
+          </Link>
+        </div>
       </section>
 
       {!restaurant.google_place_id && liens && (
-        <p className="max-w-3xl rounded-2xl border border-brand-orange/30 bg-brand-orange-soft px-5 py-4 text-sm text-ink">
+        <p className="max-w-4xl rounded-2xl border border-brand-orange/30 bg-brand-orange-soft px-5 py-4 text-sm text-ink">
           Klarr ne connaît pas encore ta fiche Google : le bouton mène à ta page
           d&apos;avis, qui la retrouve toute seule. Pour qu&apos;il aille droit
           au formulaire Google, ouvre une fois{" "}
@@ -177,60 +288,136 @@ export default async function ApresVisitePage({
         </p>
       )}
 
-      <section className="flex flex-col gap-4">
-        <TitreSection aside={message?.sujet}>
-          Ce que reçoit le client
-        </TitreSection>
-        <div className="flex flex-wrap gap-2">
-          {LANGUES.map((l) => (
-            <Link
-              key={l.cle}
-              href={`/dashboard/${id}/apres-visite${l.cle === "fr" ? "" : `?langue=${l.cle}`}`}
-              className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
-                l.cle === langue
-                  ? "border-brand-navy bg-brand-navy text-white"
-                  : "border-zinc-200 bg-white text-zinc-700 hover:border-brand-navy hover:text-brand-navy"
-              }`}
-            >
-              {l.libelle}
-            </Link>
-          ))}
-        </div>
-        <p className="max-w-3xl text-sm text-zinc-500">
-          Il part dans la langue où le client a réservé, depuis l&apos;adresse
-          de Klarr, et c&apos;est à toi qu&apos;il répond.
-        </p>
-        {message ? (
-          <iframe
-            title="Aperçu de la demande d'avis"
-            srcDoc={message.html}
-            sandbox="allow-popups allow-popups-to-escape-sandbox"
-            className="h-[560px] w-full max-w-3xl rounded-2xl border border-zinc-200/70 bg-white shadow-sm"
-          />
-        ) : (
-          <p className="max-w-3xl rounded-2xl border border-zinc-200/70 bg-white p-6 text-sm text-zinc-600 shadow-sm">
-            Rien ne part tant que ta page de réservation n&apos;a pas
-            d&apos;adresse : c&apos;est elle qui porte le lien vers ta fiche
-            Google et le formulaire pour t&apos;écrire.
-          </p>
-        )}
-      </section>
+      <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_22rem]">
+        {/* ── L'e-mail, tel qu'il arrive ───────────────────────────────── */}
+        <section className="flex min-w-0 flex-col gap-4">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <h2 className="font-serif text-2xl text-ink">
+              Ce que reçoit le client
+            </h2>
+            <div className="flex flex-wrap gap-2">
+              {LANGUES.map((l) => (
+                <Link
+                  key={l.cle}
+                  href={`/dashboard/${id}/apres-visite${l.cle === "fr" ? "" : `?langue=${l.cle}`}`}
+                  className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
+                    l.cle === langue
+                      ? "border-brand-navy bg-brand-navy text-white"
+                      : "border-zinc-200 bg-white text-zinc-700 hover:border-brand-navy hover:text-brand-navy"
+                  }`}
+                >
+                  {l.libelle}
+                </Link>
+              ))}
+            </div>
+          </div>
 
-      <section className="flex max-w-3xl flex-col gap-3">
-        <TitreSection>Qui ne la reçoit pas</TitreSection>
-        <ul className="flex flex-col gap-2 text-sm text-zinc-600">
-          <li>Les absents que tu as notés dans le carnet.</li>
-          <li>Les tables importées d&apos;un autre outil.</li>
-          <li>
-            Un habitué qui l&apos;a déjà reçue ces 90 derniers jours : on ne
-            redemande pas un avis à chaque dîner.
-          </li>
-          <li>
-            Ceux qui se sont désinscrits de tes messages — le lien est en bas de
-            chaque envoi.
-          </li>
-        </ul>
-      </section>
+          {message ? (
+            <div className="overflow-hidden rounded-2xl border border-zinc-200/70 bg-white shadow-sm">
+              <div className="flex flex-col gap-2 border-b border-zinc-100 bg-zinc-50/70 px-5 py-4">
+                <div className="flex items-center gap-3">
+                  <span
+                    aria-hidden="true"
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-navy font-serif text-base text-white"
+                  >
+                    {restaurant.nom.trim().charAt(0).toUpperCase()}
+                  </span>
+                  <div className="flex min-w-0 flex-col">
+                    <span className="truncate text-sm font-semibold text-ink">
+                      {restaurant.nom}
+                    </span>
+                    <span className="truncate text-xs text-zinc-500">
+                      envoyé par Klarr · les réponses te reviennent
+                    </span>
+                  </div>
+                  <span className="ml-auto shrink-0 text-xs text-zinc-500">
+                    11:00
+                  </span>
+                </div>
+                <p className="text-sm font-semibold text-ink">
+                  {message.sujet}
+                </p>
+              </div>
+              <iframe
+                title="Aperçu de la demande d'avis"
+                srcDoc={message.html}
+                sandbox="allow-popups allow-popups-to-escape-sandbox"
+                className="block h-[560px] w-full bg-white"
+              />
+            </div>
+          ) : (
+            <p className="rounded-2xl border border-zinc-200/70 bg-white p-6 text-sm text-zinc-600 shadow-sm">
+              Rien ne part tant que ta page de réservation n&apos;a pas
+              d&apos;adresse : c&apos;est elle qui porte le lien vers ta fiche
+              Google et le formulaire pour t&apos;écrire.
+            </p>
+          )}
+        </section>
+
+        {/* ── Le parcours, et qui n'est pas concerné ───────────────────── */}
+        <aside className="flex flex-col gap-6 lg:sticky lg:top-6">
+          <section className="flex flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm">
+            <h2 className="font-serif text-2xl text-ink">Le parcours</h2>
+            <ol className="flex flex-col">
+              {PARCOURS.map((etape, i) => (
+                <li
+                  key={etape.quand}
+                  className="relative flex gap-4 pb-5 last:pb-0"
+                >
+                  {i < PARCOURS.length - 1 && (
+                    <span
+                      aria-hidden="true"
+                      className="absolute left-[11px] top-7 bottom-1 w-px bg-zinc-200"
+                    />
+                  )}
+                  <span
+                    aria-hidden="true"
+                    className={`relative mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
+                      i === 1
+                        ? "bg-brand-orange text-white"
+                        : "border border-zinc-200 bg-white text-zinc-500"
+                    }`}
+                  >
+                    {i + 1}
+                  </span>
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-sm font-semibold text-ink">
+                      {etape.quand}
+                    </span>
+                    <span className="text-sm leading-relaxed text-zinc-600">
+                      {etape.quoi}
+                    </span>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </section>
+
+          <section className="flex flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm">
+            <h2 className="font-serif text-2xl text-ink">
+              Qui ne la reçoit pas
+            </h2>
+            <ul className="flex flex-col gap-3">
+              {EXCLUS.map((e) => (
+                <li key={e.titre} className="flex gap-3">
+                  <span
+                    aria-hidden="true"
+                    className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-zinc-100 text-xs text-zinc-500"
+                  >
+                    ✕
+                  </span>
+                  <span className="flex flex-col">
+                    <span className="text-sm font-medium text-ink">
+                      {e.titre}
+                    </span>
+                    <span className="text-xs text-zinc-500">{e.detail}</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        </aside>
+      </div>
     </div>
   );
 }
