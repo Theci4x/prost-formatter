@@ -452,7 +452,7 @@ export default async function VoisinsPage({
                             type="submit"
                             aria-label={`Ne plus suivre ${ligne.nom}`}
                             title="Ne plus suivre"
-                            className="rounded-md px-2 py-1 text-zinc-300 transition-colors hover:bg-zinc-100 hover:text-red-600"
+                            className="rounded-md px-2 py-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-red-600"
                           >
                             ×
                           </button>
@@ -530,7 +530,10 @@ function Pastille({ nom, nous = false }: { nom: string; nous?: boolean }) {
         m &&
         !/^(le|la|les|l|du|de|des|d|chez|au|aux|et|&|restaurant)$/i.test(m),
     );
-  const initiales = (mots[0]?.[0] ?? nom[0] ?? "?") + (mots[1]?.[0] ?? "");
+  // Un seul mot restant (« Chez Odile ») : ses deux premières lettres,
+  // plutôt qu'une initiale seule qui se lit mal.
+  const initiales =
+    mots.length >= 2 ? mots[0][0] + mots[1][0] : (mots[0] ?? nom).slice(0, 2);
   return (
     <span
       aria-hidden="true"
