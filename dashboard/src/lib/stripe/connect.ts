@@ -81,7 +81,9 @@ export async function connecterCompte(code: string): Promise<EtatConnexion> {
   return {
     accountId,
     nomAffiche:
-      compte.business_profile?.name ?? compte.settings?.dashboard?.display_name ?? null,
+      compte.business_profile?.name ??
+      compte.settings?.dashboard?.display_name ??
+      null,
     paiementsActifs: compte.charges_enabled === true,
     dossierComplet: compte.details_submitted === true,
   };
@@ -94,10 +96,24 @@ export async function deconnecterCompte(accountId: string): Promise<void> {
   });
 }
 
+/**
+ * Pourquoi Stripe refuse un compte relié.
+ *
+ * - `meme_compte` : le compte relié est celui de Klarr lui-même. Stripe
+ *   refuse qu'une plateforme encaisse « pour le compte de » elle-même.
+ * - `inconnu` : Stripe ne connaît pas ce compte comme relié à Klarr —
+ *   connexion retirée chez Stripe, ou faite en mode test alors que Klarr
+ *   tourne en réel (ou l'inverse).
+ */
+export type RefusStripe = "meme_compte" | "inconnu";
+
 /** Relit l'état d'un compte déjà relié, pour ne pas afficher un état périmé. */
-export async function relireCompte(
-  accountId: string,
-): Promise<Pick<EtatConnexion, "paiementsActifs" | "dossierComplet"> | null> {
+export async function relireCompte(accountId: string): Promise<
+  | (Pick<EtatConnexion, "paiementsActifs" | "dossierComplet"> & {
+      refus?: RefusStripe;
+    })
+  | null
+> {
   try {
     const compte = await getStripe().accounts.retrieve(accountId);
     return {
@@ -105,8 +121,32 @@ export async function relireCompte(
       dossierComplet: compte.details_submitted === true,
     };
   } catch (erreur) {
-    // Compte révoqué chez Stripe : on ne fait pas tomber la page pour ça.
     console.error("[stripe/relireCompte]", erreur);
-    return null;
+    const e = erreur as { code?: string; type?: string };
+    // Une panne réseau ne dit rien du compte : on garde l'état connu. Un
+    // refus, lui, doit se voir — sans quoi la page affiche « Prêt à
+    // encaisser » pendant que chaque paiement échoue.
+    if (
+      e.code !== "account_invalid" &&
+      e.type !== "StripePermissionError" &&
+      e.type !== "StripeInvalidRequestError"
+    ) {
+      return null;
+    }
+    let refus: RefusStripe = "inconnu";
+    try {
+      const plateforme = await getStripe().accounts.retrieveCurrent();
+      if (plateforme.id === accountId) refus = "meme_compte";
+    } catch {
+      // Sans réponse, on s'en tient au cas général.
+    }
+    return { paiementsActifs: false, dossierComplet: false, refus };
   }
+}
+
+/** Le mode de la clé de Klarr, pour le dire quand un compte est refusé. */
+export function modeStripe(): "test" | "reel" {
+  return (process.env.STRIPE_SECRET_KEY ?? "").startsWith("sk_test")
+    ? "test"
+    : "reel";
 }

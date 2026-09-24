@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
 import { Compteur, TitreSection } from "@/components/dashboard/Compteur";
-import { diagnostic, relireCompte } from "@/lib/stripe/connect";
+import { diagnostic, modeStripe, relireCompte } from "@/lib/stripe/connect";
 import { deconnecterStripe } from "./actions";
 import type { Restaurant } from "@/types/restaurant";
 import type { StripeConnexion } from "@/types/stripe";
@@ -71,7 +71,14 @@ export default async function PaiementsPage({
           dossierComplet: connexion.dossier_complet,
         }
       : null);
-  const aFaire = etat ? diagnostic(etat) : null;
+  const refus = frais?.refus ?? null;
+  const aFaire = refus
+    ? refus === "meme_compte"
+      ? "Ce compte Stripe est celui de Klarr lui-même : Stripe refuse qu'il encaisse pour un restaurant. Retire la connexion ci-dessous, puis relie le compte Stripe du restaurant."
+      : `Stripe ne reconnaît pas ce compte comme relié à Klarr, qui tourne en mode ${modeStripe() === "test" ? "test" : "réel"}. La connexion a sans doute été retirée chez Stripe, ou faite dans l'autre mode. Retire-la ci-dessous, puis relie ton compte à nouveau.`
+    : etat
+      ? diagnostic(etat)
+      : null;
 
   const garanties = (garantiesResult.data ?? []) as {
     acompte_centimes: number | null;
