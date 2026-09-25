@@ -2,6 +2,9 @@
 
 import { useActionState } from "react";
 import type { AnalyseState } from "@/app/dashboard/[id]/visibilite-ia/actions";
+import type { Langue } from "@/lib/i18n/langues";
+import { traducteur } from "@/lib/i18n/t";
+import { VISIBILITE_IA } from "@/lib/i18n/pages/visibiliteIa";
 
 const initial: AnalyseState = { error: null };
 
@@ -22,7 +25,9 @@ export function BoutonLent({
   libelle,
   enCours,
   className,
+  langue,
 }: {
+  langue: Langue;
   action: (
     prevState: AnalyseState,
     formData: FormData,
@@ -35,6 +40,7 @@ export function BoutonLent({
   className: string;
 }) {
   const [state, formAction, pending] = useActionState(action, initial);
+  const t = traducteur(langue, VISIBILITE_IA);
 
   return (
     <form action={formAction} className="flex flex-col items-start gap-1">
@@ -50,7 +56,7 @@ export function BoutonLent({
       </button>
       {state.error && (
         <p className="text-xs text-red-600" role="alert">
-          {state.error}
+          {t(state.error)}
         </p>
       )}
     </form>

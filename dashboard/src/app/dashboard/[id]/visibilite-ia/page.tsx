@@ -40,6 +40,11 @@ import {
   type Mesure,
 } from "@/lib/ai-visibility/score";
 import { PartDeVoix } from "@/components/visibilite-ia/PartDeVoix";
+import { langueUtilisateur } from "@/lib/i18n/langue";
+import type { Langue } from "@/lib/i18n/langues";
+import { localeDe } from "@/lib/i18n/seo";
+import { COMMUN, traducteur, type T } from "@/lib/i18n/t";
+import { VISIBILITE_IA } from "@/lib/i18n/pages/visibiliteIa";
 
 // Interroger un assistant puis en extraire les noms cités dépasse largement
 // la durée par défaut d'une fonction serveur. Posée sur la page, la valeur
@@ -86,6 +91,8 @@ export default async function VisibiliteIaPage({
       .maybeSingle(),
   ]);
 
+  const langue = await langueUtilisateur();
+  const t = traducteur(langue, VISIBILITE_IA, COMMUN);
   const questions = (questionsResult.data ?? []) as AiVisibilityQuestion[];
   const checks = (checksResult.data ?? []) as AiVisibilityCheck[];
   const plan = planResult.data as {
@@ -193,14 +200,17 @@ export default async function VisibiliteIaPage({
   const aDesAnalyses = actuelles.length > 0;
 
   const sommaire = [
-    { ancre: "plan", titre: "Ce que tu peux faire" },
+    { ancre: "plan", titre: t("Ce que tu peux faire") },
     ...(podium.lignes.length > 1
-      ? [{ ancre: "classement", titre: "Qui l'IA cite à ta place" }]
+      ? [{ ancre: "classement", titre: t("Qui l'IA cite à ta place") }]
       : []),
     ...(voix !== null
-      ? [{ ancre: "part-de-voix", titre: "Ta part de voix" }]
+      ? [{ ancre: "part-de-voix", titre: t("Ta part de voix") }]
       : []),
-    { ancre: "questions", titre: `Tes questions (${questions.length})` },
+    {
+      ancre: "questions",
+      titre: t("Tes questions ({n})", { n: questions.length }),
+    },
   ];
 
   return (
@@ -208,26 +218,24 @@ export default async function VisibiliteIaPage({
       <div className="flex flex-col gap-3">
         <PageHeader
           icon={dashboardIcons.visibiliteIa}
-          title={`Visibilité IA — ${restaurant.nom}`}
+          title={t("Visibilité IA — {nom}", { nom: restaurant.nom })}
         />
         <p className="max-w-4xl text-sm text-zinc-600">
-          De plus en plus de clients demandent à ChatGPT, Claude ou Gemini où
-          aller manger. Pose les questions qu&apos;ils poseraient : Klarr
-          regarde si les assistants te citent, qui ils citent à ta place, et te
-          dit quoi corriger.
+          {t(
+            "De plus en plus de clients demandent à ChatGPT, Claude ou Gemini où aller manger. Pose les questions qu'ils poseraient : Klarr regarde si les assistants te citent, qui ils citent à ta place, et te dit quoi corriger.",
+          )}
         </p>
       </div>
 
       {actifs.length === 0 && (
         <div className="rounded-2xl border border-orange-200 bg-orange-50 p-5">
           <p className="text-sm font-medium text-orange-900">
-            Aucun assistant n&apos;est configuré.
+            {t("Aucun assistant n'est configuré.")}
           </p>
           <p className="mt-1 text-sm text-orange-800">
-            Les analyses ne peuvent pas être lancées tant qu&apos;aucune clé
-            d&apos;API n&apos;est renseignée. Tu peux déjà enregistrer tes
-            questions : elles seront analysables dès qu&apos;une clé sera en
-            place.
+            {t(
+              "Les analyses ne peuvent pas être lancées tant qu'aucune clé d'API n'est renseignée. Tu peux déjà enregistrer tes questions : elles seront analysables dès qu'une clé sera en place.",
+            )}
           </p>
         </div>
       )}
@@ -250,7 +258,7 @@ export default async function VisibiliteIaPage({
             {/* Le score */}
             <div className="flex flex-col items-center gap-3 lg:items-start">
               <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/60">
-                Score de visibilité IA
+                {t("Score de visibilité IA")}
               </p>
               <Anneau valeur={score ?? 0} />
               <div className="flex flex-col items-center gap-1 lg:items-start">
@@ -265,17 +273,24 @@ export default async function VisibiliteIaPage({
                     }`}
                   >
                     {delta === 0
-                      ? "= stable"
+                      ? t("= stable")
                       : `${delta > 0 ? "▲ +" : "▼ "}${delta}`}{" "}
                     {deltaPartiel
-                      ? "sur les questions réanalysées"
-                      : "depuis la dernière analyse"}
+                      ? t("sur les questions réanalysées")
+                      : t("depuis la dernière analyse")}
                   </p>
                 )}
                 <p className="text-xs text-white/50">
-                  {actuelles.length} réponse{actuelles.length > 1 ? "s" : ""} ·{" "}
-                  {parAssistant.length} assistant
-                  {parAssistant.length > 1 ? "s" : ""}
+                  {t(actuelles.length > 1 ? "{n} réponses" : "{n} réponse", {
+                    n: actuelles.length,
+                  })}{" "}
+                  ·{" "}
+                  {t(
+                    parAssistant.length > 1
+                      ? "{n} assistants"
+                      : "{n} assistant",
+                    { n: parAssistant.length },
+                  )}
                 </p>
               </div>
             </div>
@@ -284,24 +299,25 @@ export default async function VisibiliteIaPage({
             <div className="flex flex-col justify-center gap-4">
               <div className="flex flex-col gap-4">
                 {INTENTIONS.map((intention) => {
-                  const t = parIntention[intention];
+                  const taux = parIntention[intention];
                   return (
                     <div key={intention} className="flex flex-col gap-1.5">
                       <div className="flex items-baseline justify-between gap-3">
                         <div className="flex items-baseline gap-2">
                           <span className="text-sm font-medium">
-                            {LIBELLE_INTENTION[intention]}
+                            {t(LIBELLE_INTENTION[intention])}
                           </span>
                           <span className="rounded-full border border-white/15 px-1.5 py-px font-mono text-[10px] text-white/60">
                             ×{POIDS[intention].toFixed(1)}
                           </span>
                         </div>
                         <span className="font-mono text-sm tabular-nums text-white/80">
-                          {t.part === null
+                          {taux.part === null
                             ? "—"
-                            : `${Math.round(t.part * 100)} %`}
+                            : `${Math.round(taux.part * 100)} %`}
                           <span className="ml-2 text-xs text-white/40">
-                            {t.analysees > 0 && `${t.citees}/${t.analysees}`}
+                            {taux.analysees > 0 &&
+                              `${taux.citees}/${taux.analysees}`}
                           </span>
                         </span>
                       </div>
@@ -309,7 +325,7 @@ export default async function VisibiliteIaPage({
                         <div
                           className="h-full rounded-full bg-brand-orange transition-[width]"
                           style={{
-                            width: `${Math.round((t.part ?? 0) * 100)}%`,
+                            width: `${Math.round((taux.part ?? 0) * 100)}%`,
                           }}
                         />
                       </div>
@@ -323,30 +339,39 @@ export default async function VisibiliteIaPage({
             <div className="flex flex-col gap-3">
               <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
                 <Indicateur
-                  libelle="Rang parmi les noms cités"
+                  libelle={t("Rang parmi les noms cités")}
                   valeur={podium.rang !== null ? `#${podium.rang}` : "—"}
                   detail={
-                    podium.rang !== null ? `sur ${podium.total}` : undefined
+                    podium.rang !== null
+                      ? t("sur {n}", { n: podium.total })
+                      : undefined
                   }
                 />
                 <Indicateur
-                  libelle="Position moyenne quand cité"
+                  libelle={t("Position moyenne quand cité")}
                   valeur={position !== null ? `${position}` : "—"}
-                  detail={position !== null ? "dans la réponse" : "jamais cité"}
+                  detail={
+                    position !== null ? t("dans la réponse") : t("jamais cité")
+                  }
                 />
                 <Indicateur
-                  libelle="Questions suivies"
+                  libelle={t("Questions suivies")}
                   valeur={`${questions.length}`}
-                  detail={`${latestByQuestion.size} analysée${
-                    latestByQuestion.size > 1 ? "s" : ""
-                  }`}
+                  detail={t(
+                    latestByQuestion.size > 1
+                      ? "{n} analysées"
+                      : "{n} analysée",
+                    { n: latestByQuestion.size },
+                  )}
                 />
               </div>
 
               {/* Par assistant */}
               {parAssistant.length > 0 && (
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-xs text-white/50">Par assistant</span>
+                  <span className="text-xs text-white/50">
+                    {t("Par assistant")}
+                  </span>
                   {parAssistant.map(({ fournisseur, taux }) => (
                     <span
                       key={fournisseur}
@@ -367,20 +392,17 @@ export default async function VisibiliteIaPage({
 
           <details className="relative mt-6 text-xs text-white/60">
             <summary className="cursor-pointer select-none hover:text-white">
-              Comment lire ce score
+              {t("Comment lire ce score")}
             </summary>
             <p className="mt-2 max-w-4xl leading-relaxed">
-              Pour chaque intention, on compte la part des réponses où tu es
-              cité. Le score les pondère : « on me réserve » compte pour la
-              moitié, « on me compare » pour trois dixièmes, « on me découvre »
-              pour deux. Une intention sans analyse est simplement ignorée, elle
-              ne te pénalise pas. Le rang te compte parmi tous les noms que les
-              assistants ont cités sur tes questions.
+              {t(
+                "Pour chaque intention, on compte la part des réponses où tu es cité. Le score les pondère : « on me réserve » compte pour la moitié, « on me compare » pour trois dixièmes, « on me découvre » pour deux. Une intention sans analyse est simplement ignorée, elle ne te pénalise pas. Le rang te compte parmi tous les noms que les assistants ont cités sur tes questions.",
+              )}
             </p>
           </details>
         </section>
       ) : (
-        <Demarrage pretes={questions.length} />
+        <Demarrage pretes={questions.length} t={t} />
       )}
 
       {/* Le sommaire : quatre blocs l'un sous l'autre, dont le dernier —
@@ -404,11 +426,14 @@ export default async function VisibiliteIaPage({
           {/* ——— Le plan d'action ————————————————————————————————— */}
           <section id="plan" className="flex scroll-mt-8 flex-col gap-3">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <Titre numero="01">Ce que tu peux faire</Titre>
+              <Titre numero="01">{t("Ce que tu peux faire")}</Titre>
               {plan && (
                 <span className="font-mono text-xs text-zinc-400">
-                  écrit le{" "}
-                  {new Date(plan.genere_le).toLocaleDateString("fr-FR")}
+                  {t("écrit le {date}", {
+                    date: new Date(plan.genere_le).toLocaleDateString(
+                      localeDe(langue),
+                    ),
+                  })}
                 </span>
               )}
             </div>
@@ -430,7 +455,7 @@ export default async function VisibiliteIaPage({
                         </p>
                         {rang === 0 && (
                           <span className="rounded-full bg-brand-orange-soft px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-brand-orange-dark">
-                            Priorité
+                            {t("Priorité")}
                           </span>
                         )}
                       </div>
@@ -444,7 +469,9 @@ export default async function VisibiliteIaPage({
                           href={`/dashboard/${id}/${ECRANS[action.ecran].chemin}`}
                           className="mt-1 w-fit text-sm font-semibold text-brand-orange-dark hover:underline"
                         >
-                          Ouvrir « {ECRANS[action.ecran].libelle} » →
+                          {t("Ouvrir « {ecran} » →", {
+                            ecran: t(ECRANS[action.ecran].libelle),
+                          })}
                         </Link>
                       )}
                     </div>
@@ -453,16 +480,20 @@ export default async function VisibiliteIaPage({
               </ol>
             ) : (
               <p className="text-sm text-ink-soft">
-                Pas encore de plan. Il se déduit de tes analyses et de ta fiche
-                — carte, photos, questions fréquentes, espaces privatisables.
+                {t(
+                  "Pas encore de plan. Il se déduit de tes analyses et de ta fiche — carte, photos, questions fréquentes, espaces privatisables.",
+                )}
               </p>
             )}
 
             <BoutonLent
               action={genererPlan}
               champs={{ restaurant_id: id }}
-              libelle={plan ? "Réécrire le plan" : "Écrire mon plan d'action"}
-              enCours="Claude lit tes analyses et ta fiche…"
+              langue={langue}
+              libelle={
+                plan ? t("Réécrire le plan") : t("Écrire mon plan d'action")
+              }
+              enCours={t("Claude lit tes analyses et ta fiche…")}
               className={
                 plan
                   ? "rounded-lg border border-zinc-200 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
@@ -477,7 +508,7 @@ export default async function VisibiliteIaPage({
               id="classement"
               className="flex scroll-mt-8 flex-col gap-3"
             >
-              <Titre numero="02">Qui l&apos;IA cite à ta place</Titre>
+              <Titre numero="02">{t("Qui l'IA cite à ta place")}</Titre>
 
               {/* Ceux qui te battent quand le client veut réserver sont tes
                   vrais concurrents commerciaux ; les autres partagent
@@ -485,27 +516,31 @@ export default async function VisibiliteIaPage({
               {podiumReservation.lignes.length > 1 ? (
                 <>
                   <Palmares
-                    titre="Quand le client veut réserver"
+                    t={t}
+                    titre={t("Quand le client veut réserver")}
                     podium={podiumReservation}
                     analysees={reservation.length}
                   />
                   <details className="flex flex-col gap-2">
                     <summary className="cursor-pointer text-xs text-ink-soft hover:text-ink">
-                      Voir aussi toutes questions confondues
+                      {t("Voir aussi toutes questions confondues")}
                     </summary>
                     <div className="mt-2">
-                      <Palmares podium={podium} analysees={toutes.length} />
+                      <Palmares
+                        t={t}
+                        podium={podium}
+                        analysees={toutes.length}
+                      />
                     </div>
                   </details>
                 </>
               ) : (
                 <>
-                  <Palmares podium={podium} analysees={toutes.length} />
+                  <Palmares t={t} podium={podium} analysees={toutes.length} />
                   <p className="text-xs leading-relaxed text-ink-soft">
-                    Analyse une question « On me réserve » et ce tableau se
-                    dédoublera : tes vrais concurrents ne sont pas ceux qui
-                    partagent un mot-clé avec toi, ce sont ceux qu&apos;on cite
-                    quand un client cherche où réserver.
+                    {t(
+                      "Analyse une question « On me réserve » et ce tableau se dédoublera : tes vrais concurrents ne sont pas ceux qui partagent un mot-clé avec toi, ce sont ceux qu'on cite quand un client cherche où réserver.",
+                    )}
                   </p>
                 </>
               )}
@@ -517,33 +552,40 @@ export default async function VisibiliteIaPage({
       {/* ——— L'évolution ——————————————————————————————————————— */}
       {aDesAnalyses && voix !== null && (
         <section id="part-de-voix" className="flex scroll-mt-8 flex-col gap-3">
-          <Titre numero="03">Ta part de voix</Titre>
-          <PartDeVoix series={series} voix={voix} reponses={releves.length} />
+          <Titre numero="03">{t("Ta part de voix")}</Titre>
+          <PartDeVoix
+            series={series}
+            voix={voix}
+            reponses={releves.length}
+            langue={langue}
+          />
         </section>
       )}
 
       {/* ——— Les questions suivies ————————————————————————————— */}
       <section id="questions" className="flex scroll-mt-8 flex-col gap-4">
-        <Titre numero={aDesAnalyses ? "04" : "01"}>Tes questions</Titre>
+        <Titre numero={aDesAnalyses ? "04" : "01"}>{t("Tes questions")}</Titre>
 
         <div className="flex flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm">
           <form action={addQuestion} className="flex flex-wrap items-end gap-2">
             <input type="hidden" name="restaurant_id" value={id} />
             <div className="flex flex-1 basis-56 flex-col gap-1">
               <label className="text-sm font-medium text-zinc-700">
-                Une question que poserait un client
+                {t("Une question que poserait un client")}
               </label>
               <input
                 name="question"
                 type="text"
                 required
-                placeholder="ex : où réserver pour un anniversaire dans le 11e ?"
+                placeholder={t(
+                  "ex : où réserver pour un anniversaire dans le 11e ?",
+                )}
                 className="w-full rounded-lg border border-zinc-200 bg-zinc-50 px-3.5 py-2.5 text-sm outline-none transition-colors focus:border-brand-navy focus:bg-white"
               />
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-sm font-medium text-zinc-700">
-                Ce que le client cherche
+                {t("Ce que le client cherche")}
               </label>
               <select
                 name="intention"
@@ -552,7 +594,7 @@ export default async function VisibiliteIaPage({
               >
                 {INTENTIONS.map((intention) => (
                   <option key={intention} value={intention}>
-                    {LIBELLE_INTENTION[intention]}
+                    {t(LIBELLE_INTENTION[intention])}
                   </option>
                 ))}
               </select>
@@ -561,19 +603,20 @@ export default async function VisibiliteIaPage({
               type="submit"
               className="rounded-lg bg-brand-navy px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover"
             >
-              Ajouter
+              {t("Ajouter")}
             </button>
           </form>
 
           <BoutonLent
             action={suggestQuestions}
             champs={{ restaurant_id: id }}
+            langue={langue}
             libelle={
               questions.length === 0
-                ? "Commencer : proposer six questions"
-                : "Proposer d'autres questions"
+                ? t("Commencer : proposer six questions")
+                : t("Proposer d'autres questions")
             }
-            enCours="Le modèle écrit tes questions…"
+            enCours={t("Le modèle écrit tes questions…")}
             className={
               questions.length === 0
                 ? "rounded-lg bg-brand-navy px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover"
@@ -582,9 +625,9 @@ export default async function VisibiliteIaPage({
           />
 
           <p className="text-xs leading-relaxed text-ink-soft">
-            Les propositions partent de tes mots-clés et, si ton compte Google
-            est relié, des requêtes réellement tapées par ceux qui t&apos;ont
-            trouvé.
+            {t(
+              "Les propositions partent de tes mots-clés et, si ton compte Google est relié, des requêtes réellement tapées par ceux qui t'ont trouvé.",
+            )}
           </p>
         </div>
 
@@ -593,21 +636,25 @@ export default async function VisibiliteIaPage({
             (q) => intentionDe.get(q.id) === intention,
           );
           if (liste.length === 0) return null;
-          const t = parIntention[intention];
+          const taux = parIntention[intention];
           return (
             <div key={intention} className="flex flex-col gap-2">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <div className="flex flex-col gap-0.5">
                   <h3 className="font-serif text-xl text-ink">
-                    {LIBELLE_INTENTION[intention]}
+                    {t(LIBELLE_INTENTION[intention])}
                   </h3>
                   <p className="text-xs leading-relaxed text-ink-soft">
-                    {RESUME_INTENTION[intention]}
+                    {t(RESUME_INTENTION[intention])}
                   </p>
                 </div>
-                {t.part !== null && (
+                {taux.part !== null && (
                   <span className="font-mono text-xs tabular-nums text-ink-soft">
-                    cité {Math.round(t.part * 100)} % · {t.citees}/{t.analysees}
+                    {t("cité {part} % · {citees}/{analysees}", {
+                      part: Math.round(taux.part * 100),
+                      citees: taux.citees,
+                      analysees: taux.analysees,
+                    })}
                   </span>
                 )}
               </div>
@@ -620,6 +667,8 @@ export default async function VisibiliteIaPage({
                     question={question}
                     results={latestByQuestion.get(question.id) ?? []}
                     analysable={actifs.length > 0}
+                    t={t}
+                    langue={langue}
                   />
                 ))}
               </ul>
@@ -629,13 +678,10 @@ export default async function VisibiliteIaPage({
       </section>
 
       <p className="max-w-4xl text-xs leading-relaxed text-zinc-400">
-        Assistants interrogés aujourd&apos;hui :{" "}
-        {actifs.length > 0 ? actifs.join(", ") : "aucun"}. Les autres
-        s&apos;activeront automatiquement dès que leur clé d&apos;API sera
-        renseignée. Les analyses portent sur les connaissances propres de chaque
-        assistant ; les réponses affichées dans les applications grand public
-        (qui vont chercher sur le web en direct) demanderaient un accès
-        supplémentaire.
+        {t(
+          "Assistants interrogés aujourd'hui : {liste}. Les autres s'activeront automatiquement dès que leur clé d'API sera renseignée. Les analyses portent sur les connaissances propres de chaque assistant ; les réponses affichées dans les applications grand public (qui vont chercher sur le web en direct) demanderaient un accès supplémentaire.",
+          { liste: actifs.length > 0 ? actifs.join(", ") : t("aucun") },
+        )}
       </p>
     </div>
   );
@@ -729,7 +775,7 @@ function Anneau({ valeur }: { valeur: number }) {
 }
 
 /** Ce qu'on voit avant la première analyse : trois pas, pas un vide. */
-function Demarrage({ pretes }: { pretes: number }) {
+function Demarrage({ pretes, t }: { pretes: number; t: T }) {
   const etapes = [
     {
       titre: "Pose les questions de tes clients",
@@ -759,11 +805,12 @@ function Demarrage({ pretes }: { pretes: number }) {
       <div className="relative flex flex-col gap-6">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/60">
-            Score de visibilité IA
+            {t("Score de visibilité IA")}
           </p>
           <p className="mt-2 max-w-4xl text-sm leading-relaxed text-white/80">
-            Trois pas pour obtenir ton premier score. Compte cinq minutes, dont
-            une à attendre les assistants.
+            {t(
+              "Trois pas pour obtenir ton premier score. Compte cinq minutes, dont une à attendre les assistants.",
+            )}
           </p>
         </div>
         <ol className="grid gap-3 sm:grid-cols-3">
@@ -779,17 +826,24 @@ function Demarrage({ pretes }: { pretes: number }) {
               <span className="font-mono text-xs text-brand-orange">
                 0{i + 1} {etape.faite && "✓"}
               </span>
-              <p className="text-sm font-semibold">{etape.titre}</p>
+              <p className="text-sm font-semibold">{t(etape.titre)}</p>
               <p className="text-xs leading-relaxed text-white/60">
-                {etape.texte}
+                {t(etape.texte)}
               </p>
             </li>
           ))}
         </ol>
         <p className="text-xs text-white/50">
           {pretes === 0
-            ? "Commence par « Proposer six questions », juste en dessous : six questions prêtes en un clic."
-            : `${pretes} question${pretes > 1 ? "s" : ""} prête${pretes > 1 ? "s" : ""} — lance une analyse ci-dessous.`}
+            ? t(
+                "Commence par « Proposer six questions », juste en dessous : six questions prêtes en un clic.",
+              )
+            : t(
+                pretes > 1
+                  ? "{n} questions prêtes — lance une analyse ci-dessous."
+                  : "{n} question prête — lance une analyse ci-dessous.",
+                { n: pretes },
+              )}
         </p>
       </div>
     </section>
@@ -803,11 +857,13 @@ function Demarrage({ pretes }: { pretes: number }) {
  * concurrents en rang : « #4 sur 9 » se retient, « La Fine Mousse : 7 » non.
  */
 function Palmares({
+  t,
   titre,
   podium,
   analysees,
   compact = false,
 }: {
+  t: T;
   titre?: string;
   podium: ReturnType<typeof classement>;
   analysees: number;
@@ -821,15 +877,20 @@ function Palmares({
           <h3 className="text-sm font-semibold text-ink">{titre}</h3>
           {podium.rang !== null && (
             <span className="font-mono text-xs tabular-nums text-ink-soft">
-              tu es #{podium.rang} sur {podium.total}
+              {t("tu es #{rang} sur {total}", {
+                rang: podium.rang,
+                total: podium.total,
+              })}
             </span>
           )}
         </div>
       )}
       {!compact && (
         <p className="text-xs leading-relaxed text-ink-soft">
-          Nombre de réponses où chaque nom apparaît, sur les {analysees}{" "}
-          analysées. Toi compris.
+          {t(
+            "Nombre de réponses où chaque nom apparaît, sur les {n} analysées. Toi compris.",
+            { n: analysees },
+          )}
         </p>
       )}
       <ol
@@ -845,8 +906,12 @@ function Palmares({
             <Fragment key={ligne.nom}>
               {saut && (
                 <li className="border-t border-line px-4 py-1.5 text-center text-xs text-zinc-400">
-                  … {podium.omis} autre{podium.omis > 1 ? "s" : ""} nom
-                  {podium.omis > 1 ? "s" : ""} cité{podium.omis > 1 ? "s" : ""}
+                  {t(
+                    podium.omis > 1
+                      ? "… {n} autres noms cités"
+                      : "… {n} autre nom cité",
+                    { n: podium.omis },
+                  )}
                 </li>
               )}
               <li
@@ -876,7 +941,7 @@ function Palmares({
                     </span>
                     {ligne.toi && (
                       <span className="rounded-full bg-brand-orange px-1.5 py-px text-[10px] font-semibold uppercase tracking-wider text-white">
-                        toi
+                        {t("toi")}
                       </span>
                     )}
                   </div>
@@ -915,12 +980,16 @@ function CarteQuestion({
   question,
   results,
   analysable,
+  t,
+  langue,
 }: {
   restaurantId: string;
   restaurantNom: string;
   question: AiVisibilityQuestion;
   results: AiVisibilityCheck[];
   analysable: boolean;
+  t: T;
+  langue: Langue;
 }) {
   // Le classement propre à cette question. C'est le plus actionnable :
   // « sur celle-ci, ces trois-là passent devant » se corrige, alors qu'un
@@ -940,10 +1009,10 @@ function CarteQuestion({
           <input type="hidden" name="question_id" value={question.id} />
           <button
             type="submit"
-            aria-label="Supprimer la question"
+            aria-label={t("Supprimer la question")}
             className="shrink-0 text-xs text-zinc-400 transition-colors hover:text-red-600"
           >
-            Supprimer
+            {t("Supprimer")}
           </button>
         </form>
       </div>
@@ -964,20 +1033,27 @@ function CarteQuestion({
                 <span className="font-medium">{check.modele}</span>
                 <span className="font-mono tabular-nums">
                   {check.est_cite
-                    ? `cité${check.rang ? ` #${check.rang}` : ""}`
-                    : "non cité"}
+                    ? check.rang
+                      ? t("cité #{rang}", { rang: check.rang })
+                      : t("cité")
+                    : t("non cité")}
                 </span>
               </span>
             ))}
           </div>
 
           {podium.lignes.length > 1 && (
-            <Palmares podium={podium} analysees={results.length} compact />
+            <Palmares
+              t={t}
+              podium={podium}
+              analysees={results.length}
+              compact
+            />
           )}
 
           <details className="text-sm text-ink-soft">
             <summary className="cursor-pointer text-xs text-ink-soft hover:text-ink">
-              Voir les réponses complètes
+              {t("Voir les réponses complètes")}
             </summary>
             <div className="mt-3 flex flex-col gap-3">
               {results.map((check) => (
@@ -990,12 +1066,16 @@ function CarteQuestion({
                       {check.modele}
                     </span>
                     <span className="font-mono text-xs text-zinc-400">
-                      {new Date(check.created_at).toLocaleDateString("fr-FR")}
+                      {new Date(check.created_at).toLocaleDateString(
+                        localeDe(langue),
+                      )}
                     </span>
                   </div>
                   {check.concurrents.length > 0 && (
                     <p className="text-sm leading-relaxed">
-                      Cités à ta place : {check.concurrents.join(", ")}
+                      {t("Cités à ta place : {liste}", {
+                        liste: check.concurrents.join(", "),
+                      })}
                     </p>
                   )}
                   {/* La réponse telle que le modèle l'a rendue. Elle
@@ -1011,17 +1091,18 @@ function CarteQuestion({
           </details>
         </>
       ) : (
-        <p className="text-sm text-ink-soft">Pas encore analysée.</p>
+        <p className="text-sm text-ink-soft">{t("Pas encore analysée.")}</p>
       )}
 
       {analysable ? (
         <BoutonLent
           action={analyzeQuestion}
           champs={{ restaurant_id: restaurantId, question_id: question.id }}
-          libelle={results.length > 0 ? "Relancer l'analyse" : "Analyser"}
+          langue={langue}
+          libelle={results.length > 0 ? t("Relancer l'analyse") : t("Analyser")}
           // Une demi-minute sans rien à l'écran passe pour une panne. Dire
           // qui travaille, et à quoi s'attendre, suffit à faire patienter.
-          enCours="Les assistants répondent… (30 s à 1 min)"
+          enCours={t("Les assistants répondent… (30 s à 1 min)")}
           className="w-fit rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
         />
       ) : (
@@ -1030,7 +1111,7 @@ function CarteQuestion({
           disabled
           className="w-fit cursor-not-allowed rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 opacity-40"
         >
-          Analyser
+          {t("Analyser")}
         </button>
       )}
     </li>

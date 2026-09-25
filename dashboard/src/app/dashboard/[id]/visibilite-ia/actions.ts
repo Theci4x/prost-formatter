@@ -19,6 +19,8 @@ import {
 } from "@/lib/ai-visibility/plan";
 import type { AiVisibilityCheck } from "@/types/ai-visibility";
 import { consommerGeste } from "@/lib/ai-visibility/quota";
+import { langueUtilisateur } from "@/lib/i18n/langue";
+import { SEO } from "@/lib/i18n/seo";
 
 /**
  * Ce que rend une action lente.
@@ -335,6 +337,10 @@ export async function genererPlan(
     return { error: "Analyse d'abord une question : le plan en découle." };
   }
 
+  // Le plan se lit dans la langue de l'écran, comme l'analyse SEO : ce
+  // sont des consignes pour le restaurateur, pas un texte pour ses clients.
+  const { langueAnalyse } = SEO[await langueUtilisateur()];
+
   const refus = await consommerGeste(restaurantId, "plan");
   if (refus) return { error: refus };
 
@@ -418,6 +424,7 @@ export async function genererPlan(
         "chaque action se rattache à un manque précis de sa fiche ou à un " +
         "concurrent nommé. Réponds uniquement par un tableau JSON d'objets " +
         '{"titre": "...", "pourquoi": "...", "ecran": "..."}. ' +
+        `Rédige titre et pourquoi ${langueAnalyse}. ` +
         "titre : une action à l'impératif, une ligne, tutoiement. " +
         "pourquoi : deux phrases maximum, appuyées sur les mesures. " +
         "ecran : un seul de vitrine, menu, photos, faq, experiences, " +
@@ -475,16 +482,14 @@ export async function genererPlan(
       return { error: "Le modèle n'a proposé aucune action. Réessaie." };
     }
 
-    const { error } = await supabase
-      .from("ai_visibility_plans")
-      .upsert(
-        {
-          restaurant_id: restaurantId,
-          actions,
-          genere_le: new Date().toISOString(),
-        },
-        { onConflict: "restaurant_id" },
-      );
+    const { error } = await supabase.from("ai_visibility_plans").upsert(
+      {
+        restaurant_id: restaurantId,
+        actions,
+        genere_le: new Date().toISOString(),
+      },
+      { onConflict: "restaurant_id" },
+    );
     if (error) {
       console.error("[genererPlan] enregistrement", error);
       return { error: "Le plan n'a pas pu être enregistré." };

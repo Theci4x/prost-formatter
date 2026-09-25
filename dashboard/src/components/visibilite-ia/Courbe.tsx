@@ -1,4 +1,5 @@
 import type { Serie } from "@/lib/ai-visibility/score";
+import type { T } from "@/lib/i18n/t";
 
 /**
  * Une seule ligne compte — la sienne. Les concurrents sont du contexte :
@@ -22,10 +23,10 @@ export function couleurDeSerie(serie: Serie, rang: number): string {
 
 const enPourcent = (part: number) => `${Math.round(part * 100)} %`;
 
-export function jourCourt(jour: string): string {
+export function jourCourt(jour: string, locale = "fr-FR"): string {
   // Midi plutôt que minuit : une date lue en UTC puis affichée dans un
   // autre fuseau reculerait d'un jour.
-  return new Date(`${jour}T12:00:00Z`).toLocaleDateString("fr-FR", {
+  return new Date(`${jour}T12:00:00Z`).toLocaleDateString(locale, {
     day: "numeric",
     month: "short",
     timeZone: "UTC",
@@ -38,11 +39,15 @@ export function jourCourt(jour: string): string {
  * devient illisible.
  */
 export function Courbe({
+  t,
+  locale,
   series,
   largeur,
   hauteur,
   etiquettes,
 }: {
+  t: T;
+  locale: string;
   series: Serie[];
   largeur: number;
   hauteur: number;
@@ -111,7 +116,14 @@ export function Courbe({
       viewBox={`0 0 ${largeur} ${hauteur}`}
       className="h-auto w-full"
       role="img"
-      aria-label={`Part des réponses citant ${series[0]!.nom} et ses concurrents, du ${jourCourt(dates[0]!)} au ${jourCourt(dates.at(-1)!)}.`}
+      aria-label={t(
+        "Part des réponses citant {nom} et ses concurrents, du {debut} au {fin}.",
+        {
+          nom: series[0]!.nom,
+          debut: jourCourt(dates[0]!, locale),
+          fin: jourCourt(dates.at(-1)!, locale),
+        },
+      )}
     >
       {/* Le repère : des filets pleins, une nuance au-dessus du fond. */}
       {[0, 0.5, 1].map((part) => (
@@ -147,7 +159,7 @@ export function Courbe({
           fontSize={10}
           className="fill-ink-soft"
         >
-          {jourCourt(dates[i]!)}
+          {jourCourt(dates[i]!, locale)}
         </text>
       ))}
 
@@ -197,7 +209,7 @@ export function Courbe({
               r={12}
               fill="transparent"
             >
-              <title>{`${serie.nom} — ${jourCourt(p.jour)} : ${enPourcent(p.part)}`}</title>
+              <title>{`${serie.nom} — ${jourCourt(p.jour, locale)} : ${enPourcent(p.part)}`}</title>
             </circle>
           ))
           .concat(
