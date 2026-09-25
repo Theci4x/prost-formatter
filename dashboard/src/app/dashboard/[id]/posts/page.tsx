@@ -9,7 +9,8 @@ import {
   type EspaceSuggerable,
   type PlatSuggerable,
 } from "@/lib/posts/suggestions";
-import { annulerPost } from "./actions";
+import { annulerPost, marquerPublie } from "./actions";
+import { BoutonCopier } from "@/components/dashboard/BoutonCopier";
 import { LIBELLE_BOUTON, type Bouton } from "@/lib/posts/regles";
 import type { Restaurant } from "@/types/restaurant";
 import type { RestaurantPhoto } from "@/types/photo";
@@ -19,7 +20,9 @@ import { exigerModule } from "@/lib/abonnement/acces";
 type Post = {
   id: string;
   texte: string;
+  photo_id: string | null;
   bouton: Bouton | null;
+  bouton_url: string | null;
   publier_le: string;
   publie_le: string | null;
   statut: string;
@@ -47,6 +50,11 @@ function quand(iso: string): string {
   });
 }
 
+/** L'instant présent, lu hors du rendu comme toute horloge. */
+function maintenantIso(): string {
+  return new Date().toISOString();
+}
+
 export default async function PostsPage({
   params,
 }: {
@@ -56,10 +64,9 @@ export default async function PostsPage({
   await exiger(id, "gerant");
   await exigerModule(id, "visibilite");
 
-  // Masqué tant que Google n'a pas accordé l'API de publication : une
-  // publication programmée qui ne part jamais coûte plus qu'un écran
-  // absent.
-  if (!publicationsGoogleOuvertes()) notFound();
+  // Sans l'accès de Google, la page reste ouverte en publication
+  // assistée : Klarr prépare et prévient, le restaurateur colle et publie.
+  const assiste = !publicationsGoogleOuvertes();
 
   const supabase = await createClient();
   const [
@@ -118,6 +125,14 @@ export default async function PostsPage({
   const enEchec = posts.filter(
     (p) => p.statut === "programme" && p.derniere_erreur,
   ).length;
+  const maintenant = maintenantIso();
+  // Arrivées à leur date : en mode assisté, c'est au restaurateur de jouer.
+  const aPublier = assiste
+    ? posts
+        .filter((p) => p.statut === "programme" && p.publier_le <= maintenant)
+        .sort((a, b) => a.publier_le.localeCompare(b.publier_le))
+    : [];
+  const urlPhoto = new Map(photos.map((ph) => [ph.id, ph.url]));
 
   return (
     <div className="flex flex-1 flex-col gap-8 px-6 py-8">
@@ -130,20 +145,139 @@ export default async function PostsPage({
         <p className="max-w-4xl text-sm text-zinc-600">
           Une publication vit une semaine sur ta fiche Google, puis disparaît.
           L&apos;intérêt est d&apos;en avoir toujours une : écris-les à
-          l&apos;avance, Klarr les publie le jour venu.
+          l&apos;avance, le lundi matin par exemple.
         </p>
       </div>
 
-      {/* Dit avant qu'on s'en aperçoive : l'attente vient de Google, pas
-          d'une panne, et l'imprécision de l'heure vient du plan Vercel. */}
-      <p className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm leading-relaxed text-amber-900">
-        <strong>L&apos;envoi vers Google n&apos;est pas encore ouvert.</strong>{" "}
-        Google accorde l&apos;accès à son API de publication sur dossier ; la
-        demande est en cours. Tes publications sont enregistrées et partiront
-        toutes seules le jour où l&apos;accès arrive — rien à ressaisir. Une
-        publication paraît au premier passage de la nuit suivant la date
-        choisie, pas à la minute près.
-      </p>
+      {assiste ? (
+        <div className="flex flex-col gap-2 rounded-2xl border border-brand-orange/30 bg-brand-orange-soft px-5 py-4 text-sm leading-relaxed text-ink">
+          <strong>
+            Publication assistée : Klarr prépare, tu publies en 30 secondes.
+          </strong>
+          <span>
+            Écris et programme tes publications ici. Le jour venu, Klarr te
+            prévient sur ton téléphone (vers 11 h) : tu copies le texte, tu
+            ouvres ta fiche Google, tu colles, c&apos;est publié. Le jour où
+            Google ouvre la publication automatique à Klarr, elles partiront
+            toutes seules — rien à ressaisir.
+          </span>
+        </div>
+      ) : (
+        <p className="rounded-2xl border border-zinc-200/70 bg-white px-5 py-4 text-sm leading-relaxed text-zinc-600">
+          Une publication paraît au premier passage de la nuit suivant la date
+          choisie, pas à la minute près.
+        </p>
+      )}
+
+      {/* ── À publier maintenant (mode assisté) ───────────────────── */}
+      {aPublier.length > 0 && (
+        <section className="flex flex-col gap-4" id="a-publier">
+          <TitreSection
+            aside={`${aPublier.length} publication${aPublier.length > 1 ? "s" : ""}`}
+          >
+            À publier maintenant
+          </TitreSection>
+          <ol className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-zinc-600">
+            <li>
+              <strong className="text-ink">1.</strong> Copie le texte
+            </li>
+            <li>
+              <strong className="text-ink">2.</strong> Ouvre ta fiche Google,
+              puis « Ajouter une mise à jour »
+            </li>
+            <li>
+              <strong className="text-ink">3.</strong> Colle, ajoute la photo,
+              publie
+            </li>
+            <li>
+              <strong className="text-ink">4.</strong> Reviens cliquer «
+              C&apos;est publié »
+            </li>
+          </ol>
+          <ul className="flex flex-col gap-4">
+            {aPublier.map((post) => {
+              const photo = post.photo_id ? urlPhoto.get(post.photo_id) : null;
+              return (
+                <li
+                  key={post.id}
+                  className="grid gap-5 rounded-2xl border border-brand-orange/40 bg-white p-6 shadow-sm md:grid-cols-[minmax(0,1fr)_16rem]"
+                >
+                  <div className="flex min-w-0 flex-col gap-3">
+                    <span className="w-fit rounded-full bg-brand-orange-soft px-2.5 py-0.5 text-xs font-semibold text-brand-orange-dark">
+                      Prévue {quand(post.publier_le)}
+                    </span>
+                    <p className="whitespace-pre-wrap rounded-xl bg-zinc-50 px-4 py-3 text-[15px] leading-relaxed text-ink">
+                      {post.texte}
+                    </p>
+                    {post.bouton && (
+                      <p className="text-sm text-zinc-600">
+                        Bouton à ajouter : «{" "}
+                        <strong className="text-ink">
+                          {LIBELLE_BOUTON[post.bouton]}
+                        </strong>{" "}
+                        »
+                        {post.bouton_url && (
+                          <>
+                            {" "}
+                            avec le lien{" "}
+                            <span className="break-all font-mono text-xs text-ink">
+                              {post.bouton_url}
+                            </span>
+                          </>
+                        )}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-3">
+                    {photo && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={photo}
+                        alt=""
+                        className="aspect-[4/3] w-full rounded-xl object-cover"
+                      />
+                    )}
+                    <BoutonCopier
+                      texte={post.texte}
+                      libelle="Copier le texte"
+                      copie="Texte copié ✓"
+                    />
+                    <a
+                      href="https://business.google.com/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-center text-sm font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
+                    >
+                      Ouvrir ma fiche Google ↗
+                    </a>
+                    {photo && (
+                      <a
+                        href={photo}
+                        download
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-center text-xs font-medium text-zinc-500 hover:text-brand-navy"
+                      >
+                        Télécharger la photo
+                      </a>
+                    )}
+                    <form action={marquerPublie}>
+                      <input type="hidden" name="restaurant_id" value={id} />
+                      <input type="hidden" name="post_id" value={post.id} />
+                      <button
+                        type="submit"
+                        className="w-full rounded-lg bg-brand-navy px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover"
+                      >
+                        C&apos;est publié ✓
+                      </button>
+                    </form>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
 
       {/* Une fiche sans publication à venir redevient muette dans la
           semaine : c'est la case à surveiller, d'où l'orange à zéro. */}
@@ -162,9 +296,9 @@ export default async function PostsPage({
           libelle={`publiée${publiees > 1 ? "s" : ""} sur ta fiche`}
         />
         <Compteur
-          valeur={enEchec}
-          libelle="en échec, à revoir"
-          accent={enEchec > 0}
+          valeur={assiste ? aPublier.length : enEchec}
+          libelle={assiste ? "à publier maintenant" : "en échec, à revoir"}
+          accent={assiste ? aPublier.length > 0 : enEchec > 0}
         />
       </div>
 
@@ -207,7 +341,9 @@ export default async function PostsPage({
                     >
                       {post.statut === "publie"
                         ? `Publiée ${post.publie_le ? quand(post.publie_le) : ""}`
-                        : `Programmée ${quand(post.publier_le)}`}
+                        : assiste && post.publier_le <= maintenant
+                          ? `À publier — prévue ${quand(post.publier_le)}`
+                          : `Programmée ${quand(post.publier_le)}`}
                     </span>
                     {post.bouton && (
                       <span className="text-xs text-zinc-500">
@@ -220,7 +356,7 @@ export default async function PostsPage({
                     {post.texte}
                   </p>
 
-                  {post.derniere_erreur && (
+                  {!assiste && post.derniere_erreur && (
                     <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
                       Dernier essai : {post.derniere_erreur}
                     </p>

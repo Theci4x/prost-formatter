@@ -4,7 +4,6 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { exiger } from "@/lib/equipe/roles";
 import { valider, type Bouton } from "@/lib/posts/regles";
-import { publicationsGoogleOuvertes } from "@/lib/google/business";
 
 export type PostState = {
   error: string | null;
@@ -32,11 +31,6 @@ export async function programmerPost(
     enregistre: false,
     version,
   });
-
-  // L'écran est masqué, mais une action serveur reste une adresse.
-  if (!publicationsGoogleOuvertes()) {
-    return echec("Les publications Google ne sont pas encore ouvertes.");
-  }
 
   const restaurantId = String(formData.get("restaurant_id") ?? "");
   if (!restaurantId) return echec("Établissement inconnu.");
@@ -94,6 +88,29 @@ export async function annulerPost(formData: FormData): Promise<void> {
   await supabase
     .from("restaurant_posts")
     .delete()
+    .eq("id", postId)
+    .eq("restaurant_id", restaurantId)
+    .eq("statut", "programme");
+
+  revalidatePath(`/dashboard/${restaurantId}/posts`);
+}
+
+/**
+ * Publication assistée : le restaurateur a collé le texte sur sa fiche
+ * Google et le dit. Klarr n'a aucun moyen de le vérifier sans l'API ; il
+ * range la publication parmi les publiées, avec l'heure du geste.
+ */
+export async function marquerPublie(formData: FormData): Promise<void> {
+  const restaurantId = String(formData.get("restaurant_id") ?? "");
+  const postId = String(formData.get("post_id") ?? "");
+  if (!restaurantId || !postId) return;
+
+  await exiger(restaurantId, "gerant");
+
+  const supabase = await createClient();
+  await supabase
+    .from("restaurant_posts")
+    .update({ statut: "publie", publie_le: new Date().toISOString() })
     .eq("id", postId)
     .eq("restaurant_id", restaurantId)
     .eq("statut", "programme");

@@ -59,7 +59,7 @@ function destinations(publications: boolean) {
             href: "posts",
             titre: "Publications Google",
             texte:
-              "Tes actualités et offres, publiées sur ta fiche depuis Klarr.",
+              "Tes actualités et offres, préparées dans Klarr et publiées sur ta fiche.",
           },
         ]
       : [
@@ -284,11 +284,11 @@ export default async function GoogleConnectionPage({
           accent={fiche.accent}
         />
         <Compteur
-          valeur={publicationsGoogleOuvertes() ? "Ouvertes" : "Bientôt"}
+          valeur={publicationsGoogleOuvertes() ? "Auto" : "Assistées"}
           libelle={
             publicationsGoogleOuvertes()
               ? "publications Google"
-              : "publications, dès l'accord de Google"
+              : "publications Google, en 30 secondes"
           }
         />
       </div>
@@ -366,16 +366,12 @@ export default async function GoogleConnectionPage({
             >
               Voir mes avis
             </Link>
-            {/* Tant que Google n'a pas ouvert l'accès, l'écran répond 404 :
-                pas de lien vers une page absente. */}
-            {publicationsGoogleOuvertes() && (
-              <Link
-                href={`/dashboard/${id}/posts`}
-                className="rounded-lg border border-zinc-200 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
-              >
-                Publications Google
-              </Link>
-            )}
+            <Link
+              href={`/dashboard/${id}/posts`}
+              className="rounded-lg border border-zinc-200 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
+            >
+              Publications Google
+            </Link>
           </div>
           <div className="flex flex-wrap items-center justify-between gap-3 border-t border-emerald-200/70 pt-4">
             <form action={selectGoogleLocation}>
@@ -476,7 +472,7 @@ export default async function GoogleConnectionPage({
       <section className="flex flex-col gap-4">
         <TitreSection>Ce que Klarr en fait</TitreSection>
         <div className="grid gap-3 sm:grid-cols-3 sm:gap-4">
-          {destinations(publicationsGoogleOuvertes()).map((destination) => (
+          {destinations(true).map((destination) => (
             <Link
               key={destination.href}
               href={`/dashboard/${id}/${destination.href}`}

@@ -1,7 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
 import type { Pouls } from "@/lib/dashboard/pouls";
-import { publicationsGoogleOuvertes } from "@/lib/google/business";
 import { campagnesOuvertes } from "@/lib/campagnes/message";
 import type { ClesAccueil } from "@/lib/i18n/accueil";
 import {
@@ -408,24 +407,19 @@ function groupes(t: ClesAccueil, d: DetailsAccueil, langue: Langue): Groupe[] {
             p.presenceARevoir > 0 ? d.fichesARevoir(p.presenceARevoir) : null,
           attention: (p) => p.presenceARevoir > 0,
         },
-        // Masquée tant que Google n'a pas ouvert la publication : elle
-        // revient d'elle-même le jour où l'accès est accordé, sans toucher
-        // au code.
-        ...(publicationsGoogleOuvertes()
-          ? [
-              {
-                href: "posts",
-                label: t.entrees.posts.label,
-                resume: t.entrees.posts.resume,
-                icone: ICONES.posts,
-                minimum: "gerant" as const,
-                detail: (p: Pouls) =>
-                  p.prochainPost
-                    ? d.prochainePublication(dateCourte(p.prochainPost, langue))
-                    : d.aucuneProgrammee,
-              },
-            ]
-          : []),
+        // Toujours là : sans l'accès de Google, en publication assistée
+        // (Klarr prépare et prévient, le restaurateur colle et publie).
+        {
+          href: "posts",
+          label: t.entrees.posts.label,
+          resume: t.entrees.posts.resume,
+          icone: ICONES.posts,
+          minimum: "gerant" as const,
+          detail: (p: Pouls) =>
+            p.prochainPost
+              ? d.prochainePublication(dateCourte(p.prochainPost, langue))
+              : d.aucuneProgrammee,
+        },
         {
           href: "visibilite-ia",
           label: t.entrees.visibiliteIa.label,

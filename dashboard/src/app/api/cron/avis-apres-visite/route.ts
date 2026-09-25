@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { jetonValide } from "@/lib/limites/publiques";
 import { demanderLesAvis } from "@/lib/courriel/apresVisite";
+import { rappelerLesPosts } from "@/lib/posts/rappels";
 
 export const maxDuration = 300;
 
@@ -28,5 +29,17 @@ export async function GET(request: Request) {
     `[cron/avis-apres-visite] ${bilan.envoyes} envoyé(s), ${bilan.echoues} en échec, ` +
       `${bilan.ignorees} ignoré(s) sur ${bilan.concernees} table(s) d'hier`,
   );
-  return NextResponse.json(bilan);
+
+  // Même heure que la demande d'avis : en fin de matinée, le restaurateur
+  // a le temps de publier. Seulement tant que Google n'a pas ouvert la
+  // publication automatique.
+  const rappels = await rappelerLesPosts({
+    supabase: createServiceClient(),
+    maintenant: new Date(),
+  });
+  console.log(
+    `[cron/avis-apres-visite] posts : ${rappels.publications} à publier, ` +
+      `${rappels.prevenus} établissement(s) prévenu(s)`,
+  );
+  return NextResponse.json({ ...bilan, rappels });
 }

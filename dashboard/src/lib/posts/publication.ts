@@ -1,7 +1,11 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getValidAccessToken } from "@/lib/google/connection";
-import { listAccounts, publierPostLocal } from "@/lib/google/business";
+import {
+  listAccounts,
+  publicationsGoogleOuvertes,
+  publierPostLocal,
+} from "@/lib/google/business";
 import { aPublier, actionGoogle, type Bouton } from "@/lib/posts/regles";
 
 /**
@@ -47,6 +51,12 @@ export async function publierLesPosts({
   maintenant: Date;
   plafond?: number;
 }): Promise<BilanPosts> {
+  // Sans l'accès de Google, chaque essai échouerait et noircirait la
+  // publication d'une erreur qui n'en est pas une : c'est la publication
+  // assistée qui prend le relais (`rappels.ts`).
+  if (!publicationsGoogleOuvertes())
+    return { echus: 0, publies: 0, reportes: 0 };
+
   const { data, error } = await supabase
     .from("restaurant_posts")
     .select("*")
