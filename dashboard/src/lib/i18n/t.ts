@@ -14,7 +14,10 @@ import type { Langue } from "@/lib/i18n/langues";
  */
 export type Traductions = Record<string, { en: string; zh: string }>;
 
-export type T = (fr: string, vars?: Record<string, string | number>) => string;
+/** Une variable absente (`null`) s'écrit vide plutôt que « null ». */
+export type Variables = Record<string, string | number | null | undefined>;
+
+export type T = (fr: string, vars?: Variables) => string;
 
 export function traducteur(langue: Langue, ...tables: Traductions[]): T {
   return (fr, vars) => {
@@ -30,7 +33,7 @@ export function traducteur(langue: Langue, ...tables: Traductions[]): T {
     }
     if (vars) {
       texte = texte.replace(/\{(\w+)\}/g, (tout, cle: string) =>
-        cle in vars ? String(vars[cle]) : tout,
+        cle in vars ? String(vars[cle] ?? "") : tout,
       );
     }
     return texte;

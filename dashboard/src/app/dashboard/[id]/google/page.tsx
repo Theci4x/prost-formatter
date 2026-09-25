@@ -19,6 +19,8 @@ import { exigerModule } from "@/lib/abonnement/acces";
 import { langueUtilisateur } from "@/lib/i18n/langue";
 import { localeDe } from "@/lib/i18n/seo";
 import { VISIBILITE_GOOGLE } from "@/lib/i18n/visibiliteGoogle";
+import { COMMUN, traducteur } from "@/lib/i18n/t";
+import { GOOGLE } from "@/lib/i18n/pages/google";
 import {
   PERIODES,
   VisibiliteGoogle,
@@ -139,6 +141,7 @@ export default async function GoogleConnectionPage({
   const { connected, error, periode: periodeDemandee } = await searchParams;
   const langue = await langueUtilisateur();
   const tv = VISIBILITE_GOOGLE[langue];
+  const t = traducteur(langue, GOOGLE, COMMUN);
   const periode: Periode = (PERIODES as readonly string[]).includes(
     periodeDemandee ?? "",
   )
@@ -187,8 +190,9 @@ export default async function GoogleConnectionPage({
         }
       }
       if (locations.length === 0) {
-        locationsError =
-          "Aucune fiche établissement trouvée sur ce compte Google.";
+        locationsError = t(
+          "Aucune fiche établissement trouvée sur ce compte Google.",
+        );
       }
     } catch (err) {
       console.error("[google/page] fetch locations", err);
@@ -196,7 +200,7 @@ export default async function GoogleConnectionPage({
       // Deviner à voix haute fait attendre une chose qui n'arrivera
       // jamais seule : le quota de cette API reste à zéro tant que
       // Google n'a pas accordé le dossier d'accès.
-      locationsError = expliquerBusinessProfile(err);
+      locationsError = t(expliquerBusinessProfile(err));
     }
   }
 
@@ -241,18 +245,26 @@ export default async function GoogleConnectionPage({
   // un « 0 fiche trouvée » quand c'est Google qui refuse l'accès ferait
   // chercher une fiche qui existe bel et bien.
   const fiche = connection?.location_name
-    ? { valeur: "Choisie", libelle: "fiche établissement", accent: false }
+    ? {
+        valeur: t("Choisie"),
+        libelle: t("fiche établissement"),
+        accent: false,
+      }
     : !connection
-      ? { valeur: "—", libelle: "fiche établissement", accent: false }
+      ? { valeur: "—", libelle: t("fiche établissement"), accent: false }
       : locationsError
         ? {
             valeur: "—",
-            libelle: "fiche inaccessible pour l'instant",
+            libelle: t("fiche inaccessible pour l'instant"),
             accent: true,
           }
         : {
             valeur: String(locations.length),
-            libelle: `fiche${locations.length > 1 ? "s" : ""} trouvée${locations.length > 1 ? "s" : ""}, à choisir`,
+            libelle: t(
+              locations.length > 1
+                ? "fiches trouvées, à choisir"
+                : "fiche trouvée, à choisir",
+            ),
             accent: true,
           };
 
@@ -261,21 +273,22 @@ export default async function GoogleConnectionPage({
       <div className="flex flex-col gap-3">
         <PageHeader
           icon={dashboardIcons.google}
-          title={`Google Business Profile — ${restaurant.nom}`}
+          title={t("Google Business Profile — {nom}", { nom: restaurant.nom })}
           backHref={`/dashboard/${id}/connexions`}
         />
         <p className="max-w-4xl text-sm text-zinc-600">
-          Ta fiche Google est souvent la première chose qu&apos;un client voit
-          de toi. Relie le compte qui la gère : Klarr y lit ta note, tes avis et
-          les recherches qui t&apos;amènent des clients, sans que tu aies à
-          recopier quoi que ce soit.
+          {t(
+            "Ta fiche Google est souvent la première chose qu'un client voit de toi. Relie le compte qui la gère : Klarr y lit ta note, tes avis et les recherches qui t'amènent des clients, sans que tu aies à recopier quoi que ce soit.",
+          )}
         </p>
       </div>
 
       <div className="grid grid-cols-3 gap-3 sm:gap-4">
         <Compteur
-          valeur={connection ? "Relié" : "—"}
-          libelle={connection ? "compte Google" : "compte Google à relier"}
+          valeur={connection ? t("Relié") : "—"}
+          libelle={
+            connection ? t("compte Google") : t("compte Google à relier")
+          }
           accent={!connection}
         />
         <Compteur
@@ -284,23 +297,23 @@ export default async function GoogleConnectionPage({
           accent={fiche.accent}
         />
         <Compteur
-          valeur={publicationsGoogleOuvertes() ? "Auto" : "Assistées"}
+          valeur={publicationsGoogleOuvertes() ? t("Auto") : t("Assistées")}
           libelle={
             publicationsGoogleOuvertes()
-              ? "publications Google"
-              : "publications Google, en 30 secondes"
+              ? t("publications Google")
+              : t("publications Google, en 30 secondes")
           }
         />
       </div>
 
       {connected && (
         <p className="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-800">
-          Compte Google connecté avec succès.
+          {t("Compte Google connecté avec succès.")}
         </p>
       )}
       {error && (
         <p className="rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">
-          La connexion à Google a échoué. Réessaie.
+          {t("La connexion à Google a échoué. Réessaie.")}
         </p>
       )}
 
@@ -327,19 +340,19 @@ export default async function GoogleConnectionPage({
               className="h-3 w-3 rounded-full bg-zinc-300"
             />
             <span className="font-serif text-3xl text-ink">
-              Aucun compte relié
+              {t("Aucun compte relié")}
             </span>
           </div>
           <p className="text-sm leading-relaxed text-zinc-600">
-            Relie le compte Google qui gère ta fiche établissement : Klarr y
-            lira ta note, tes avis, tes horaires et les recherches qui
-            t&apos;amènent des clients.
+            {t(
+              "Relie le compte Google qui gère ta fiche établissement : Klarr y lira ta note, tes avis, tes horaires et les recherches qui t'amènent des clients.",
+            )}
           </p>
           <a
             href={`/api/google/authorize?restaurant_id=${id}`}
             className="w-fit rounded-lg bg-brand-navy px-5 py-2.5 text-center text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover"
           >
-            Connecter mon compte Google Business Profile
+            {t("Connecter mon compte Google Business Profile")}
           </a>
         </div>
       ) : connection.location_name ? (
@@ -349,14 +362,16 @@ export default async function GoogleConnectionPage({
               aria-hidden="true"
               className="h-3 w-3 rounded-full bg-emerald-500"
             />
-            <span className="font-serif text-3xl text-ink">Fiche reliée</span>
+            <span className="font-serif text-3xl text-ink">
+              {t("Fiche reliée")}
+            </span>
           </div>
           <div className="flex flex-col gap-1 rounded-xl bg-white px-4 py-3">
             <span className="text-lg font-semibold text-ink">
               {connection.location_title}
             </span>
             <span className="text-sm text-zinc-500">
-              via {connection.google_email}
+              {t("via {email}", { email: connection.google_email })}
             </span>
           </div>
           <div className="flex flex-wrap items-center gap-3">
@@ -364,13 +379,13 @@ export default async function GoogleConnectionPage({
               href={`/dashboard/${id}/avis`}
               className="rounded-lg bg-brand-navy px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover"
             >
-              Voir mes avis
+              {t("Voir mes avis")}
             </Link>
             <Link
               href={`/dashboard/${id}/posts`}
               className="rounded-lg border border-zinc-200 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
             >
-              Publications Google
+              {t("Publications Google")}
             </Link>
           </div>
           <div className="flex flex-wrap items-center justify-between gap-3 border-t border-emerald-200/70 pt-4">
@@ -382,7 +397,7 @@ export default async function GoogleConnectionPage({
                 type="submit"
                 className="rounded-lg border border-zinc-200 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
               >
-                Changer de fiche
+                {t("Changer de fiche")}
               </button>
             </form>
             <form action={disconnectGoogle}>
@@ -391,7 +406,7 @@ export default async function GoogleConnectionPage({
                 type="submit"
                 className="text-sm font-medium text-red-600 hover:text-red-800"
               >
-                Déconnecter ce compte
+                {t("Déconnecter ce compte")}
               </button>
             </form>
           </div>
@@ -400,14 +415,13 @@ export default async function GoogleConnectionPage({
         <div className="flex flex-col gap-5 rounded-2xl border border-brand-orange/50 bg-white p-6 shadow-sm">
           <div className="flex flex-col gap-1">
             <span className="font-serif text-3xl text-ink">
-              Quelle fiche est la tienne ?
+              {t("Quelle fiche est la tienne ?")}
             </span>
             <span className="text-sm text-zinc-500">
-              Connecté en tant que{" "}
-              <span className="font-medium text-ink">
-                {connection.google_email}
-              </span>
-              . Choisis la fiche établissement de ce restaurant :
+              {t(
+                "Connecté en tant que {email}. Choisis la fiche établissement de ce restaurant :",
+                { email: connection.google_email },
+              )}
             </span>
           </div>
 
@@ -463,14 +477,14 @@ export default async function GoogleConnectionPage({
               type="submit"
               className="text-sm font-medium text-red-600 hover:text-red-800"
             >
-              Déconnecter ce compte
+              {t("Déconnecter ce compte")}
             </button>
           </form>
         </div>
       )}
 
       <section className="flex flex-col gap-4">
-        <TitreSection>Ce que Klarr en fait</TitreSection>
+        <TitreSection>{t("Ce que Klarr en fait")}</TitreSection>
         <div className="grid gap-3 sm:grid-cols-3 sm:gap-4">
           {destinations(true).map((destination) => (
             <Link
@@ -479,7 +493,7 @@ export default async function GoogleConnectionPage({
               className="group flex flex-col gap-1 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm transition-[border-color,transform,box-shadow] hover:-translate-y-px hover:border-ink hover:shadow-md"
             >
               <span className="flex items-center justify-between gap-2 text-base font-semibold text-ink">
-                {destination.titre}
+                {t(destination.titre)}
                 <span
                   aria-hidden="true"
                   className="text-zinc-400 transition-transform group-hover:translate-x-0.5 group-hover:text-ink"
@@ -488,7 +502,7 @@ export default async function GoogleConnectionPage({
                 </span>
               </span>
               <span className="text-sm leading-relaxed text-zinc-600">
-                {destination.texte}
+                {t(destination.texte)}
               </span>
             </Link>
           ))}

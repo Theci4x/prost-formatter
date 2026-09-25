@@ -4,18 +4,18 @@ import { useActionState, useState } from "react";
 import type { RestaurantFormState } from "@/app/dashboard/actions";
 import { JOURS_SEMAINE, type JourSemaine } from "@/types/restaurant";
 import type { Restaurant } from "@/types/restaurant";
+import type { Langue } from "@/lib/i18n/langues";
+import { nomJour } from "@/lib/i18n/jours";
+import { COMMUN, traducteur } from "@/lib/i18n/t";
+import { FICHE } from "@/lib/i18n/pages/fiche";
 
 const initialState: RestaurantFormState = { error: null };
 
-const JOUR_LABELS: Record<JourSemaine, string> = {
-  lundi: "Lundi",
-  mardi: "Mardi",
-  mercredi: "Mercredi",
-  jeudi: "Jeudi",
-  vendredi: "Vendredi",
-  samedi: "Samedi",
-  dimanche: "Dimanche",
-};
+/** « Lundi », « Monday », « 星期一 » : le nom du jour, dans l'ordre de la semaine. */
+function libelleJour(jour: JourSemaine, langue: Langue): string {
+  const nom = nomJour(JOURS_SEMAINE.indexOf(jour) + 1, langue);
+  return nom.charAt(0).toUpperCase() + nom.slice(1);
+}
 
 const CHAMP =
   "w-full rounded-lg border border-zinc-200 bg-zinc-50 px-3.5 py-2.5 text-sm text-ink outline-none transition-colors focus:border-brand-navy focus:bg-white";
@@ -92,6 +92,7 @@ export function RestaurantForm({
   action,
   restaurant,
   submitLabel,
+  langue,
 }: {
   action: (
     prevState: RestaurantFormState,
@@ -99,7 +100,12 @@ export function RestaurantForm({
   ) => Promise<RestaurantFormState>;
   restaurant?: Restaurant;
   submitLabel: string;
+  langue: Langue;
 }) {
+  const t = traducteur(langue, FICHE, COMMUN);
+  const JOUR_LABELS = Object.fromEntries(
+    JOURS_SEMAINE.map((jour) => [jour, libelleJour(jour, langue)]),
+  ) as Record<JourSemaine, string>;
   const [state, formAction, pending] = useActionState(action, initialState);
   const [fermes, setFermes] = useState<Record<JourSemaine, boolean>>(() => {
     const initial = {} as Record<JourSemaine, boolean>;
@@ -134,14 +140,17 @@ export function RestaurantForm({
           pourtant ce qu'on vient corriger le plus souvent. */}
       <section className="flex flex-col gap-5 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm sm:p-8">
         <div className="flex flex-col gap-1">
-          <h2 className="font-serif text-2xl text-ink">L&apos;établissement</h2>
+          <h2 className="font-serif text-2xl text-ink">
+            {t("L'établissement")}
+          </h2>
           <p className="text-sm text-zinc-500">
-            Ce que voient tes clients sur ton site vitrine et ta page de
-            réservation.
+            {t(
+              "Ce que voient tes clients sur ton site vitrine et ta page de réservation.",
+            )}
           </p>
         </div>
 
-        <Champ id="nom" libelle="Nom">
+        <Champ id="nom" libelle={t("Nom")}>
           <input
             id="nom"
             name="nom"
@@ -152,7 +161,7 @@ export function RestaurantForm({
           />
         </Champ>
 
-        <Champ id="adresse" libelle="Adresse">
+        <Champ id="adresse" libelle={t("Adresse")}>
           <input
             id="adresse"
             name="adresse"
@@ -164,7 +173,7 @@ export function RestaurantForm({
         </Champ>
 
         <div className="grid gap-5 sm:grid-cols-2">
-          <Champ id="telephone" libelle="Téléphone">
+          <Champ id="telephone" libelle={t("Téléphone")}>
             <input
               id="telephone"
               name="telephone"
@@ -173,7 +182,7 @@ export function RestaurantForm({
               className={CHAMP}
             />
           </Champ>
-          <Champ id="site_web" libelle="Site web">
+          <Champ id="site_web" libelle={t("Site web")}>
             <input
               id="site_web"
               name="site_web"
@@ -189,24 +198,21 @@ export function RestaurantForm({
           id="type_cuisine"
           libelle={
             <>
-              Type de cuisine{" "}
+              {t("Type de cuisine")}{" "}
               <span className="font-normal text-zinc-400">
-                (ce que cherchent Google et les assistants)
+                {t("(ce que cherchent Google et les assistants)")}
               </span>
             </>
           }
-          aide={
-            <>
-              Sépare par des virgules. C&apos;est ce qui permet d&apos;être
-              proposé sur « restaurant allemand près de République ».
-            </>
-          }
+          aide={t(
+            "Sépare par des virgules. C'est ce qui permet d'être proposé sur « restaurant allemand près de République ».",
+          )}
         >
           <input
             id="type_cuisine"
             name="type_cuisine"
             type="text"
-            placeholder="Allemande, brasserie"
+            placeholder={t("Allemande, brasserie")}
             defaultValue={restaurant?.type_cuisine ?? ""}
             className={CHAMP}
           />
@@ -214,12 +220,13 @@ export function RestaurantForm({
 
         <Champ
           id="description"
-          libelle="Description"
+          libelle={t("Description")}
           aide={
             <span className="flex flex-wrap justify-between gap-2">
               <span>
-                Ta cuisine, ton ambiance, ce qui te distingue — en quelques
-                phrases.
+                {t(
+                  "Ta cuisine, ton ambiance, ce qui te distingue — en quelques phrases.",
+                )}
               </span>
               <span
                 className={`tabular-nums ${
@@ -229,8 +236,11 @@ export function RestaurantForm({
                     : "text-zinc-400"
                 }`}
               >
-                {longueur} caractères · idéal {DESCRIPTION_MIN} à{" "}
-                {DESCRIPTION_MAX}
+                {t("{n} caractères · idéal {min} à {max}", {
+                  n: longueur,
+                  min: DESCRIPTION_MIN,
+                  max: DESCRIPTION_MAX,
+                })}
               </span>
             </span>
           }
@@ -250,15 +260,18 @@ export function RestaurantForm({
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <div className="flex flex-col gap-1">
             <h2 className="font-serif text-2xl text-ink">
-              Horaires d&apos;ouverture
+              {t("Horaires d'ouverture")}
             </h2>
             <p className="text-sm text-zinc-500">
-              Ceux de ta devanture, pas tes créneaux de réservation. Active
-              «&nbsp;Coupure&nbsp;» si tu fermes entre le déjeuner et le dîner.
+              {t(
+                "Ceux de ta devanture, pas tes créneaux de réservation. Active « Coupure » si tu fermes entre le déjeuner et le dîner.",
+              )}
             </p>
           </div>
           <span className="text-xs text-zinc-500">
-            {joursOuverts} jour{joursOuverts > 1 ? "s" : ""} sur 7
+            {t(joursOuverts > 1 ? "{n} jours sur 7" : "{n} jour sur 7", {
+              n: joursOuverts,
+            })}
           </span>
         </div>
 
@@ -280,7 +293,9 @@ export function RestaurantForm({
                 <div className="flex flex-wrap items-center gap-2">
                   <input
                     type="time"
-                    aria-label={`${JOUR_LABELS[jour]}, ouverture`}
+                    aria-label={t("{jour}, ouverture", {
+                      jour: JOUR_LABELS[jour],
+                    })}
                     name={`horaire_${jour}_ouverture`}
                     defaultValue={
                       restaurant?.horaires?.[jour]?.ouverture ?? "09:00"
@@ -288,10 +303,12 @@ export function RestaurantForm({
                     disabled={fermes[jour]}
                     className={HEURE}
                   />
-                  <span className="text-sm text-zinc-400">à</span>
+                  <span className="text-sm text-zinc-400">{t("à")}</span>
                   <input
                     type="time"
-                    aria-label={`${JOUR_LABELS[jour]}, fermeture`}
+                    aria-label={t("{jour}, fermeture", {
+                      jour: JOUR_LABELS[jour],
+                    })}
                     name={`horaire_${jour}_fermeture`}
                     defaultValue={
                       restaurant?.horaires?.[jour]?.fermeture ?? "22:00"
@@ -308,7 +325,7 @@ export function RestaurantForm({
                         setCoupures((prev) => ({ ...prev, [jour]: valeur }))
                       }
                     >
-                      Coupure
+                      {t("Coupure")}
                     </Pastille>
                     <Pastille
                       name={`horaire_${jour}_ferme`}
@@ -317,7 +334,7 @@ export function RestaurantForm({
                         setFermes((prev) => ({ ...prev, [jour]: valeur }))
                       }
                     >
-                      Fermé
+                      {t("Fermé")}
                     </Pastille>
                   </span>
                 </div>
@@ -329,7 +346,9 @@ export function RestaurantForm({
                   <div className="flex flex-wrap items-center gap-2">
                     <input
                       type="time"
-                      aria-label={`${JOUR_LABELS[jour]}, réouverture`}
+                      aria-label={t("{jour}, réouverture", {
+                        jour: JOUR_LABELS[jour],
+                      })}
                       name={`horaire_${jour}_ouverture2`}
                       defaultValue={
                         restaurant?.horaires?.[jour]?.seconde?.ouverture ??
@@ -337,10 +356,12 @@ export function RestaurantForm({
                       }
                       className={HEURE}
                     />
-                    <span className="text-sm text-zinc-400">à</span>
+                    <span className="text-sm text-zinc-400">{t("à")}</span>
                     <input
                       type="time"
-                      aria-label={`${JOUR_LABELS[jour]}, seconde fermeture`}
+                      aria-label={t("{jour}, seconde fermeture", {
+                        jour: JOUR_LABELS[jour],
+                      })}
                       name={`horaire_${jour}_fermeture2`}
                       defaultValue={
                         restaurant?.horaires?.[jour]?.seconde?.fermeture ??
@@ -348,7 +369,9 @@ export function RestaurantForm({
                       }
                       className={HEURE}
                     />
-                    <span className="text-xs text-zinc-500">le soir</span>
+                    <span className="text-xs text-zinc-500">
+                      {t("le soir")}
+                    </span>
                   </div>
                 )}
               </div>
@@ -366,13 +389,15 @@ export function RestaurantForm({
           disabled={pending}
           className="rounded-lg bg-brand-navy px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover disabled:opacity-50"
         >
-          {pending ? "Enregistrement..." : submitLabel}
+          {pending ? t("Enregistrement...") : submitLabel}
         </button>
         {state.error ? (
-          <p className="text-sm text-red-600">{state.error}</p>
+          <p className="text-sm text-red-600">{t(state.error)}</p>
         ) : (
           <p className="hidden text-sm text-zinc-500 sm:block">
-            Une fois enregistré, tu reviens à l&apos;accueil du tableau de bord.
+            {t(
+              "Une fois enregistré, tu reviens à l'accueil du tableau de bord.",
+            )}
           </p>
         )}
       </div>

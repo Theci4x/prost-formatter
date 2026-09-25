@@ -13,6 +13,9 @@ import { horairesRenseignes } from "@/lib/site/horaires";
 import { couvertureDe } from "@/lib/vitrine/couverture";
 import type { Restaurant } from "@/types/restaurant";
 import type { RestaurantPhoto } from "@/types/photo";
+import { langueUtilisateur } from "@/lib/i18n/langue";
+import { COMMUN, traducteur } from "@/lib/i18n/t";
+import { VITRINE_TDB } from "@/lib/i18n/pages/vitrine";
 
 export default async function VitrinePage({
   params,
@@ -51,6 +54,8 @@ export default async function VitrinePage({
     | null;
   if (!restaurant) notFound();
 
+  const langue = await langueUtilisateur();
+  const t = traducteur(langue, VITRINE_TDB, COMMUN);
   const photos = (photosResult.data ?? []) as RestaurantPhoto[];
   const couverture = couvertureDe(photos, restaurant.photo_couverture_id);
 
@@ -107,42 +112,43 @@ export default async function VitrinePage({
     <div className="flex flex-1 flex-col gap-8 px-6 py-8">
       <PageHeader
         icon={dashboardIcons.vitrine}
-        title={`Site vitrine — ${restaurant.nom}`}
+        title={t("Site vitrine — {nom}", { nom: restaurant.nom })}
         backHref="/dashboard"
       />
 
       <p className="max-w-4xl text-sm text-zinc-600">
-        Ton site, engendré de ce que tu as déjà rempli : tes photos, ta carte,
-        tes horaires, ton adresse, ta note Google. Rien de plus à saisir, rien à
-        mettre en page. C&apos;est l&apos;adresse à donner à Google, à ta fiche
-        d&apos;établissement et à ton Instagram — et c&apos;est exactement ce
-        qu&apos;un audit de visibilité reproche à un restaurant qui n&apos;en a
-        pas.
+        {t(
+          "Ton site, engendré de ce que tu as déjà rempli : tes photos, ta carte, tes horaires, ton adresse, ta note Google. Rien de plus à saisir, rien à mettre en page. C'est l'adresse à donner à Google, à ta fiche d'établissement et à ton Instagram — et c'est exactement ce qu'un audit de visibilité reproche à un restaurant qui n'en a pas.",
+        )}
       </p>
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <Compteur
-          valeur={publiee ? "En ligne" : "Hors ligne"}
+          valeur={publiee ? t("En ligne") : t("Hors ligne")}
           libelle={
-            publiee ? "ton site est ouvert" : "ton site n'est pas publié"
+            publiee ? t("ton site est ouvert") : t("ton site n'est pas publié")
           }
           accent={!publiee}
         />
         <Compteur
           valeur={`${faits}/${elements.length}`}
-          libelle="éléments du site remplis"
+          libelle={t("éléments du site remplis")}
           accent={faits < elements.length}
         />
         <Link href={`/dashboard/${id}/photos`} className="block">
           <Compteur
             valeur={photos.length}
-            libelle={`photo${photos.length > 1 ? "s" : ""} sur le site`}
+            libelle={t(
+              photos.length > 1 ? "photos sur le site" : "photo sur le site",
+            )}
           />
         </Link>
         <Link href={`/dashboard/${id}/menu`} className="block">
           <Compteur
             valeur={nombrePlats}
-            libelle={`plat${nombrePlats > 1 ? "s" : ""} à la carte`}
+            libelle={t(
+              nombrePlats > 1 ? "plats à la carte" : "plat à la carte",
+            )}
           />
         </Link>
       </div>
@@ -160,17 +166,18 @@ export default async function VitrinePage({
             {!slug ? (
               <>
                 <span className="font-serif text-2xl text-ink">
-                  Ouvre d&apos;abord ta page de réservation.
+                  {t("Ouvre d'abord ta page de réservation.")}
                 </span>
                 <p className="text-sm text-zinc-500">
-                  La vitrine partage son adresse : c&apos;est là que se décide
-                  le nom de ton site.
+                  {t(
+                    "La vitrine partage son adresse : c'est là que se décide le nom de ton site.",
+                  )}
                 </p>
                 <Link
                   href={`/dashboard/${id}/reservations/configuration`}
                   className="w-fit rounded-lg bg-brand-navy px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover"
                 >
-                  Ouvrir ma page de réservation
+                  {t("Ouvrir ma page de réservation")}
                 </Link>
               </>
             ) : (
@@ -184,8 +191,8 @@ export default async function VitrinePage({
                   />
                   <span className="font-serif text-2xl text-ink">
                     {publiee
-                      ? "Ton site est en ligne"
-                      : "Ton site n'est pas ouvert"}
+                      ? t("Ton site est en ligne")
+                      : t("Ton site n'est pas ouvert")}
                   </span>
                 </div>
                 {publiee ? (
@@ -202,15 +209,21 @@ export default async function VitrinePage({
                         coller sur la fiche Google, la bio Instagram, la
                         page Facebook. */}
                     <div className="flex flex-wrap items-center gap-2">
-                      <BoutonCopier texte={adresse!} />
+                      <BoutonCopier
+                        texte={adresse!}
+                        libelle={t("Copier l'adresse")}
+                        copie={t("Adresse copiée ✓")}
+                      />
                       <span className="text-xs text-zinc-500">
-                        À coller sur ta fiche Google et ton Instagram.
+                        {t("À coller sur ta fiche Google et ton Instagram.")}
                       </span>
                     </div>
                   </div>
                 ) : (
                   <span className="break-all text-sm text-zinc-500">
-                    Il recevra l&apos;adresse {adresse}
+                    {t("Il recevra l'adresse {adresse}", {
+                      adresse: adresse ?? "",
+                    })}
                   </span>
                 )}
                 <form action={basculerVitrine} className="w-fit">
@@ -228,7 +241,7 @@ export default async function VitrinePage({
                         : "rounded-lg bg-brand-navy px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover"
                     }
                   >
-                    {publiee ? "Retirer mon site" : "Publier mon site"}
+                    {publiee ? t("Retirer mon site") : t("Publier mon site")}
                   </button>
                 </form>
               </>
@@ -242,7 +255,7 @@ export default async function VitrinePage({
             className="group flex flex-col gap-1 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm transition-[border-color,box-shadow] hover:border-ink hover:shadow-md"
           >
             <span className="flex items-center gap-2 font-semibold text-ink">
-              Tu as déjà un site ?
+              {t("Tu as déjà un site ?")}
               <span
                 aria-hidden="true"
                 className="text-zinc-400 transition-transform group-hover:translate-x-0.5 group-hover:text-ink"
@@ -251,18 +264,21 @@ export default async function VitrinePage({
               </span>
             </span>
             <span className="text-sm text-zinc-500">
-              Ajoute-lui un bouton « Réserver » qui ouvre ta réservation Klarr,
-              sans quitter ton site.
+              {t(
+                "Ajoute-lui un bouton « Réserver » qui ouvre ta réservation Klarr, sans quitter ton site.",
+              )}
             </span>
           </Link>
 
           {/* Ce qui est fait, ce qui reste : une barre et une liste. */}
           <section className="flex flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm">
             <div className="flex items-baseline justify-between gap-4">
-              <h2 className="font-serif text-2xl text-ink">Ton site</h2>
+              <h2 className="font-serif text-2xl text-ink">{t("Ton site")}</h2>
               <span className="text-sm text-zinc-500">
-                <strong className="font-semibold text-ink">{faits}</strong> sur{" "}
-                {elements.length}
+                {t("{faits} sur {total}", {
+                  faits,
+                  total: elements.length,
+                })}
               </span>
             </div>
             <div
@@ -295,7 +311,7 @@ export default async function VitrinePage({
                       {e.fait ? "✓" : ""}
                     </span>
                     <span className={e.fait ? "text-ink" : "text-zinc-500"}>
-                      {e.texte}
+                      {t(e.texte)}
                     </span>
                   </span>
                   <Link
@@ -304,21 +320,21 @@ export default async function VitrinePage({
                       e.fait ? "text-zinc-400" : "text-brand-orange-dark"
                     }`}
                   >
-                    {e.fait ? "Modifier" : "Ajouter"}
+                    {e.fait ? t("Modifier") : t("Ajouter")}
                   </Link>
                 </li>
               ))}
             </ul>
             {couverture.photo && !couverture.choisie && (
               <p className="rounded-lg bg-brand-cream px-3 py-2 text-xs leading-relaxed text-zinc-600">
-                La couverture est la première de tes photos, faute de choix :
-                une salle pleine ou la façade feront plus d&apos;effet
-                qu&apos;un plat.{" "}
+                {t(
+                  "La couverture est la première de tes photos, faute de choix : une salle pleine ou la façade feront plus d'effet qu'un plat.",
+                )}{" "}
                 <Link
                   href={`/dashboard/${id}/photos`}
                   className="font-semibold text-brand-orange-dark hover:underline"
                 >
-                  En choisir une
+                  {t("En choisir une")}
                 </Link>
               </p>
             )}
@@ -330,10 +346,10 @@ export default async function VitrinePage({
             la couverture, comme le site l'ouvrira. */}
         <section className="flex min-w-0 flex-col gap-3">
           <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
-            <h2 className="font-serif text-2xl text-ink">Aperçu</h2>
+            <h2 className="font-serif text-2xl text-ink">{t("Aperçu")}</h2>
             {publiee && slug && (
               <span className="text-xs text-zinc-500">
-                Ton site tel que tes clients le voient, en direct.
+                {t("Ton site tel que tes clients le voient, en direct.")}
               </span>
             )}
           </div>
@@ -343,7 +359,9 @@ export default async function VitrinePage({
                 <div className="relative h-[640px] overflow-hidden">
                   <iframe
                     src={`/restaurant/${slug}`}
-                    title={`Aperçu du site de ${restaurant.nom}`}
+                    title={t("Aperçu du site de {nom}", {
+                      nom: restaurant.nom,
+                    })}
                     loading="lazy"
                     className="absolute left-0 top-0 h-[200%] w-[200%] origin-top-left scale-50 border-0"
                   />
@@ -354,13 +372,17 @@ export default async function VitrinePage({
                   <div className="relative h-[560px] w-[280px] overflow-hidden rounded-[1.5rem] bg-white">
                     <iframe
                       src={`/restaurant/${slug}`}
-                      title={`Aperçu mobile du site de ${restaurant.nom}`}
+                      title={t("Aperçu mobile du site de {nom}", {
+                        nom: restaurant.nom,
+                      })}
                       loading="lazy"
                       className="absolute left-0 top-0 h-[140%] w-[140%] origin-top-left scale-[0.7143] border-0"
                     />
                   </div>
                 </div>
-                <span className="text-xs text-zinc-500">Sur téléphone</span>
+                <span className="text-xs text-zinc-500">
+                  {t("Sur téléphone")}
+                </span>
               </div>
             </div>
           ) : couverture.photo ? (
@@ -379,7 +401,7 @@ export default async function VitrinePage({
                     {restaurant.nom}
                   </span>
                   <span className="w-fit rounded-full bg-white px-5 py-2 text-sm font-semibold text-ink">
-                    Réserver une table
+                    {t("Réserver une table")}
                   </span>
                 </div>
               </div>
@@ -390,20 +412,21 @@ export default async function VitrinePage({
                 {restaurant.nom}
               </span>
               <span className="text-sm text-zinc-500">
-                Pour l&apos;instant, ton site s&apos;ouvre sur un bandeau vide.
+                {t("Pour l'instant, ton site s'ouvre sur un bandeau vide.")}
               </span>
               <Link
                 href={`/dashboard/${id}/photos`}
                 className="mt-2 rounded-lg bg-brand-navy px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover"
               >
-                Ajouter une photo de couverture
+                {t("Ajouter une photo de couverture")}
               </Link>
             </div>
           )}
           {!publiee && slug && (
             <p className="text-xs text-zinc-500">
-              L&apos;aperçu complet, en direct, apparaît ici dès que le site est
-              publié.
+              {t(
+                "L'aperçu complet, en direct, apparaît ici dès que le site est publié.",
+              )}
             </p>
           )}
         </section>

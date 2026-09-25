@@ -7,6 +7,9 @@ import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
 import { Compteur, TitreSection } from "@/components/dashboard/Compteur";
 import { JOURS_SEMAINE, type Plage, type Restaurant } from "@/types/restaurant";
 import { exiger } from "@/lib/equipe/roles";
+import { langueUtilisateur } from "@/lib/i18n/langue";
+import { COMMUN, traducteur } from "@/lib/i18n/t";
+import { FICHE } from "@/lib/i18n/pages/fiche";
 
 /** La durée d'une plage en minutes ; une fermeture après minuit compte le lendemain. */
 function minutes(plage: Plage): number {
@@ -61,6 +64,8 @@ export default async function EditRestaurantPage({
   // Ce qui manque se voit avant de lire le formulaire : une fiche sans
   // téléphone ni description se remplit en deux minutes, encore faut-il
   // savoir qu'elle est incomplète.
+  const langue = await langueUtilisateur();
+  const t = traducteur(langue, FICHE, COMMUN);
   const champs = [
     restaurant.nom,
     restaurant.adresse,
@@ -90,36 +95,44 @@ export default async function EditRestaurantPage({
       <div className="flex flex-col gap-3">
         <PageHeader
           icon={dashboardIcons.edit}
-          title={`Modifier ${restaurant.nom}`}
+          title={t("Modifier {nom}", { nom: restaurant.nom })}
         />
         <p className="max-w-4xl text-sm text-zinc-600">
-          La fiche de ta maison : ce qu&apos;elle est, où elle se trouve et
-          quand elle ouvre. Klarr la reprend partout — site vitrine, page de
-          réservation, questions posées aux assistants IA.
+          {t(
+            "La fiche de ta maison : ce qu'elle est, où elle se trouve et quand elle ouvre. Klarr la reprend partout — site vitrine, page de réservation, questions posées aux assistants IA.",
+          )}
         </p>
       </div>
 
       <div className="grid grid-cols-3 gap-3 sm:gap-4">
         <Compteur
           valeur={`${remplis}/${champs.length}`}
-          libelle="champs de la fiche remplis"
+          libelle={t("champs de la fiche remplis")}
           accent={remplis < champs.length}
         />
         <Compteur
           valeur={jours.length}
-          libelle={`jour${jours.length > 1 ? "s" : ""} d'ouverture par semaine`}
+          libelle={t(
+            jours.length > 1
+              ? "jours d'ouverture par semaine"
+              : "jour d'ouverture par semaine",
+          )}
         />
-        <Compteur valeur={`${heures} h`} libelle="d'ouverture par semaine" />
+        <Compteur
+          valeur={t("{n} h", { n: heures })}
+          libelle={t("d'ouverture par semaine")}
+        />
       </div>
 
       <RestaurantForm
         action={updateRestaurant}
         restaurant={restaurant}
-        submitLabel="Enregistrer"
+        submitLabel={t("Enregistrer")}
+        langue={langue}
       />
 
       <section className="flex flex-col gap-4">
-        <TitreSection>Où ces informations apparaissent</TitreSection>
+        <TitreSection>{t("Où ces informations apparaissent")}</TitreSection>
         <div className="grid gap-3 sm:grid-cols-3 sm:gap-4">
           {DESTINATIONS.map((destination) => (
             <Link
@@ -128,7 +141,7 @@ export default async function EditRestaurantPage({
               className="group flex flex-col gap-1 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm transition-[border-color,transform,box-shadow] hover:-translate-y-px hover:border-ink hover:shadow-md"
             >
               <span className="flex items-center justify-between gap-2 text-base font-semibold text-ink">
-                {destination.titre}
+                {t(destination.titre)}
                 <span
                   aria-hidden="true"
                   className="text-zinc-400 transition-transform group-hover:translate-x-0.5 group-hover:text-ink"
@@ -137,7 +150,7 @@ export default async function EditRestaurantPage({
                 </span>
               </span>
               <span className="text-sm leading-relaxed text-zinc-600">
-                {destination.texte}
+                {t(destination.texte)}
               </span>
             </Link>
           ))}

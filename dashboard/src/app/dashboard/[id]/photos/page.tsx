@@ -12,6 +12,9 @@ import type { RestaurantPhoto } from "@/types/photo";
 import { exiger } from "@/lib/equipe/roles";
 import { exigerModule } from "@/lib/abonnement/acces";
 import { couvertureDe } from "@/lib/vitrine/couverture";
+import { langueUtilisateur } from "@/lib/i18n/langue";
+import { COMMUN, traducteur } from "@/lib/i18n/t";
+import { PHOTOS } from "@/lib/i18n/pages/photos";
 
 export default async function PhotosPage({
   params,
@@ -58,6 +61,8 @@ export default async function PhotosPage({
     ]),
   );
 
+  const langue = await langueUtilisateur();
+  const t = traducteur(langue, PHOTOS, COMMUN);
   const photos = (photosData ?? []) as RestaurantPhoto[];
   // Colonne récente : lue avec un défaut, pour qu'un déploiement en
   // avance sur la base n'emporte pas toute la page.
@@ -75,9 +80,14 @@ export default async function PhotosPage({
     photos.some((p) => p.espace_id === espaceId),
   );
   const filtres = [
-    { cle: "", libelle: `Toutes · ${photos.length}` },
+    { cle: "", libelle: t("Toutes · {n}", { n: photos.length }) },
     ...(sansLegende > 0
-      ? [{ cle: "sans-legende", libelle: `Sans légende · ${sansLegende}` }]
+      ? [
+          {
+            cle: "sans-legende",
+            libelle: t("Sans légende · {n}", { n: sansLegende }),
+          },
+        ]
       : []),
     ...sallesAvecPhotos.map(([espaceId, nom]) => ({
       cle: `salle-${espaceId}`,
@@ -97,32 +107,38 @@ export default async function PhotosPage({
     <div className="flex flex-1 flex-col gap-8 px-6 py-8">
       <PageHeader
         icon={dashboardIcons.photos}
-        title={`Photos — ${restaurant.nom}`}
+        title={t("Photos — {nom}", { nom: restaurant.nom })}
       />
 
       <p className="max-w-4xl text-sm text-zinc-600">
-        Tes photos illustrent ton site vitrine et ta page de réservation. Une
-        légende dit ce qu&apos;on voit — « la terrasse l&apos;été », « le
-        tartare » : elle aide tes clients, et Google comprend mieux ce que
-        montre l&apos;image.
+        {t(
+          "Tes photos illustrent ton site vitrine et ta page de réservation. Une légende dit ce qu'on voit — « la terrasse l'été », « le tartare » : elle aide tes clients, et Google comprend mieux ce que montre l'image.",
+        )}
       </p>
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <Compteur
           valeur={photos.length}
-          libelle={`photo${photos.length > 1 ? "s" : ""}`}
+          libelle={t(photos.length > 1 ? "photos" : "photo")}
         />
-        <Compteur valeur={photos.length - sansLegende} libelle="avec légende" />
+        <Compteur
+          valeur={photos.length - sansLegende}
+          libelle={t("avec légende")}
+        />
         <Link href={`/dashboard/${id}/photos?filtre=sans-legende#photos`}>
           <Compteur
             valeur={sansLegende}
-            libelle="sans légende"
+            libelle={t("sans légende")}
             accent={sansLegende > 0}
           />
         </Link>
         <Compteur
           valeur={deSalle}
-          libelle={`photo${deSalle > 1 ? "s" : ""} de salle, montrée${deSalle > 1 ? "s" : ""} à la réservation`}
+          libelle={t(
+            deSalle > 1
+              ? "photos de salle, montrées à la réservation"
+              : "photo de salle, montrée à la réservation",
+          )}
         />
       </div>
 
@@ -132,14 +148,14 @@ export default async function PhotosPage({
         <div className="flex flex-col gap-3">
           <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
             <h2 className="font-serif text-2xl text-ink">
-              Photo de couverture
+              {t("Photo de couverture")}
             </h2>
             <p className="text-xs text-zinc-500">
               {couverture.photo
                 ? couverture.choisie
-                  ? "Choisie par toi."
-                  : "La première de tes photos, faute de choix."
-                : "Aucune pour l'instant."}
+                  ? t("Choisie par toi.")
+                  : t("La première de tes photos, faute de choix.")
+                : t("Aucune pour l'instant.")}
             </p>
           </div>
           {couverture.photo ? (
@@ -162,22 +178,25 @@ export default async function PhotosPage({
             </div>
           )}
           <p className="text-sm text-zinc-500">
-            Elle ouvre ton site, en plein écran, avant qu&apos;on lise quoi que
-            ce soit : choisis la salle pleine ou la façade plutôt que le plat
-            isolé. Pour en changer, « Mettre en couverture » sous n&apos;importe
-            quelle photo.
+            {t(
+              "Elle ouvre ton site, en plein écran, avant qu'on lise quoi que ce soit : choisis la salle pleine ou la façade plutôt que le plat isolé. Pour en changer, « Mettre en couverture » sous n'importe quelle photo.",
+            )}
           </p>
         </div>
 
         <div className="flex flex-col gap-3">
-          <h2 className="font-serif text-2xl text-ink">Ajouter une photo</h2>
-          <AjoutPhoto restaurantId={id} />
+          <h2 className="font-serif text-2xl text-ink">
+            {t("Ajouter une photo")}
+          </h2>
+          <AjoutPhoto restaurantId={id} langue={langue} />
         </div>
       </section>
 
       <section id="photos" className="flex scroll-mt-8 flex-col gap-4">
         <div className="flex flex-wrap items-baseline justify-between gap-3">
-          <h2 className="font-serif text-2xl text-ink">Toutes tes photos</h2>
+          <h2 className="font-serif text-2xl text-ink">
+            {t("Toutes tes photos")}
+          </h2>
           {filtres.length > 1 && (
             <nav className="flex flex-wrap gap-2">
               {filtres.map((f) => (
@@ -199,8 +218,9 @@ export default async function PhotosPage({
         </div>
         {photos.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-zinc-300 bg-white px-6 py-12 text-center text-sm text-zinc-500">
-            Aucune photo pour le moment. La première que tu ajoutes ouvrira ton
-            site.
+            {t(
+              "Aucune photo pour le moment. La première que tu ajoutes ouvrira ton site.",
+            )}
           </div>
         ) : (
           <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
@@ -233,7 +253,7 @@ export default async function PhotosPage({
                           chercher. */}
                       {estCouverture && (
                         <span className="rounded-full bg-brand-orange px-2.5 py-1 text-xs font-semibold text-white shadow-sm">
-                          Couverture
+                          {t("Couverture")}
                         </span>
                       )}
                       {salle && (
@@ -248,7 +268,8 @@ export default async function PhotosPage({
                       photoId={photo.id}
                       restaurantId={id}
                       legende={photo.legende ?? null}
-                      placeholder="Ajouter une légende…"
+                      placeholder={t("Ajouter une légende…")}
+                      langue={langue}
                     />
                     {/* Les actions visibles sans survol : sur un
                         téléphone, un bouton qui n'apparaît qu'au survol
@@ -256,7 +277,7 @@ export default async function PhotosPage({
                     <div className="mt-auto flex items-center justify-between gap-2">
                       {estCouverture && couverture.choisie ? (
                         <span className="text-xs text-zinc-400">
-                          Ouvre ton site
+                          {t("Ouvre ton site")}
                         </span>
                       ) : (
                         <form action={definirCouverture}>
@@ -274,7 +295,7 @@ export default async function PhotosPage({
                             type="submit"
                             className="text-xs font-semibold text-brand-orange-dark hover:underline"
                           >
-                            Mettre en couverture
+                            {t("Mettre en couverture")}
                           </button>
                         </form>
                       )}
@@ -288,10 +309,10 @@ export default async function PhotosPage({
                         />
                         <button
                           type="submit"
-                          aria-label="Supprimer la photo"
+                          aria-label={t("Supprimer la photo")}
                           className="rounded-lg px-2 py-1 text-xs font-medium text-zinc-400 transition-colors hover:bg-red-50 hover:text-red-600"
                         >
-                          Supprimer
+                          {t("Supprimer")}
                         </button>
                       </form>
                     </div>

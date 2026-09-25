@@ -16,6 +16,11 @@ import type { Restaurant } from "@/types/restaurant";
 import type { RestaurantPhoto } from "@/types/photo";
 import { exiger } from "@/lib/equipe/roles";
 import { exigerModule } from "@/lib/abonnement/acces";
+import { langueUtilisateur } from "@/lib/i18n/langue";
+import type { Langue } from "@/lib/i18n/langues";
+import { localeDe } from "@/lib/i18n/seo";
+import { COMMUN, traducteur } from "@/lib/i18n/t";
+import { POSTS } from "@/lib/i18n/pages/posts";
 
 type Post = {
   id: string;
@@ -31,16 +36,16 @@ type Post = {
 };
 
 /** « 12 oct. » : la date de la prochaine publication, pour une tuile. */
-function jourCourt(iso: string): string {
-  return new Date(iso).toLocaleDateString("fr-FR", {
+function jourCourt(iso: string, langue: Langue): string {
+  return new Date(iso).toLocaleDateString(localeDe(langue), {
     day: "numeric",
     month: "short",
     timeZone: "Europe/Paris",
   });
 }
 
-function quand(iso: string): string {
-  return new Date(iso).toLocaleString("fr-FR", {
+function quand(iso: string, langue: Langue): string {
+  return new Date(iso).toLocaleString(localeDe(langue), {
     weekday: "long",
     day: "numeric",
     month: "long",
@@ -108,6 +113,8 @@ export default async function PostsPage({
   const restaurant = restaurantData as Restaurant | null;
   if (!restaurant) notFound();
 
+  const langue = await langueUtilisateur();
+  const t = traducteur(langue, POSTS, COMMUN);
   const posts = (postsData ?? []) as Post[];
   const photos = (photosData ?? []) as RestaurantPhoto[];
   const pistes = suggestions(
@@ -139,33 +146,34 @@ export default async function PostsPage({
       <div className="flex flex-col gap-3">
         <PageHeader
           icon={dashboardIcons.google}
-          title={`Publications Google — ${restaurant.nom}`}
+          title={t("Publications Google — {nom}", { nom: restaurant.nom })}
           backHref={`/dashboard/${id}/google`}
         />
         <p className="max-w-4xl text-sm text-zinc-600">
-          Une publication vit une semaine sur ta fiche Google, puis disparaît.
-          L&apos;intérêt est d&apos;en avoir toujours une : écris-les à
-          l&apos;avance, le lundi matin par exemple.
+          {t(
+            "Une publication vit une semaine sur ta fiche Google, puis disparaît. L'intérêt est d'en avoir toujours une : écris-les à l'avance, le lundi matin par exemple.",
+          )}
         </p>
       </div>
 
       {assiste ? (
         <div className="flex flex-col gap-2 rounded-2xl border border-brand-orange/30 bg-brand-orange-soft px-5 py-4 text-sm leading-relaxed text-ink">
           <strong>
-            Publication assistée : Klarr prépare, tu publies en 30 secondes.
+            {t(
+              "Publication assistée : Klarr prépare, tu publies en 30 secondes.",
+            )}
           </strong>
           <span>
-            Écris et programme tes publications ici. Le jour venu, Klarr te
-            prévient sur ton téléphone (vers 11 h) : tu copies le texte, tu
-            ouvres ta fiche Google, tu colles, c&apos;est publié. Le jour où
-            Google ouvre la publication automatique à Klarr, elles partiront
-            toutes seules — rien à ressaisir.
+            {t(
+              "Écris et programme tes publications ici. Le jour venu, Klarr te prévient sur ton téléphone (vers 11 h) : tu copies le texte, tu ouvres ta fiche Google, tu colles, c'est publié. Le jour où Google ouvre la publication automatique à Klarr, elles partiront toutes seules — rien à ressaisir.",
+            )}
           </span>
         </div>
       ) : (
         <p className="rounded-2xl border border-zinc-200/70 bg-white px-5 py-4 text-sm leading-relaxed text-zinc-600">
-          Une publication paraît au premier passage de la nuit suivant la date
-          choisie, pas à la minute près.
+          {t(
+            "Une publication paraît au premier passage de la nuit suivant la date choisie, pas à la minute près.",
+          )}
         </p>
       )}
 
@@ -173,26 +181,24 @@ export default async function PostsPage({
       {aPublier.length > 0 && (
         <section className="flex flex-col gap-4" id="a-publier">
           <TitreSection
-            aside={`${aPublier.length} publication${aPublier.length > 1 ? "s" : ""}`}
+            aside={t(
+              aPublier.length > 1 ? "{n} publications" : "{n} publication",
+              { n: aPublier.length },
+            )}
           >
-            À publier maintenant
+            {t("À publier maintenant")}
           </TitreSection>
           <ol className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-zinc-600">
-            <li>
-              <strong className="text-ink">1.</strong> Copie le texte
-            </li>
-            <li>
-              <strong className="text-ink">2.</strong> Ouvre ta fiche Google,
-              puis « Ajouter une mise à jour »
-            </li>
-            <li>
-              <strong className="text-ink">3.</strong> Colle, ajoute la photo,
-              publie
-            </li>
-            <li>
-              <strong className="text-ink">4.</strong> Reviens cliquer «
-              C&apos;est publié »
-            </li>
+            {[
+              "Copie le texte",
+              "Ouvre ta fiche Google, puis « Ajouter une mise à jour »",
+              "Colle, ajoute la photo, publie",
+              "Reviens cliquer « C'est publié »",
+            ].map((etape, i) => (
+              <li key={etape}>
+                <strong className="text-ink">{i + 1}.</strong> {t(etape)}
+              </li>
+            ))}
           </ol>
           <ul className="flex flex-col gap-4">
             {aPublier.map((post) => {
@@ -204,22 +210,21 @@ export default async function PostsPage({
                 >
                   <div className="flex min-w-0 flex-col gap-3">
                     <span className="w-fit rounded-full bg-brand-orange-soft px-2.5 py-0.5 text-xs font-semibold text-brand-orange-dark">
-                      Prévue {quand(post.publier_le)}
+                      {t("Prévue {date}", {
+                        date: quand(post.publier_le, langue),
+                      })}
                     </span>
                     <p className="whitespace-pre-wrap rounded-xl bg-zinc-50 px-4 py-3 text-[15px] leading-relaxed text-ink">
                       {post.texte}
                     </p>
                     {post.bouton && (
                       <p className="text-sm text-zinc-600">
-                        Bouton à ajouter : «{" "}
-                        <strong className="text-ink">
-                          {LIBELLE_BOUTON[post.bouton]}
-                        </strong>{" "}
-                        »
+                        {t("Bouton à ajouter : « {bouton} »", {
+                          bouton: t(LIBELLE_BOUTON[post.bouton]),
+                        })}
                         {post.bouton_url && (
                           <>
-                            {" "}
-                            avec le lien{" "}
+                            {t(" avec le lien ")}
                             <span className="break-all font-mono text-xs text-ink">
                               {post.bouton_url}
                             </span>
@@ -239,8 +244,8 @@ export default async function PostsPage({
                     )}
                     <BoutonCopier
                       texte={post.texte}
-                      libelle="Copier le texte"
-                      copie="Texte copié ✓"
+                      libelle={t("Copier le texte")}
+                      copie={t("Texte copié ✓")}
                     />
                     <a
                       href="https://business.google.com/"
@@ -248,7 +253,7 @@ export default async function PostsPage({
                       rel="noopener noreferrer"
                       className="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-center text-sm font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
                     >
-                      Ouvrir ma fiche Google ↗
+                      {t("Ouvrir ma fiche Google ↗")}
                     </a>
                     {photo && (
                       <a
@@ -258,7 +263,7 @@ export default async function PostsPage({
                         rel="noopener noreferrer"
                         className="text-center text-xs font-medium text-zinc-500 hover:text-brand-navy"
                       >
-                        Télécharger la photo
+                        {t("Télécharger la photo")}
                       </a>
                     )}
                     <form action={marquerPublie}>
@@ -268,7 +273,7 @@ export default async function PostsPage({
                         type="submit"
                         className="w-full rounded-lg bg-brand-navy px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover"
                       >
-                        C&apos;est publié ✓
+                        {t("C'est publié ✓")}
                       </button>
                     </form>
                   </div>
@@ -284,29 +289,38 @@ export default async function PostsPage({
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <Compteur
           valeur={programmees}
-          libelle={`publication${programmees > 1 ? "s" : ""} programmée${programmees > 1 ? "s" : ""}`}
+          libelle={t(
+            programmees > 1
+              ? "publications programmées"
+              : "publication programmée",
+          )}
           accent={programmees === 0}
         />
         <Compteur
-          valeur={prochaine ? jourCourt(prochaine) : "—"}
-          libelle={prochaine ? "prochaine publication" : "rien de prévu"}
+          valeur={prochaine ? jourCourt(prochaine, langue) : "—"}
+          libelle={prochaine ? t("prochaine publication") : t("rien de prévu")}
         />
         <Compteur
           valeur={publiees}
-          libelle={`publiée${publiees > 1 ? "s" : ""} sur ta fiche`}
+          libelle={t(
+            publiees > 1 ? "publiées sur ta fiche" : "publiée sur ta fiche",
+          )}
         />
         <Compteur
           valeur={assiste ? aPublier.length : enEchec}
-          libelle={assiste ? "à publier maintenant" : "en échec, à revoir"}
+          libelle={
+            assiste ? t("à publier maintenant") : t("en échec, à revoir")
+          }
           accent={assiste ? aPublier.length > 0 : enEchec > 0}
         />
       </div>
 
       <div className="grid items-start gap-8 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
         <section className="flex min-w-0 flex-col gap-4">
-          <TitreSection>Nouvelle publication</TitreSection>
+          <TitreSection>{t("Nouvelle publication")}</TitreSection>
           <FormulairePost
             restaurantId={id}
+            langue={langue}
             photos={photos}
             suggestions={pistes}
           />
@@ -314,15 +328,21 @@ export default async function PostsPage({
 
         <section className="flex min-w-0 flex-col gap-4">
           <TitreSection
-            aside={posts.length > 0 ? `${posts.length} au total` : undefined}
+            aside={
+              posts.length > 0
+                ? t("{n} au total", { n: posts.length })
+                : undefined
+            }
           >
-            Tes publications
+            {t("Tes publications")}
           </TitreSection>
           {posts.length === 0 ? (
             <p className="rounded-2xl border border-dashed border-zinc-300 bg-white/60 px-6 py-12 text-center text-sm text-zinc-600">
-              Aucune publication pour l&apos;instant.
+              {t("Aucune publication pour l'instant.")}
               {pistes.length > 0 &&
-                " Pars d'un plat ou d'un espace dans « Partir de… » : le texte s'écrit presque seul."}
+                t(
+                  " Pars d'un plat ou d'un espace dans « Partir de… » : le texte s'écrit presque seul.",
+                )}
             </p>
           ) : (
             <ul className="flex flex-col gap-3">
@@ -340,14 +360,24 @@ export default async function PostsPage({
                       }`}
                     >
                       {post.statut === "publie"
-                        ? `Publiée ${post.publie_le ? quand(post.publie_le) : ""}`
+                        ? t("Publiée {date}", {
+                            date: post.publie_le
+                              ? quand(post.publie_le, langue)
+                              : "",
+                          })
                         : assiste && post.publier_le <= maintenant
-                          ? `À publier — prévue ${quand(post.publier_le)}`
-                          : `Programmée ${quand(post.publier_le)}`}
+                          ? t("À publier — prévue {date}", {
+                              date: quand(post.publier_le, langue),
+                            })
+                          : t("Programmée {date}", {
+                              date: quand(post.publier_le, langue),
+                            })}
                     </span>
                     {post.bouton && (
                       <span className="text-xs text-zinc-500">
-                        Bouton : {LIBELLE_BOUTON[post.bouton]}
+                        {t("Bouton : {bouton}", {
+                          bouton: t(LIBELLE_BOUTON[post.bouton]),
+                        })}
                       </span>
                     )}
                   </div>
@@ -358,7 +388,9 @@ export default async function PostsPage({
 
                   {!assiste && post.derniere_erreur && (
                     <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-                      Dernier essai : {post.derniere_erreur}
+                      {t("Dernier essai : {erreur}", {
+                        erreur: post.derniere_erreur,
+                      })}
                     </p>
                   )}
 
@@ -373,7 +405,7 @@ export default async function PostsPage({
                         type="submit"
                         className="text-sm font-medium text-zinc-500 transition-colors hover:text-red-600"
                       >
-                        Annuler cette publication
+                        {t("Annuler cette publication")}
                       </button>
                     </form>
                   )}

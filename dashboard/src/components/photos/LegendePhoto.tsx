@@ -2,6 +2,9 @@
 
 import { useState, useTransition } from "react";
 import { legenderPhoto } from "@/app/dashboard/[id]/photos/actions";
+import type { Langue } from "@/lib/i18n/langues";
+import { traducteur } from "@/lib/i18n/t";
+import { PHOTOS } from "@/lib/i18n/pages/photos";
 
 /**
  * La légende d'une photo, modifiable sous la vignette.
@@ -14,13 +17,16 @@ export function LegendePhoto({
   photoId,
   restaurantId,
   legende,
-  placeholder = "Salle speakeasy, au sous-sol",
+  placeholder,
+  langue = "fr",
 }: {
   photoId: string;
   restaurantId: string;
   legende: string | null;
   placeholder?: string;
+  langue?: Langue;
 }) {
+  const t = traducteur(langue, PHOTOS);
   const [enCours, startTransition] = useTransition();
   const [enregistre, setEnregistre] = useState(false);
 
@@ -37,13 +43,13 @@ export function LegendePhoto({
       <input type="hidden" name="id" value={photoId} />
       <input type="hidden" name="restaurant_id" value={restaurantId} />
       <label className="sr-only" htmlFor={`legende-${photoId}`}>
-        Légende de cette photo
+        {t("Légende de cette photo")}
       </label>
       <input
         id={`legende-${photoId}`}
         name="legende"
         defaultValue={legende ?? ""}
-        placeholder={placeholder}
+        placeholder={placeholder ?? t("Salle speakeasy, au sous-sol")}
         maxLength={80}
         onChange={() => setEnregistre(false)}
         className="min-w-0 flex-1 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm outline-none transition-colors focus:border-brand-navy focus:bg-white"
@@ -57,7 +63,7 @@ export function LegendePhoto({
             : "border-zinc-200 text-zinc-600 hover:border-brand-navy hover:text-brand-navy"
         }`}
       >
-        {enCours ? "…" : enregistre ? "Enregistré" : "OK"}
+        {enCours ? "…" : enregistre ? t("Enregistré") : "OK"}
       </button>
     </form>
   );

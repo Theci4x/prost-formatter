@@ -4,6 +4,9 @@ import { useRef, useState, useTransition } from "react";
 import { uploadPhoto } from "@/app/dashboard/[id]/photos/actions";
 import { GALERIE, messageJuste, messageTropPetite } from "@/lib/images/formats";
 import { poidsLisible, preparerPhoto } from "@/lib/images/preparer";
+import type { Langue } from "@/lib/i18n/langues";
+import { traducteur } from "@/lib/i18n/t";
+import { PHOTOS } from "@/lib/i18n/pages/photos";
 
 // Même plafond que côté serveur : on refuse avant d'occuper la connexion.
 // Il ne sert plus qu'au cas où le navigateur n'a pas su réencoder.
@@ -20,7 +23,14 @@ const TAILLE_MAX = 4 * 1024 * 1024;
  * qui supprime au passage le refus à 4 Mo qui obligeait le restaurateur
  * à aller la redimensionner ailleurs.
  */
-export function AjoutPhoto({ restaurantId }: { restaurantId: string }) {
+export function AjoutPhoto({
+  restaurantId,
+  langue,
+}: {
+  restaurantId: string;
+  langue: Langue;
+}) {
+  const t = traducteur(langue, PHOTOS);
   const [erreur, setErreur] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
   const [enCours, startTransition] = useTransition();
@@ -35,7 +45,7 @@ export function AjoutPhoto({ restaurantId }: { restaurantId: string }) {
     setNote(null);
     startTransition(async () => {
       if (!choisi || choisi.size === 0) {
-        setErreur("Choisis une photo.");
+        setErreur(t("Choisis une photo."));
         return;
       }
 
@@ -43,14 +53,19 @@ export function AjoutPhoto({ restaurantId }: { restaurantId: string }) {
       if (!prete.ok) {
         setErreur(
           prete.motif === "trop-petite"
-            ? messageTropPetite(prete.largeur, prete.hauteur, GALERIE.minCote)
-            : "Ce fichier ne s'ouvre pas comme une image.",
+            ? messageTropPetite(
+                prete.largeur,
+                prete.hauteur,
+                GALERIE.minCote,
+                langue,
+              )
+            : t("Ce fichier ne s'ouvre pas comme une image."),
         );
         return;
       }
       if (prete.fichier.size > TAILLE_MAX) {
         setErreur(
-          "Photo trop lourde (4 Mo maximum). Réduis-la avant de l'envoyer.",
+          t("Photo trop lourde (4 Mo maximum). Réduis-la avant de l'envoyer."),
         );
         return;
       }
@@ -59,13 +74,22 @@ export function AjoutPhoto({ restaurantId }: { restaurantId: string }) {
       // le formulaire plutôt que d'en refabriquer un.
       donnees.set("photo", prete.fichier);
       const reponse = await uploadPhoto(donnees);
-      setErreur(reponse.error);
+      setErreur(reponse.error ? t(reponse.error) : null);
       if (!reponse.error) {
         setNote(
           prete.juste
-            ? messageJuste(prete.largeur, prete.hauteur, GALERIE.conseilCote)
+            ? messageJuste(
+                prete.largeur,
+                prete.hauteur,
+                GALERIE.conseilCote,
+                langue,
+              )
             : prete.retravaillee
-              ? `Réduite à ${prete.largeur} × ${prete.hauteur} px (${poidsLisible(prete.fichier.size)}).`
+              ? t("Réduite à {l} × {h} px ({poids}).", {
+                  l: prete.largeur,
+                  h: prete.hauteur,
+                  poids: poidsLisible(prete.fichier.size),
+                })
               : null,
         );
         if (champ.current) champ.current.value = "";
@@ -110,12 +134,14 @@ export function AjoutPhoto({ restaurantId }: { restaurantId: string }) {
           </svg>
         </span>
         <span className="text-sm font-semibold text-ink">
-          {choisi ?? "Choisir une photo, ou la déposer ici"}
+          {choisi ?? t("Choisir une photo, ou la déposer ici")}
         </span>
         <span className="text-xs text-zinc-500">
           {choisi
-            ? "Ajoute une légende si tu veux, puis « Ajouter la photo »."
-            : "Une photo de téléphone est réduite toute seule avant l'envoi."}
+            ? t("Ajoute une légende si tu veux, puis « Ajouter la photo ».")
+            : t(
+                "Une photo de téléphone est réduite toute seule avant l'envoi.",
+              )}
         </span>
       </label>
 
@@ -123,13 +149,13 @@ export function AjoutPhoto({ restaurantId }: { restaurantId: string }) {
         {/* La légende s'écrit pendant qu'on regarde la photo qu'on envoie :
             la réclamer plus tard, c'est ne jamais l'obtenir. */}
         <label className="sr-only" htmlFor="legende-etablissement">
-          Légende de la photo
+          {t("Légende de la photo")}
         </label>
         <input
           id="legende-etablissement"
           name="legende"
           maxLength={80}
-          placeholder="Légende (facultatif) — « La terrasse, l'été »"
+          placeholder={t("Légende (facultatif) — « La terrasse, l'été »")}
           className="min-w-0 flex-1 basis-64 rounded-lg border border-zinc-200 bg-zinc-50 px-3.5 py-2.5 text-sm outline-none transition-colors focus:border-brand-navy focus:bg-white"
         />
         <button
@@ -137,7 +163,7 @@ export function AjoutPhoto({ restaurantId }: { restaurantId: string }) {
           disabled={enCours}
           className="rounded-lg bg-brand-navy px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover disabled:opacity-50"
         >
-          {enCours ? "Envoi…" : "Ajouter la photo"}
+          {enCours ? t("Envoi…") : t("Ajouter la photo")}
         </button>
       </div>
 
