@@ -10,6 +10,11 @@ import { exiger } from "@/lib/equipe/roles";
 import { exigerModule } from "@/lib/abonnement/acces";
 import { qrSvgDe } from "@/lib/menu/qr";
 import { BoutonCopier } from "@/components/dashboard/BoutonCopier";
+import { langueUtilisateur } from "@/lib/i18n/langue";
+import type { Langue } from "@/lib/i18n/langues";
+import { localeDe } from "@/lib/i18n/seo";
+import { COMMUN, traducteur } from "@/lib/i18n/t";
+import { RETOURS } from "@/lib/i18n/pages/retours";
 
 type Retour = {
   id: string;
@@ -19,8 +24,8 @@ type Retour = {
   created_at: string;
 };
 
-function quand(iso: string): string {
-  return new Date(iso).toLocaleString("fr-FR", {
+function quand(iso: string, langue: Langue): string {
+  return new Date(iso).toLocaleString(localeDe(langue), {
     weekday: "long",
     day: "numeric",
     month: "long",
@@ -60,6 +65,8 @@ export default async function RetoursPage({
   const restaurant = restaurantData as Restaurant | null;
   if (!restaurant) notFound();
 
+  const langue = await langueUtilisateur();
+  const t = traducteur(langue, RETOURS, COMMUN);
   const retours = (retoursData ?? []) as Retour[];
   const adresse = restaurant.slug_reservation
     ? `${siteUrl()}/avis/${restaurant.slug_reservation}`
@@ -71,9 +78,12 @@ export default async function RetoursPage({
   const aTraiter = retours.filter((r) => !r.traite).length;
   const recents = retours.filter((r) => recent(r.created_at, 30)).length;
   const filtres = [
-    { cle: "", libelle: `Tous · ${retours.length}` },
-    { cle: "a-traiter", libelle: `À traiter · ${aTraiter}` },
-    { cle: "traites", libelle: `Traités · ${retours.length - aTraiter}` },
+    { cle: "", libelle: t("Tous · {n}", { n: retours.length }) },
+    { cle: "a-traiter", libelle: t("À traiter · {n}", { n: aTraiter }) },
+    {
+      cle: "traites",
+      libelle: t("Traités · {n}", { n: retours.length - aTraiter }),
+    },
   ];
   const actif = filtres.some((f) => f.cle === filtre) ? (filtre ?? "") : "";
   const affiches = retours.filter((r) =>
@@ -84,20 +94,20 @@ export default async function RetoursPage({
     <div className="flex flex-1 flex-col gap-8 px-6 py-8">
       <PageHeader
         icon={dashboardIcons.avis}
-        title={`Retours clients — ${restaurant.nom}`}
+        title={t("Retours clients — {nom}", { nom: restaurant.nom })}
       />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="max-w-4xl text-sm text-zinc-600">
-          Ce que des clients ont préféré te dire en privé plutôt qu&apos;en
-          public. Personne n&apos;a été trié : la page leur proposait
-          l&apos;avis Google et ce message côte à côte, ils ont choisi.
+          {t(
+            "Ce que des clients ont préféré te dire en privé plutôt qu'en public. Personne n'a été trié : la page leur proposait l'avis Google et ce message côte à côte, ils ont choisi.",
+          )}
         </p>
         <Link
           href={`/dashboard/${id}/avis`}
           className="rounded-lg border border-zinc-200 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
         >
-          Avis publics
+          {t("Avis publics")}
         </Link>
       </div>
 
@@ -109,21 +119,25 @@ export default async function RetoursPage({
         >
           <Compteur
             valeur={aTraiter}
-            libelle={`retour${aTraiter > 1 ? "s" : ""} à traiter`}
+            libelle={t(aTraiter > 1 ? "retours à traiter" : "retour à traiter")}
             accent={aTraiter > 0}
           />
         </Link>
         <Compteur
           valeur={retours.length - aTraiter}
-          libelle={`traité${retours.length - aTraiter > 1 ? "s" : ""}`}
+          libelle={t(retours.length - aTraiter > 1 ? "traités" : "traité")}
         />
         <Compteur
           valeur={retours.length}
-          libelle={`retour${retours.length > 1 ? "s" : ""} en tout`}
+          libelle={t(retours.length > 1 ? "retours en tout" : "retour en tout")}
         />
         <Compteur
           valeur={recents}
-          libelle={`reçu${recents > 1 ? "s" : ""} ces 30 derniers jours`}
+          libelle={t(
+            recents > 1
+              ? "reçus ces 30 derniers jours"
+              : "reçu ces 30 derniers jours",
+          )}
         />
       </div>
 
@@ -133,7 +147,7 @@ export default async function RetoursPage({
           className="flex min-w-0 scroll-mt-8 flex-col gap-4"
         >
           <div className="flex flex-wrap items-baseline justify-between gap-3">
-            <TitreSection>Les messages</TitreSection>
+            <TitreSection>{t("Les messages")}</TitreSection>
             {retours.length > 0 && (
               <nav className="flex flex-wrap gap-2">
                 {filtres.map((f) => (
@@ -155,12 +169,13 @@ export default async function RetoursPage({
           </div>
           {retours.length === 0 ? (
             <p className="rounded-2xl border border-dashed border-zinc-300 bg-white px-6 py-12 text-center text-sm text-zinc-500">
-              Aucun retour pour l&apos;instant. Pose le QR code à côté : ils
-              arriveront ici, et nulle part ailleurs.
+              {t(
+                "Aucun retour pour l'instant. Pose le QR code à côté : ils arriveront ici, et nulle part ailleurs.",
+              )}
             </p>
           ) : affiches.length === 0 ? (
             <p className="rounded-2xl border border-zinc-200/70 bg-white p-6 text-sm text-zinc-500 shadow-sm">
-              Rien dans cette catégorie.
+              {t("Rien dans cette catégorie.")}
             </p>
           ) : (
             <ul className="grid items-start gap-4 2xl:grid-cols-2">
@@ -175,7 +190,7 @@ export default async function RetoursPage({
                 >
                   <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
                     <span className="text-xs text-zinc-500 first-letter:capitalize">
-                      {quand(retour.created_at)}
+                      {quand(retour.created_at, langue)}
                     </span>
                     <span
                       className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
@@ -184,7 +199,7 @@ export default async function RetoursPage({
                           : "bg-brand-orange-soft text-brand-orange-dark"
                       }`}
                     >
-                      {retour.traite ? "Traité" : "À traiter"}
+                      {retour.traite ? t("Traité") : t("À traiter")}
                     </span>
                   </div>
 
@@ -203,19 +218,23 @@ export default async function RetoursPage({
                           href={`mailto:${retour.contact}`}
                           className="text-sm font-semibold text-brand-orange-dark hover:underline"
                         >
-                          Répondre à {retour.contact}
+                          {t("Répondre à {contact}", {
+                            contact: retour.contact,
+                          })}
                         </a>
                       ) : (
                         <a
                           href={`tel:${retour.contact.replace(/\s/g, "")}`}
                           className="text-sm font-semibold text-brand-orange-dark hover:underline"
                         >
-                          Rappeler le {retour.contact}
+                          {t("Rappeler le {contact}", {
+                            contact: retour.contact,
+                          })}
                         </a>
                       )
                     ) : (
                       <span className="text-xs text-zinc-400">
-                        Aucun contact laissé
+                        {t("Aucun contact laissé")}
                       </span>
                     )}
                     <form action={marquerTraite}>
@@ -234,7 +253,9 @@ export default async function RetoursPage({
                             : "rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-ink transition-colors hover:border-brand-navy hover:text-brand-navy"
                         }
                       >
-                        {retour.traite ? "Rouvrir" : "Marquer comme traité"}
+                        {retour.traite
+                          ? t("Rouvrir")
+                          : t("Marquer comme traité")}
                       </button>
                     </form>
                   </div>
@@ -246,7 +267,7 @@ export default async function RetoursPage({
 
         {/* Le QR à côté des messages : c'est lui qui les fait venir. */}
         <aside className="flex flex-col gap-3 xl:sticky xl:top-24">
-          <TitreSection>Le QR code</TitreSection>
+          <TitreSection>{t("Le QR code")}</TitreSection>
           {adresse ? (
             <div className="flex flex-col items-center gap-4 rounded-2xl border border-zinc-200/70 bg-white p-6 text-center shadow-sm">
               {/* Le QR en vectoriel : un totem s'imprime, et un QR en pixels
@@ -258,27 +279,32 @@ export default async function RetoursPage({
                 />
               )}
               <p className="text-sm text-zinc-600">
-                À poser sur les tables, le totem ou l&apos;addition.
+                {t("À poser sur les tables, le totem ou l'addition.")}
               </p>
               <code className="w-full break-all rounded-lg bg-zinc-50 px-3 py-2 text-xs text-zinc-700">
                 {adresse}
               </code>
               <div className="flex flex-wrap justify-center gap-2">
-                <BoutonCopier texte={adresse} />
+                <BoutonCopier
+                  texte={adresse}
+                  libelle={t("Copier l'adresse")}
+                  copie={t("Adresse copiée ✓")}
+                />
                 <a
                   href={adresse}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
                 >
-                  Voir la page ↗
+                  {t("Voir la page ↗")}
                 </a>
               </div>
             </div>
           ) : (
             <p className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-900">
-              Ouvre d&apos;abord ta page de réservation : c&apos;est son adresse
-              qui sert aussi à celle des avis.
+              {t(
+                "Ouvre d'abord ta page de réservation : c'est son adresse qui sert aussi à celle des avis.",
+              )}
             </p>
           )}
         </aside>

@@ -6,6 +6,9 @@ import {
   envoyerTest,
   retirerAbonnement,
 } from "@/app/dashboard/[id]/notifications/actions";
+import type { Langue } from "@/lib/i18n/langues";
+import { COMMUN, traducteur } from "@/lib/i18n/t";
+import { NOTIFICATIONS } from "@/lib/i18n/pages/notifications";
 
 /**
  * L'activation des notifications, appareil par appareil.
@@ -56,9 +59,12 @@ function nomAppareil(): string {
 
 export function ActiverNotifications({
   restaurantId,
+  langue,
 }: {
   restaurantId: string;
+  langue: Langue;
 }) {
+  const t = traducteur(langue, NOTIFICATIONS, COMMUN);
   const [etat, setEtat] = useState<Etat>("chargement");
   const [erreur, setErreur] = useState<string | null>(null);
   const [teste, setTeste] = useState(false);
@@ -137,14 +143,14 @@ export function ActiverNotifications({
         // Enregistré nulle part, l'abonnement ne servirait qu'à croire
         // qu'on est prévenu : on le défait.
         await abonnement.unsubscribe();
-        setErreur(reponse.erreur);
+        setErreur(t(reponse.erreur));
         setEtat("inactive");
         return;
       }
       setEtat("active");
     } catch (cause) {
       console.error("[notifications] activation", cause);
-      setErreur("L'activation a échoué sur cet appareil.");
+      setErreur(t("L'activation a échoué sur cet appareil."));
     } finally {
       setEnCours(false);
     }
@@ -166,7 +172,7 @@ export function ActiverNotifications({
       setTeste(false);
     } catch (cause) {
       console.error("[notifications] désactivation", cause);
-      setErreur("La désactivation a échoué.");
+      setErreur(t("La désactivation a échoué."));
     } finally {
       setEnCours(false);
     }
@@ -178,14 +184,16 @@ export function ActiverNotifications({
     const donnees = new FormData();
     donnees.set("restaurant_id", restaurantId);
     const reponse = await envoyerTest({ erreur: null, fait: false }, donnees);
-    setErreur(reponse.erreur);
+    setErreur(reponse.erreur ? t(reponse.erreur) : null);
     setTeste(reponse.fait);
     setEnCours(false);
   }
 
   if (etat === "chargement") {
     return (
-      <p className="text-sm text-ink-soft">Vérification de cet appareil…</p>
+      <p className="text-sm text-ink-soft">
+        {t("Vérification de cet appareil…")}
+      </p>
     );
   }
 
@@ -193,15 +201,12 @@ export function ActiverNotifications({
     return (
       <div className="flex flex-col gap-3 rounded-2xl border border-line bg-brand-orange-soft p-5">
         <p className="font-semibold text-ink">
-          Sur iPhone, ajoute d&apos;abord Klarr à ton écran d&apos;accueil.
+          {t("Sur iPhone, ajoute d'abord Klarr à ton écran d'accueil.")}
         </p>
         <p className="text-sm leading-relaxed text-ink-soft">
-          Apple n&apos;autorise les notifications que pour les applications
-          installées. Dans Safari, touche le bouton{" "}
-          <span aria-hidden="true">⎋</span> Partager en bas de l&apos;écran,
-          puis <strong>Sur l&apos;écran d&apos;accueil</strong>. Rouvre Klarr
-          depuis l&apos;icône et reviens ici : le bouton d&apos;activation
-          apparaîtra.
+          {t(
+            "Apple n'autorise les notifications que pour les applications installées. Dans Safari, touche le bouton ⎋ Partager en bas de l'écran, puis « Sur l'écran d'accueil ». Rouvre Klarr depuis l'icône et reviens ici : le bouton d'activation apparaîtra.",
+          )}
         </p>
       </div>
     );
@@ -210,8 +215,9 @@ export function ActiverNotifications({
   if (etat === "impossible") {
     return (
       <p className="text-sm text-ink-soft">
-        Ce navigateur ne sait pas recevoir de notifications. Essaie depuis
-        Chrome, Safari ou Firefox à jour.
+        {t(
+          "Ce navigateur ne sait pas recevoir de notifications. Essaie depuis Chrome, Safari ou Firefox à jour.",
+        )}
       </p>
     );
   }
@@ -220,12 +226,12 @@ export function ActiverNotifications({
     return (
       <div className="flex flex-col gap-2 rounded-2xl border border-line bg-brand-cream p-5">
         <p className="font-semibold text-ink">
-          Les notifications sont bloquées sur cet appareil.
+          {t("Les notifications sont bloquées sur cet appareil.")}
         </p>
         <p className="text-sm leading-relaxed text-ink-soft">
-          Le blocage vient du navigateur, pas de Klarr : nous ne pouvons plus le
-          demander nous-mêmes. Autorise les notifications pour klarr.net dans
-          les réglages de ton navigateur, puis recharge cette page.
+          {t(
+            "Le blocage vient du navigateur, pas de Klarr : nous ne pouvons plus le demander nous-mêmes. Autorise les notifications pour klarr.net dans les réglages de ton navigateur, puis recharge cette page.",
+          )}
         </p>
       </div>
     );
@@ -247,7 +253,12 @@ export function ActiverNotifications({
               etat === "active" ? "bg-emerald-500" : "bg-ink-soft/40"
             }`}
           />
-          {nomAppareil()} — {etat === "active" ? "activé" : "pas encore activé"}
+          {t(
+            etat === "active"
+              ? "{appareil} — activé"
+              : "{appareil} — pas encore activé",
+            { appareil: t(nomAppareil()) },
+          )}
         </span>
       </div>
 
@@ -260,7 +271,7 @@ export function ActiverNotifications({
               disabled={enCours}
               className="rounded-lg bg-ink px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy disabled:opacity-50"
             >
-              {enCours ? "Envoi…" : "Envoyer une notification d'essai"}
+              {enCours ? t("Envoi…") : t("Envoyer une notification d'essai")}
             </button>
             <button
               type="button"
@@ -268,7 +279,7 @@ export function ActiverNotifications({
               disabled={enCours}
               className="rounded-lg border border-line bg-paper px-4 py-2.5 text-sm font-semibold text-ink transition-colors hover:border-ink disabled:opacity-50"
             >
-              Désactiver sur cet appareil
+              {t("Désactiver sur cet appareil")}
             </button>
           </>
         ) : (
@@ -278,15 +289,16 @@ export function ActiverNotifications({
             disabled={enCours}
             className="rounded-lg bg-ink px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy disabled:opacity-50"
           >
-            {enCours ? "Activation…" : "Activer sur cet appareil"}
+            {enCours ? t("Activation…") : t("Activer sur cet appareil")}
           </button>
         )}
       </div>
 
       {teste && (
         <p className="text-sm text-emerald-700">
-          Envoyée. Elle doit arriver dans les secondes qui viennent — verrouille
-          l&apos;écran pour la voir comme un vrai soir de service.
+          {t(
+            "Envoyée. Elle doit arriver dans les secondes qui viennent — verrouille l'écran pour la voir comme un vrai soir de service.",
+          )}
         </p>
       )}
       {erreur && <p className="text-sm text-red-600">{erreur}</p>}

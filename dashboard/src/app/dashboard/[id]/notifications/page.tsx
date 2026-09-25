@@ -6,6 +6,10 @@ import { TitreSection } from "@/components/dashboard/Compteur";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { ActiverNotifications } from "@/components/dashboard/ActiverNotifications";
 import { exiger } from "@/lib/equipe/roles";
+import { langueUtilisateur } from "@/lib/i18n/langue";
+import { localeDe } from "@/lib/i18n/seo";
+import { COMMUN, traducteur } from "@/lib/i18n/t";
+import { NOTIFICATIONS } from "@/lib/i18n/pages/notifications";
 
 export const metadata: Metadata = {
   title: "Notifications",
@@ -60,40 +64,49 @@ export default async function NotificationsPage({
     .eq("restaurant_id", id)
     .order("created_at", { ascending: false });
   const appareils = (data ?? []) as Appareil[];
+  const langue = await langueUtilisateur();
+  const t = traducteur(langue, NOTIFICATIONS, COMMUN);
 
   return (
     <div className="flex flex-1 flex-col gap-8 px-6 py-8">
       <PageHeader
         icon={<Cloche />}
-        title={`Notifications — ${(restaurant as { nom: string }).nom}`}
+        title={t("Notifications — {nom}", {
+          nom: (restaurant as { nom: string }).nom,
+        })}
       />
 
       <p className="max-w-4xl text-sm leading-relaxed text-zinc-600">
-        Une demande de réservation arrive à 19 h 40, en plein coup de feu.
-        L&apos;e-mail attendra la fermeture ; la notification, non. Active-la
-        sur chaque appareil qui doit sonner — ton téléphone, celui de ton
-        gérant.
+        {t(
+          "Une demande de réservation arrive à 19 h 40, en plein coup de feu. L'e-mail attendra la fermeture ; la notification, non. Active-la sur chaque appareil qui doit sonner — ton téléphone, celui de ton gérant.",
+        )}
       </p>
 
       <div className="grid items-start gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <div className="flex flex-col gap-6">
           <section className="flex flex-col gap-3">
-            <TitreSection>Sur cet appareil</TitreSection>
+            <TitreSection>{t("Sur cet appareil")}</TitreSection>
             <div className="rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm">
-              <ActiverNotifications restaurantId={id} />
+              <ActiverNotifications restaurantId={id} langue={langue} />
             </div>
           </section>
 
           <section className="flex flex-col gap-3">
             <TitreSection
-              aside={`${appareils.length} appareil${appareils.length > 1 ? "s" : ""}`}
+              aside={t(
+                appareils.length > 1 ? "{n} appareils" : "{n} appareil",
+                {
+                  n: appareils.length,
+                },
+              )}
             >
-              Tes appareils
+              {t("Tes appareils")}
             </TitreSection>
             {appareils.length === 0 ? (
               <p className="rounded-2xl border border-dashed border-zinc-300 bg-white px-6 py-8 text-sm text-zinc-500">
-                Aucun appareil pour l&apos;instant : active les notifications
-                ci-dessus, depuis le téléphone qui doit sonner.
+                {t(
+                  "Aucun appareil pour l'instant : active les notifications ci-dessus, depuis le téléphone qui doit sonner.",
+                )}
               </p>
             ) : (
               <ul className="flex flex-col divide-y divide-zinc-100 overflow-hidden rounded-2xl border border-zinc-200/70 bg-white shadow-sm">
@@ -107,29 +120,30 @@ export default async function NotificationsPage({
                         aria-hidden="true"
                         className="h-2 w-2 rounded-full bg-emerald-500"
                       />
-                      {appareil.appareil ?? "Appareil"}
+                      {t(appareil.appareil ?? "Appareil")}
                     </span>
                     <span className="text-zinc-500">
-                      depuis le{" "}
-                      {new Date(appareil.created_at).toLocaleDateString(
-                        "fr-FR",
-                        { day: "2-digit", month: "2-digit", year: "numeric" },
-                      )}
+                      {t("depuis le {date}", {
+                        date: new Date(appareil.created_at).toLocaleDateString(
+                          localeDe(langue),
+                          { day: "2-digit", month: "2-digit", year: "numeric" },
+                        ),
+                      })}
                     </span>
                   </li>
                 ))}
               </ul>
             )}
             <p className="text-xs leading-relaxed text-zinc-500">
-              Un appareil se retire depuis lui-même, avec le bouton ci-dessus.
-              Un téléphone perdu cesse de recevoir dès que le navigateur est
-              réinstallé.
+              {t(
+                "Un appareil se retire depuis lui-même, avec le bouton ci-dessus. Un téléphone perdu cesse de recevoir dès que le navigateur est réinstallé.",
+              )}
             </p>
           </section>
         </div>
 
         <section className="flex flex-col gap-3">
-          <TitreSection>Ce qui te réveillera</TitreSection>
+          <TitreSection>{t("Ce qui te réveillera")}</TitreSection>
           <ul className="grid gap-3">
             {[
               {
@@ -149,16 +163,16 @@ export default async function NotificationsPage({
                   <Cloche />
                 </span>
                 <span className="flex flex-col gap-0.5">
-                  <span className="font-semibold text-ink">{n.titre}</span>
-                  <span className="text-sm text-zinc-500">{n.texte}</span>
+                  <span className="font-semibold text-ink">{t(n.titre)}</span>
+                  <span className="text-sm text-zinc-500">{t(n.texte)}</span>
                 </span>
               </li>
             ))}
           </ul>
           <p className="text-sm text-zinc-500">
-            Et rien d&apos;autre. Pas de conseil du jour, pas de relance
-            d&apos;abonnement : une notification qui ne sert à rien est une
-            notification qu&apos;on coupe.
+            {t(
+              "Et rien d'autre. Pas de conseil du jour, pas de relance d'abonnement : une notification qui ne sert à rien est une notification qu'on coupe.",
+            )}
           </p>
         </section>
 
@@ -166,14 +180,14 @@ export default async function NotificationsPage({
             bilan du mois, à toi, et la demande d'avis du lendemain, à
             tes clients. Chacun se règle sur sa propre page. */}
         <section className="flex flex-col gap-3">
-          <TitreSection>Par e-mail</TitreSection>
+          <TitreSection>{t("Par e-mail")}</TitreSection>
           <Link
             href={`/dashboard/${id}/rapport`}
             className="group flex items-start gap-4 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm transition-[border-color,transform,box-shadow] hover:-translate-y-px hover:border-ink hover:shadow-md"
           >
             <span className="flex flex-col gap-0.5">
               <span className="flex items-center gap-2 font-semibold text-ink">
-                Le bilan mensuel
+                {t("Le bilan mensuel")}
                 <span
                   aria-hidden="true"
                   className="text-zinc-400 transition-transform group-hover:translate-x-0.5 group-hover:text-ink"
@@ -182,8 +196,9 @@ export default async function NotificationsPage({
                 </span>
               </span>
               <span className="text-sm text-zinc-500">
-                Le 1er du mois : couverts, note Google, nouveaux clients, et ce
-                qui t&apos;attend. Aperçu, envoi d&apos;essai et désinscription.
+                {t(
+                  "Le 1er du mois : couverts, note Google, nouveaux clients, et ce qui t'attend. Aperçu, envoi d'essai et désinscription.",
+                )}
               </span>
             </span>
           </Link>
@@ -193,7 +208,7 @@ export default async function NotificationsPage({
           >
             <span className="flex flex-col gap-0.5">
               <span className="flex items-center gap-2 font-semibold text-ink">
-                La demande d&apos;avis, le lendemain
+                {t("La demande d'avis, le lendemain")}
                 <span
                   aria-hidden="true"
                   className="text-zinc-400 transition-transform group-hover:translate-x-0.5 group-hover:text-ink"
@@ -202,8 +217,9 @@ export default async function NotificationsPage({
                 </span>
               </span>
               <span className="text-sm text-zinc-500">
-                À tes clients venus la veille : un merci, un lien vers Google et
-                un lien pour t&apos;écrire. Aperçu et réglage.
+                {t(
+                  "À tes clients venus la veille : un merci, un lien vers Google et un lien pour t'écrire. Aperçu et réglage.",
+                )}
               </span>
             </span>
           </Link>

@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import type { Langue } from "@/lib/i18n/langues";
+import { traducteur } from "@/lib/i18n/t";
+import { CONNEXIONS } from "@/lib/i18n/pages/connexions";
 
 type FacebookLoginResponse = {
   status?: string;
@@ -71,12 +74,15 @@ export function FacebookConnectButton({
   // Page sur laquelle revenir une fois la connexion faite : le bouton est
   // affiche depuis "Connexions" comme depuis "Reseaux sociaux".
   returnTo = "social",
-  label = "Connecter Facebook / Instagram",
+  label,
+  langue = "fr",
 }: {
   restaurantId: string;
   returnTo?: string;
   label?: string;
+  langue?: Langue;
 }) {
+  const t = traducteur(langue, CONNEXIONS);
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -117,11 +123,11 @@ export function FacebookConnectButton({
           return;
         }
         setLoading(false);
-        setError(data.error ?? "La connexion a échoué. Réessaie.");
+        setError(t(data.error ?? "La connexion a échoué. Réessaie."));
       })
       .catch(() => {
         setLoading(false);
-        setError("La connexion a échoué. Réessaie.");
+        setError(t("La connexion a échoué. Réessaie."));
       });
   }
 
@@ -131,13 +137,13 @@ export function FacebookConnectButton({
 
     if (!appId) {
       setError(
-        "Configuration Facebook manquante (NEXT_PUBLIC_FACEBOOK_APP_ID).",
+        t("Configuration Facebook manquante (NEXT_PUBLIC_FACEBOOK_APP_ID)."),
       );
       return;
     }
     if (!window.FB) {
       setError(
-        "Le SDK Facebook se charge encore, réessaie dans quelques secondes.",
+        t("Le SDK Facebook se charge encore, réessaie dans quelques secondes."),
       );
       return;
     }
@@ -160,8 +166,12 @@ export function FacebookConnectButton({
         // qui a manqué.
         setError(
           response.status === "not_authorized"
-            ? "Les autorisations ont été refusées. Relance la connexion et accepte l'accès aux Pages."
-            : "Connexion annulée. La fenêtre Facebook s'est fermée avant la fin.",
+            ? t(
+                "Les autorisations ont été refusées. Relance la connexion et accepte l'accès aux Pages.",
+              )
+            : t(
+                "Connexion annulée. La fenêtre Facebook s'est fermée avant la fin.",
+              ),
         );
         return;
       }
@@ -173,8 +183,9 @@ export function FacebookConnectButton({
     return (
       <div className="flex flex-col gap-3">
         <p className="text-sm text-zinc-600">
-          Plusieurs Pages Facebook sont associées à ton compte. Laquelle
-          correspond à ce restaurant ?
+          {t(
+            "Plusieurs Pages Facebook sont associées à ton compte. Laquelle correspond à ce restaurant ?",
+          )}
         </p>
         <div className="flex flex-col gap-2">
           {pageOptions.map((page) => (
@@ -202,7 +213,9 @@ export function FacebookConnectButton({
         disabled={loading}
         className="rounded-lg bg-brand-navy px-5 py-2.5 text-center text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover disabled:opacity-50"
       >
-        {loading ? "Connexion..." : label}
+        {loading
+          ? t("Connexion...")
+          : (label ?? t("Connecter Facebook / Instagram"))}
       </button>
       {error && (
         <p className="text-sm text-red-600" role="alert">

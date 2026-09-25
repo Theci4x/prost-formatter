@@ -9,6 +9,10 @@ import type { Restaurant } from "@/types/restaurant";
 import type { StripeConnexion } from "@/types/stripe";
 import { exiger } from "@/lib/equipe/roles";
 import { exigerModule } from "@/lib/abonnement/acces";
+import { langueUtilisateur } from "@/lib/i18n/langue";
+import { localeDe } from "@/lib/i18n/seo";
+import { COMMUN, traducteur } from "@/lib/i18n/t";
+import { PAIEMENTS } from "@/lib/i18n/pages/paiements";
 
 const MOTIFS: Record<string, string> = {
   annule: "Connexion annulée : rien n'a été relié.",
@@ -56,6 +60,8 @@ export default async function PaiementsPage({
   const restaurant = restaurantResult.data as Restaurant | null;
   if (!restaurant) notFound();
 
+  const langue = await langueUtilisateur();
+  const t = traducteur(langue, PAIEMENTS, COMMUN);
   const connexion = connexionResult.data as StripeConnexion | null;
 
   // L'état est relu chez Stripe : un dossier complété depuis la connexion
@@ -74,10 +80,18 @@ export default async function PaiementsPage({
   const refus = frais?.refus ?? null;
   const aFaire = refus
     ? refus === "meme_compte"
-      ? "Ce compte Stripe est celui de Klarr lui-même : Stripe refuse qu'il encaisse pour un restaurant. Retire la connexion ci-dessous, puis relie le compte Stripe du restaurant."
-      : `Stripe ne reconnaît pas ce compte comme relié à Klarr, qui tourne en mode ${modeStripe() === "test" ? "test" : "réel"}. La connexion a sans doute été retirée chez Stripe, ou faite dans l'autre mode. Retire-la ci-dessous, puis relie ton compte à nouveau.`
+      ? t(
+          "Ce compte Stripe est celui de Klarr lui-même : Stripe refuse qu'il encaisse pour un restaurant. Retire la connexion ci-dessous, puis relie le compte Stripe du restaurant.",
+        )
+      : t(
+          "Stripe ne reconnaît pas ce compte comme relié à Klarr, qui tourne en mode {mode}. La connexion a sans doute été retirée chez Stripe, ou faite dans l'autre mode. Retire-la ci-dessous, puis relie ton compte à nouveau.",
+          { mode: t(modeStripe() === "test" ? "test" : "réel") },
+        )
     : etat
-      ? diagnostic(etat)
+      ? (() => {
+          const d = diagnostic(etat);
+          return d ? t(d) : null;
+        })()
       : null;
 
   const garanties = (garantiesResult.data ?? []) as {
@@ -99,7 +113,7 @@ export default async function PaiementsPage({
       (g.acompte_statut === "attendu" || g.caution_statut === "attendue") &&
       g.date_reservation >= aujourdhui,
   ).length;
-  const euros = new Intl.NumberFormat("fr-FR", {
+  const euros = new Intl.NumberFormat(localeDe(langue), {
     style: "currency",
     currency: "EUR",
     maximumFractionDigits: encaisse % 100 === 0 ? 0 : 2,
@@ -111,47 +125,49 @@ export default async function PaiementsPage({
       <div className="flex flex-col gap-3">
         <PageHeader
           icon={dashboardIcons.abonnement}
-          title={`Paiements — ${restaurant.nom}`}
+          title={t("Paiements — {nom}", { nom: restaurant.nom })}
         />
         <p className="max-w-4xl text-sm text-zinc-600">
-          Relie <span className="font-medium">ton</span> compte Stripe pour
-          demander un acompte sur une privatisation, prendre une empreinte de
-          carte en garantie, ou faire payer une expérience à l&apos;avance.
-          L&apos;argent va directement chez toi : Klarr ne le touche jamais et
-          ne prélève aucune commission.
+          {t(
+            "Relie ton compte Stripe pour demander un acompte sur une privatisation, prendre une empreinte de carte en garantie, ou faire payer une expérience à l'avance. L'argent va directement chez toi : Klarr ne le touche jamais et ne prélève aucune commission.",
+          )}
         </p>
       </div>
 
       {query.stripe_connecte && (
         <p className="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-800">
-          Ton compte Stripe est relié.
+          {t("Ton compte Stripe est relié.")}
         </p>
       )}
       {query.stripe_error && (
         <p className="rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">
-          {MOTIFS[query.stripe_error] ?? "La connexion a échoué."}
+          {t(MOTIFS[query.stripe_error] ?? "La connexion a échoué.")}
         </p>
       )}
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <Compteur
-          valeur={!connexion ? "—" : pret ? "Prêt" : "À finir"}
+          valeur={!connexion ? "—" : pret ? t("Prêt") : t("À finir")}
           libelle={
             !connexion
-              ? "compte Stripe à relier"
+              ? t("compte Stripe à relier")
               : pret
-                ? "compte Stripe, prêt à encaisser"
-                : "dossier Stripe à terminer"
+                ? t("compte Stripe, prêt à encaisser")
+                : t("dossier Stripe à terminer")
           }
           accent={!pret}
         />
         <Compteur
           valeur={euros.format(encaisse / 100)}
-          libelle="d'acomptes encaissés"
+          libelle={t("d'acomptes encaissés")}
         />
         <Compteur
           valeur={String(empreintes)}
-          libelle={`empreinte${empreintes > 1 ? "s" : ""} de carte en cours`}
+          libelle={t(
+            empreintes > 1
+              ? "empreintes de carte en cours"
+              : "empreinte de carte en cours",
+          )}
         />
         {/* Les paiements attendus se suivent dans le carnet, réservation
             par réservation : la tuile y mène. */}
@@ -161,7 +177,11 @@ export default async function PaiementsPage({
         >
           <Compteur
             valeur={String(enAttente)}
-            libelle={`paiement${enAttente > 1 ? "s" : ""} en attente du client`}
+            libelle={t(
+              enAttente > 1
+                ? "paiements en attente du client"
+                : "paiement en attente du client",
+            )}
             accent={enAttente > 0}
           />
         </Link>
@@ -171,7 +191,7 @@ export default async function PaiementsPage({
         {/* Le compte : relié ou non, prêt ou non. C'est la seule chose à
             régler ici ; le reste se passe chez Stripe. */}
         <section className="flex flex-col gap-4">
-          <TitreSection>Ton compte Stripe</TitreSection>
+          <TitreSection>{t("Ton compte Stripe")}</TitreSection>
           {connexion ? (
             <div
               className={`flex flex-col gap-5 rounded-2xl border p-6 shadow-sm ${
@@ -189,7 +209,7 @@ export default async function PaiementsPage({
                     }`}
                   />
                   <span className="font-serif text-3xl text-ink">
-                    {pret ? "Prêt à encaisser" : "Pas encore prêt"}
+                    {pret ? t("Prêt à encaisser") : t("Pas encore prêt")}
                   </span>
                 </div>
                 <span className="rounded-full bg-white/80 px-3 py-1 text-xs font-semibold text-zinc-600">
@@ -198,7 +218,7 @@ export default async function PaiementsPage({
               </div>
               <div className="flex flex-col gap-0.5">
                 <span className="font-semibold text-ink">
-                  {connexion.nom_affiche ?? "Compte Stripe relié"}
+                  {connexion.nom_affiche ?? t("Compte Stripe relié")}
                 </span>
                 <span className="font-mono text-xs text-zinc-500">
                   {connexion.stripe_account_id}
@@ -216,7 +236,7 @@ export default async function PaiementsPage({
                   rel="noopener noreferrer"
                   className="rounded-lg bg-brand-navy px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover"
                 >
-                  Ouvrir mon tableau de bord Stripe ↗
+                  {t("Ouvrir mon tableau de bord Stripe ↗")}
                 </a>
                 <form action={deconnecterStripe}>
                   <input type="hidden" name="restaurant_id" value={id} />
@@ -224,13 +244,14 @@ export default async function PaiementsPage({
                     type="submit"
                     className="text-sm font-medium text-zinc-500 hover:text-red-600"
                   >
-                    Retirer la connexion
+                    {t("Retirer la connexion")}
                   </button>
                 </form>
               </div>
               <p className="text-xs leading-relaxed text-zinc-500">
-                Tes virements, tes remboursements et tes litiges restent dans
-                ton tableau de bord Stripe, comme aujourd&apos;hui.
+                {t(
+                  "Tes virements, tes remboursements et tes litiges restent dans ton tableau de bord Stripe, comme aujourd'hui.",
+                )}
               </p>
             </div>
           ) : (
@@ -241,19 +262,19 @@ export default async function PaiementsPage({
                   className="h-3 w-3 rounded-full bg-zinc-300"
                 />
                 <span className="font-serif text-3xl text-ink">
-                  Aucun compte relié
+                  {t("Aucun compte relié")}
                 </span>
               </div>
               <p className="text-sm leading-relaxed text-zinc-600">
-                Tu peux relier un compte Stripe existant, ou en créer un pendant
-                la connexion si tu n&apos;en as pas encore. Stripe demandera une
-                pièce d&apos;identité et ton RIB.
+                {t(
+                  "Tu peux relier un compte Stripe existant, ou en créer un pendant la connexion si tu n'en as pas encore. Stripe demandera une pièce d'identité et ton RIB.",
+                )}
               </p>
               <a
                 href={`/api/stripe/connect/authorize?restaurant_id=${id}`}
                 className="rounded-lg bg-brand-navy px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover"
               >
-                Connecter mon compte Stripe
+                {t("Connecter mon compte Stripe")}
               </a>
             </div>
           )}
@@ -262,7 +283,7 @@ export default async function PaiementsPage({
         {/* Ce que le compte permet, et où ça se règle : sans ça, relier
             Stripe reste une case cochée qui ne sert à rien. */}
         <section className="flex flex-col gap-4">
-          <TitreSection>Ce que tu peux encaisser</TitreSection>
+          <TitreSection>{t("Ce que tu peux encaisser")}</TitreSection>
           <ul className="grid gap-3 md:grid-cols-3 xl:grid-cols-1 2xl:grid-cols-3">
             {USAGES.map((usage) => (
               <li
@@ -270,16 +291,16 @@ export default async function PaiementsPage({
                 className="flex flex-col gap-2 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm"
               >
                 <span className="text-base font-semibold text-ink">
-                  {usage.titre}
+                  {t(usage.titre)}
                 </span>
                 <span className="text-sm leading-relaxed text-zinc-600">
-                  {usage.texte}
+                  {t(usage.texte)}
                 </span>
                 <Link
                   href={`/dashboard/${id}/${usage.ou}`}
                   className="mt-auto w-fit pt-1 text-sm font-semibold text-brand-orange-dark hover:underline"
                 >
-                  {usage.lien} →
+                  {t(usage.lien)} →
                 </Link>
               </li>
             ))}
@@ -291,7 +312,7 @@ export default async function PaiementsPage({
         href={`/dashboard/${id}/connexions`}
         className="w-fit text-sm font-semibold text-brand-orange-dark hover:underline"
       >
-        ← Toutes mes connexions
+        {t("← Toutes mes connexions")}
       </Link>
     </div>
   );

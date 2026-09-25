@@ -6,6 +6,9 @@ import {
   epinglerTripadvisor,
   type RechercheState,
 } from "@/app/dashboard/[id]/avis/actions";
+import type { Langue } from "@/lib/i18n/langues";
+import { COMMUN, traducteur } from "@/lib/i18n/t";
+import { AVIS } from "@/lib/i18n/pages/avis";
 
 const initial: RechercheState = { candidats: null, error: null };
 
@@ -26,13 +29,16 @@ export function ConfirmationTripadvisor({
   nomTrouve,
   requeteInitiale,
   epingle,
+  langue,
 }: {
   restaurantId: string;
+  langue: Langue;
   /** Le nom de l'établissement retenu, ou null si rien n'a été trouvé. */
   nomTrouve: string | null;
   requeteInitiale: string;
   epingle: boolean;
 }) {
+  const t = traducteur(langue, AVIS, COMMUN);
   const [ouvert, setOuvert] = useState(false);
   const [state, chercher, cherchePending] = useActionState(
     chercherSurTripadvisor,
@@ -45,18 +51,21 @@ export function ConfirmationTripadvisor({
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
           {nomTrouve ? (
             <span className="text-zinc-500">
-              {epingle ? "Confirmé" : "Trouvé automatiquement"} :{" "}
+              {epingle ? t("Confirmé") : t("Trouvé automatiquement")}
+              {langue === "fr" ? " : " : langue === "zh" ? "：" : ": "}
               <span className="font-medium text-zinc-700">{nomTrouve}</span>
             </span>
           ) : (
-            <span className="text-zinc-500">Aucun établissement associé.</span>
+            <span className="text-zinc-500">
+              {t("Aucun établissement associé.")}
+            </span>
           )}
           <button
             type="button"
             onClick={() => setOuvert(true)}
             className="font-medium text-brand-navy underline underline-offset-2"
           >
-            {nomTrouve ? "Ce n'est pas mon établissement" : "Le chercher"}
+            {nomTrouve ? t("Ce n'est pas mon établissement") : t("Le chercher")}
           </button>
         </div>
       )}
@@ -66,11 +75,11 @@ export function ConfirmationTripadvisor({
           <form action={chercher} className="flex flex-wrap items-end gap-2">
             <input type="hidden" name="restaurant_id" value={restaurantId} />
             <label className="flex min-w-48 flex-1 flex-col gap-1 text-xs font-medium text-zinc-700">
-              Cherche ton établissement
+              {t("Cherche ton établissement")}
               <input
                 name="requete"
                 defaultValue={requeteInitiale}
-                placeholder="Nom du restaurant et ville"
+                placeholder={t("Nom du restaurant et ville")}
                 className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-brand-navy"
               />
             </label>
@@ -79,13 +88,13 @@ export function ConfirmationTripadvisor({
               disabled={cherchePending}
               className="rounded-md border border-zinc-200 px-3 py-2 text-sm font-medium text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy disabled:opacity-50"
             >
-              {cherchePending ? "Recherche…" : "Chercher"}
+              {cherchePending ? t("Recherche…") : t("Chercher")}
             </button>
           </form>
 
           {state.error && (
             <p className="text-xs text-red-600" role="alert">
-              {state.error}
+              {t(state.error)}
             </p>
           )}
 
@@ -131,7 +140,7 @@ export function ConfirmationTripadvisor({
               onClick={() => setOuvert(false)}
               className="text-zinc-500 underline underline-offset-2"
             >
-              Annuler
+              {t("Annuler")}
             </button>
             {epingle && (
               <form action={epinglerTripadvisor}>
@@ -145,7 +154,7 @@ export function ConfirmationTripadvisor({
                   type="submit"
                   className="text-zinc-500 underline underline-offset-2"
                 >
-                  Revenir à la recherche automatique
+                  {t("Revenir à la recherche automatique")}
                 </button>
               </form>
             )}

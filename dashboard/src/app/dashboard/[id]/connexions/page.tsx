@@ -8,6 +8,9 @@ import { platformIcons } from "@/components/connections/platformIcons";
 import type { Restaurant } from "@/types/restaurant";
 import { exiger } from "@/lib/equipe/roles";
 import { tiktokDisponible } from "@/lib/tiktok/oauth";
+import { langueUtilisateur } from "@/lib/i18n/langue";
+import { COMMUN, traducteur, type T } from "@/lib/i18n/t";
+import { CONNEXIONS } from "@/lib/i18n/pages/connexions";
 
 type Platform = {
   key: string;
@@ -41,7 +44,7 @@ function StatusDot({ connected }: { connected: boolean }) {
   );
 }
 
-function PlatformCard({ platform }: { platform: Platform }) {
+function PlatformCard({ platform, t }: { platform: Platform; t: T }) {
   return (
     <li
       className={`flex flex-col gap-5 rounded-2xl border bg-white p-6 shadow-sm ${
@@ -77,10 +80,10 @@ function PlatformCard({ platform }: { platform: Platform }) {
             <StatusDot connected={platform.connected} />
           )}
           {platform.aTerminer
-            ? "À terminer"
+            ? t("À terminer")
             : platform.connected
-              ? "Connecté"
-              : "Non connecté"}
+              ? t("Connecté")
+              : t("Non connecté")}
         </span>
       </div>
 
@@ -93,7 +96,7 @@ function PlatformCard({ platform }: { platform: Platform }) {
           connecté la page d'un autre établissement. */}
       {platform.connected && (
         <span className="truncate rounded-lg bg-zinc-50 px-3 py-2 text-sm text-ink">
-          {platform.detail ?? "Connecté"}
+          {platform.detail ?? t("Connecté")}
         </span>
       )}
 
@@ -119,14 +122,14 @@ function PlatformCard({ platform }: { platform: Platform }) {
             href={platform.managePath}
             className="block w-full rounded-lg bg-brand-navy px-5 py-2.5 text-center text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover"
           >
-            Terminer le dossier
+            {t("Terminer le dossier")}
           </Link>
         ) : platform.connected ? (
           <Link
             href={platform.managePath}
             className="block w-full rounded-lg border border-zinc-200 bg-white px-5 py-2.5 text-center text-sm font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
           >
-            Gérer
+            {t("Gérer")}
           </Link>
         ) : platform.connectButton ? (
           platform.connectButton
@@ -135,7 +138,7 @@ function PlatformCard({ platform }: { platform: Platform }) {
             href={platform.connectHref}
             className="block w-full rounded-lg bg-brand-navy px-5 py-2.5 text-center text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover"
           >
-            Connecter
+            {t("Connecter")}
           </a>
         )}
       </div>
@@ -190,6 +193,8 @@ export default async function ConnexionsPage({
     notFound();
   }
 
+  const langue = await langueUtilisateur();
+  const t = traducteur(langue, CONNEXIONS, COMMUN);
   const google = googleResult.data as {
     google_email: string;
     location_title: string | null;
@@ -215,12 +220,12 @@ export default async function ConnexionsPage({
     {
       key: "google",
       name: "Google",
-      purpose: "Ta fiche établissement, tes avis, tes horaires.",
+      purpose: t("Ta fiche établissement, tes avis, tes horaires."),
       debloque: [
-        "Ta note et tes avis",
-        "Ta fiche et tes horaires",
-        "Tes statistiques : apparitions, appels, itinéraires",
-        "Tes recherches Google (Search Console)",
+        t("Ta note et tes avis"),
+        t("Ta fiche et tes horaires"),
+        t("Tes statistiques : apparitions, appels, itinéraires"),
+        t("Tes recherches Google (Search Console)"),
       ],
       icon: platformIcons.google,
       color: "#1a73e8",
@@ -233,8 +238,8 @@ export default async function ConnexionsPage({
     {
       key: "facebook",
       name: "Facebook",
-      purpose: "Ta page, tes publications, tes abonnés.",
-      debloque: ["Ta page et ses publications", "Tes abonnés"],
+      purpose: t("Ta page, tes publications, tes abonnés."),
+      debloque: [t("Ta page et ses publications"), t("Tes abonnés")],
       icon: platformIcons.facebook,
       color: "#1877f2",
       tint: "#e7f0fe",
@@ -245,7 +250,8 @@ export default async function ConnexionsPage({
         <FacebookConnectButton
           restaurantId={id}
           returnTo="connexions"
-          label="Connecter"
+          label={t("Connecter")}
+          langue={langue}
         />
       ),
     },
@@ -254,8 +260,8 @@ export default async function ConnexionsPage({
       name: "Instagram",
       // Instagram n'a pas de connexion propre : Meta le rattache au compte
       // professionnel lié à la page Facebook.
-      purpose: "Se connecte en même temps que ta page Facebook.",
-      debloque: ["Ton flux sur ton site vitrine", "Tes publications"],
+      purpose: t("Se connecte en même temps que ta page Facebook."),
+      debloque: [t("Ton flux sur ton site vitrine"), t("Tes publications")],
       icon: platformIcons.instagram,
       color: "#c13584",
       tint: "#fce8f3",
@@ -268,18 +274,19 @@ export default async function ConnexionsPage({
         <FacebookConnectButton
           restaurantId={id}
           returnTo="connexions"
-          label="Connecter via Facebook"
+          label={t("Connecter via Facebook")}
+          langue={langue}
         />
       ),
     },
     {
       key: "stripe",
       name: "Stripe",
-      purpose: "Acomptes, cautions et expériences payées d'avance.",
+      purpose: t("Acomptes, cautions et expériences payées d'avance."),
       debloque: [
-        "Acomptes sur les privatisations",
-        "Empreintes de carte",
-        "Expériences payées d'avance",
+        t("Acomptes sur les privatisations"),
+        t("Empreintes de carte"),
+        t("Expériences payées d'avance"),
       ],
       icon: platformIcons.stripe,
       color: "#635bff",
@@ -291,7 +298,7 @@ export default async function ConnexionsPage({
       // d'acompte.
       detail: stripe
         ? `${stripe.nom_affiche ?? stripe.stripe_account_id}${
-            stripe.paiements_actifs ? "" : " — dossier à terminer"
+            stripe.paiements_actifs ? "" : t(" — dossier à terminer")
           }`
         : null,
       managePath: `/dashboard/${id}/paiements`,
@@ -303,8 +310,8 @@ export default async function ConnexionsPage({
     platforms.splice(2, 0, {
       key: "tiktok",
       name: "TikTok",
-      purpose: "Ton compte, tes vidéos, tes vues.",
-      debloque: ["Tes vidéos et tes vues"],
+      purpose: t("Ton compte, tes vidéos, tes vues."),
+      debloque: [t("Tes vidéos et tes vues")],
       icon: platformIcons.tiktok,
       color: "#111827",
       tint: "#f1f2f4",
@@ -325,30 +332,29 @@ export default async function ConnexionsPage({
       <div className="flex flex-col gap-3">
         <PageHeader
           icon={dashboardIcons.connexions}
-          title={`Connexions — ${restaurant.nom}`}
+          title={t("Connexions — {nom}", { nom: restaurant.nom })}
         />
         <p className="max-w-4xl text-sm text-zinc-600">
-          Relie tes comptes à Klarr pour qu&apos;il puisse lire tes avis, tes
-          publications et tes statistiques, et encaisser tes acomptes. Tu restes
-          propriétaire de tes comptes : la connexion se retire quand tu veux,
-          depuis « Gérer ».
+          {t(
+            "Relie tes comptes à Klarr pour qu'il puisse lire tes avis, tes publications et tes statistiques, et encaisser tes acomptes. Tu restes propriétaire de tes comptes : la connexion se retire quand tu veux, depuis « Gérer ».",
+          )}
         </p>
       </div>
 
       {connected && (
         <p className="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-800">
-          Compte connecté avec succès.
+          {t("Compte connecté avec succès.")}
         </p>
       )}
 
       {stripeError && (
         <p className="rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">
-          La connexion Stripe n&apos;a pas abouti.{" "}
+          {t("La connexion Stripe n'a pas abouti.")}{" "}
           <Link
             href={`/dashboard/${id}/paiements`}
             className="font-medium underline"
           >
-            Voir le détail et réessayer
+            {t("Voir le détail et réessayer")}
           </Link>
           .
         </p>
@@ -360,29 +366,31 @@ export default async function ConnexionsPage({
       <div className="grid grid-cols-3 gap-3 sm:gap-4">
         <Compteur
           valeur={`${connectedCount}/${platforms.length}`}
-          libelle={`compte${connectedCount > 1 ? "s" : ""} relié${connectedCount > 1 ? "s" : ""}`}
+          libelle={t(connectedCount > 1 ? "comptes reliés" : "compte relié")}
         />
         <a href="#comptes" className="block [&>div]:h-full">
           <Compteur
             valeur={restants.length}
             libelle={
               restants.length === 0
-                ? "tout est relié"
-                : `à relier : ${restants.map((p) => p.name).join(", ")}`
+                ? t("tout est relié")
+                : t("à relier : {liste}", {
+                    liste: restants.map((p) => p.name).join(", "),
+                  })
             }
             accent={restants.length > 0}
           />
         </a>
         <Compteur
           valeur={
-            !stripe ? "—" : stripe.paiements_actifs ? "Actifs" : "À finir"
+            !stripe ? "—" : stripe.paiements_actifs ? t("Actifs") : t("À finir")
           }
           libelle={
             !stripe
-              ? "paiements en ligne"
+              ? t("paiements en ligne")
               : stripe.paiements_actifs
-                ? "paiements en ligne"
-                : "dossier Stripe à terminer"
+                ? t("paiements en ligne")
+                : t("dossier Stripe à terminer")
           }
           accent={Boolean(stripe) && !stripe?.paiements_actifs}
         />
@@ -390,9 +398,14 @@ export default async function ConnexionsPage({
 
       <section id="comptes" className="flex scroll-mt-8 flex-col gap-4">
         <TitreSection
-          aside={`${connectedCount} relié${connectedCount > 1 ? "s" : ""} sur ${platforms.length}`}
+          aside={t(
+            connectedCount > 1
+              ? "{n} reliés sur {total}"
+              : "{n} relié sur {total}",
+            { n: connectedCount, total: platforms.length },
+          )}
         >
-          Tes comptes
+          {t("Tes comptes")}
         </TitreSection>
         <ul
           className={`grid gap-4 sm:grid-cols-2 ${
@@ -402,7 +415,7 @@ export default async function ConnexionsPage({
           }`}
         >
           {platforms.map((platform) => (
-            <PlatformCard key={platform.key} platform={platform} />
+            <PlatformCard key={platform.key} platform={platform} t={t} />
           ))}
         </ul>
       </section>

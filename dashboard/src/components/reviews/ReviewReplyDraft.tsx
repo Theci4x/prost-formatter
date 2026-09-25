@@ -7,11 +7,15 @@ import {
   marquerRepondu,
   type DraftState,
 } from "@/app/dashboard/[id]/avis/actions";
+import type { Langue } from "@/lib/i18n/langues";
+import { localeDe } from "@/lib/i18n/seo";
+import { COMMUN, traducteur } from "@/lib/i18n/t";
+import { AVIS } from "@/lib/i18n/pages/avis";
 
 const initialState: DraftState = { draft: null, error: null, version: 0 };
 
-function quand(iso: string): string {
-  return new Date(iso).toLocaleDateString("fr-FR", {
+function quand(iso: string, langue: Langue): string {
+  return new Date(iso).toLocaleDateString(localeDe(langue), {
     day: "numeric",
     month: "long",
     timeZone: "Europe/Paris",
@@ -38,8 +42,10 @@ export function ReviewReplyDraft({
   text,
   reviewUrl,
   enregistree,
+  langue,
 }: {
   restaurantId: string;
+  langue: Langue;
   cle?: string;
   plateforme?: string;
   author: string;
@@ -48,6 +54,7 @@ export function ReviewReplyDraft({
   reviewUrl: string | null;
   enregistree?: { reponse: string; reponduLe: string } | null;
 }) {
+  const t = traducteur(langue, AVIS, COMMUN);
   const [state, action, pending] = useActionState(draftReply, initialState);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [copied, setCopied] = useState(false);
@@ -80,7 +87,9 @@ export function ReviewReplyDraft({
             aria-hidden="true"
             className="h-2 w-2 rounded-full bg-emerald-500"
           />
-          Répondu le {quand(enregistree.reponduLe)}
+          {t("Répondu le {date}", {
+            date: quand(enregistree.reponduLe, langue),
+          })}
         </span>
         <p className="whitespace-pre-line text-sm leading-relaxed text-zinc-700">
           {enregistree.reponse}
@@ -95,7 +104,7 @@ export function ReviewReplyDraft({
             }}
             className="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
           >
-            Modifier la réponse
+            {t("Modifier la réponse")}
           </button>
           {cle && (
             <form action={annulerReponse}>
@@ -105,7 +114,7 @@ export function ReviewReplyDraft({
                 type="submit"
                 className="text-sm text-zinc-500 transition-colors hover:text-ink"
               >
-                Remettre dans « sans réponse »
+                {t("Remettre dans « sans réponse »")}
               </button>
             </form>
           )}
@@ -129,10 +138,10 @@ export function ReviewReplyDraft({
             className="inline-flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy disabled:opacity-50"
           >
             {pending
-              ? "Rédaction…"
+              ? t("Rédaction…")
               : source === "ia" && state.draft
-                ? "Proposer une autre réponse"
-                : "Proposer une réponse"}
+                ? t("Proposer une autre réponse")
+                : t("Proposer une réponse")}
           </button>
         </form>
         {source === "aucune" && (
@@ -145,14 +154,14 @@ export function ReviewReplyDraft({
             }}
             className="text-sm font-medium text-zinc-500 transition-colors hover:text-ink"
           >
-            Écrire moi-même
+            {t("Écrire moi-même")}
           </button>
         )}
       </div>
 
       {state.error && source === "ia" && (
         <p className="text-sm text-red-600" role="alert">
-          {state.error}
+          {t(state.error)}
         </p>
       )}
 
@@ -178,7 +187,7 @@ export function ReviewReplyDraft({
             defaultValue={texteEnCours ?? ""}
             rows={7}
             required
-            placeholder="Merci pour votre visite…"
+            placeholder={t("Merci pour votre visite…")}
             className="w-full rounded-lg border border-zinc-200 bg-zinc-50 px-3.5 py-3 text-sm leading-relaxed outline-none transition-colors focus:border-brand-navy focus:bg-white"
           />
           <div className="flex flex-wrap items-center gap-3">
@@ -187,7 +196,7 @@ export function ReviewReplyDraft({
               onClick={copy}
               className="rounded-lg bg-brand-navy px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover"
             >
-              {copied ? "Copiée ✓" : "Copier"}
+              {copied ? t("Copiée ✓") : t("Copier")}
             </button>
             {reviewUrl && (
               <a
@@ -196,7 +205,7 @@ export function ReviewReplyDraft({
                 rel="noopener noreferrer"
                 className="text-sm font-semibold text-brand-orange-dark hover:underline"
               >
-                Ouvrir l&apos;avis pour coller la réponse ↗
+                {t("Ouvrir l'avis pour coller la réponse ↗")}
               </a>
             )}
             {cle && (
@@ -204,7 +213,7 @@ export function ReviewReplyDraft({
                 type="submit"
                 className="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
               >
-                J&apos;ai publié cette réponse
+                {t("J'ai publié cette réponse")}
               </button>
             )}
             <button
@@ -212,11 +221,11 @@ export function ReviewReplyDraft({
               onClick={() => setSource("aucune")}
               className="text-sm text-zinc-500 transition-colors hover:text-ink"
             >
-              Annuler
+              {t("Annuler")}
             </button>
           </div>
           <span className="text-xs text-zinc-500">
-            Relis avant de publier : c&apos;est ton nom sous la réponse.
+            {t("Relis avant de publier : c'est ton nom sous la réponse.")}
           </span>
         </form>
       )}

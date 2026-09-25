@@ -1,4 +1,5 @@
 import { noterContact } from "@/app/dashboard/[id]/clients/actions";
+import type { T } from "@/lib/i18n/t";
 
 /**
  * Le pense-bête sur un client, éditable sur place.
@@ -12,10 +13,12 @@ export function NoteContact({
   restaurantId,
   contactId,
   note,
+  t,
 }: {
   restaurantId: string;
   contactId: string;
   note: string | null;
+  t: T;
 }) {
   return (
     <form action={noterContact} className="flex w-full items-center gap-2">
@@ -24,16 +27,16 @@ export function NoteContact({
       <input
         name="note"
         defaultValue={note ?? ""}
-        placeholder="Allergies, habitudes…"
+        placeholder={t("Allergies, habitudes…")}
         maxLength={500}
-        aria-label="Note interne"
+        aria-label={t("Note interne")}
         className="min-w-0 flex-1 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm outline-none transition-colors placeholder:text-zinc-400 hover:border-zinc-300 focus:border-brand-navy focus:bg-white"
       />
       <button
         type="submit"
         className="shrink-0 rounded-lg border border-zinc-200 px-3 py-2 text-xs font-semibold text-zinc-600 transition-colors hover:border-brand-navy hover:text-brand-navy"
       >
-        Enregistrer
+        {t("Enregistrer")}
       </button>
     </form>
   );
