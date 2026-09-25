@@ -13,6 +13,9 @@ import {
   expediteur,
 } from "@/lib/campagnes/message";
 import { envoyerCourriel } from "@/lib/courriel/envoyer";
+import { langueUtilisateur } from "@/lib/i18n/langue";
+import { traducteur } from "@/lib/i18n/t";
+import { CAMPAGNES } from "@/lib/i18n/pages/campagnes";
 
 export type CampagneState = {
   error: string | null;
@@ -280,7 +283,11 @@ export async function envoyerTest(
   if (!resultat.envoye) {
     return { error: resultat.erreur ?? "L'envoi a échoué.", message: null };
   }
-  return { error: null, message: `Essai envoyé à ${destinataire}.` };
+  const t = traducteur(await langueUtilisateur(), CAMPAGNES);
+  return {
+    error: null,
+    message: t("Essai envoyé à {email}.", { email: destinataire }),
+  };
 }
 
 /** Relance à la main une campagne en échec, sans attendre la nuit. */

@@ -5,6 +5,10 @@ import { Compteur } from "@/components/dashboard/Compteur";
 import { AssistantImport } from "@/components/import/AssistantImport";
 import { exiger } from "@/lib/equipe/roles";
 import { exigerModule } from "@/lib/abonnement/acces";
+import { langueUtilisateur } from "@/lib/i18n/langue";
+import { localeDe } from "@/lib/i18n/seo";
+import { COMMUN, traducteur } from "@/lib/i18n/t";
+import { IMPORT } from "@/lib/i18n/pages/import";
 
 /**
  * Reprendre son fichier client et ses réservations d'un autre outil.
@@ -53,36 +57,38 @@ export default async function ImportPage({
 
   const restaurant = restaurantResult.data as { nom: string } | null;
   if (!restaurant) notFound();
+  const langue = await langueUtilisateur();
+  const t = traducteur(langue, IMPORT, COMMUN);
 
   return (
     <div className="flex flex-1 flex-col gap-8 px-6 py-8">
       <div className="flex flex-col gap-3">
         <PageHeader
           icon={dashboardIcons.reservations}
-          title={`Importer — ${restaurant.nom}`}
+          title={t("Importer — {nom}", { nom: restaurant.nom })}
           backHref={`/dashboard/${id}/clients`}
         />
         <p className="max-w-4xl text-sm text-zinc-600">
-          Tu viens de TheFork, de Zenchef ou d&apos;un tableur ? Reprends ton
-          fichier client et tes réservations à venir en quelques minutes :
-          exporte-les de l&apos;ancien outil, dépose le fichier ici, vérifie,
-          importe. Rien n&apos;est écrasé, et aucun client n&apos;est prévenu.
+          {t(
+            "Tu viens de TheFork, de Zenchef ou d'un tableur ? Reprends ton fichier client et tes réservations à venir en quelques minutes : exporte-les de l'ancien outil, dépose le fichier ici, vérifie, importe. Rien n'est écrasé, et aucun client n'est prévenu.",
+          )}
         </p>
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4">
         <Compteur
-          valeur={(contacts.count ?? 0).toLocaleString("fr-FR")}
-          libelle="clients déjà au fichier"
+          valeur={(contacts.count ?? 0).toLocaleString(localeDe(langue))}
+          libelle={t("clients déjà au fichier")}
         />
         <Compteur
-          valeur={(aVenir.count ?? 0).toLocaleString("fr-FR")}
-          libelle="réservations à venir au carnet"
+          valeur={(aVenir.count ?? 0).toLocaleString(localeDe(langue))}
+          libelle={t("réservations à venir au carnet")}
         />
       </div>
 
       <AssistantImport
         restaurantId={id}
+        langue={langue}
         sallePrete={(espaces.count ?? 0) > 0}
         genreInitial={type === "reservations" ? "reservations" : "clients"}
       />

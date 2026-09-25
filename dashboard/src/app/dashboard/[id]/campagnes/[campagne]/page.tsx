@@ -20,14 +20,22 @@ import {
   supprimerCampagne,
   relancerCampagne,
 } from "../actions";
+import { langueUtilisateur } from "@/lib/i18n/langue";
+import type { Langue } from "@/lib/i18n/langues";
+import { localeDe } from "@/lib/i18n/seo";
+import { COMMUN, traducteur } from "@/lib/i18n/t";
+import { CAMPAGNES } from "@/lib/i18n/pages/campagnes";
 
-function jourLisible(iso: string | null): string {
+function jourLisible(iso: string | null, langue: Langue): string {
   if (!iso) return "—";
-  return new Date(`${iso.slice(0, 10)}T12:00:00`).toLocaleDateString("fr-FR", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  });
+  return new Date(`${iso.slice(0, 10)}T12:00:00`).toLocaleDateString(
+    localeDe(langue),
+    {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+    },
+  );
 }
 
 export default async function CampagnePage({
@@ -63,6 +71,10 @@ export default async function CampagnePage({
   const modifiable =
     campagne.statut === "brouillon" || campagne.statut === "programmee";
   const aujourdhui = new Date().toISOString().slice(0, 10);
+  const langue = await langueUtilisateur();
+  const t = traducteur(langue, CAMPAGNES, COMMUN);
+  const jour = (iso: string | null) => jourLisible(iso, langue);
+  const destinataires = compteurs[campagne.segment];
 
   return (
     <div className="flex flex-1 flex-col gap-8 px-6 py-8">
@@ -74,35 +86,46 @@ export default async function CampagnePage({
         />
         <p className="max-w-4xl text-sm text-zinc-600">
           {modifiable
-            ? "Relis le message, envoie-toi un essai, puis choisis le jour : la campagne part le matin venu, et seuls les clients qui ont accepté de recevoir tes nouvelles la reçoivent."
-            : "Cette campagne est partie : le texte reste tel qu'il a été envoyé, pour que le journal corresponde à ce que tes clients ont reçu."}
+            ? t(
+                "Relis le message, envoie-toi un essai, puis choisis le jour : la campagne part le matin venu, et seuls les clients qui ont accepté de recevoir tes nouvelles la reçoivent.",
+              )
+            : t(
+                "Cette campagne est partie : le texte reste tel qu'il a été envoyé, pour que le journal corresponde à ce que tes clients ont reçu.",
+              )}
         </p>
       </div>
 
       <div className="grid grid-cols-3 gap-3 sm:gap-4">
         <Compteur
-          valeur={LIBELLE_STATUT[campagne.statut]}
+          valeur={t(LIBELLE_STATUT[campagne.statut])}
           libelle={
             campagne.statut === "programmee"
-              ? `part le ${jourLisible(campagne.envoyer_le)}`
+              ? t("part le {date}", { date: jour(campagne.envoyer_le) })
               : campagne.statut === "envoyee"
-                ? `le ${jourLisible(campagne.envoyee_le)}`
-                : "état de la campagne"
+                ? t("le {date}", { date: jour(campagne.envoyee_le) })
+                : t("état de la campagne")
           }
           accent={campagne.statut === "echec"}
         />
         <Compteur
           valeur={compteurs[campagne.segment]}
-          libelle={`destinataire${compteurs[campagne.segment] > 1 ? "s" : ""} · ${LIBELLE_SEGMENT[campagne.segment]}`}
+          libelle={t(
+            destinataires > 1
+              ? "destinataires · {segment}"
+              : "destinataire · {segment}",
+            { segment: t(LIBELLE_SEGMENT[campagne.segment]) },
+          )}
         />
         <Compteur
           valeur={envois.envoyes}
           libelle={
             campagne.statut === "en_cours"
-              ? `partis, ${envois.restants} en attente — la suite au prochain passage`
+              ? t("partis, {n} en attente — la suite au prochain passage", {
+                  n: envois.restants,
+                })
               : envois.echoues > 0
-                ? `envoyés · ${envois.echoues} en échec`
-                : `e-mail${envois.envoyes > 1 ? "s" : ""} envoyé${envois.envoyes > 1 ? "s" : ""}`
+                ? t("envoyés · {n} en échec", { n: envois.echoues })
+                : t(envois.envoyes > 1 ? "e-mails envoyés" : "e-mail envoyé")
           }
         />
       </div>
@@ -119,6 +142,7 @@ export default async function CampagnePage({
         modifiable={modifiable}
         compteurs={compteurs}
         maison={(maison as { nom: string } | null)?.nom}
+        langue={langue}
         valeurs={{
           objet: campagne.objet,
           texte: campagne.texte,
@@ -135,17 +159,23 @@ export default async function CampagnePage({
               arriver dans une boîte. */}
           <div className="grid items-start gap-8 xl:grid-cols-2">
             <section className="flex flex-col gap-4">
-              <TitreSection>1. S&apos;envoyer un essai</TitreSection>
-              <EssaiCampagne restaurantId={id} campagneId={campagne.id} />
+              <TitreSection>{t("1. S'envoyer un essai")}</TitreSection>
+              <EssaiCampagne
+                restaurantId={id}
+                campagneId={campagne.id}
+                langue={langue}
+              />
             </section>
 
             <section className="flex flex-col gap-4">
-              <TitreSection>2. Programmer l&apos;envoi</TitreSection>
+              <TitreSection>{t("2. Programmer l'envoi")}</TitreSection>
               <div className="flex flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm">
                 <span className="text-sm font-semibold text-ink">
                   {campagne.statut === "programmee"
-                    ? `Programmée pour le ${jourLisible(campagne.envoyer_le)}`
-                    : "Choisis le jour : elle part le matin venu."}
+                    ? t("Programmée pour le {date}", {
+                        date: jour(campagne.envoyer_le),
+                      })
+                    : t("Choisis le jour : elle part le matin venu.")}
                 </span>
                 <form
                   action={programmerCampagne}
@@ -154,7 +184,7 @@ export default async function CampagnePage({
                   <input type="hidden" name="restaurant_id" value={id} />
                   <input type="hidden" name="campagne_id" value={campagne.id} />
                   <label className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700">
-                    Le jour
+                    {t("Le jour")}
                     <input
                       type="date"
                       name="envoyer_le"
@@ -168,8 +198,8 @@ export default async function CampagnePage({
                     className="rounded-lg bg-brand-navy px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover"
                   >
                     {campagne.statut === "programmee"
-                      ? "Changer la date"
-                      : "Programmer"}
+                      ? t("Changer la date")
+                      : t("Programmer")}
                   </button>
                 </form>
 
@@ -186,7 +216,7 @@ export default async function CampagnePage({
                         type="submit"
                         className="rounded-lg border border-zinc-200 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
                       >
-                        Annuler la programmation
+                        {t("Annuler la programmation")}
                       </button>
                     </form>
                   )}
@@ -201,7 +231,7 @@ export default async function CampagnePage({
                       type="submit"
                       className="text-sm font-medium text-zinc-500 transition-colors hover:text-red-600"
                     >
-                      Supprimer
+                      {t("Supprimer")}
                     </button>
                   </form>
                 </div>
@@ -219,17 +249,18 @@ export default async function CampagnePage({
           <input type="hidden" name="restaurant_id" value={id} />
           <input type="hidden" name="campagne_id" value={campagne.id} />
           <p className="text-sm leading-relaxed text-red-900">
-            L&apos;envoi s&apos;est arrêté. Ceux qui ont déjà reçu ne recevront
-            pas deux fois : la relance ne reprend que les {envois.restants}{" "}
-            destinataire
-            {envois.restants > 1 ? "s" : ""} restant
-            {envois.restants > 1 ? "s" : ""}.
+            {t(
+              envois.restants > 1
+                ? "L'envoi s'est arrêté. Ceux qui ont déjà reçu ne recevront pas deux fois : la relance ne reprend que les {n} destinataires restants."
+                : "L'envoi s'est arrêté. Ceux qui ont déjà reçu ne recevront pas deux fois : la relance ne reprend que les {n} destinataire restant.",
+              { n: envois.restants },
+            )}
           </p>
           <button
             type="submit"
             className="w-fit rounded-lg bg-brand-navy px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover"
           >
-            Relancer
+            {t("Relancer")}
           </button>
         </form>
       )}

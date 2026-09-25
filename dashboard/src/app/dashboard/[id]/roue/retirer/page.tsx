@@ -5,6 +5,9 @@ import { RetirerLot } from "@/components/roue/RetirerLot";
 import { roleSur } from "@/lib/equipe/roles";
 import { aujourdhui } from "@/lib/roue/retrait";
 import type { Restaurant } from "@/types/restaurant";
+import { langueUtilisateur } from "@/lib/i18n/langue";
+import { COMMUN, traducteur } from "@/lib/i18n/t";
+import { ROUE } from "@/lib/i18n/pages/roue";
 
 /**
  * L'écran de retrait, en salle.
@@ -29,12 +32,14 @@ export default async function RetirerPage({
     .maybeSingle();
   const restaurant = data as Pick<Restaurant, "id" | "nom"> | null;
   if (!restaurant) notFound();
+  const langue = await langueUtilisateur();
+  const t = traducteur(langue, ROUE, COMMUN);
 
   return (
     <div className="flex w-full flex-1 flex-col gap-6 px-6 py-8">
       <PageHeader
         icon={dashboardIcons.roue}
-        title="Retirer un lot"
+        title={t("Retirer un lot")}
         backHref={`/dashboard/${id}/service`}
       />
 
@@ -61,14 +66,18 @@ export default async function RetirerPage({
                 {i + 1}
               </span>
               <span className="flex flex-col gap-0.5">
-                <span className="font-semibold text-ink">{titre}</span>
-                <span className="text-sm text-zinc-500">{texte}</span>
+                <span className="font-semibold text-ink">{t(titre)}</span>
+                <span className="text-sm text-zinc-500">{t(texte)}</span>
               </span>
             </li>
           ))}
         </ol>
 
-        <RetirerLot restaurantId={id} aujourdhui={aujourdhui()} />
+        <RetirerLot
+          restaurantId={id}
+          aujourdhui={aujourdhui()}
+          langue={langue}
+        />
       </div>
     </div>
   );

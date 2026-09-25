@@ -6,6 +6,10 @@ import {
   marquerRetire,
 } from "@/app/dashboard/[id]/roue/retirer/actions";
 import { RETRAIT_INITIAL, type RetraitState } from "@/lib/roue/retrait";
+import type { Langue } from "@/lib/i18n/langues";
+import { localeDe } from "@/lib/i18n/seo";
+import { COMMUN, traducteur } from "@/lib/i18n/t";
+import { ROUE } from "@/lib/i18n/pages/roue";
 
 /**
  * Le retrait d'un lot, en salle.
@@ -19,8 +23,8 @@ import { RETRAIT_INITIAL, type RetraitState } from "@/lib/roue/retrait";
  * yeux.
  */
 
-function jourLisible(iso: string): string {
-  return new Date(`${iso}T12:00:00`).toLocaleDateString("fr-FR", {
+function jourLisible(iso: string, langue: Langue): string {
+  return new Date(`${iso}T12:00:00`).toLocaleDateString(localeDe(langue), {
     day: "numeric",
     month: "long",
     year: "numeric",
@@ -30,11 +34,14 @@ function jourLisible(iso: string): string {
 export function RetirerLot({
   restaurantId,
   aujourdhui,
+  langue,
 }: {
   restaurantId: string;
   /** Calculé par le serveur : le téléphone du serveur peut être à l'heure d'ailleurs. */
   aujourdhui: string;
+  langue: Langue;
 }) {
+  const t = traducteur(langue, ROUE, COMMUN);
   const [etat, chercher, cherchePending] = useActionState(
     chercherCode,
     RETRAIT_INITIAL,
@@ -55,7 +62,7 @@ export function RetirerLot({
     return (
       <div className="flex flex-col gap-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-6">
         <p className="text-sm font-semibold uppercase tracking-[0.08em] text-emerald-800">
-          Lot remis
+          {t("Lot remis")}
         </p>
         <p className="text-2xl font-semibold text-emerald-900">
           {trouvaille.libelle}
@@ -67,7 +74,7 @@ export function RetirerLot({
           href="?"
           className="w-fit rounded-md bg-brand-navy px-4 py-3 text-base font-medium text-white transition-colors hover:bg-brand-navy-hover active:bg-brand-navy-hover"
         >
-          Code suivant
+          {t("Code suivant")}
         </a>
       </div>
     );
@@ -92,33 +99,37 @@ export function RetirerLot({
 
         {!trouvaille.gagnant && (
           <p className="text-base font-medium text-zinc-500">
-            Cette partie n&apos;a rien gagné. Il n&apos;y a rien à remettre.
+            {t("Cette partie n'a rien gagné. Il n'y a rien à remettre.")}
           </p>
         )}
         {dejaPris && (
           <p className="text-base font-medium text-amber-700">
-            Déjà retiré le{" "}
-            {new Date(trouvaille.utiliseLe!).toLocaleDateString("fr-FR", {
-              day: "numeric",
-              month: "long",
+            {t("Déjà retiré le {date}.", {
+              date: new Date(trouvaille.utiliseLe!).toLocaleDateString(
+                localeDe(langue),
+                { day: "numeric", month: "long" },
+              ),
             })}
-            .
           </p>
         )}
         {perime && !dejaPris && (
           <p className="text-base font-medium text-amber-700">
-            Périmé depuis le {jourLisible(trouvaille.expireLe)}.
+            {t("Périmé depuis le {date}.", {
+              date: jourLisible(trouvaille.expireLe, langue),
+            })}
           </p>
         )}
         {remisable && (
           <p className="text-sm text-zinc-500">
-            Valable jusqu&apos;au {jourLisible(trouvaille.expireLe)}.
+            {t("Valable jusqu'au {date}.", {
+              date: jourLisible(trouvaille.expireLe, langue),
+            })}
           </p>
         )}
 
         {courant.error && (
           <p className="text-base font-medium text-red-600" role="alert">
-            {courant.error}
+            {t(courant.error)}
           </p>
         )}
 
@@ -132,12 +143,12 @@ export function RetirerLot({
                 disabled={retraitPending}
                 className="rounded-md bg-brand-navy px-5 py-3 text-base font-medium text-white transition-colors hover:bg-brand-navy-hover active:bg-brand-navy-hover disabled:opacity-50"
               >
-                {retraitPending ? "…" : "Je l'ai remis"}
+                {retraitPending ? "…" : t("Je l'ai remis")}
               </button>
             </form>
           )}
           <a href="?" className="text-base text-zinc-500 hover:text-zinc-900">
-            Chercher un autre code
+            {t("Chercher un autre code")}
           </a>
         </div>
       </div>
@@ -154,7 +165,7 @@ export function RetirerLot({
         className="flex flex-col gap-2 text-sm font-medium text-zinc-700"
         htmlFor="code"
       >
-        Le code du client
+        {t("Le code du client")}
         <input
           id="code"
           name="code"
@@ -176,7 +187,7 @@ export function RetirerLot({
 
       {etat.error && (
         <p className="text-base font-medium text-red-600" role="alert">
-          {etat.error}
+          {t(etat.error)}
         </p>
       )}
 
@@ -185,7 +196,7 @@ export function RetirerLot({
         disabled={cherchePending}
         className="rounded-md bg-brand-navy px-5 py-3.5 text-base font-medium text-white transition-colors hover:bg-brand-navy-hover active:bg-brand-navy-hover disabled:opacity-50"
       >
-        {cherchePending ? "Recherche…" : "Chercher"}
+        {cherchePending ? t("Recherche…") : t("Chercher")}
       </button>
     </form>
   );

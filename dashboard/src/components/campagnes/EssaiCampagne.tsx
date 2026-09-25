@@ -5,6 +5,9 @@ import {
   envoyerTest,
   type CampagneState,
 } from "@/app/dashboard/[id]/campagnes/actions";
+import type { Langue } from "@/lib/i18n/langues";
+import { COMMUN, traducteur } from "@/lib/i18n/t";
+import { CAMPAGNES } from "@/lib/i18n/pages/campagnes";
 
 const initial: CampagneState = { error: null, message: null };
 
@@ -20,10 +23,13 @@ const initial: CampagneState = { error: null, message: null };
 export function EssaiCampagne({
   restaurantId,
   campagneId,
+  langue,
 }: {
   restaurantId: string;
   campagneId: string;
+  langue: Langue;
 }) {
+  const t = traducteur(langue, CAMPAGNES, COMMUN);
   const [state, action, pending] = useActionState(envoyerTest, initial);
 
   return (
@@ -34,16 +40,16 @@ export function EssaiCampagne({
       <input type="hidden" name="restaurant_id" value={restaurantId} />
       <input type="hidden" name="campagne_id" value={campagneId} />
       <span className="text-sm font-medium text-zinc-700">
-        S&apos;envoyer un essai
+        {t("S'envoyer un essai")}
       </span>
       <div className="flex flex-wrap items-end gap-3">
         <label className="flex min-w-64 flex-1 flex-col gap-1 text-sm text-zinc-600">
-          À quelle adresse
+          {t("À quelle adresse")}
           <input
             name="destinataire"
             type="email"
             required
-            placeholder="vous@votre-restaurant.fr"
+            placeholder={t("vous@votre-restaurant.fr")}
             className="rounded-lg border border-zinc-200 bg-zinc-50 px-3.5 py-2.5 text-sm outline-none transition-colors focus:border-brand-navy focus:bg-white"
           />
         </label>
@@ -52,16 +58,17 @@ export function EssaiCampagne({
           disabled={pending}
           className="rounded-lg border border-zinc-200 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy disabled:opacity-50"
         >
-          {pending ? "Envoi…" : "Envoyer l'essai"}
+          {pending ? t("Envoi…") : t("Envoyer l'essai")}
         </button>
       </div>
       <p className="text-xs text-zinc-500">
-        Le message est composé exactement comme le vrai, pied de désinscription
-        compris. Le lien de cet essai ne désinscrit personne.
+        {t(
+          "Le message est composé exactement comme le vrai, pied de désinscription compris. Le lien de cet essai ne désinscrit personne.",
+        )}
       </p>
       {state.error ? (
         <p className="text-sm text-red-600" role="alert">
-          {state.error}
+          {t(state.error)}
         </p>
       ) : (
         state.message && (

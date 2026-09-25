@@ -12,6 +12,14 @@ import {
   type ContactImporte,
   type ReservationImportee,
 } from "@/lib/import/csv";
+import { langueUtilisateur } from "@/lib/i18n/langue";
+import { COMMUN, traducteur } from "@/lib/i18n/t";
+import { IMPORT } from "@/lib/i18n/pages/import";
+
+/** Les messages dans la langue de l'écran qui les affichera. */
+async function traduction() {
+  return traducteur(await langueUtilisateur(), IMPORT, COMMUN);
+}
 
 /**
  * L'import d'un fichier venu d'un autre outil.
@@ -65,14 +73,17 @@ export async function importerContacts(
   contacts: ContactImporte[],
   consentementConfirme: boolean,
 ): Promise<BilanImport> {
-  if (!restaurantId) return echec("Établissement inconnu.");
+  const t = await traduction();
+  if (!restaurantId) return echec(t("Établissement inconnu."));
   await exiger(restaurantId, "gerant");
   if (!Array.isArray(contacts) || contacts.length === 0) {
-    return echec("Aucun client à importer.");
+    return echec(t("Aucun client à importer."));
   }
   if (contacts.length > PLAFOND_CONTACTS) {
     return echec(
-      `Plus de ${PLAFOND_CONTACTS} clients : découpe le fichier en plusieurs parties.`,
+      t("Plus de {n} clients : découpe le fichier en plusieurs parties.", {
+        n: PLAFOND_CONTACTS,
+      }),
     );
   }
 
@@ -117,7 +128,10 @@ export async function importerContacts(
     if (error) {
       console.error("[import/contacts]", error.message);
       return {
-        erreur: `L'import s'est arrêté après ${ajoutes} clients. Réessaie : ceux déjà ajoutés ne seront pas dédoublés.`,
+        erreur: t(
+          "L'import s'est arrêté après {n} clients. Réessaie : ceux déjà ajoutés ne seront pas dédoublés.",
+          { n: ajoutes },
+        ),
         ajoutes,
         dejaLa: 0,
         refuses,
@@ -149,14 +163,17 @@ export async function importerReservations(
   restaurantId: string,
   reservations: ReservationImportee[],
 ): Promise<BilanImport> {
-  if (!restaurantId) return echec("Établissement inconnu.");
+  const t = await traduction();
+  if (!restaurantId) return echec(t("Établissement inconnu."));
   await exiger(restaurantId, "gerant");
   if (!Array.isArray(reservations) || reservations.length === 0) {
-    return echec("Aucune réservation à importer.");
+    return echec(t("Aucune réservation à importer."));
   }
   if (reservations.length > PLAFOND_RESERVATIONS) {
     return echec(
-      `Plus de ${PLAFOND_RESERVATIONS} réservations : découpe le fichier en plusieurs parties.`,
+      t("Plus de {n} réservations : découpe le fichier en plusieurs parties.", {
+        n: PLAFOND_RESERVATIONS,
+      }),
     );
   }
 
@@ -190,7 +207,9 @@ export async function importerReservations(
   const espace = espaces.find((e) => e.accepte_table) ?? espaces[0];
   if (!espace) {
     return echec(
-      "Crée d'abord au moins une salle dans « Configuration » : chaque réservation doit y être rangée.",
+      t(
+        "Crée d'abord au moins une salle dans « Configuration » : chaque réservation doit y être rangée.",
+      ),
     );
   }
 
@@ -290,7 +309,10 @@ export async function importerReservations(
     if (error) {
       console.error("[import/reservations]", error.message);
       return {
-        erreur: `L'import s'est arrêté après ${ajoutes} réservations. Réessaie : celles déjà ajoutées ne seront pas dédoublées.`,
+        erreur: t(
+          "L'import s'est arrêté après {n} réservations. Réessaie : celles déjà ajoutées ne seront pas dédoublées.",
+          { n: ajoutes },
+        ),
         ajoutes,
         dejaLa,
         refuses,

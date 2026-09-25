@@ -20,6 +20,10 @@ import { siteUrl } from "@/lib/site-url";
 import { exiger } from "@/lib/equipe/roles";
 import { exigerModule } from "@/lib/abonnement/acces";
 import { qrSvgDe } from "@/lib/menu/qr";
+import { langueUtilisateur } from "@/lib/i18n/langue";
+import { localeDe } from "@/lib/i18n/seo";
+import { COMMUN, traducteur } from "@/lib/i18n/t";
+import { ROUE } from "@/lib/i18n/pages/roue";
 
 function Puce({
   children,
@@ -83,6 +87,8 @@ export default async function RouePage({
     restaurant_id: id,
   };
   const lots = (lotsResult.data ?? []) as LotRoue[];
+  const langue = await langueUtilisateur();
+  const t = traducteur(langue, ROUE, COMMUN);
 
   const parties = (partiesResult.data ?? []) as {
     lot_id: string | null;
@@ -112,16 +118,15 @@ export default async function RouePage({
     <div className="flex flex-1 flex-col gap-8 px-6 py-8">
       <PageHeader
         icon={dashboardIcons.roue}
-        title={`Roue de la fortune — ${restaurant.nom}`}
+        title={t("Roue de la fortune — {nom}", { nom: restaurant.nom })}
         backHref="/dashboard"
       />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="max-w-4xl text-sm text-zinc-600">
-          Un panneau sur la table, avec son propre QR code : le client scanne,
-          tourne la roue, et son lot part par e-mail pour la visite suivante —
-          c&apos;est une raison de revenir autant qu&apos;un cadeau. Le totem
-          des avis reste à part, il ne change pas.
+          {t(
+            "Un panneau sur la table, avec son propre QR code : le client scanne, tourne la roue, et son lot part par e-mail pour la visite suivante — c'est une raison de revenir autant qu'un cadeau. Le totem des avis reste à part, il ne change pas.",
+          )}
         </p>
         {/* Pendant le service, c'est le seul geste qu'on vient faire ici :
           il passe en tête dès que la roue tourne. */}
@@ -130,32 +135,32 @@ export default async function RouePage({
             href={`/dashboard/${id}/roue/retirer`}
             className="rounded-lg bg-brand-navy px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover"
           >
-            Retirer un lot
+            {t("Retirer un lot")}
           </Link>
         )}
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <Compteur
-          valeur={roue.active ? "Allumée" : "Éteinte"}
+          valeur={roue.active ? t("Allumée") : t("Éteinte")}
           libelle={
             roue.active
-              ? "la roue tourne en salle"
-              : "rien ne change pour tes clients"
+              ? t("la roue tourne en salle")
+              : t("rien ne change pour tes clients")
           }
           accent={!roue.active && prete}
         />
         <Compteur
           valeur={parties.length}
-          libelle={`partie${parties.length > 1 ? "s" : ""} jouée${parties.length > 1 ? "s" : ""}`}
+          libelle={t(parties.length > 1 ? "parties jouées" : "partie jouée")}
         />
         <Compteur
           valeur={gagnees}
-          libelle={`lot${gagnees > 1 ? "s" : ""} gagné${gagnees > 1 ? "s" : ""}`}
+          libelle={t(gagnees > 1 ? "lots gagnés" : "lot gagné")}
         />
         <Compteur
           valeur={retires}
-          libelle={`retiré${retires > 1 ? "s" : ""} en salle`}
+          libelle={t(retires > 1 ? "retirés en salle" : "retiré en salle")}
         />
       </div>
 
@@ -163,26 +168,23 @@ export default async function RouePage({
           risque sur sa fiche : il doit le lire, une fois, en clair. */}
       <div className="flex flex-col gap-2 rounded-2xl border border-amber-200 bg-amber-50 p-5">
         <p className="text-sm font-semibold text-amber-900">
-          À lire avant d&apos;allumer
+          {t("À lire avant d'allumer")}
         </p>
         <p className="text-sm leading-relaxed text-amber-900">
-          Google interdit d&apos;offrir quoi que ce soit en échange d&apos;un
-          avis, quelle que soit la note. En cas de détection, les avis concernés
-          sont supprimés — y compris ceux que tu as obtenus autrement — et la
-          fiche peut être suspendue. Klarr ne trie jamais sur la note et ne
-          prétend pas vérifier qu&apos;un avis a été écrit : personne ne le peut
-          techniquement. La roue tourne pour tout le monde, une étoile comme
-          cinq.
+          {t(
+            "Google interdit d'offrir quoi que ce soit en échange d'un avis, quelle que soit la note. En cas de détection, les avis concernés sont supprimés — y compris ceux que tu as obtenus autrement — et la fiche peut être suspendue. Klarr ne trie jamais sur la note et ne prétend pas vérifier qu'un avis a été écrit : personne ne le peut techniquement. La roue tourne pour tout le monde, une étoile comme cinq.",
+          )}
         </p>
       </div>
 
       <div className="grid items-start gap-8 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
         <section className="flex flex-col gap-4">
           <div className="flex flex-col gap-1">
-            <TitreSection>Les cases</TitreSection>
+            <TitreSection>{t("Les cases")}</TitreSection>
             <p className="text-sm text-zinc-600">
-              Ce que la roue peut donner, et à quelle fréquence. Deux cases
-              minimum, dont une gagnante.
+              {t(
+                "Ce que la roue peut donner, et à quelle fréquence. Deux cases minimum, dont une gagnante.",
+              )}
             </p>
           </div>
 
@@ -197,7 +199,7 @@ export default async function RouePage({
                     key={lot.id}
                     className="flex flex-wrap items-start justify-between gap-4 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm"
                   >
-                    <LotModifiable restaurantId={id} lot={lot}>
+                    <LotModifiable restaurantId={id} lot={lot} langue={langue}>
                       <div className="flex min-w-0 flex-col gap-2">
                         <span className="font-serif text-xl text-ink">
                           {lot.libelle}
@@ -209,26 +211,31 @@ export default async function RouePage({
                         )}
                         <div className="flex flex-wrap gap-2">
                           {lot.gagnant ? (
-                            <Puce ton="chaud">Gagnante</Puce>
+                            <Puce ton="chaud">{t("Gagnante")}</Puce>
                           ) : (
-                            <Puce>Perdante</Puce>
+                            <Puce>{t("Perdante")}</Puce>
                           )}
                           {epuise ? (
-                            <Puce ton="eteint">Stock épuisé</Puce>
+                            <Puce ton="eteint">{t("Stock épuisé")}</Puce>
                           ) : lot.poids === 0 ? (
-                            <Puce ton="eteint">Retirée du tirage</Puce>
+                            <Puce ton="eteint">{t("Retirée du tirage")}</Puce>
                           ) : (
                             <Puce>
-                              {part
-                                .toFixed(part < 10 ? 1 : 0)
-                                .replace(".", ",")}{" "}
-                              % des parties
+                              {t("{part} % des parties", {
+                                part: part.toLocaleString(localeDe(langue), {
+                                  maximumFractionDigits: part < 10 ? 1 : 0,
+                                }),
+                              })}
                             </Puce>
                           )}
                           {lot.stock !== null && (
                             <Puce>
-                              {donnes} sur {lot.stock} distribué
-                              {donnes > 1 ? "s" : ""}
+                              {t(
+                                donnes > 1
+                                  ? "{n} sur {stock} distribués"
+                                  : "{n} sur {stock} distribué",
+                                { n: donnes, stock: lot.stock },
+                              )}
                             </Puce>
                           )}
                         </div>
@@ -242,7 +249,7 @@ export default async function RouePage({
                         type="submit"
                         className="text-sm font-medium text-red-600 hover:text-red-800"
                       >
-                        Supprimer
+                        {t("Supprimer")}
                       </button>
                     </form>
                   </li>
@@ -253,16 +260,17 @@ export default async function RouePage({
 
           {lots.length < LOTS_MAX ? (
             <Depliable
-              libelle="Ajouter une case"
-              fermer="Fermer"
+              libelle={t("Ajouter une case")}
+              fermer={t("Fermer")}
               ouvertParDefaut={lots.length < 2}
             >
-              <LotForm restaurantId={id} />
+              <LotForm restaurantId={id} langue={langue} />
             </Depliable>
           ) : (
             <p className="text-sm text-zinc-500">
-              Douze cases, c&apos;est le maximum : au-delà, la roue devient
-              illisible sur un téléphone.
+              {t(
+                "Douze cases, c'est le maximum : au-delà, la roue devient illisible sur un téléphone.",
+              )}
             </p>
           )}
         </section>
@@ -270,10 +278,11 @@ export default async function RouePage({
         <div className="flex flex-col gap-8">
           <section className="flex flex-col gap-4">
             <div className="flex flex-col gap-1">
-              <TitreSection>Mise en service</TitreSection>
+              <TitreSection>{t("Mise en service")}</TitreSection>
               <p className="text-sm text-zinc-500">
-                Le seul réglage que tes clients voient. Tant qu&apos;il est
-                éteint, le totem se comporte comme aujourd&apos;hui.
+                {t(
+                  "Le seul réglage que tes clients voient. Tant qu'il est éteint, le totem se comporte comme aujourd'hui.",
+                )}
               </p>
             </div>
 
@@ -291,13 +300,14 @@ export default async function RouePage({
                       aria-hidden="true"
                       className="h-3 w-3 rounded-full bg-emerald-500"
                     />
-                    La roue tourne
+                    {t("La roue tourne")}
                   </p>
                   {adresseJeu && (
                     <>
                       <p className="text-sm text-zinc-500">
-                        L&apos;adresse à mettre sur le panneau du jeu. Ce
-                        n&apos;est pas celle du totem des avis.
+                        {t(
+                          "L'adresse à mettre sur le panneau du jeu. Ce n'est pas celle du totem des avis.",
+                        )}
                       </p>
                       <a
                         href={`/jeu/${slug}`}
@@ -308,7 +318,11 @@ export default async function RouePage({
                         {adresseJeu}
                       </a>
                       <div className="w-fit">
-                        <BoutonCopier texte={adresseJeu} />
+                        <BoutonCopier
+                          texte={adresseJeu}
+                          libelle={t("Copier l'adresse")}
+                          copie={t("Adresse copiée ✓")}
+                        />
                       </div>
                       {/* Le QR en vectoriel : un panneau s'imprime, et un QR en
                       pixels grossis ne se scanne plus. */}
@@ -322,7 +336,7 @@ export default async function RouePage({
                         href={`/dashboard/${id}/roue/panneau`}
                         className="w-fit rounded-lg border border-zinc-200 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy active:border-brand-navy"
                       >
-                        Le panneau à imprimer, avec les avis
+                        {t("Le panneau à imprimer, avec les avis")}
                       </Link>
                     </>
                   )}
@@ -333,7 +347,7 @@ export default async function RouePage({
                       type="submit"
                       className="text-sm font-medium text-zinc-500 hover:text-red-600"
                     >
-                      Éteindre la roue
+                      {t("Éteindre la roue")}
                     </button>
                   </form>
                 </>
@@ -342,34 +356,44 @@ export default async function RouePage({
                   <input type="hidden" name="restaurant_id" value={id} />
                   <input type="hidden" name="active" value="1" />
                   <p className="text-sm text-zinc-500">
-                    Tes cases sont prêtes. En allumant, la roue apparaît sur la
-                    page du totem.
+                    {t(
+                      "Tes cases sont prêtes. En allumant, la roue apparaît sur la page du totem.",
+                    )}
                   </p>
                   <button
                     type="submit"
                     className="w-fit rounded-lg bg-brand-navy px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover"
                   >
-                    Allumer la roue
+                    {t("Allumer la roue")}
                   </button>
                 </form>
               ) : (
                 <p className="text-sm text-zinc-500">
-                  Il faut au moins deux cases, dont une gagnante, pour que la
-                  roue ait un sens. Ajoute-les dans « Les cases ».
+                  {t(
+                    "Il faut au moins deux cases, dont une gagnante, pour que la roue ait un sens. Ajoute-les dans « Les cases ».",
+                  )}
                 </p>
               )}
 
               {parties.length > 0 && (
                 <p className="border-t border-zinc-100 pt-3 text-sm text-zinc-500">
-                  {parties.length} partie{parties.length > 1 ? "s" : ""} jouée
-                  {parties.length > 1 ? "s" : ""}, {retires} lot
-                  {retires > 1 ? "s" : ""} retiré{retires > 1 ? "s" : ""} en
-                  salle.{" "}
+                  {t(
+                    parties.length > 1
+                      ? "{n} parties jouées"
+                      : "{n} partie jouée",
+                    { n: parties.length },
+                  )}
+                  {t(
+                    retires > 1
+                      ? ", {n} lots retirés en salle."
+                      : ", {n} lot retiré en salle.",
+                    { n: retires },
+                  )}{" "}
                   <Link
                     href={`/dashboard/${id}/roue/retirer`}
                     className="font-medium text-brand-orange-dark hover:underline"
                   >
-                    Retirer un lot
+                    {t("Retirer un lot")}
                   </Link>
                 </p>
               )}
@@ -377,12 +401,12 @@ export default async function RouePage({
           </section>
           <section className="flex flex-col gap-4">
             <div className="flex flex-col gap-1">
-              <TitreSection>Les réglages</TitreSection>
+              <TitreSection>{t("Les réglages")}</TitreSection>
               <p className="text-sm text-zinc-500">
-                Ce que le client lit, et combien de temps son lot vaut.
+                {t("Ce que le client lit, et combien de temps son lot vaut.")}
               </p>
             </div>
-            <ReglagesRoue restaurantId={id} roue={roue} />
+            <ReglagesRoue restaurantId={id} roue={roue} langue={langue} />
           </section>
         </div>
       </div>

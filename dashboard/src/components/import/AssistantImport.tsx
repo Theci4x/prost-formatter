@@ -17,6 +17,10 @@ import {
   importerReservations,
   type BilanImport,
 } from "@/app/dashboard/[id]/import/actions";
+import type { Langue } from "@/lib/i18n/langues";
+import { localeDe } from "@/lib/i18n/seo";
+import { COMMUN, traducteur } from "@/lib/i18n/t";
+import { IMPORT } from "@/lib/i18n/pages/import";
 
 export type Genre = "clients" | "reservations";
 type Source = "thefork" | "zenchef" | "autre";
@@ -111,13 +115,20 @@ export function AssistantImport({
   restaurantId,
   sallePrete,
   genreInitial = "clients",
+  langue,
 }: {
   restaurantId: string;
   /** Sans salle, une réservation n'a nulle part où se ranger. */
   sallePrete: boolean;
   genreInitial?: Genre;
+  langue: Langue;
 }) {
+  const t = traducteur(langue, IMPORT, COMMUN);
+  // Les accords du français (ajouté, ajoutée, ajoutés…) se choisissent
+  // ici ; la table donne la phrase entière dans chaque langue.
+  const pluriel = (n: number) => (n > 1 ? "s" : "");
   const [genre, setGenre] = useState<Genre>(genreInitial);
+  const feminin = genre === "reservations" ? "e" : "";
   const [source, setSource] = useState<Source>("thefork");
   const [fichier, setFichier] = useState<string | null>(null);
   const [erreurFichier, setErreurFichier] = useState<string | null>(null);
@@ -142,7 +153,9 @@ export function AssistantImport({
     recommencer();
     if (/\.(xlsx?|numbers)$/i.test(file.name)) {
       setErreurFichier(
-        "C'est un fichier Excel ou Numbers : enregistre-le d'abord au format CSV, puis dépose ce CSV ici.",
+        t(
+          "C'est un fichier Excel ou Numbers : enregistre-le d'abord au format CSV, puis dépose ce CSV ici.",
+        ),
       );
       return;
     }
@@ -150,7 +163,9 @@ export function AssistantImport({
     const tableau = parserCsv(texte);
     if (tableau.length < 2) {
       setErreurFichier(
-        "Le fichier semble vide : il faut une ligne d'en-têtes et au moins une ligne de données.",
+        t(
+          "Le fichier semble vide : il faut une ligne d'en-têtes et au moins une ligne de données.",
+        ),
       );
       return;
     }
@@ -176,7 +191,7 @@ export function AssistantImport({
             // Un nom suffit s'il y a au moins un prénom, et inversement.
             !(champ === "nom" && colonnes.prenom >= 0),
         )
-        .map(({ champ }) => LIBELLE_CHAMP[champ])
+        .map(({ champ }) => t(LIBELLE_CHAMP[champ]))
     : [];
   const optinCompte =
     genre === "clients" && tri
@@ -209,7 +224,7 @@ export function AssistantImport({
       {/* 1. Quoi, et d'où */}
       <section className="flex flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm">
         <span className="font-serif text-2xl text-ink">
-          1. Ce que tu importes
+          {t("1. Ce que tu importes")}
         </span>
         <div className="flex flex-wrap gap-2">
           {(
@@ -227,12 +242,12 @@ export function AssistantImport({
               }}
               className={`${PUCE} ${genre === valeur ? PUCE_ACTIVE : PUCE_REPOS}`}
             >
-              {libelle}
+              {t(libelle)}
             </button>
           ))}
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm text-zinc-600">Depuis :</span>
+          <span className="text-sm text-zinc-600">{t("Depuis :")}</span>
           {(Object.keys(NOM_SOURCE) as Source[]).map((valeur) => (
             <button
               key={valeur}
@@ -240,7 +255,7 @@ export function AssistantImport({
               onClick={() => setSource(valeur)}
               className={`${PUCE} ${source === valeur ? PUCE_ACTIVE : PUCE_REPOS}`}
             >
-              {NOM_SOURCE[valeur]}
+              {t(NOM_SOURCE[valeur])}
             </button>
           ))}
         </div>
@@ -250,35 +265,53 @@ export function AssistantImport({
               <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-navy text-xs font-semibold text-white">
                 {i + 1}
               </span>
-              <span className="text-zinc-700">{etape}</span>
+              <span className="text-zinc-700">{t(etape)}</span>
             </li>
           ))}
         </ol>
         {genre === "reservations" && !sallePrete && (
           <p className="rounded-xl border border-brand-orange/60 bg-brand-orange-soft px-4 py-3 text-sm text-ink">
-            Crée d&apos;abord au moins une salle dans{" "}
-            <Link
-              href={`/dashboard/${restaurantId}/reservations/configuration`}
-              className="font-semibold text-brand-orange-dark underline"
-            >
-              la configuration des réservations
-            </Link>{" "}
-            : chaque réservation importée doit y être rangée.
+            {(() => {
+              const [avant, apres] = t(
+                "Crée d'abord au moins une salle dans {lien} : chaque réservation importée doit y être rangée.",
+              ).split("{lien}");
+              return (
+                <>
+                  {avant}
+                  <Link
+                    href={`/dashboard/${restaurantId}/reservations/configuration`}
+                    className="font-semibold text-brand-orange-dark underline"
+                  >
+                    {t("la configuration des réservations")}
+                  </Link>
+                  {apres}
+                </>
+              );
+            })()}
           </p>
         )}
       </section>
 
       {/* 2. Le fichier */}
       <section className="flex flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm">
-        <span className="font-serif text-2xl text-ink">2. Ton fichier</span>
+        <span className="font-serif text-2xl text-ink">
+          {t("2. Ton fichier")}
+        </span>
         <label className="flex cursor-pointer flex-col items-center gap-2 rounded-xl border-2 border-dashed border-zinc-300 bg-zinc-50/60 px-6 py-8 text-center transition-colors hover:border-brand-navy">
           <span className="text-sm font-semibold text-ink">
-            {fichier ?? "Choisis ou dépose ton fichier CSV"}
+            {fichier ?? t("Choisis ou dépose ton fichier CSV")}
           </span>
           <span className="text-xs text-zinc-500">
             {fichier
-              ? `${lignes.length} ligne${lignes.length > 1 ? "s" : ""} lue${lignes.length > 1 ? "s" : ""} — clique pour en choisir un autre`
-              : "Il reste sur ton ordinateur tant que tu n'as pas cliqué « Importer »."}
+              ? t(
+                  lignes.length > 1
+                    ? "{n} lignes lues — clique pour en choisir un autre"
+                    : "{n} ligne lue — clique pour en choisir un autre",
+                  { n: lignes.length },
+                )
+              : t(
+                  "Il reste sur ton ordinateur tant que tu n'as pas cliqué « Importer ».",
+                )}
           </span>
           <input
             type="file"
@@ -303,11 +336,12 @@ export function AssistantImport({
         <section className="flex flex-col gap-5 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm">
           <div className="flex flex-col gap-1">
             <span className="font-serif text-2xl text-ink">
-              3. Vérifie les colonnes
+              {t("3. Vérifie les colonnes")}
             </span>
             <span className="text-sm text-zinc-600">
-              Klarr a reconnu ce qu&apos;il a pu. Corrige ce qui ne va pas :
-              l&apos;aperçu se met à jour.
+              {t(
+                "Klarr a reconnu ce qu'il a pu. Corrige ce qui ne va pas : l'aperçu se met à jour.",
+              )}
             </span>
           </div>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -317,7 +351,7 @@ export function AssistantImport({
                 className="flex flex-col gap-1.5 text-sm font-medium text-zinc-700"
               >
                 <span>
-                  {LIBELLE_CHAMP[champ]}
+                  {t(LIBELLE_CHAMP[champ])}
                   {requis && <span className="text-brand-orange-dark"> *</span>}
                 </span>
                 <select
@@ -330,10 +364,10 @@ export function AssistantImport({
                   }
                   className={`${champSelect} font-normal`}
                 >
-                  <option value={-1}>— Aucune colonne —</option>
+                  <option value={-1}>{t("— Aucune colonne —")}</option>
                   {entetes.map((entete, i) => (
                     <option key={i} value={i}>
-                      {entete || `Colonne ${i + 1}`}
+                      {entete || t("Colonne {n}", { n: i + 1 })}
                     </option>
                   ))}
                 </select>
@@ -343,8 +377,10 @@ export function AssistantImport({
 
           {manquants.length > 0 ? (
             <p className="rounded-xl border border-brand-orange/60 bg-brand-orange-soft px-4 py-3 text-sm text-ink">
-              Il manque : {manquants.join(", ")}. Choisis la colonne
-              correspondante ci-dessus.
+              {t(
+                "Il manque : {liste}. Choisis la colonne correspondante ci-dessus.",
+                { liste: manquants.join(", ") },
+              )}
             </p>
           ) : (
             <>
@@ -355,8 +391,8 @@ export function AssistantImport({
                   </span>
                   <span className="text-sm text-zinc-600">
                     {genre === "clients"
-                      ? "clients prêts à importer"
-                      : "réservations à venir prêtes à importer"}
+                      ? t("clients prêts à importer")
+                      : t("réservations à venir prêtes à importer")}
                   </span>
                 </div>
                 <div className="flex flex-col gap-1 rounded-2xl border border-zinc-200/70 bg-white px-5 py-4">
@@ -364,7 +400,7 @@ export function AssistantImport({
                     {tri.ecartees.length}
                   </span>
                   <span className="text-sm text-zinc-600">
-                    lignes laissées de côté
+                    {t("lignes laissées de côté")}
                   </span>
                 </div>
               </div>
@@ -377,9 +413,9 @@ export function AssistantImport({
                         {(genre === "clients"
                           ? ["E-mail", "Nom", "Téléphone", "Opt-in"]
                           : ["Date", "Heure", "Couverts", "Nom", "E-mail"]
-                        ).map((t) => (
-                          <th key={t} className="px-4 py-2.5">
-                            {t}
+                        ).map((entete) => (
+                          <th key={entete} className="px-4 py-2.5">
+                            {t(entete)}
                           </th>
                         ))}
                       </tr>
@@ -393,12 +429,14 @@ export function AssistantImport({
                                 (v as { nom: string | null }).nom ?? "—",
                                 (v as { telephone: string | null }).telephone ??
                                   "—",
-                                (v as { optin: boolean }).optin ? "oui" : "—",
+                                (v as { optin: boolean }).optin
+                                  ? t("oui")
+                                  : "—",
                               ]
                             : [
                                 new Date(
                                   `${(v as { date: string }).date}T12:00:00`,
-                                ).toLocaleDateString("fr-FR", {
+                                ).toLocaleDateString(localeDe(langue), {
                                   weekday: "short",
                                   day: "numeric",
                                   month: "short",
@@ -422,7 +460,7 @@ export function AssistantImport({
                   </table>
                   {tri.valides.length > 5 && (
                     <p className="border-t border-zinc-100 px-4 py-2 text-xs text-zinc-500">
-                      … et {tri.valides.length - 5} autres
+                      {t("… et {n} autres", { n: tri.valides.length - 5 })}
                     </p>
                   )}
                 </div>
@@ -431,20 +469,28 @@ export function AssistantImport({
               {tri.ecartees.length > 0 && (
                 <details className="text-sm text-zinc-600">
                   <summary className="cursor-pointer font-medium text-zinc-700">
-                    Pourquoi {tri.ecartees.length} ligne
-                    {tri.ecartees.length > 1
-                      ? "s sont laissées"
-                      : " est laissée"}{" "}
-                    de côté
+                    {t(
+                      tri.ecartees.length > 1
+                        ? "Pourquoi {n} lignes sont laissées de côté"
+                        : "Pourquoi {n} ligne est laissée de côté",
+                      { n: tri.ecartees.length },
+                    )}
                   </summary>
                   <ul className="mt-2 flex flex-col gap-1">
                     {tri.ecartees.slice(0, 20).map((e) => (
                       <li key={e.ligne}>
-                        Ligne {e.ligne} : {e.raison}
+                        {t("Ligne {n} : {raison}", {
+                          n: e.ligne,
+                          raison: t(e.raison),
+                        })}
                       </li>
                     ))}
                     {tri.ecartees.length > 20 && (
-                      <li>… et {tri.ecartees.length - 20} autres</li>
+                      <li>
+                        {t("… et {n} autres", {
+                          n: tri.ecartees.length - 20,
+                        })}
+                      </li>
                     )}
                   </ul>
                 </details>
@@ -461,27 +507,25 @@ export function AssistantImport({
                       className="mt-1 accent-brand-navy"
                     />
                     <span>
-                      Je certifie que les {optinCompte} clients marqués « oui »
-                      dans la colonne « {entetes[colonnes.optin]} » ont accepté
-                      de recevoir les actualités de mon restaurant. Sans cette
-                      case, ils sont importés sans consentement : ils
-                      n&apos;apparaîtront pas dans les destinataires de tes
-                      campagnes.
+                      {t(
+                        "Je certifie que les {n} clients marqués « oui » dans la colonne « {colonne} » ont accepté de recevoir les actualités de mon restaurant. Sans cette case, ils sont importés sans consentement : ils n'apparaîtront pas dans les destinataires de tes campagnes.",
+                        { n: optinCompte, colonne: entetes[colonnes.optin] },
+                      )}
                     </span>
                   </label>
                 )}
               {genre === "clients" && colonnes.optin < 0 && (
                 <p className="text-sm text-zinc-500">
-                  Aucune colonne d&apos;opt-in : les clients sont importés sans
-                  consentement, et ne recevront pas tes campagnes tant
-                  qu&apos;ils ne l&apos;auront pas donné en réservant.
+                  {t(
+                    "Aucune colonne d'opt-in : les clients sont importés sans consentement, et ne recevront pas tes campagnes tant qu'ils ne l'auront pas donné en réservant.",
+                  )}
                 </p>
               )}
               {genre === "reservations" && (
                 <p className="text-sm text-zinc-500">
-                  Les réservations importées arrivent confirmées dans ton
-                  carnet. Klarr n&apos;envoie rien à ces clients : ils ont déjà
-                  reçu leur confirmation de l&apos;autre outil.
+                  {t(
+                    "Les réservations importées arrivent confirmées dans ton carnet. Klarr n'envoie rien à ces clients : ils ont déjà reçu leur confirmation de l'autre outil.",
+                  )}
                 </p>
               )}
 
@@ -498,23 +542,18 @@ export function AssistantImport({
                   className="rounded-lg bg-brand-navy px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover disabled:opacity-50"
                 >
                   {enCours
-                    ? "Import en cours…"
-                    : `Importer ${tri.valides.length} ${
-                        genre === "clients"
-                          ? tri.valides.length > 1
-                            ? "clients"
-                            : "client"
-                          : tri.valides.length > 1
-                            ? "réservations"
-                            : "réservation"
-                      }`}
+                    ? t("Import en cours…")
+                    : t(
+                        `Importer {n} ${genre === "clients" ? "client" : "réservation"}${pluriel(tri.valides.length)}`,
+                        { n: tri.valides.length },
+                      )}
                 </button>
                 <button
                   type="button"
                   onClick={recommencer}
                   className="text-sm text-zinc-500 transition-colors hover:text-ink"
                 >
-                  Recommencer
+                  {t("Recommencer")}
                 </button>
               </div>
             </>
@@ -533,25 +572,35 @@ export function AssistantImport({
           role="status"
         >
           <span className="font-serif text-2xl text-ink">
-            {bilan.erreur ? "L'import s'est interrompu" : "Import terminé"}
+            {bilan.erreur
+              ? t("L'import s'est interrompu")
+              : t("Import terminé")}
           </span>
           {bilan.erreur && (
             <p className="text-sm text-red-700">{bilan.erreur}</p>
           )}
           <p className="text-sm leading-relaxed text-zinc-700">
-            {bilan.ajoutes} {genre === "clients" ? "client" : "réservation"}
-            {bilan.ajoutes > 1 ? "s" : ""} ajouté
-            {genre === "reservations" ? "e" : ""}
-            {bilan.ajoutes > 1 ? "s" : ""}
+            {t(
+              `{n} ${genre === "clients" ? "client" : "réservation"}${pluriel(bilan.ajoutes)} ajouté${feminin}${pluriel(bilan.ajoutes)}`,
+              { n: bilan.ajoutes },
+            )}
             {bilan.dejaLa > 0
-              ? `, ${bilan.dejaLa} déjà présent${genre === "reservations" ? "e" : ""}${bilan.dejaLa > 1 ? "s" : ""}`
+              ? t(`, {n} déjà présent${feminin}${pluriel(bilan.dejaLa)}`, {
+                  n: bilan.dejaLa,
+                })
               : ""}
             {bilan.refuses > 0
-              ? `, ${bilan.refuses} refusé${genre === "reservations" ? "e" : ""}${bilan.refuses > 1 ? "s" : ""}`
+              ? t(`, {n} refusé${feminin}${pluriel(bilan.refuses)}`, {
+                  n: bilan.refuses,
+                })
               : ""}
             {genre === "clients" && bilan.joignables
-              ? `. ${bilan.joignables} pourront recevoir tes campagnes.`
-              : "."}
+              ? t(". {n} pourront recevoir tes campagnes.", {
+                  n: bilan.joignables,
+                })
+              : langue === "zh"
+                ? "。"
+                : "."}
           </p>
           {!bilan.erreur && (
             <Link
@@ -559,8 +608,8 @@ export function AssistantImport({
               className="w-fit text-sm font-semibold text-brand-orange-dark hover:underline"
             >
               {genre === "clients"
-                ? "Voir mon fichier client →"
-                : "Voir mon carnet →"}
+                ? t("Voir mon fichier client →")
+                : t("Voir mon carnet →")}
             </Link>
           )}
         </section>

@@ -8,6 +8,9 @@ import { exigerModule } from "@/lib/abonnement/acces";
 import { qrSvgDe } from "@/lib/menu/qr";
 import { siteUrl } from "@/lib/site-url";
 import type { Restaurant } from "@/types/restaurant";
+import { langueUtilisateur } from "@/lib/i18n/langue";
+import { COMMUN, traducteur } from "@/lib/i18n/t";
+import { ROUE } from "@/lib/i18n/pages/roue";
 
 /**
  * Le panneau de table, prêt à imprimer.
@@ -82,22 +85,24 @@ export default async function PanneauPage({
   const restaurant = data as Restaurant | null;
   if (!restaurant) notFound();
 
+  const t = traducteur(await langueUtilisateur(), ROUE, COMMUN);
   const slug = (restaurant as Restaurant & { slug_reservation?: string | null })
     .slug_reservation;
   if (!slug) {
     return (
       <div className="flex flex-1 flex-col gap-4 px-6 py-8">
         <h1 className="text-xl font-semibold text-zinc-900">
-          Panneau à imprimer
+          {t("Panneau à imprimer")}
         </h1>
         <p className="max-w-4xl text-sm text-zinc-500">
-          Ouvre d&apos;abord ta page de réservation : c&apos;est son adresse qui
-          sert au jeu comme aux avis.{" "}
+          {t(
+            "Ouvre d'abord ta page de réservation : c'est son adresse qui sert au jeu comme aux avis.",
+          )}{" "}
           <Link
             href={`/dashboard/${id}/reservations/configuration`}
             className="font-medium text-brand-orange hover:underline"
           >
-            Réglages des réservations
+            {t("Réglages des réservations")}
           </Link>
         </p>
       </div>
@@ -116,15 +121,17 @@ export default async function PanneauPage({
           href={`/dashboard/${id}/roue`}
           className="text-sm text-zinc-500 hover:text-zinc-900"
         >
-          ← Roue de la fortune
+          {t("← Roue de la fortune")}
         </Link>
-        <h1 className="font-serif text-4xl text-ink">Panneau à imprimer</h1>
+        <h1 className="font-serif text-4xl text-ink">
+          {t("Panneau à imprimer")}
+        </h1>
         <p className="text-sm leading-relaxed text-zinc-500">
-          Imprime en A5, ou en A4 puis plie en deux. Vérifie les deux QR avec
-          ton propre téléphone avant d&apos;en faire cinquante : un carton
-          imprimé de travers se paie en papier.
+          {t(
+            "Imprime en A5, ou en A4 puis plie en deux. Vérifie les deux QR avec ton propre téléphone avant d'en faire cinquante : un carton imprimé de travers se paie en papier.",
+          )}
         </p>
-        <BoutonImprimer />
+        <BoutonImprimer libelle={t("Imprimer le panneau")} />
       </div>
 
       {/* Le carton lui-même. Bordure et coins visibles à l'écran pour qu'on

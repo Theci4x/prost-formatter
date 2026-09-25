@@ -13,6 +13,9 @@ import {
   type Segment,
 } from "@/lib/campagnes/cibles";
 import { OBJET_MAX, TEXTE_MAX } from "@/lib/campagnes/regles";
+import type { Langue } from "@/lib/i18n/langues";
+import { COMMUN, traducteur, type T } from "@/lib/i18n/t";
+import { CAMPAGNES } from "@/lib/i18n/pages/campagnes";
 
 const initial: CampagneState = { error: null, message: null };
 
@@ -47,8 +50,10 @@ export function FormulaireCampagne({
   valeurs = VIDE,
   compteurs,
   modifiable = true,
-  maison = "Votre restaurant",
+  maison,
+  langue,
 }: {
+  langue: Langue;
   restaurantId: string;
   /** Absent en création : l'action crée puis redirige vers l'édition. */
   campagneId?: string;
@@ -60,6 +65,7 @@ export function FormulaireCampagne({
   /** Le nom qui signe le message, pour l'aperçu. */
   maison?: string;
 }) {
+  const t = traducteur(langue, CAMPAGNES, COMMUN);
   const [state, action, pending] = useActionState(
     campagneId ? enregistrerCampagne : creerCampagne,
     initial,
@@ -85,47 +91,51 @@ export function FormulaireCampagne({
 
       <div className="flex min-w-0 flex-col gap-6">
         <label className="flex flex-col gap-1.5 text-sm font-semibold text-ink">
-          L&apos;objet
+          {t("L'objet")}
           <input
             name="objet"
             value={objet}
             onChange={(e) => setObjet(e.target.value)}
             disabled={!modifiable}
-            placeholder="Notre carte d'automne arrive lundi"
+            placeholder={t("Notre carte d'automne arrive lundi")}
             className={`${champ} text-base`}
           />
           <span
             className={`text-xs font-normal ${objet.length > OBJET_MAX ? "text-red-600" : "text-zinc-500"}`}
           >
-            {objet.length} / {OBJET_MAX} caractères — c&apos;est la seule phrase
-            que tout le monde lira.
+            {t(
+              "{n} / {max} caractères — c'est la seule phrase que tout le monde lira.",
+              { n: objet.length, max: OBJET_MAX },
+            )}
           </span>
         </label>
 
         <label className="flex flex-col gap-1.5 text-sm font-semibold text-ink">
-          Le message
+          {t("Le message")}
           <textarea
             name="texte"
             rows={11}
             value={texte}
             onChange={(e) => setTexte(e.target.value)}
             disabled={!modifiable}
-            placeholder={
-              "Bonjour,\n\nNotre carte d'automne arrive lundi : gibier, champignons, et la tarte aux quetsches de la maison.\n\nÀ très vite,"
-            }
+            placeholder={t(
+              "Bonjour,\n\nNotre carte d'automne arrive lundi : gibier, champignons, et la tarte aux quetsches de la maison.\n\nÀ très vite,",
+            )}
             className={`${champ} leading-relaxed`}
           />
           <span
             className={`text-xs font-normal ${texte.length > TEXTE_MAX ? "text-red-600" : "text-zinc-500"}`}
           >
-            {texte.length} / {TEXTE_MAX} caractères. Une ligne vide sépare deux
-            paragraphes. Votre nom signe le message, inutile de le répéter.
+            {t(
+              "{n} / {max} caractères. Une ligne vide sépare deux paragraphes. Votre nom signe le message, inutile de le répéter.",
+              { n: texte.length, max: TEXTE_MAX },
+            )}
           </span>
         </label>
 
         <fieldset className="flex flex-col gap-2.5">
           <legend className="mb-2.5 text-sm font-semibold text-ink">
-            À qui
+            {t("À qui")}
           </legend>
           <div className="grid gap-2.5 sm:grid-cols-2">
             {SEGMENTS.map((cle) => (
@@ -148,28 +158,28 @@ export function FormulaireCampagne({
                       disabled={!modifiable}
                       className="accent-brand-orange"
                     />
-                    {LIBELLE_SEGMENT[cle]}
+                    {t(LIBELLE_SEGMENT[cle])}
                   </span>
                   <span className="shrink-0 text-right">
                     <span className="font-serif text-2xl leading-none text-ink">
                       {compteurs[cle]}
                     </span>
                     <span className="block text-[11px] text-zinc-500">
-                      personne{compteurs[cle] > 1 ? "s" : ""}
+                      {t(compteurs[cle] > 1 ? "personnes" : "personne")}
                     </span>
                   </span>
                 </span>
                 <span className="text-xs leading-relaxed text-zinc-500">
-                  {EXPLICATION_SEGMENT[cle]}
+                  {t(EXPLICATION_SEGMENT[cle])}
                 </span>
               </label>
             ))}
           </div>
           {compteurs.tous === 0 && (
             <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-900">
-              Personne n&apos;a encore accepté tes e-mails. Tu peux écrire la
-              campagne, elle partira quand le fichier se remplira — la case est
-              proposée à chaque réservation.
+              {t(
+                "Personne n'a encore accepté tes e-mails. Tu peux écrire la campagne, elle partira quand le fichier se remplira — la case est proposée à chaque réservation.",
+              )}
             </p>
           )}
         </fieldset>
@@ -177,21 +187,23 @@ export function FormulaireCampagne({
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="flex flex-col gap-1.5 text-sm font-semibold text-ink">
             <span>
-              Un bouton{" "}
-              <span className="font-normal text-zinc-400">(facultatif)</span>
+              {t("Un bouton")}{" "}
+              <span className="font-normal text-zinc-400">
+                {t("(facultatif)")}
+              </span>
             </span>
             <input
               name="bouton_libelle"
               value={boutonLibelle}
               onChange={(e) => setBoutonLibelle(e.target.value)}
               disabled={!modifiable}
-              placeholder="Réserver une table"
+              placeholder={t("Réserver une table")}
               className={champ}
             />
           </label>
           {boutonLibelle.trim() && (
             <label className="flex flex-col gap-1.5 text-sm font-semibold text-ink">
-              Vers quelle adresse
+              {t("Vers quelle adresse")}
               <input
                 name="bouton_url"
                 type="url"
@@ -212,18 +224,18 @@ export function FormulaireCampagne({
               className="w-fit rounded-lg bg-brand-navy px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover disabled:opacity-50"
             >
               {pending
-                ? "Enregistrement…"
+                ? t("Enregistrement…")
                 : campagneId
-                  ? "Enregistrer"
-                  : "Créer le brouillon"}
+                  ? t("Enregistrer")
+                  : t("Créer le brouillon")}
             </button>
             {state.error ? (
               <p className="text-sm text-red-600" role="alert">
-                {state.error}
+                {t(state.error)}
               </p>
             ) : (
               state.message && (
-                <p className="text-sm text-emerald-700">{state.message}</p>
+                <p className="text-sm text-emerald-700">{t(state.message)}</p>
               )
             )}
           </div>
@@ -231,7 +243,8 @@ export function FormulaireCampagne({
       </div>
 
       <Apercu
-        maison={maison}
+        t={t}
+        maison={maison ?? t("Votre restaurant")}
         objet={objet}
         texte={texte}
         bouton={boutonLibelle}
@@ -247,11 +260,13 @@ export function FormulaireCampagne({
  * l'air d'être, pas sur un champ de texte.
  */
 function Apercu({
+  t,
   maison,
   objet,
   texte,
   bouton,
 }: {
+  t: T;
   maison: string;
   objet: string;
   texte: string;
@@ -264,7 +279,7 @@ function Apercu({
   return (
     <div className="flex min-w-0 flex-col gap-3 xl:sticky xl:top-24 xl:self-start">
       <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-500">
-        Aperçu
+        {t("Aperçu")}
       </span>
       <div className="overflow-hidden rounded-2xl border border-zinc-200/70">
         <div className="flex flex-col gap-0.5 border-b border-zinc-200/70 bg-white px-5 py-3">
@@ -272,7 +287,7 @@ function Apercu({
           <span className="truncate text-sm font-semibold text-ink">
             {objet || (
               <span className="font-normal text-zinc-400">
-                L&apos;objet de ton message
+                {t("L'objet de ton message")}
               </span>
             )}
           </span>
@@ -293,7 +308,7 @@ function Apercu({
               ))
             ) : (
               <p className="mb-3 text-[15px] leading-relaxed text-zinc-400">
-                Votre message apparaîtra ici.
+                {t("Votre message apparaîtra ici.")}
               </p>
             )}
             {bouton.trim() && (

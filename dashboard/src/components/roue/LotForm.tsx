@@ -7,6 +7,9 @@ import {
   type LotState,
 } from "@/app/dashboard/[id]/roue/actions";
 import { LOT_VIDE, type LotRoue, type LotValeurs } from "@/types/roue";
+import type { Langue } from "@/lib/i18n/langues";
+import { COMMUN, traducteur, type T } from "@/lib/i18n/t";
+import { ROUE } from "@/lib/i18n/pages/roue";
 
 const champ =
   "w-full rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-brand-navy";
@@ -17,11 +20,13 @@ function Champs({
   valeurs,
   prefixe = "lot",
   lotId,
+  t,
 }: {
   restaurantId: string;
   valeurs: LotValeurs;
   prefixe?: string;
   lotId?: string;
+  t: T;
 }) {
   // Une case perdante n'a ni stock ni précision pour la salle : rien n'est
   // remis, il n'y a rien à décompter.
@@ -41,30 +46,33 @@ function Champs({
           className="mt-0.5"
         />
         <span>
-          <span className="font-medium">Case gagnante</span> — décoche pour une
-          case qui ne donne rien. Le client voit « Perdu », et c&apos;est ce qui
-          rend les autres cases désirables.
+          <span className="font-medium">{t("Case gagnante")}</span>{" "}
+          {t(
+            "— décoche pour une case qui ne donne rien. Le client voit « Perdu », et c'est ce qui rend les autres cases désirables.",
+          )}
         </span>
       </label>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <label className={label} htmlFor={`${prefixe}-libelle`}>
           {gagnant
-            ? "Le lot, tel que le client le lit"
-            : "Ce que le client lit"}
+            ? t("Le lot, tel que le client le lit")
+            : t("Ce que le client lit")}
           <input
             id={`${prefixe}-libelle`}
             name="libelle"
             required
             maxLength={80}
             defaultValue={valeurs.libelle}
-            placeholder={gagnant ? "Un café offert" : "Perdu — retentez demain"}
+            placeholder={
+              gagnant ? t("Un café offert") : t("Perdu — retentez demain")
+            }
             className={champ}
           />
         </label>
 
         <label className={label} htmlFor={`${prefixe}-poids`}>
-          Fréquence
+          {t("Fréquence")}
           <input
             id={`${prefixe}-poids`}
             name="poids"
@@ -74,9 +82,9 @@ function Champs({
             className={`${champ} max-w-28`}
           />
           <span className="text-xs font-normal text-zinc-500">
-            Un poids, pas un pourcentage : une case à 70 sort sept fois plus
-            souvent qu&apos;une case à 10. Mets 0 pour retirer la case du tirage
-            sans la supprimer.
+            {t(
+              "Un poids, pas un pourcentage : une case à 70 sort sept fois plus souvent qu'une case à 10. Mets 0 pour retirer la case du tirage sans la supprimer.",
+            )}
           </span>
         </label>
       </div>
@@ -84,36 +92,42 @@ function Champs({
       {gagnant && (
         <div className="grid gap-4 sm:grid-cols-2">
           <label className={label} htmlFor={`${prefixe}-precision`}>
-            Précision pour la salle{" "}
-            <span className="font-normal text-zinc-400">(facultatif)</span>
+            {t("Précision pour la salle")}{" "}
+            <span className="font-normal text-zinc-400">
+              {t("(facultatif)")}
+            </span>
             <input
               id={`${prefixe}-precision`}
               name="precision"
               maxLength={120}
               defaultValue={valeurs.precision}
-              placeholder="Expresso ou allongé, pas un dessert"
+              placeholder={t("Expresso ou allongé, pas un dessert")}
               className={champ}
             />
             <span className="text-xs font-normal text-zinc-500">
-              Jamais montrée au client. C&apos;est ce que lit le serveur quand
-              on lui présente le code.
+              {t(
+                "Jamais montrée au client. C'est ce que lit le serveur quand on lui présente le code.",
+              )}
             </span>
           </label>
 
           <label className={label} htmlFor={`${prefixe}-stock`}>
-            Stock{" "}
-            <span className="font-normal text-zinc-400">(facultatif)</span>
+            {t("Stock")}{" "}
+            <span className="font-normal text-zinc-400">
+              {t("(facultatif)")}
+            </span>
             <input
               id={`${prefixe}-stock`}
               name="stock"
               inputMode="numeric"
               defaultValue={valeurs.stock}
-              placeholder="illimité"
+              placeholder={t("illimité")}
               className={`${champ} max-w-32`}
             />
             <span className="text-xs font-normal text-zinc-500">
-              Combien tu acceptes d&apos;en offrir en tout. Une fois atteint, la
-              case ne sort plus et les autres se repartagent le tirage.
+              {t(
+                "Combien tu acceptes d'en offrir en tout. Une fois atteint, la case ne sort plus et les autres se repartagent le tirage.",
+              )}
             </span>
           </label>
         </div>
@@ -122,7 +136,14 @@ function Champs({
   );
 }
 
-export function LotForm({ restaurantId }: { restaurantId: string }) {
+export function LotForm({
+  restaurantId,
+  langue,
+}: {
+  restaurantId: string;
+  langue: Langue;
+}) {
+  const t = traducteur(langue, ROUE, COMMUN);
   const [state, action, pending] = useActionState(ajouterLot, {
     error: null,
     rendu: 0,
@@ -140,11 +161,12 @@ export function LotForm({ restaurantId }: { restaurantId: string }) {
         key={state.rendu}
         restaurantId={restaurantId}
         valeurs={state.valeurs}
+        t={t}
       />
 
       {state.error && (
         <p className="text-sm text-red-600" role="alert">
-          {state.error}
+          {t(state.error)}
         </p>
       )}
 
@@ -153,7 +175,7 @@ export function LotForm({ restaurantId }: { restaurantId: string }) {
         disabled={pending}
         className="w-fit rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover disabled:opacity-50"
       >
-        {pending ? "Enregistrement…" : "Ajouter cette case"}
+        {pending ? t("Enregistrement…") : t("Ajouter cette case")}
       </button>
     </form>
   );
@@ -173,12 +195,15 @@ export function LotModifiable({
   restaurantId,
   lot,
   children,
+  langue,
 }: {
   restaurantId: string;
   lot: LotRoue;
+  langue: Langue;
   /** Ce qu'on affiche tant que le formulaire est fermé. */
   children: React.ReactNode;
 }) {
+  const t = traducteur(langue, ROUE, COMMUN);
   const [ouvertDepuis, setOuvertDepuis] = useState<number | null>(null);
   const [state, action, pending] = useActionState(modifierLot, {
     error: null,
@@ -201,7 +226,7 @@ export function LotModifiable({
           onClick={() => setOuvertDepuis(state.rendu)}
           className="rounded-md border border-zinc-200 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy active:border-brand-navy"
         >
-          Modifier
+          {t("Modifier")}
         </button>
       </div>
     );
@@ -215,11 +240,12 @@ export function LotModifiable({
         lotId={lot.id}
         prefixe={`mod-${lot.id}`}
         valeurs={state.valeurs}
+        t={t}
       />
 
       {state.error && (
         <p className="text-sm text-red-600" role="alert">
-          {state.error}
+          {t(state.error)}
         </p>
       )}
 
@@ -229,14 +255,14 @@ export function LotModifiable({
           disabled={pending}
           className="rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover disabled:opacity-50"
         >
-          {pending ? "Enregistrement…" : "Enregistrer"}
+          {pending ? t("Enregistrement…") : t("Enregistrer")}
         </button>
         <button
           type="button"
           onClick={() => setOuvertDepuis(null)}
           className="text-sm text-zinc-500 hover:text-zinc-900"
         >
-          Fermer
+          {t("Fermer")}
         </button>
       </div>
     </form>
