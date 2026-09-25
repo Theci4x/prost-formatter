@@ -62,7 +62,7 @@ export const RESUME_MODULE: Record<Module, string> = {
   visibilite:
     "Ta fiche Google, tes avis, ta visibilité, ta carte, tes photos et ton site vitrine.",
   reservations:
-    "Ta page de réservation, le carnet, l'écran de service, le plan de salle, les acomptes et les empreintes bancaires.",
+    "Ta page de réservation, le carnet, l'écran de service, le plan de salle, les acomptes et les empreintes bancaires — avec ton site vitrine et ta carte.",
 };
 
 /**
@@ -234,12 +234,15 @@ export const ACCES_COMPLET: Acces = {
  * ou de l'autre.
  */
 export const MODULE_DE_LA_SECTION: Record<string, Module | Module[]> = {
-  vitrine: "visibilite",
   // La carte se saisit des deux côtés : elle s'affiche sur la page de
   // réservation, qui appartient au carnet. Ce qui en fait un produit de
   // visibilité — le QR posé sur les tables, la page « la carte de X »
   // référencée, la traduction — reste vérifié écran par écran.
   menu: ["visibilite", "reservations"],
+  // Le site vitrine aussi : un restaurant en Réservations seul a besoin
+  // d'une page où envoyer ses clients, et un kebab qui ne prend que la
+  // visibilité a besoin de son site et de sa carte.
+  vitrine: ["visibilite", "reservations"],
   photos: "visibilite",
   avis: "visibilite",
   retours: "visibilite",

@@ -57,6 +57,7 @@ const INCLUS: Record<Module, (keyof ClesAccueil["entrees"])[]> = {
     "clients",
     "experiences",
     "paiements",
+    "vitrine",
     "carte",
     "faq",
   ],

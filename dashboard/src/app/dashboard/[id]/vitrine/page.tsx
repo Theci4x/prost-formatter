@@ -7,7 +7,7 @@ import { Compteur } from "@/components/dashboard/Compteur";
 import { BoutonCopier } from "@/components/dashboard/BoutonCopier";
 import { basculerVitrine } from "@/app/dashboard/actions";
 import { exiger } from "@/lib/equipe/roles";
-import { exigerModule } from "@/lib/abonnement/acces";
+import { exigerSection } from "@/lib/abonnement/acces";
 import { siteUrl } from "@/lib/site-url";
 import { horairesRenseignes } from "@/lib/site/horaires";
 import { couvertureDe } from "@/lib/vitrine/couverture";
@@ -21,7 +21,7 @@ export default async function VitrinePage({
 }) {
   const { id } = await params;
   await exiger(id, "gerant");
-  await exigerModule(id, "visibilite");
+  await exigerSection(id, "vitrine");
 
   const supabase = await createClient();
   const [restaurantResult, photosResult, platsResult] = await Promise.all([
