@@ -212,6 +212,37 @@ export function RestaurantForm({
           />
         </Champ>
 
+        <div className="flex flex-col gap-3 rounded-xl border border-zinc-200 bg-zinc-50 p-4">
+          <div>
+            <h3 className="text-sm font-semibold text-ink">Fiches d&apos;avis</h3>
+            <p className="mt-1 text-xs leading-relaxed text-zinc-500">
+              Colle les URLs publiques exactes de ta fiche Yelp et Tripadvisor.
+              Klarr relèvera ensuite la note et le nombre d&apos;avis une fois par
+              semaine, sans deviner un établissement homonyme.
+            </p>
+          </div>
+          <Champ id="yelp_url" libelle="Fiche Yelp">
+            <input
+              id="yelp_url"
+              name="yelp_url"
+              type="url"
+              placeholder="https://www.yelp.fr/biz/..."
+              defaultValue={restaurant?.yelp_url ?? ""}
+              className={CHAMP}
+            />
+          </Champ>
+          <Champ id="tripadvisor_url" libelle="Fiche Tripadvisor">
+            <input
+              id="tripadvisor_url"
+              name="tripadvisor_url"
+              type="url"
+              placeholder="https://www.tripadvisor.fr/Restaurant_Review-..."
+              defaultValue={restaurant?.tripadvisor_url ?? ""}
+              className={CHAMP}
+            />
+          </Champ>
+        </div>
+
         <Champ
           id="description"
           libelle="Description"

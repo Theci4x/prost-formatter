@@ -47,14 +47,14 @@ Dashboard de gestion des restaurants. Next.js (App Router) + Supabase.
     `GOOGLE_PLACES_API_KEY`.
 11. Appliquer `supabase/migrations/0005_visibility_audits.sql` dans le SQL
     editor Supabase.
-12. Pour les avis Yelp/Tripadvisor (page `/dashboard/[id]/avis`) : créer
-    une clé sur [yelp.com/developers](https://www.yelp.com/developers)
-    (`YELP_API_KEY`) et sur
-    [tripadvisor.com/developers](https://www.tripadvisor.com/developers)
-    (`TRIPADVISOR_API_KEY`) — auto-inscription, pas de partenariat
-    commercial à négocier, contrairement à la plupart des connecteurs
-    livraison/réservation (Uber Eats, Deliveroo, TheFork...) qui
-    nécessitent une société établie et un dossier partenaire.
+12. Pour les avis Yelp/Tripadvisor (page `/dashboard/[id]/avis`) : passe la
+    fiche publique exacte de chaque plateforme dans « Modifier
+    l'établissement ». Klarr relève alors uniquement la note et le nombre
+    d'avis depuis ces URLs, sans clé d'API et sans recherche automatique d'un
+    homonyme. Le relevé est limité à un passage par établissement dans la
+    rotation hebdomadaire. Applique aussi
+    `supabase/migrations/0089_reputation_sources.sql` dans le SQL editor
+    Supabase avant de saisir les URLs.
 13. Pour Facebook/Instagram : va sur
     [developers.facebook.com](https://developers.facebook.com), crée une
     App (type "Business"), ajoute le produit **"Facebook Login for
@@ -194,9 +194,10 @@ une fois connecté.
   configurée ou si l'établissement n'est pas trouvé.
 - `supabase/migrations/0005_visibility_audits.sql` — table des audits
   générés.
-- `src/lib/reviews/yelp.ts`, `src/lib/reviews/tripadvisor.ts` — APIs
-  publiques self-service (lecture seule des avis, 2-3 avis par appel
-  selon les quotas de chaque plateforme).
+- `src/lib/reviews/scrape.ts`, `src/lib/reviews/yelp.ts`,
+  `src/lib/reviews/tripadvisor.ts` — lecture ciblée des pages publiques
+  confirmées par le restaurateur (note, nombre d'avis et quelques avis
+  structurés quand la page les expose).
 - `src/lib/reviews/aggregate.ts` — combine les deux, se dégrade
   proprement (établissement introuvable, clé absente) sans jamais
   casser la page.

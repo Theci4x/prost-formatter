@@ -38,6 +38,8 @@ type RestaurantRow = {
   // nuit doit l'honorer comme l'écran : sinon il enregistrerait chaque nuit
   // la note d'un homonyme par-dessus celle qu'on lui a désignée.
   tripadvisor_location_id: string | null;
+  yelp_url: string | null;
+  tripadvisor_url: string | null;
   // Celui que la recherche automatique a trouvé un soir précédent : on ne
   // repaie pas la recherche pour retrouver le même. Absent tant que la
   // migration 0078 n'est pas passée — d'où la lecture de toute la ligne.
@@ -127,12 +129,18 @@ export async function GET(request: Request) {
 
     const platforms = await Promise.all([
       fetchGooglePlatformReviews(restaurant.nom, location, TOUJOURS_FRAIS),
-      fetchYelpPlatformReviews(restaurant.nom, location, TOUJOURS_FRAIS),
+      fetchYelpPlatformReviews(
+        restaurant.nom,
+        location,
+        restaurant.yelp_url,
+        TOUJOURS_FRAIS,
+      ),
       fetchTripadvisorPlatformReviews(restaurant.nom, location, {
         epingle: restaurant.tripadvisor_location_id,
         devine: restaurant.tripadvisor_location_devine ?? null,
         fraicheur: TOUJOURS_FRAIS,
         avecAvis: false,
+        sourceUrl: restaurant.tripadvisor_url,
       }),
     ]);
 

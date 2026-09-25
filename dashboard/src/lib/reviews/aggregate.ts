@@ -1,9 +1,4 @@
-import { searchYelpBusiness, getYelpReviews } from "@/lib/reviews/yelp";
-import {
-  searchTripadvisorLocation,
-  getTripadvisorDetails,
-  getTripadvisorReviews,
-} from "@/lib/reviews/tripadvisor";
+import { scraperFiche } from "@/lib/reviews/scrape";
 import { FRAICHEUR_ECRAN } from "@/lib/reviews/fraicheur";
 import {
   searchPlace,
@@ -59,29 +54,28 @@ export type PlatformReviews = {
 export async function fetchYelpPlatformReviews(
   name: string,
   location: string,
+  sourceUrl: string | null = null,
   fraicheur: number = FRAICHEUR_ECRAN,
 ): Promise<PlatformReviews> {
-  if (!process.env.YELP_API_KEY) {
+  if (!sourceUrl) {
     return { platform: "yelp", configured: false, found: false, reviews: [] };
   }
 
   try {
-    const business = await searchYelpBusiness(name, location, fraicheur);
-    if (!business) {
+    const fiche = await scraperFiche("yelp", sourceUrl, fraicheur);
+    if (fiche.rating == null && fiche.reviewCount == null) {
       return { platform: "yelp", configured: true, found: false, reviews: [] };
     }
-
-    const reviews = await getYelpReviews(business.id, fraicheur);
 
     return {
       platform: "yelp",
       configured: true,
       found: true,
-      businessName: business.name,
-      businessUrl: business.url,
-      rating: business.rating,
-      reviewCount: business.reviewCount,
-      reviews,
+      businessName: fiche.name ?? name,
+      businessUrl: fiche.url,
+      rating: fiche.rating,
+      reviewCount: fiche.reviewCount,
+      reviews: fiche.reviews,
     };
   } catch (err) {
     console.error("[fetchYelpPlatformReviews]", err);
@@ -97,6 +91,7 @@ export async function fetchTripadvisorPlatformReviews(
     devine = null,
     fraicheur = FRAICHEUR_ECRAN,
     avecAvis = true,
+    sourceUrl = null,
   }: {
     /** L'identifiant confirmé par le restaurateur : il passe avant tout. */
     epingle?: string | null;
@@ -113,9 +108,10 @@ export async function fetchTripadvisorPlatformReviews(
      * établissement et par semaine, pour rien.
      */
     avecAvis?: boolean;
+    sourceUrl?: string | null;
   } = {},
 ): Promise<PlatformReviews> {
-  if (!process.env.TRIPADVISOR_API_KEY) {
+  if (!sourceUrl) {
     return {
       platform: "tripadvisor",
       configured: false,
@@ -125,41 +121,23 @@ export async function fetchTripadvisorPlatformReviews(
   }
 
   try {
-    const locationId =
-      locationIdEpingle ??
-      devine ??
-      (await searchTripadvisorLocation(`${name} ${location}`, fraicheur))
-        ?.locationId ??
-      null;
+    const fiche = await scraperFiche("tripadvisor", sourceUrl, fraicheur);
 
-    if (!locationId) {
-      return {
-        platform: "tripadvisor",
-        configured: true,
-        found: false,
-        epingle: false,
-        reviews: [],
-      };
+    if (fiche.rating == null && fiche.reviewCount == null) {
+      return { platform: "tripadvisor", configured: true, found: false, epingle: false, reviews: [] };
     }
-
-    const [details, reviews] = await Promise.all([
-      getTripadvisorDetails(locationId, fraicheur),
-      avecAvis
-        ? getTripadvisorReviews(locationId, fraicheur)
-        : Promise.resolve([]),
-    ]);
 
     return {
       platform: "tripadvisor",
       configured: true,
       found: true,
-      epingle: Boolean(locationIdEpingle),
-      locationId,
-      businessName: details.nom ?? name,
-      businessUrl: details.webUrl,
-      rating: details.rating,
-      reviewCount: details.reviewCount,
-      reviews,
+      epingle: Boolean(locationIdEpingle || sourceUrl),
+      locationId: sourceUrl,
+      businessName: fiche.name ?? name,
+      businessUrl: fiche.url,
+      rating: fiche.rating,
+      reviewCount: fiche.reviewCount,
+      reviews: avecAvis ? fiche.reviews : [],
     };
   } catch (err) {
     console.error("[fetchTripadvisorPlatformReviews]", err);
