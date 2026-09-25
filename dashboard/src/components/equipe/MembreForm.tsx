@@ -6,6 +6,9 @@ import {
   type MembreState,
 } from "@/app/dashboard/[id]/equipe/actions";
 import { DESCRIPTIONS_ROLE, LIBELLES_ROLE } from "@/types/equipe";
+import type { Langue } from "@/lib/i18n/langues";
+import { traducteur, type T } from "@/lib/i18n/t";
+import { EQUIPE } from "@/lib/i18n/pages/equipe";
 
 const initialState: MembreState = { error: null, rendu: 0 };
 
@@ -17,25 +20,27 @@ const champ =
  * la seule chose qui compte au moment de choisir — ce que la personne
  * verra, et surtout ce qu'elle ne verra pas.
  */
-function Champs() {
+function Champs({ t }: { t: T }) {
   return (
     <div className="flex flex-col gap-4">
       <label
         className="flex flex-col gap-1.5 text-sm font-semibold text-ink"
         htmlFor="membre-email"
       >
-        Adresse e-mail
+        {t("Adresse e-mail")}
         <input
           id="membre-email"
           name="email"
           type="email"
           required
-          placeholder="jean@exemple.fr"
+          placeholder={t("jean@exemple.fr")}
           className={`${champ} font-normal`}
         />
       </label>
       <fieldset className="flex flex-col gap-2">
-        <legend className="mb-2 text-sm font-semibold text-ink">Rôle</legend>
+        <legend className="mb-2 text-sm font-semibold text-ink">
+          {t("Rôle")}
+        </legend>
         <div className="grid gap-2.5 sm:grid-cols-2">
           {(["service", "gerant"] as const).map((role) => (
             <label
@@ -50,10 +55,10 @@ function Champs() {
                   defaultChecked={role === "service"}
                   className="accent-brand-orange"
                 />
-                {LIBELLES_ROLE[role]}
+                {t(LIBELLES_ROLE[role])}
               </span>
               <span className="text-xs leading-relaxed text-zinc-500">
-                {DESCRIPTIONS_ROLE[role]}
+                {t(DESCRIPTIONS_ROLE[role])}
               </span>
             </label>
           ))}
@@ -63,7 +68,14 @@ function Champs() {
   );
 }
 
-export function MembreForm({ restaurantId }: { restaurantId: string }) {
+export function MembreForm({
+  restaurantId,
+  langue,
+}: {
+  restaurantId: string;
+  langue: Langue;
+}) {
+  const t = traducteur(langue, EQUIPE);
   const [state, action, pending] = useActionState(inviterMembre, initialState);
 
   return (
@@ -74,14 +86,14 @@ export function MembreForm({ restaurantId }: { restaurantId: string }) {
       <input type="hidden" name="restaurant_id" value={restaurantId} />
       {/* Voir EspaceForm : React vide le formulaire après l'action, la clé le
           remonte vierge une fois le membre ajouté. */}
-      <Champs key={state.rendu} />
+      <Champs key={state.rendu} t={t} />
 
-      {state.error && <p className="text-sm text-red-600">{state.error}</p>}
+      {state.error && <p className="text-sm text-red-600">{t(state.error)}</p>}
 
       <p className="text-xs text-zinc-500">
-        Klarr n&apos;envoie pas encore d&apos;e-mail : dis-lui de créer son
-        compte sur klarr.net avec exactement cette adresse. Il retrouvera
-        l&apos;établissement à sa première connexion.
+        {t(
+          "Klarr n'envoie pas encore d'e-mail : dis-lui de créer son compte sur klarr.net avec exactement cette adresse. Il retrouvera l'établissement à sa première connexion.",
+        )}
       </p>
 
       <button
@@ -89,7 +101,7 @@ export function MembreForm({ restaurantId }: { restaurantId: string }) {
         disabled={pending}
         className="w-fit rounded-lg bg-brand-navy px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover disabled:opacity-50"
       >
-        {pending ? "Ajout…" : "Ajouter à l'équipe"}
+        {pending ? t("Ajout…") : t("Ajouter à l'équipe")}
       </button>
     </form>
   );

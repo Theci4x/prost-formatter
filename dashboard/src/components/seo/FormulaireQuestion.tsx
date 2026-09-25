@@ -5,6 +5,9 @@ import {
   ajouterQuestion,
   type FaqState,
 } from "@/app/dashboard/[id]/faq/actions";
+import type { Langue } from "@/lib/i18n/langues";
+import { COMMUN, traducteur } from "@/lib/i18n/t";
+import { FAQ } from "@/lib/i18n/pages/faq";
 
 const initial: FaqState = { error: null, ajoutee: false };
 
@@ -20,11 +23,14 @@ export function FormulaireQuestion({
   restaurantId,
   suggestions,
   dejaPosees,
+  langue,
 }: {
   restaurantId: string;
   suggestions: string[];
   dejaPosees: string[];
+  langue: Langue;
 }) {
+  const t = traducteur(langue, FAQ, COMMUN);
   const [state, action, pending] = useActionState(ajouterQuestion, initial);
   const [question, setQuestion] = useState("");
   const reponseRef = useRef<HTMLTextAreaElement>(null);
@@ -38,7 +44,7 @@ export function FormulaireQuestion({
       {restantes.length > 0 && (
         <div className="flex flex-col gap-2">
           <p className="text-xs font-medium text-zinc-500">
-            Les plus demandées — clique pour la reprendre
+            {t("Les plus demandées — clique pour la reprendre")}
           </p>
           <div className="flex flex-wrap gap-2">
             {restantes.map((suggestion) => (
@@ -62,28 +68,31 @@ export function FormulaireQuestion({
         <input type="hidden" name="restaurant_id" value={restaurantId} />
 
         <label className="flex flex-col gap-1 text-sm font-medium text-zinc-700">
-          La question, telle qu&apos;on te la pose
+          {t("La question, telle qu'on te la pose")}
           <input
             name="question"
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
-            placeholder="Avez-vous une terrasse ?"
+            placeholder={t("Avez-vous une terrasse ?")}
             className="rounded-lg border border-zinc-200 bg-zinc-50 px-3.5 py-2.5 text-sm font-normal outline-none transition-colors focus:border-brand-navy focus:bg-white"
           />
         </label>
 
         <label className="flex flex-col gap-1 text-sm font-medium text-zinc-700">
-          Ta réponse
+          {t("Ta réponse")}
           <textarea
             ref={reponseRef}
             name="reponse"
             rows={2}
-            placeholder="Oui, une terrasse de vingt couverts, chauffée jusqu'en novembre."
+            placeholder={t(
+              "Oui, une terrasse de vingt couverts, chauffée jusqu'en novembre.",
+            )}
             className="rounded-lg border border-zinc-200 bg-zinc-50 px-3.5 py-2.5 text-sm font-normal outline-none transition-colors focus:border-brand-navy focus:bg-white"
           />
           <span className="text-xs font-normal text-zinc-500">
-            Une ou deux phrases. C&apos;est ce texte que les assistants
-            reprendront, souvent mot pour mot.
+            {t(
+              "Une ou deux phrases. C'est ce texte que les assistants reprendront, souvent mot pour mot.",
+            )}
           </span>
         </label>
 
@@ -93,16 +102,18 @@ export function FormulaireQuestion({
             disabled={pending}
             className="w-fit rounded-lg bg-brand-navy px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover disabled:opacity-50"
           >
-            {pending ? "Enregistrement…" : "Ajouter"}
+            {pending ? t("Enregistrement…") : t("Ajouter")}
           </button>
           {state.error ? (
             <p className="text-sm text-red-600" role="alert">
-              {state.error}
+              {t(state.error)}
             </p>
           ) : (
             state.ajoutee &&
             !pending && (
-              <p className="text-sm text-emerald-700">Question ajoutée.</p>
+              <p className="text-sm text-emerald-700">
+                {t("Question ajoutée.")}
+              </p>
             )
           )}
         </div>

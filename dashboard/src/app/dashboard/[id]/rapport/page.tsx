@@ -12,6 +12,11 @@ import {
   rendreRapport,
 } from "@/lib/rapport/mensuel";
 import { basculerRapport } from "./actions";
+import { langueUtilisateur } from "@/lib/i18n/langue";
+import type { Langue } from "@/lib/i18n/langues";
+import { localeDe } from "@/lib/i18n/seo";
+import { COMMUN, traducteur } from "@/lib/i18n/t";
+import { RAPPORT } from "@/lib/i18n/pages/rapport";
 
 /**
  * Le bilan mensuel, tel qu'il arrive par e-mail.
@@ -22,8 +27,8 @@ import { basculerRapport } from "./actions";
  * de son propre compte.
  */
 
-function jourLong(iso: string): string {
-  return new Date(iso).toLocaleDateString("fr-FR", {
+function jourLong(iso: string, langue: Langue): string {
+  return new Date(iso).toLocaleDateString(localeDe(langue), {
     day: "numeric",
     month: "long",
     year: "numeric",
@@ -58,8 +63,20 @@ export default async function RapportPage({
   } | null;
   if (!restaurant) notFound();
 
+  const langue = await langueUtilisateur();
+  const t = traducteur(langue, RAPPORT, COMMUN);
   const actif = restaurant.rapport_mensuel !== false;
   const periode = periodeDuRapport(new Date());
+  // « de septembre 2026 », « d'août 2026 » : l'élision n'est que française.
+  const moisLisible = (aaaamm: string) =>
+    new Date(`${aaaamm}-15T12:00:00Z`).toLocaleDateString(localeDe(langue), {
+      month: "long",
+      year: "numeric",
+    });
+  const titreBilan =
+    langue === "fr"
+      ? `Le bilan ${deMois(periode.libelle)}`
+      : t("Le bilan de {mois}", { mois: moisLisible(periode.mois) });
   const message = rendreRapport(
     await calculerRapport(supabase, restaurant, periode),
   );
@@ -74,13 +91,13 @@ export default async function RapportPage({
       <div className="flex flex-col gap-3">
         <PageHeader
           icon={dashboardIcons.abonnement}
-          title={`Bilan mensuel — ${restaurant.nom}`}
+          title={t("Bilan mensuel — {nom}", { nom: restaurant.nom })}
           backHref={`/dashboard/${id}/notifications`}
         />
         <p className="max-w-4xl text-sm text-zinc-600">
-          Le 1er de chaque mois, Klarr t&apos;envoie le bilan du mois écoulé :
-          couverts, note Google, nouveaux clients, et ce qui t&apos;attend. Il
-          part à l&apos;adresse de ton compte Klarr.
+          {t(
+            "Le 1er de chaque mois, Klarr t'envoie le bilan du mois écoulé : couverts, note Google, nouveaux clients, et ce qui t'attend. Il part à l'adresse de ton compte Klarr.",
+          )}
         </p>
       </div>
 
@@ -93,12 +110,12 @@ export default async function RapportPage({
                 actif ? "bg-emerald-500" : "bg-zinc-300"
               }`}
             />
-            {actif ? "Tu le reçois chaque mois" : "Tu ne le reçois plus"}
+            {actif ? t("Tu le reçois chaque mois") : t("Tu ne le reçois plus")}
           </span>
           <span className="text-sm text-zinc-600">
             {actif
-              ? "Prochain envoi le 1er du mois prochain, dans la matinée."
-              : "Tu peux le réactiver quand tu veux."}
+              ? t("Prochain envoi le 1er du mois prochain, dans la matinée.")
+              : t("Tu peux le réactiver quand tu veux.")}
           </span>
         </div>
         <div className="flex flex-wrap items-start gap-3">
@@ -113,21 +130,19 @@ export default async function RapportPage({
                   : "rounded-lg bg-brand-navy px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover"
               }
             >
-              {actif ? "Ne plus le recevoir" : "Le recevoir à nouveau"}
+              {actif ? t("Ne plus le recevoir") : t("Le recevoir à nouveau")}
             </button>
           </form>
-          <EssaiRapport restaurantId={id} />
+          <EssaiRapport restaurantId={id} langue={langue} />
         </div>
       </section>
 
       <section className="flex flex-col gap-4">
-        <TitreSection aside={message.sujet}>
-          Le bilan {deMois(periode.libelle)}
-        </TitreSection>
+        <TitreSection aside={message.sujet}>{titreBilan}</TitreSection>
         {/* L'e-mail lui-même, dans un cadre isolé : ce qu'on voit ici est
             exactement ce qui arrive dans la boîte, styles compris. */}
         <iframe
-          title={`Bilan ${deMois(periode.libelle)}`}
+          title={titreBilan}
           srcDoc={message.html}
           sandbox="allow-popups allow-popups-to-escape-sandbox"
           className="h-[900px] w-full max-w-3xl rounded-2xl border border-zinc-200/70 bg-white shadow-sm"
@@ -136,7 +151,7 @@ export default async function RapportPage({
 
       {historique.length > 0 && (
         <section className="flex flex-col gap-4">
-          <TitreSection>Déjà envoyés</TitreSection>
+          <TitreSection>{t("Déjà envoyés")}</TitreSection>
           <ul className="flex max-w-3xl flex-col overflow-hidden rounded-2xl border border-zinc-200/70 bg-white shadow-sm">
             {historique.map((ligne, index) => (
               <li
@@ -146,14 +161,13 @@ export default async function RapportPage({
                 }`}
               >
                 <span className="font-semibold text-ink">
-                  {new Date(`${ligne.mois}-15T12:00:00Z`).toLocaleDateString(
-                    "fr-FR",
-                    { month: "long", year: "numeric" },
-                  )}
+                  {moisLisible(ligne.mois)}
                 </span>
                 <span className="text-zinc-500">
-                  le {jourLong(ligne.envoye_le)}
-                  {ligne.destinataire ? ` à ${ligne.destinataire}` : ""}
+                  {t("le {date}", { date: jourLong(ligne.envoye_le, langue) })}
+                  {ligne.destinataire
+                    ? t(" à {email}", { email: ligne.destinataire })
+                    : ""}
                 </span>
               </li>
             ))}
@@ -165,7 +179,7 @@ export default async function RapportPage({
         href="/dashboard"
         className="w-fit text-sm font-semibold text-brand-orange-dark hover:underline"
       >
-        ← Retour à l&apos;accueil
+        {t("← Retour à l'accueil")}
       </Link>
     </div>
   );

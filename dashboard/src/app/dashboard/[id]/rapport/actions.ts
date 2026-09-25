@@ -9,6 +9,9 @@ import {
   periodeDuRapport,
   rendreRapport,
 } from "@/lib/rapport/mensuel";
+import { langueUtilisateur } from "@/lib/i18n/langue";
+import { COMMUN, traducteur } from "@/lib/i18n/t";
+import { RAPPORT } from "@/lib/i18n/pages/rapport";
 
 /** Recevoir le bilan chaque mois, ou plus. */
 export async function basculerRapport(formData: FormData): Promise<void> {
@@ -36,8 +39,11 @@ export async function envoyerRapportEssai(
   _prev: EssaiState,
   formData: FormData,
 ): Promise<EssaiState> {
+  const t = traducteur(await langueUtilisateur(), RAPPORT, COMMUN);
   const restaurantId = String(formData.get("restaurant_id") ?? "");
-  if (!restaurantId) return { message: null, erreur: "Établissement inconnu." };
+  if (!restaurantId) {
+    return { message: null, erreur: t("Établissement inconnu.") };
+  }
   await exiger(restaurantId, "gerant");
 
   const supabase = await createClient();
@@ -51,7 +57,7 @@ export async function envoyerRapportEssai(
   ]);
   const email = utilisateur.user?.email;
   if (!email || !restaurant) {
-    return { message: null, erreur: "Impossible de trouver ton adresse." };
+    return { message: null, erreur: t("Impossible de trouver ton adresse.") };
   }
 
   const rapport = await calculerRapport(
@@ -68,9 +74,11 @@ export async function envoyerRapportEssai(
   });
 
   return resultat.envoye
-    ? { message: `Envoyé à ${email}.`, erreur: null }
+    ? { message: t("Envoyé à {email}.", { email }), erreur: null }
     : {
         message: null,
-        erreur: `L'envoi a échoué : ${resultat.erreur ?? "raison inconnue"}.`,
+        erreur: t("L'envoi a échoué : {raison}.", {
+          raison: resultat.erreur ?? t("raison inconnue"),
+        }),
       };
 }

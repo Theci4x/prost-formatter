@@ -6,7 +6,10 @@ import {
   type ExperienceState,
 } from "@/app/dashboard/[id]/experiences/actions";
 import { EXPERIENCE_VIDE, type ExperienceValeurs } from "@/types/experience";
-import { JOURS_ISO } from "@/types/reservation";
+import type { Langue } from "@/lib/i18n/langues";
+import { joursSemaine } from "@/lib/i18n/jours";
+import { COMMUN, traducteur, type T } from "@/lib/i18n/t";
+import { EXPERIENCES } from "@/lib/i18n/pages/experiences";
 
 const initialState: ExperienceState = {
   error: null,
@@ -21,9 +24,13 @@ const label = "flex flex-col gap-1 text-sm font-medium text-zinc-700";
 function Champs({
   restaurantId,
   valeurs,
+  t,
+  langue,
 }: {
   restaurantId: string;
   valeurs: ExperienceValeurs;
+  t: T;
+  langue: Langue;
 }) {
   // Le prépaiement décide de ce qu'on annonce au client : autant le montrer
   // pendant qu'on configure, pas seulement après.
@@ -35,18 +42,18 @@ function Champs({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <label className={label} htmlFor="exp-nom">
-          Nom
+          {t("Nom")}
           <input
             id="exp-nom"
             name="nom"
             required
             defaultValue={valeurs.nom}
-            placeholder="Cours de cocktails"
+            placeholder={t("Cours de cocktails")}
             className={champ}
           />
         </label>
         <label className={label} htmlFor="exp-prix">
-          Prix par personne
+          {t("Prix par personne")}
           <span className="flex items-center gap-2">
             <input
               id="exp-prix"
@@ -63,21 +70,23 @@ function Champs({
       </div>
 
       <label className={label} htmlFor="exp-description">
-        Description{" "}
-        <span className="font-normal text-zinc-400">(facultatif)</span>
+        {t("Description")}{" "}
+        <span className="font-normal text-zinc-400">{t("(facultatif)")}</span>
         <textarea
           id="exp-description"
           name="description"
           rows={2}
           defaultValue={valeurs.description}
-          placeholder="Deux heures derrière le bar avec notre chef barman, trois cocktails à emporter dans les jambes."
+          placeholder={t(
+            "Deux heures derrière le bar avec notre chef barman, trois cocktails à emporter dans les jambes.",
+          )}
           className={champ}
         />
       </label>
 
       <div className="grid gap-4 sm:grid-cols-3">
         <label className={label} htmlFor="exp-places">
-          Places par séance
+          {t("Places par séance")}
           <input
             id="exp-places"
             name="places"
@@ -89,7 +98,7 @@ function Champs({
           />
         </label>
         <label className={label} htmlFor="exp-heure">
-          Heure
+          {t("Heure")}
           <input
             id="exp-heure"
             name="heure"
@@ -100,8 +109,10 @@ function Champs({
           />
         </label>
         <label className={label} htmlFor="exp-duree">
-          Durée{" "}
-          <span className="font-normal text-zinc-400">(min, facultatif)</span>
+          {t("Durée")}{" "}
+          <span className="font-normal text-zinc-400">
+            {t("(min, facultatif)")}
+          </span>
           <input
             id="exp-duree"
             name="duree"
@@ -116,10 +127,10 @@ function Champs({
 
       <fieldset className="flex flex-col gap-2">
         <legend className="mb-1 text-sm font-medium text-zinc-700">
-          Jours de la semaine
+          {t("Jours de la semaine")}
         </legend>
         <div className="flex flex-wrap gap-2">
-          {JOURS_ISO.map((jour) => (
+          {joursSemaine(langue).map((jour) => (
             <label
               key={jour.valeur}
               className="flex cursor-pointer items-center gap-2 rounded-md border border-zinc-200 px-3 py-1.5 text-sm text-zinc-700 has-checked:border-brand-navy has-checked:bg-brand-orange-soft"
@@ -138,8 +149,8 @@ function Champs({
 
       <div className="grid gap-4 sm:grid-cols-3">
         <label className={label} htmlFor="exp-debut">
-          À partir du{" "}
-          <span className="font-normal text-zinc-400">(facultatif)</span>
+          {t("À partir du")}{" "}
+          <span className="font-normal text-zinc-400">{t("(facultatif)")}</span>
           <input
             id="exp-debut"
             name="date_debut"
@@ -149,8 +160,8 @@ function Champs({
           />
         </label>
         <label className={label} htmlFor="exp-fin">
-          Jusqu&apos;au{" "}
-          <span className="font-normal text-zinc-400">(facultatif)</span>
+          {t("Jusqu'au")}{" "}
+          <span className="font-normal text-zinc-400">{t("(facultatif)")}</span>
           <input
             id="exp-fin"
             name="date_fin"
@@ -160,7 +171,7 @@ function Champs({
           />
         </label>
         <label className={label} htmlFor="exp-delai">
-          Inscriptions closes
+          {t("Inscriptions closes")}
           <span className="flex items-center gap-2">
             <input
               id="exp-delai"
@@ -170,7 +181,9 @@ function Champs({
               defaultValue={valeurs.delai}
               className={`${champ} max-w-24`}
             />
-            <span className="text-sm font-normal text-zinc-500">h avant</span>
+            <span className="text-sm font-normal text-zinc-500">
+              {t("h avant")}
+            </span>
           </span>
         </label>
       </div>
@@ -184,11 +197,15 @@ function Champs({
           className="mt-0.5"
         />
         <span>
-          <span className="font-medium">Paiement à l&apos;inscription</span>
+          <span className="font-medium">{t("Paiement à l'inscription")}</span>
           <span className="block text-xs text-zinc-500">
             {prepaiement
-              ? "Le client paie en réservant, sur ton compte Stripe. Sa place n'est retenue qu'une fois payée."
-              : "Le client réserve sans payer et règle sur place. Utile pour un atelier gratuit ou une découverte."}
+              ? t(
+                  "Le client paie en réservant, sur ton compte Stripe. Sa place n'est retenue qu'une fois payée.",
+                )
+              : t(
+                  "Le client réserve sans payer et règle sur place. Utile pour un atelier gratuit ou une découverte.",
+                )}
           </span>
         </span>
       </label>
@@ -196,7 +213,14 @@ function Champs({
   );
 }
 
-export function ExperienceForm({ restaurantId }: { restaurantId: string }) {
+export function ExperienceForm({
+  restaurantId,
+  langue,
+}: {
+  restaurantId: string;
+  langue: Langue;
+}) {
+  const t = traducteur(langue, EXPERIENCES, COMMUN);
   const [state, action, pending] = useActionState(
     ajouterExperience,
     initialState,
@@ -213,16 +237,18 @@ export function ExperienceForm({ restaurantId }: { restaurantId: string }) {
         key={state.rendu}
         restaurantId={restaurantId}
         valeurs={state.valeurs}
+        t={t}
+        langue={langue}
       />
 
-      {state.error && <p className="text-sm text-red-600">{state.error}</p>}
+      {state.error && <p className="text-sm text-red-600">{t(state.error)}</p>}
 
       <button
         type="submit"
         disabled={pending}
         className="w-fit rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover disabled:opacity-50"
       >
-        {pending ? "Enregistrement…" : "Créer cette expérience"}
+        {pending ? t("Enregistrement…") : t("Créer cette expérience")}
       </button>
     </form>
   );

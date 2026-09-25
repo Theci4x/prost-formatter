@@ -12,6 +12,9 @@ import {
 import type { Restaurant } from "@/types/restaurant";
 import { exiger } from "@/lib/equipe/roles";
 import { exigerSection } from "@/lib/abonnement/acces";
+import { langueUtilisateur } from "@/lib/i18n/langue";
+import { COMMUN, traducteur } from "@/lib/i18n/t";
+import { FAQ } from "@/lib/i18n/pages/faq";
 
 type Question = {
   id: string;
@@ -52,6 +55,8 @@ export default async function FaqPage({
   const restaurant = restaurantData as Restaurant | null;
   if (!restaurant) notFound();
 
+  const langue = await langueUtilisateur();
+  const t = traducteur(langue, FAQ, COMMUN);
   const questions = (questionsData ?? []) as Question[];
 
   // Une maison qui n'ouvre que le soir n'a pas à répondre sur le menu du
@@ -77,17 +82,24 @@ export default async function FaqPage({
     <div className="flex flex-1 flex-col gap-8 px-6 py-8">
       <PageHeader
         icon={dashboardIcons.visibiliteIa}
-        title={`Questions fréquentes — ${restaurant.nom}`}
+        title={t("Questions fréquentes — {nom}", { nom: restaurant.nom })}
       />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="max-w-4xl text-sm text-zinc-600">
-          Ces réponses s&apos;affichent sur ta page publique et sont lues par
-          Google et les assistants, qui les reprennent presque mot pour mot
-          quand on leur demande si tu as une terrasse ou si tu acceptes les
-          chiens. Accessoirement, elles épargnent autant d&apos;appels en plein
-          service.
-        </p>
+        <div className="flex max-w-4xl flex-col gap-2 text-sm text-zinc-600">
+          <p>
+            {t(
+              "Ces réponses s'affichent sur ta page publique et sont lues par Google et les assistants, qui les reprennent presque mot pour mot quand on leur demande si tu as une terrasse ou si tu acceptes les chiens. Accessoirement, elles épargnent autant d'appels en plein service.",
+            )}
+          </p>
+          {langue !== "fr" && (
+            <p className="font-medium text-ink">
+              {t(
+                "Les questions et réponses s'affichent telles quelles sur ta page publique : écris-les dans la langue de tes clients.",
+              )}
+            </p>
+          )}
+        </div>
         {surLeSite && (
           <a
             href={surLeSite}
@@ -95,7 +107,7 @@ export default async function FaqPage({
             rel="noopener noreferrer"
             className="rounded-lg border border-zinc-200 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
           >
-            Voir sur mon site ↗
+            {t("Voir sur mon site ↗")}
           </a>
         )}
       </div>
@@ -119,20 +131,21 @@ export default async function FaqPage({
         </span>
         <div className="flex min-w-0 flex-1 flex-col gap-3">
           <p className="text-sm leading-relaxed text-ink sm:text-base">
-            {etat.complet ? (
-              <>
-                Ta page répond aux {etat.attendues} questions qu&apos;on pose le
-                plus. C&apos;est autant d&apos;appels que tu ne prendras pas en
-                plein service.
-              </>
-            ) : (
-              <>
-                Ta page répond à <strong>{etat.repondues}</strong> question
-                {etat.repondues > 1 ? "s" : ""} sur {etat.attendues}. Pour les{" "}
-                {etat.attendues - etat.repondues} autres, les clients appellent
-                — ou vont voir ailleurs.
-              </>
-            )}
+            {etat.complet
+              ? t(
+                  "Ta page répond aux {n} questions qu'on pose le plus. C'est autant d'appels que tu ne prendras pas en plein service.",
+                  { n: etat.attendues },
+                )
+              : t(
+                  etat.repondues > 1
+                    ? "Ta page répond à {n} questions sur {total}. Pour les {reste} autres, les clients appellent — ou vont voir ailleurs."
+                    : "Ta page répond à {n} question sur {total}. Pour les {reste} autres, les clients appellent — ou vont voir ailleurs.",
+                  {
+                    n: etat.repondues,
+                    total: etat.attendues,
+                    reste: etat.attendues - etat.repondues,
+                  },
+                )}
           </p>
           <div className="h-2 overflow-hidden rounded-full bg-white/80">
             <div
@@ -149,12 +162,15 @@ export default async function FaqPage({
 
       <div className="grid items-start gap-8 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
         <div className="flex min-w-0 flex-col gap-6">
-          <ReponsesRapides restaurantId={id} questions={restantes} />
+          <ReponsesRapides restaurantId={id} questions={restantes} t={t} />
 
           <section className="flex flex-col gap-3">
-            <h2 className="font-serif text-2xl text-ink">Une autre question</h2>
+            <h2 className="font-serif text-2xl text-ink">
+              {t("Une autre question")}
+            </h2>
             <FormulaireQuestion
               restaurantId={id}
+              langue={langue}
               suggestions={SUGGESTIONS.map((s) => s.question)}
               dejaPosees={posees}
             />
@@ -165,15 +181,18 @@ export default async function FaqPage({
             le client lira, pas une liste de champs. */}
         <section className="flex min-w-0 flex-col gap-3 xl:sticky xl:top-24">
           <div className="flex items-baseline justify-between gap-4">
-            <h2 className="font-serif text-2xl text-ink">Sur ta page</h2>
+            <h2 className="font-serif text-2xl text-ink">{t("Sur ta page")}</h2>
             <span className="text-xs text-zinc-500">
-              {questions.length} question{questions.length > 1 ? "s" : ""}
+              {t(questions.length > 1 ? "{n} questions" : "{n} question", {
+                n: questions.length,
+              })}
             </span>
           </div>
           {questions.length === 0 ? (
             <p className="rounded-2xl border border-dashed border-zinc-300 bg-white px-6 py-10 text-center text-sm text-zinc-500">
-              Aucune question pour l&apos;instant. Commence par les deux ou
-              trois qu&apos;on te pose au téléphone toutes les semaines.
+              {t(
+                "Aucune question pour l'instant. Commence par les deux ou trois qu'on te pose au téléphone toutes les semaines.",
+              )}
             </p>
           ) : (
             <ul className="flex flex-col divide-y divide-zinc-100 overflow-hidden rounded-2xl border border-zinc-200/70 bg-white shadow-sm">
@@ -188,10 +207,12 @@ export default async function FaqPage({
                       <input type="hidden" name="question_id" value={q.id} />
                       <button
                         type="submit"
-                        aria-label={`Supprimer « ${q.question} »`}
+                        aria-label={t("Supprimer « {question} »", {
+                          question: q.question,
+                        })}
                         className="rounded-lg px-2 py-1 text-xs font-medium text-zinc-400 transition-colors hover:bg-red-50 hover:text-red-600"
                       >
-                        Supprimer
+                        {t("Supprimer")}
                       </button>
                     </form>
                   </div>

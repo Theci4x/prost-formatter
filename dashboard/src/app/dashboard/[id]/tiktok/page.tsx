@@ -13,6 +13,10 @@ import type { Restaurant } from "@/types/restaurant";
 import type { TikTokConnection } from "@/types/tiktok";
 import { exiger } from "@/lib/equipe/roles";
 import { exigerModule } from "@/lib/abonnement/acces";
+import { langueUtilisateur } from "@/lib/i18n/langue";
+import { localeDe } from "@/lib/i18n/seo";
+import { COMMUN, traducteur } from "@/lib/i18n/t";
+import { SOCIAL } from "@/lib/i18n/pages/social";
 
 export default async function TikTokPage({
   params,
@@ -49,6 +53,9 @@ export default async function TikTokPage({
     .maybeSingle();
 
   const connection = connectionData as TikTokConnection | null;
+  const langue = await langueUtilisateur();
+  const t = traducteur(langue, SOCIAL, COMMUN);
+  const nombre = (n: number) => n.toLocaleString(localeDe(langue));
 
   let displayName: string | null = null;
   let username: string | null = null;
@@ -77,38 +84,38 @@ export default async function TikTokPage({
     <div className="flex flex-1 flex-col gap-6 px-6 py-8">
       <PageHeader
         icon={dashboardIcons.tiktok}
-        title={`TikTok — ${restaurant.nom}`}
+        title={t("TikTok — {nom}", { nom: restaurant.nom })}
         backHref={`/dashboard/${id}/connexions`}
       />
 
       {connected && (
         <p className="rounded-md bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-          Compte TikTok connecté avec succès.
+          {t("Compte TikTok connecté avec succès.")}
         </p>
       )}
       {error && (
         <p className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
-          La connexion a échoué. Réessaie.
+          {t("La connexion a échoué. Réessaie.")}
         </p>
       )}
 
       {!connection ? (
         <div className="flex flex-col gap-4 rounded-md border border-zinc-200 p-4">
           <p className="text-sm text-zinc-500">
-            Aucun compte TikTok connecté pour ce restaurant.
+            {t("Aucun compte TikTok connecté pour ce restaurant.")}
           </p>
           <a
             href={`/api/tiktok/authorize?restaurant_id=${id}`}
             className="w-fit rounded-md bg-brand-navy px-4 py-2 text-center text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover"
           >
-            Connecter TikTok
+            {t("Connecter TikTok")}
           </a>
         </div>
       ) : (
         <div className="flex flex-col gap-4 rounded-md border border-zinc-200 p-4">
           <div className="flex items-center justify-between">
             <p className="text-sm font-medium text-zinc-900">
-              {displayName ?? "Compte TikTok"}
+              {displayName ?? t("Compte TikTok")}
               {username && (
                 <span className="ml-1 font-normal text-zinc-500">
                   @{username}
@@ -121,27 +128,31 @@ export default async function TikTokPage({
                 type="submit"
                 className="text-sm font-medium text-red-600 hover:text-red-800"
               >
-                Déconnecter
+                {t("Déconnecter")}
               </button>
             </form>
           </div>
 
           {fetchError && (
             <p className="text-sm text-red-600">
-              Impossible de récupérer les données TikTok pour le moment.
+              {t("Impossible de récupérer les données TikTok pour le moment.")}
             </p>
           )}
 
           {followerCount != null && (
-            <p className="text-sm text-zinc-600">{followerCount} abonnés</p>
+            <p className="text-sm text-zinc-600">
+              {t("{n} abonnés", { n: nombre(followerCount) })}
+            </p>
           )}
 
           <div className="flex flex-col gap-3">
             <h2 className="text-sm font-medium text-zinc-700">
-              Dernières vidéos
+              {t("Dernières vidéos")}
             </h2>
             {videos.length === 0 ? (
-              <p className="text-sm text-zinc-500">Aucune vidéo récente.</p>
+              <p className="text-sm text-zinc-500">
+                {t("Aucune vidéo récente.")}
+              </p>
             ) : (
               <ul className="flex flex-col gap-3">
                 {videos.map((video) => (
@@ -150,12 +161,12 @@ export default async function TikTokPage({
                     className="border-t border-zinc-100 pt-3 first:border-0 first:pt-0"
                   >
                     <p className="line-clamp-2 text-sm text-zinc-700">
-                      {video.title ?? "(sans titre)"}
+                      {video.title ?? t("(sans titre)")}
                     </p>
                     <div className="flex items-center justify-between">
                       {video.viewCount != null && (
                         <span className="text-xs text-zinc-500">
-                          {video.viewCount} vues
+                          {t("{n} vues", { n: nombre(video.viewCount) })}
                         </span>
                       )}
                       <a
@@ -164,7 +175,7 @@ export default async function TikTokPage({
                         rel="noopener noreferrer"
                         className="text-xs font-medium text-zinc-500 hover:text-zinc-900"
                       >
-                        Voir la vidéo →
+                        {t("Voir la vidéo →")}
                       </a>
                     </div>
                   </li>

@@ -6,9 +6,13 @@ import { ExperienceForm } from "@/components/experiences/ExperienceForm";
 import { exiger } from "@/lib/equipe/roles";
 import { exigerModule } from "@/lib/abonnement/acces";
 import { chargerFermetures } from "@/lib/reservations/fermetures";
-import { formatEuros } from "@/lib/reservations/acompte";
 import { prochainesSeances } from "@/lib/experiences/seances";
-import { formatHeure, formatJours } from "@/types/reservation";
+import { langueUtilisateur } from "@/lib/i18n/langue";
+import type { Langue } from "@/lib/i18n/langues";
+import { localeDe } from "@/lib/i18n/seo";
+import { heure, listeJours } from "@/lib/i18n/jours";
+import { COMMUN, traducteur } from "@/lib/i18n/t";
+import { EXPERIENCES } from "@/lib/i18n/pages/experiences";
 import { annulerPlace, basculerExperience } from "./actions";
 import type { Experience, PlaceReservee } from "@/types/experience";
 import type { Restaurant } from "@/types/restaurant";
@@ -20,8 +24,8 @@ type Place = PlaceReservee & {
   montant_centimes: number;
 };
 
-function formatJour(date: string): string {
-  return new Date(`${date}T12:00:00`).toLocaleDateString("fr-FR", {
+function formatJour(date: string, langue: Langue): string {
+  return new Date(`${date}T12:00:00`).toLocaleDateString(localeDe(langue), {
     weekday: "long",
     day: "numeric",
     month: "long",
@@ -63,6 +67,14 @@ export default async function ExperiencesPage({
   const restaurant = restaurantResult.data as Restaurant | null;
   if (!restaurant) notFound();
 
+  const langue = await langueUtilisateur();
+  const t = traducteur(langue, EXPERIENCES, COMMUN);
+  // Les montants gardent l'euro, écrit à la manière de la langue.
+  const euros = (centimes: number) =>
+    new Intl.NumberFormat(localeDe(langue), {
+      style: "currency",
+      currency: "EUR",
+    }).format(centimes / 100);
   const experiences = (experiencesResult.data ?? []) as Experience[];
   const places = (placesResult.data ?? []) as Place[];
   const actives = experiences.filter((e) => e.actif).length;
@@ -92,6 +104,7 @@ export default async function ExperiencesPage({
         ),
         fermetures,
         maintenant,
+        langue,
       }),
     ]),
   );
@@ -107,16 +120,15 @@ export default async function ExperiencesPage({
     <div className="flex flex-1 flex-col gap-8 px-6 py-8">
       <PageHeader
         icon={dashboardIcons.menu}
-        title={`Expériences — ${restaurant.nom}`}
+        title={t("Expériences — {nom}", { nom: restaurant.nom })}
         backHref={`/dashboard/${id}/reservations`}
       />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="max-w-4xl text-sm text-zinc-600">
-          Un cours, un atelier, une dégustation : une séance à places limitées
-          qui revient selon le rythme que tu choisis. Elle apparaît sur ta page
-          de réservation, et le client paie sur ton compte Stripe — sans
-          commission.
+          {t(
+            "Un cours, un atelier, une dégustation : une séance à places limitées qui revient selon le rythme que tu choisis. Elle apparaît sur ta page de réservation, et le client paie sur ton compte Stripe — sans commission.",
+          )}
         </p>
         {slug && (
           <a
@@ -125,7 +137,7 @@ export default async function ExperiencesPage({
             rel="noopener noreferrer"
             className="rounded-lg border border-zinc-200 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
           >
-            Voir sur ma page de réservation ↗
+            {t("Voir sur ma page de réservation ↗")}
           </a>
         )}
       </div>
@@ -133,29 +145,36 @@ export default async function ExperiencesPage({
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <Compteur
           valeur={actives}
-          libelle={`expérience${actives > 1 ? "s" : ""} en cours`}
+          libelle={t(
+            actives > 1 ? "expériences en cours" : "expérience en cours",
+          )}
         />
         <Compteur
           valeur={inscrits}
-          libelle={`place${inscrits > 1 ? "s" : ""} réservée${inscrits > 1 ? "s" : ""}`}
+          libelle={t(inscrits > 1 ? "places réservées" : "place réservée")}
         />
         <Compteur
-          valeur={formatEuros(encaisse)}
-          libelle="déjà payés pour les séances à venir"
+          valeur={euros(encaisse)}
+          libelle={t("déjà payés pour les séances à venir")}
         />
         <Compteur
           valeur={placesLibres}
-          libelle={`place${placesLibres > 1 ? "s" : ""} encore libre${placesLibres > 1 ? "s" : ""} sur 4 semaines`}
+          libelle={t(
+            placesLibres > 1
+              ? "places encore libres sur 4 semaines"
+              : "place encore libre sur 4 semaines",
+          )}
         />
       </div>
 
       <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
         <section className="flex min-w-0 flex-col gap-3">
-          <TitreSection>Tes expériences</TitreSection>
+          <TitreSection>{t("Tes expériences")}</TitreSection>
           {experiences.length === 0 && (
             <p className="rounded-2xl border border-dashed border-zinc-300 bg-white px-6 py-12 text-center text-sm text-zinc-500">
-              Aucune expérience pour l&apos;instant. Crée la première à côté :
-              une dégustation, un atelier, une soirée à thème.
+              {t(
+                "Aucune expérience pour l'instant. Crée la première à côté : une dégustation, un atelier, une soirée à thème.",
+              )}
             </p>
           )}
           {experiences.length > 0 && (
@@ -181,20 +200,23 @@ export default async function ExperiencesPage({
                           {experience.nom}
                           {!experience.actif && (
                             <span className="ml-2 rounded-full bg-zinc-100 px-2.5 py-0.5 align-middle font-sans text-xs font-medium text-zinc-500">
-                              arrêtée
+                              {t("arrêtée")}
                             </span>
                           )}
                         </span>
                         <span className="text-sm text-zinc-500">
-                          {formatEuros(experience.prix_centimes)} par personne ·{" "}
-                          {experience.places} places ·{" "}
-                          {formatHeure(experience.heure)}
+                          {t("{prix} par personne", {
+                            prix: euros(experience.prix_centimes),
+                          })}{" "}
+                          · {t("{n} places", { n: experience.places })} ·{" "}
+                          {heure(experience.heure, langue)}
                           {experience.duree_minutes &&
                             ` · ${experience.duree_minutes} min`}
                         </span>
                         <span className="text-sm text-zinc-500 first-letter:capitalize">
-                          {formatJours(experience.jours)}
-                          {!experience.prepaiement && " · paiement sur place"}
+                          {listeJours(experience.jours, langue)}
+                          {!experience.prepaiement &&
+                            t(" · paiement sur place")}
                         </span>
                       </div>
 
@@ -214,7 +236,7 @@ export default async function ExperiencesPage({
                           type="submit"
                           className="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 transition-colors hover:border-brand-navy hover:text-brand-navy"
                         >
-                          {experience.actif ? "Arrêter" : "Relancer"}
+                          {experience.actif ? t("Arrêter") : t("Relancer")}
                         </button>
                       </form>
                     </div>
@@ -241,18 +263,25 @@ export default async function ExperiencesPage({
                             }`}
                           >
                             <span className="first-letter:capitalize">
-                              {formatJour(seance.date)}
+                              {formatJour(seance.date, langue)}
                             </span>{" "}
                             —{" "}
                             {seance.raison ??
                               (seance.placesRestantes === 0
-                                ? "complet"
-                                : `${seance.placesRestantes} place${seance.placesRestantes > 1 ? "s" : ""} libre${seance.placesRestantes > 1 ? "s" : ""}`)}
+                                ? t("complet")
+                                : t(
+                                    seance.placesRestantes > 1
+                                      ? "{n} places libres"
+                                      : "{n} place libre",
+                                    { n: seance.placesRestantes },
+                                  ))}
                           </span>
                         ))}
                         {seances.length === 0 && (
                           <span className="text-sm text-zinc-400">
-                            Aucune séance dans les quatre prochaines semaines.
+                            {t(
+                              "Aucune séance dans les quatre prochaines semaines.",
+                            )}
                           </span>
                         )}
                       </div>
@@ -272,15 +301,21 @@ export default async function ExperiencesPage({
                                 <span className="text-sm font-medium text-zinc-900">
                                   {place.client_nom}
                                   <span className="ml-2 font-normal text-zinc-500">
-                                    {place.places} place
-                                    {place.places > 1 ? "s" : ""}
+                                    {t(
+                                      place.places > 1
+                                        ? "{n} places"
+                                        : "{n} place",
+                                      { n: place.places },
+                                    )}
                                   </span>
                                 </span>
                                 <span className="text-sm text-zinc-500 first-letter:capitalize">
-                                  {formatJour(place.date_seance)} ·{" "}
+                                  {formatJour(place.date_seance, langue)} ·{" "}
                                   {place.statut === "confirmee"
-                                    ? `${formatEuros(place.montant_centimes)} encaissés`
-                                    : "en attente de paiement"}
+                                    ? t("{montant} encaissés", {
+                                        montant: euros(place.montant_centimes),
+                                      })
+                                    : t("en attente de paiement")}
                                 </span>
                               </span>
                               <span className="flex items-baseline gap-4 text-sm">
@@ -305,7 +340,7 @@ export default async function ExperiencesPage({
                                     type="submit"
                                     className="font-medium text-zinc-500 hover:text-red-600"
                                   >
-                                    Annuler
+                                    {t("Annuler")}
                                   </button>
                                 </form>
                               </span>
@@ -321,8 +356,8 @@ export default async function ExperiencesPage({
         </section>
 
         <section className="flex flex-col gap-3 xl:sticky xl:top-24">
-          <TitreSection>Nouvelle expérience</TitreSection>
-          <ExperienceForm restaurantId={id} />
+          <TitreSection>{t("Nouvelle expérience")}</TitreSection>
+          <ExperienceForm restaurantId={id} langue={langue} />
         </section>
       </div>
     </div>
