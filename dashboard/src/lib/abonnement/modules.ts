@@ -62,7 +62,7 @@ export const RESUME_MODULE: Record<Module, string> = {
   visibilite:
     "Ta fiche Google, tes avis, ta visibilité, ta carte, tes photos et ton site vitrine.",
   reservations:
-    "Ta page de réservation, le carnet, l'écran de service, le plan de salle, les acomptes et les cautions.",
+    "Ta page de réservation, le carnet, l'écran de service, le plan de salle, les acomptes et les empreintes bancaires.",
 };
 
 /**

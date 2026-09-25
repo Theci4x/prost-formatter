@@ -671,7 +671,7 @@ const fr: ClesAccueilPublic = {
       {
         titre: "Moins de no-show",
         texte:
-          "Rappel la veille, annulation en un clic, acompte quand la table le mérite.",
+          "Rappel la veille, annulation en un clic. Pour les tables qui comptent : un acompte, ou une empreinte bancaire débitée seulement si le client ne vient pas.",
       },
       {
         titre: "Les privatisations",
@@ -764,6 +764,12 @@ const fr: ClesAccueilPublic = {
       {
         question: "Klarr prend-il une commission sur les réservations ?",
         reponse: `Non. Klarr ne prélève aucune commission sur les couverts ni sur les privatisations. Les acomptes sont versés directement sur le compte Stripe du restaurateur. Le module Réservations est facturé ${PRIX_MODULE.reservations}, et rien d'autre.`,
+      },
+      {
+        question:
+          "Peut-on demander une empreinte bancaire contre les no-show ?",
+        reponse:
+          "Oui. Pour les grandes tables, les soirs de fête ou les privatisations, le client enregistre sa carte en réservant : rien n'est débité. S'il ne vient pas et n'a pas annulé à temps, le restaurateur prélève le montant prévu en un clic. Vous pouvez aussi demander un acompte, encaissé tout de suite. Dans les deux cas, l'argent va sur votre propre compte Stripe, sans commission Klarr.",
       },
       {
         question:
@@ -1226,7 +1232,7 @@ const en: ClesAccueilPublic = {
       {
         titre: "Fewer no-shows",
         texte:
-          "A reminder the day before, one-click cancellation, a deposit when the table warrants it.",
+          "A reminder the day before, one-click cancellation. For the tables that matter: a deposit, or a card hold charged only if the guest doesn't show.",
       },
       {
         titre: "Private hire",
@@ -1319,6 +1325,11 @@ const en: ClesAccueilPublic = {
       {
         question: "Does Klarr take a commission on bookings?",
         reponse: `No. Klarr takes no commission on covers or on private hire. Deposits are paid directly into the restaurant's own Stripe account. The Bookings module is billed at ${ht(HT.reservations, "en")} per month, and nothing else.`,
+      },
+      {
+        question: "Can I ask for a card hold against no-shows?",
+        reponse:
+          "Yes. For large tables, special evenings or private hire, guests save their card when booking: nothing is charged. If they don't come and haven't cancelled in time, the restaurant charges the agreed amount in one click. You can also ask for a deposit, collected straight away. Either way, the money goes to your own Stripe account, with no Klarr commission.",
       },
       {
         question:
@@ -1763,7 +1774,8 @@ const zh: ClesAccueilPublic = {
       },
       {
         titre: "更少放鸽子",
-        texte: "前一天提醒，一键取消，值得收订金的桌位就收订金。",
+        texte:
+          "前一天提醒，一键取消。重要的桌位可以收订金，或做信用卡担保——客人没来才扣款。",
       },
       {
         titre: "包场",
@@ -1852,6 +1864,11 @@ const zh: ClesAccueilPublic = {
       {
         question: "Klarr 会对订位抽成吗？",
         reponse: `不会。Klarr 对散客和包场都不抽成。订金直接进入餐厅自己的 Stripe 账户。订位模块每月 ${ht(HT.reservations, "zh")}，没有其他费用。`,
+      },
+      {
+        question: "可以用信用卡担保来防止客人爽约吗？",
+        reponse:
+          "可以。大桌、节日晚上或包场时，客人订位时登记信用卡，但不会扣款。如果客人没来、也没有按时取消，餐厅一键扣除约定金额。您也可以收订金，订位时直接付款。两种方式的款项都进入您自己的 Stripe 账户，Klarr 不抽成。",
       },
       {
         question: "Klarr 与 TheFork、Zenchef 有什么区别？",
