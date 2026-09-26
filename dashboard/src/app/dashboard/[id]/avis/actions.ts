@@ -8,6 +8,13 @@ import {
   searchTripadvisorLocations,
   type TripadvisorLocation,
 } from "@/lib/reviews/tripadvisor";
+import { cheminFiche, ouvrirFicheGoogle } from "@/lib/google/fiche";
+import {
+  AccesGoogleFerme,
+  LONGUEUR_REPONSE_MAX,
+  repondreAvisGoogle,
+  retirerReponseGoogle,
+} from "@/lib/google/avis";
 
 export type DraftState = {
   draft: string | null;
@@ -203,6 +210,129 @@ export async function annulerReponse(formData: FormData): Promise<void> {
     .eq("restaurant_id", restaurantId)
     .eq("cle", cle);
   if (error) console.error("[avis/annulerReponse]", error.message);
+
+  revalidatePath(`/dashboard/${restaurantId}/avis`);
+}
+
+export type PublicationState = {
+  ok: boolean;
+  error: string | null;
+  // Incrémenté à chaque envoi : le formulaire s'en sert pour savoir qu'une
+  // réponse vient d'arriver, même identique à la précédente.
+  version: number;
+};
+
+/**
+ * Ouvre la fiche et vérifie que l'avis lui appartient.
+ *
+ * Le nom de l'avis vient du navigateur : sans ce contrôle, un gérant
+ * pourrait répondre, avec le jeton de son restaurant, sous l'avis d'une
+ * fiche qui n'est pas la sienne.
+ */
+async function ficheDeLAvis(restaurantId: string, avisName: string) {
+  const supabase = await createClient();
+  const fiche = await ouvrirFicheGoogle(supabase, restaurantId);
+  if (fiche.etat !== "prete") return null;
+  const prefixe = `${cheminFiche(fiche.accountName, fiche.locationName)}/reviews/`;
+  if (!avisName.startsWith(prefixe) || avisName.includes("..")) return null;
+  return { supabase, accessToken: fiche.accessToken };
+}
+
+/** Publie la réponse sous l'avis Google, puis la garde dans Klarr. */
+export async function publierReponseGoogle(
+  prevState: PublicationState,
+  formData: FormData,
+): Promise<PublicationState> {
+  const version = prevState.version + 1;
+  const restaurantId = String(formData.get("restaurant_id") ?? "");
+  const avisName = String(formData.get("avis_name") ?? "");
+  const cle = String(formData.get("cle") ?? "").slice(0, 300);
+  const reponse = String(formData.get("reponse") ?? "").trim();
+  if (!restaurantId || !avisName || !cle) {
+    return { ok: false, error: "Avis introuvable.", version };
+  }
+  if (!reponse) {
+    return { ok: false, error: "La réponse est vide.", version };
+  }
+  if (reponse.length > LONGUEUR_REPONSE_MAX) {
+    return {
+      ok: false,
+      error: "Google limite une réponse à 4 096 caractères.",
+      version,
+    };
+  }
+
+  await exiger(restaurantId, "gerant");
+
+  const acces = await ficheDeLAvis(restaurantId, avisName);
+  if (!acces) {
+    return {
+      ok: false,
+      error: "Cet avis n'appartient pas à la fiche Google reliée.",
+      version,
+    };
+  }
+
+  try {
+    await repondreAvisGoogle(acces.accessToken, avisName, reponse);
+  } catch (erreur) {
+    console.error("[avis/publierReponseGoogle]", erreur);
+    return {
+      ok: false,
+      error:
+        erreur instanceof AccesGoogleFerme
+          ? "Google n'autorise pas encore Klarr à publier. Copie la réponse et colle-la sous l'avis."
+          : "Google a refusé la réponse. Réessaie dans un instant.",
+      version,
+    };
+  }
+
+  const note = Number(formData.get("note") ?? 0);
+  const { error } = await acces.supabase
+    .from("restaurant_avis_reponses")
+    .upsert({
+      restaurant_id: restaurantId,
+      cle,
+      plateforme: "Google",
+      auteur: String(formData.get("auteur") ?? "").slice(0, 200) || null,
+      note: note >= 1 && note <= 5 ? Math.round(note) : null,
+      reponse,
+      source: "api",
+      repondu_le: new Date().toISOString(),
+    });
+  // Publiée sur Google, la réponse compte même si la trace manque : Google
+  // la renvoie avec l'avis au prochain chargement.
+  if (error) console.error("[avis/publierReponseGoogle]", error.message);
+
+  revalidatePath(`/dashboard/${restaurantId}/avis`);
+  return { ok: true, error: null, version };
+}
+
+/** Retire la réponse de Google : l'avis redevient « sans réponse ». */
+export async function retirerReponseDeGoogle(
+  formData: FormData,
+): Promise<void> {
+  const restaurantId = String(formData.get("restaurant_id") ?? "");
+  const avisName = String(formData.get("avis_name") ?? "");
+  const cle = String(formData.get("cle") ?? "");
+  if (!restaurantId || !avisName || !cle) return;
+
+  await exiger(restaurantId, "gerant");
+
+  const acces = await ficheDeLAvis(restaurantId, avisName);
+  if (!acces) return;
+
+  try {
+    await retirerReponseGoogle(acces.accessToken, avisName);
+  } catch (erreur) {
+    console.error("[avis/retirerReponseDeGoogle]", erreur);
+    return;
+  }
+  await acces.supabase
+    .from("restaurant_avis_reponses")
+    .delete()
+    .eq("restaurant_id", restaurantId)
+    .eq("cle", cle);
 
   revalidatePath(`/dashboard/${restaurantId}/avis`);
 }

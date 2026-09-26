@@ -301,6 +301,7 @@ export function CarteAvis({
           cle={cle}
           plateforme={LIBELLE_PLATEFORME[avis.platform]}
           enregistree={enregistree}
+          googleName={avis.googleName}
           author={avis.author}
           rating={avis.rating}
           text={avis.text}

@@ -53,6 +53,12 @@ export type PlatformReviews = {
     text: string;
     publishedAt: string | null;
     url: string | null;
+    /**
+     * Lu par l'API de la fiche Google : son identifiant, pour y répondre
+     * depuis Klarr, et la réponse déjà publiée, s'il y en a une.
+     */
+    googleName?: string;
+    reponsePubliee?: { texte: string; le: string } | null;
   }[];
 };
 

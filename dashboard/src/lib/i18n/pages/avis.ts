@@ -234,4 +234,63 @@ export const AVIS: Traductions = {
     en: "Tripadvisor didn't respond. Try again in a moment.",
     zh: "Tripadvisor 没有响应，请稍后再试。",
   },
+  // Réponse publiée directement sur la fiche Google.
+  "Retirer cette réponse de Google ?": {
+    en: "Remove this reply from Google?",
+    zh: "要从 Google 上删除这条回复吗？",
+  },
+  "Retirer de Google": { en: "Remove from Google", zh: "从 Google 删除" },
+  "Publiée sur Google le {date}": {
+    en: "Posted on Google on {date}",
+    zh: "已于 {date} 发布到 Google",
+  },
+  "Publication…": { en: "Posting…", zh: "正在发布…" },
+  "Remplacer sur Google": { en: "Replace on Google", zh: "在 Google 上替换" },
+  "Publier sur Google": { en: "Post on Google", zh: "发布到 Google" },
+  "Avis introuvable.": { en: "Review not found.", zh: "找不到这条评价。" },
+  "La réponse est vide.": { en: "The reply is empty.", zh: "回复内容为空。" },
+  "Google limite une réponse à 4 096 caractères.": {
+    en: "Google limits a reply to 4,096 characters.",
+    zh: "Google 规定回复不能超过 4096 个字符。",
+  },
+  "Cet avis n'appartient pas à la fiche Google reliée.": {
+    en: "This review doesn't belong to the linked Google listing.",
+    zh: "这条评价不属于已关联的 Google 商家资料。",
+  },
+  "Google n'autorise pas encore Klarr à publier. Copie la réponse et colle-la sous l'avis.":
+    {
+      en: "Google doesn't allow Klarr to post yet. Copy the reply and paste it under the review.",
+      zh: "Google 暂时还不允许 Klarr 直接发布。请复制回复，粘贴到评价下方。",
+    },
+  "Google a refusé la réponse. Réessaie dans un instant.": {
+    en: "Google rejected the reply. Try again in a moment.",
+    zh: "Google 拒绝了这条回复，请稍后再试。",
+  },
+  "Klarr rédige une réponse pour chaque avis, dans la langue du client. Sur Google, relis-la et publie-la en un clic ; ailleurs, copie-la et colle-la sous l'avis.":
+    {
+      en: "Klarr drafts a reply to every review, in the guest's language. On Google, read it over and post it in one click; elsewhere, copy it and paste it under the review.",
+      zh: "Klarr 会用顾客的语言为每条评价起草回复。Google 上的评价，检查后一键发布；其他平台，复制后粘贴到评价下方。",
+    },
+  "Google n'a pas transmis les avis de ta fiche. Ceux affichés viennent de la fiche publique ; réessaie dans un instant pour répondre depuis Klarr.":
+    {
+      en: "Google didn't send your listing's reviews. The ones shown come from your public listing; try again in a moment to reply from Klarr.",
+      zh: "Google 没有传回您商家资料的评价。下面显示的是公开资料中的评价，请稍后再试，以便在 Klarr 中直接回复。",
+    },
+  "Choisis ta fiche Google pour lire tous tes avis et y répondre depuis Klarr, sans copier-coller.":
+    {
+      en: "Choose your Google listing to read all your reviews and reply from Klarr, without copy-pasting.",
+      zh: "选择您的 Google 商家资料，即可在 Klarr 中查看全部评价并直接回复，无需复制粘贴。",
+    },
+  "Connecte ta fiche Google pour lire tous tes avis et y répondre depuis Klarr, sans copier-coller.":
+    {
+      en: "Connect your Google listing to read all your reviews and reply from Klarr, without copy-pasting.",
+      zh: "关联您的 Google 商家资料，即可在 Klarr 中查看全部评价并直接回复，无需复制粘贴。",
+    },
+  "Choisir ma fiche": { en: "Choose my listing", zh: "选择我的商家资料" },
+  "Connecter Google": { en: "Connect Google", zh: "关联 Google" },
+  "Pour un avis TheFork, Facebook ou d'ailleurs, colle-le ici : Klarr propose la réponse, tu la copies.":
+    {
+      en: "For a review on TheFork, Facebook or elsewhere, paste it here: Klarr suggests the reply, you copy it.",
+      zh: "TheFork、Facebook 或其他平台的评价，粘贴到这里：Klarr 起草回复，您复制即可。",
+    },
 };

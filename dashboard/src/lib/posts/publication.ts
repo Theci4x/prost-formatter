@@ -1,11 +1,10 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { getValidAccessToken } from "@/lib/google/connection";
 import {
-  listAccounts,
   publicationsGoogleOuvertes,
   publierPostLocal,
 } from "@/lib/google/business";
+import { ouvrirFicheGoogle } from "@/lib/google/fiche";
 import { aPublier, actionGoogle, type Bouton } from "@/lib/posts/regles";
 
 /**
@@ -96,48 +95,16 @@ export async function publierLesPosts({
 
   for (const ligne of lignes) {
     try {
-      const { data: connexionData } = await supabase
-        .from("google_business_connections")
-        .select(
-          "restaurant_id, access_token, refresh_token, token_expires_at, account_name, location_name",
-        )
-        .eq("restaurant_id", ligne.restaurant_id)
-        .maybeSingle();
-
-      const connexion = connexionData as {
-        restaurant_id: string;
-        access_token: string;
-        refresh_token: string;
-        token_expires_at: string;
-        account_name: string | null;
-        location_name: string | null;
-      } | null;
-
-      if (!connexion?.location_name) {
+      const fiche = await ouvrirFicheGoogle(supabase, ligne.restaurant_id);
+      if (fiche.etat !== "prete") {
         throw new Error("Aucune fiche Google reliée à cet établissement.");
       }
-
-      const accessToken = await getValidAccessToken(supabase, connexion);
-
-      // Les connexions établies avant que le compte soit retenu n'en ont
-      // pas : on le retrouve une fois, et on le range pour la suite.
-      let accountName = connexion.account_name;
-      if (!accountName) {
-        const comptes = await listAccounts(accessToken);
-        accountName = comptes[0]?.name ?? null;
-        if (accountName) {
-          await supabase
-            .from("google_business_connections")
-            .update({ account_name: accountName })
-            .eq("restaurant_id", ligne.restaurant_id);
-        }
-      }
-      if (!accountName) throw new Error("Compte Google introuvable.");
+      const { accessToken, accountName } = fiche;
 
       const nom = await publierPostLocal(
         accessToken,
         accountName,
-        connexion.location_name,
+        fiche.locationName,
         {
           texte: ligne.texte,
           photoUrl: ligne.photo_id

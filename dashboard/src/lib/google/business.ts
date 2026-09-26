@@ -20,6 +20,7 @@ const BUSINESS_INFORMATION_BASE_URL =
  * mieux vaut ne rien proposer que proposer ce qu'on ne tient pas.
  */
 export function publicationsGoogleOuvertes(): boolean {
+  // Le même accès ouvre les réponses aux avis : même API v4, même dossier.
   return process.env.GOOGLE_POSTS_ACTIF === "1";
 }
 
@@ -103,7 +104,12 @@ export async function listLocations(
 // le quota du projet reste à zéro et chaque appel répond 403. Le code
 // complet vit donc ici en attendant, et la file d'attente se videra sans
 // qu'on y retouche le jour où l'accès est accordé.
-const BUSINESS_V4_BASE_URL = "https://mybusiness.googleapis.com/v4";
+// `GOOGLE_BUSINESS_V4_URL` ne sert qu'aux essais : il pointe l'appel vers
+// un faux serveur, puisque le vrai refuse tout tant que l'accès n'est pas
+// accordé.
+export const BUSINESS_V4_BASE_URL =
+  process.env.GOOGLE_BUSINESS_V4_URL?.replace(/\/+$/, "") ||
+  "https://mybusiness.googleapis.com/v4";
 
 export type PostLocal = {
   texte: string;

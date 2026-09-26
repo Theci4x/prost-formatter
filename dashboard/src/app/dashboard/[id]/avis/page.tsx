@@ -17,6 +17,7 @@ import { FRAICHEUR_DEMANDE } from "@/lib/reviews/fraicheur";
 import { ConfirmationTripadvisor } from "@/components/reviews/ConfirmationTripadvisor";
 import { RepondreAvisLibre } from "@/components/reviews/RepondreAvisLibre";
 import { chargerReponses, cleAvis } from "@/lib/reviews/reponses";
+import { chargerAvisGoogleDirect } from "@/lib/reviews/googleDirect";
 import { PageHeader, dashboardIcons } from "@/components/dashboard/PageHeader";
 import { Compteur, TitreSection } from "@/components/dashboard/Compteur";
 import type { Restaurant } from "@/types/restaurant";
@@ -64,7 +65,7 @@ export default async function AvisPage({
   };
   const epingleTripadvisor = suivi.tripadvisor_location_id;
 
-  const [google, yelp, releveTripadvisor, direct, suiviReponses] =
+  const [google, yelp, releveTripadvisor, direct, suiviReponses, ficheGoogle] =
     await Promise.all([
       fetchGooglePlatformReviews(restaurant.nom, location),
       fetchYelpPlatformReviews(restaurant.nom, location),
@@ -77,13 +78,30 @@ export default async function AvisPage({
           })
         : Promise.resolve(null),
       chargerReponses(supabase, id),
+      chargerAvisGoogleDirect(supabase, id),
     ]);
   const { reponses, tableAbsente } = suiviReponses;
   // Chargé à la demande, l'appel direct l'emporte : il porte les avis, le
   // lien vers la fiche et le nom retenu. Sinon, le relevé suffit.
   const tripadvisor = direct?.found ? direct : releveTripadvisor;
 
-  const plateformes = [google, yelp, tripadvisor].filter((p) => p.configured);
+  // Lus sur la fiche du restaurateur, les avis Google sont plus nombreux et
+  // se répondent depuis Klarr : ils remplacent ceux de Places, dont on garde
+  // le lien vers la fiche publique et l'état d'ouverture.
+  const repondDirect = ficheGoogle.etat === "ok";
+  const avisGoogle =
+    ficheGoogle.etat === "ok"
+      ? {
+          ...ficheGoogle.donnees,
+          businessName: google.businessName,
+          businessUrl: google.businessUrl,
+          businessStatus: google.businessStatus,
+        }
+      : google;
+
+  const plateformes = [avisGoogle, yelp, tripadvisor].filter(
+    (p) => p.configured,
+  );
 
   // Toutes plateformes confondues, du plus récent au plus ancien : c'est
   // l'ordre dans lequel on répond. Sans date, en dernier.
@@ -110,7 +128,14 @@ export default async function AvisPage({
       ? notees.reduce((t, p) => t + p.rating! * (p.reviewCount ?? 0), 0) /
         totalAvis
       : null;
-  const repondu = (a: AvisAffiche) => reponses.has(cleAvis(a));
+  // Répondu dans Klarr, ou déjà sur Google : la fiche le dit elle-même,
+  // y compris pour les réponses écrites ailleurs que dans Klarr.
+  const repondu = (a: AvisAffiche) =>
+    reponses.has(cleAvis(a)) || Boolean(a.reponsePubliee);
+  const reponseDe = (a: AvisAffiche) =>
+    a.reponsePubliee
+      ? { reponse: a.reponsePubliee.texte, reponduLe: a.reponsePubliee.le }
+      : (reponses.get(cleAvis(a)) ?? null);
   // « À traiter » : les notes basses encore sans réponse. Une fois
   // répondu, l'avis n'a plus à attirer l'œil.
   const bas = avis.filter((a) => a.rating > 0 && a.rating <= 3 && !repondu(a));
@@ -176,9 +201,13 @@ export default async function AvisPage({
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="max-w-4xl text-sm text-zinc-600">
-          {t(
-            "Klarr rédige une réponse pour chaque avis, dans la langue du client. En attendant que Google ouvre la publication directe, copie-la, colle-la sous l'avis, puis coche « J'ai publié » : l'avis sort de la liste à traiter.",
-          )}
+          {repondDirect
+            ? t(
+                "Klarr rédige une réponse pour chaque avis, dans la langue du client. Sur Google, relis-la et publie-la en un clic ; ailleurs, copie-la et colle-la sous l'avis.",
+              )
+            : t(
+                "Klarr rédige une réponse pour chaque avis, dans la langue du client. En attendant que Google ouvre la publication directe, copie-la, colle-la sous l'avis, puis coche « J'ai publié » : l'avis sort de la liste à traiter.",
+              )}
         </p>
         {/* L'autre moitié de la réputation : ce que les clients disent en
             privé, avant d'écrire en public. */}
@@ -199,6 +228,36 @@ export default async function AvisPage({
           </Link>
         </div>
       </div>
+
+      {(ficheGoogle.etat === "non-connecte" ||
+        ficheGoogle.etat === "sans-fiche" ||
+        ficheGoogle.etat === "erreur") && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-brand-orange/40 bg-brand-orange-soft px-5 py-4">
+          <p className="max-w-3xl text-sm leading-relaxed text-ink">
+            {ficheGoogle.etat === "erreur"
+              ? t(
+                  "Google n'a pas transmis les avis de ta fiche. Ceux affichés viennent de la fiche publique ; réessaie dans un instant pour répondre depuis Klarr.",
+                )
+              : ficheGoogle.etat === "sans-fiche"
+                ? t(
+                    "Choisis ta fiche Google pour lire tous tes avis et y répondre depuis Klarr, sans copier-coller.",
+                  )
+                : t(
+                    "Connecte ta fiche Google pour lire tous tes avis et y répondre depuis Klarr, sans copier-coller.",
+                  )}
+          </p>
+          {ficheGoogle.etat !== "erreur" && (
+            <Link
+              href={`/dashboard/${id}/google`}
+              className="rounded-lg bg-brand-navy px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover"
+            >
+              {ficheGoogle.etat === "sans-fiche"
+                ? t("Choisir ma fiche")
+                : t("Connecter Google")}
+            </Link>
+          )}
+        </div>
+      )}
 
       {plateformes.length > 0 && (
         <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
@@ -337,7 +396,7 @@ export default async function AvisPage({
                 restaurantId={id}
                 langue={langue}
                 cle={cleAvis(a)}
-                enregistree={reponses.get(cleAvis(a)) ?? null}
+                enregistree={reponseDe(a)}
               />
             ))}
           </ul>
@@ -347,9 +406,13 @@ export default async function AvisPage({
       <section id="autre-avis" className="flex scroll-mt-8 flex-col gap-4">
         <TitreSection>{t("Répondre à un autre avis")}</TitreSection>
         <p className="max-w-4xl text-sm text-zinc-600">
-          {t(
-            "Google ne transmet que cinq avis, pas forcément les plus récents. Pour les autres — ou ceux de TheFork et d'ailleurs — colle l'avis ici : Klarr propose la réponse, tu la copies.",
-          )}
+          {repondDirect
+            ? t(
+                "Pour un avis TheFork, Facebook ou d'ailleurs, colle-le ici : Klarr propose la réponse, tu la copies.",
+              )
+            : t(
+                "Google ne transmet que cinq avis, pas forcément les plus récents. Pour les autres — ou ceux de TheFork et d'ailleurs — colle l'avis ici : Klarr propose la réponse, tu la copies.",
+              )}
         </p>
         <RepondreAvisLibre restaurantId={id} langue={langue} />
       </section>

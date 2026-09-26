@@ -40,7 +40,11 @@ Voir `dashboard/README.md` pour l'installation et la configuration.
 - [x] Code prêt pour choisir la fiche Business Profile précise
       (`src/lib/google/business.ts`, migration `0007`) — bloqué par la
       demande d'accès API ci-dessous
-- [ ] Lecture/réponse aux avis
+- [x] Lecture/réponse aux avis (26/09/2026) : avis lus sur la fiche via
+      l'API v4 (50 derniers, réponse existante comprise), réponse publiée,
+      remplacée ou retirée depuis Klarr (`src/lib/google/avis.ts`). Actif
+      avec `GOOGLE_POSTS_ACTIF=1`, comme les posts ; sans lui, ou tant que
+      Google refuse (quota à zéro), l'écran reste en copier-coller.
 - [ ] Création et programmation de posts (avec photos)
 - [ ] Statistiques (vues, recherches, appels) via la Business Profile
       Performance API — réutilise la connexion OAuth déjà en place
