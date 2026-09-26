@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { ClesAccueilPublic } from "@/lib/i18n/accueilPublic";
 import type { Langue } from "@/lib/i18n/langue";
 import { Reveal } from "@/components/landing/Reveal";
@@ -89,6 +90,16 @@ export function Showcase({
                   <p className="m-0 max-w-prose text-[15px] leading-[1.7] text-ink-soft sm:text-base">
                     {carte.texte}
                   </p>
+                  {/* La première carte montre la réponse d'une IA : la page
+                      qui l'explique en entier est juste derrière. */}
+                  {rang === 0 && (
+                    <Link
+                      href="/visibilite-restaurant-ia"
+                      className="w-fit text-[15px] font-semibold text-brand-orange-dark underline underline-offset-4"
+                    >
+                      ▶ {t.lienIa}
+                    </Link>
+                  )}
                 </div>
                 <div
                   className={`lg:col-span-7 ${inverse ? "lg:order-1 lg:col-start-1" : "lg:order-2"}`}

@@ -33,6 +33,9 @@ const PAGES_FIXES = [
     chemin: "/logiciel-reservation-restaurant-sans-commission",
     priorite: 0.9,
   },
+  // La page de la fonction qui distingue Klarr : apparaître dans les
+  // réponses des assistants. Guide et démonstration à la fois.
+  { chemin: "/visibilite-restaurant-ia", priorite: 0.9 },
   // Le calculateur vise la même intention que le comparatif — quelqu'un
   // qui paie déjà une commission et se demande ce qu'elle lui coûte —
   // mais il répond avec ses chiffres à lui.

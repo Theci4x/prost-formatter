@@ -117,7 +117,7 @@ Vous pouvez le faire vous-même, ce soir, gratuitement. La méthode tient en qua
 
 **Recommencez dans un mois.** Après avoir complété votre fiche, répondu à vos avis, ajouté des photos. C'est la comparaison qui vous dira si ça sert, pas la première mesure.
 
-Faites-le à la main : ça marche, ça ne coûte rien, et vous comprendrez le sujet mieux qu'avec n'importe quel rapport. Si vous ne voulez pas le refaire tous les mois, c'est ce que notre module Visibilité automatise — il pose vos questions, garde les réponses datées, et trace la courbe. Mais commencez par le faire vous-même une fois.
+Faites-le à la main : ça marche, ça ne coûte rien, et vous comprendrez le sujet mieux qu'avec n'importe quel rapport. Si vous ne voulez pas le refaire tous les mois, c'est ce que notre module Visibilité automatise — il pose vos questions, garde les réponses datées, et trace la courbe ([voir comment, en vidéo](/visibilite-restaurant-ia)). Mais commencez par le faire vous-même une fois.
 
 ## Ce que ça change, concrètement
 

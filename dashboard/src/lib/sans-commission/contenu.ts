@@ -6,32 +6,10 @@ import {
   PRIX_PACK_TTC,
 } from "@/lib/abonnement/modules";
 import type { Langue } from "@/lib/i18n/langues";
+import { PRIX_EN, PRIX_ZH } from "@/lib/abonnement/prix-affiches";
 
-// Les prix en anglais et en chinois se déduisent des prix français plutôt
-// que de se recopier : « 29 € HT / mois » devient « €29 excl. VAT ».
-function nombre(prixFrancais: string): number {
-  return Number.parseFloat(prixFrancais.replace(",", "."));
-}
-function euros(prixFrancais: string, etiquette: string): string {
-  const valeur = nombre(prixFrancais);
-  return new Intl.NumberFormat(etiquette, {
-    style: "currency",
-    currency: "EUR",
-    minimumFractionDigits: Number.isInteger(valeur) ? 0 : 2,
-  }).format(valeur);
-}
-const EN = {
-  reservations: euros(PRIX_MODULE.reservations, "en-GB"),
-  reservationsTTC: euros(PRIX_MODULE_TTC.reservations, "en-GB"),
-  pack: euros(PRIX_PACK, "en-GB"),
-  packTTC: euros(PRIX_PACK_TTC, "en-GB"),
-};
-const ZH = {
-  reservations: euros(PRIX_MODULE.reservations, "zh-CN"),
-  reservationsTTC: euros(PRIX_MODULE_TTC.reservations, "zh-CN"),
-  pack: euros(PRIX_PACK, "zh-CN"),
-  packTTC: euros(PRIX_PACK_TTC, "zh-CN"),
-};
+const EN = PRIX_EN;
+const ZH = PRIX_ZH;
 
 /**
  * La page qui dit comment marchent les réservations directes chez Klarr.

@@ -70,7 +70,7 @@ You can do it yourself, tonight, for nothing. The method comes down to four poin
 
 **Do it again in a month.** After completing your listing, replying to your reviews, adding photos. It is the comparison that will tell you whether it works, not the first measurement.
 
-Do it by hand: it works, it costs nothing, and you will understand the subject better than from any report. If you would rather not repeat it every month, that is what our Visibility module automates — it asks your questions, keeps the answers dated, and draws the curve. But start by doing it yourself once.
+Do it by hand: it works, it costs nothing, and you will understand the subject better than from any report. If you would rather not repeat it every month, that is what our Visibility module automates — it asks your questions, keeps the answers dated, and draws the curve ([see how, on video](/visibilite-restaurant-ia)). But start by doing it yourself once.
 
 ## What it changes, in practice
 

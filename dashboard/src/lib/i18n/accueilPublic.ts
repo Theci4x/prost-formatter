@@ -69,6 +69,8 @@ export type ClesAccueilPublic = {
     surtitre: string;
     titre: string;
     cartes: { titre: string; texte: string }[];
+    /** Sous la carte « IA » : vers la page qui la montre en entier. */
+    lienIa: string;
   };
   /**
    * Ce qui vient d'arriver dans le produit, montré sur la même maison
@@ -490,6 +492,7 @@ const fr: ClesAccueilPublic = {
   benefices: {
     surtitre: "Comment ça marche",
     titre: "La donnée brute, l'historique, et ce qui cloche.",
+    lienIa: "Apparaître dans ChatGPT : la démonstration en vidéo",
     cartes: [
       {
         titre: "La donnée brute",
@@ -1080,6 +1083,7 @@ const en: ClesAccueilPublic = {
   benefices: {
     surtitre: "How it works",
     titre: "The raw data, the history, and what's wrong.",
+    lienIa: "Showing up in ChatGPT: the video demo",
     cartes: [
       {
         titre: "The raw data",
@@ -1654,6 +1658,7 @@ const zh: ClesAccueilPublic = {
   benefices: {
     surtitre: "运作方式",
     titre: "原始数据、历史记录，以及问题所在。",
+    lienIa: "如何出现在 ChatGPT 的回答里：视频演示",
     cartes: [
       {
         titre: "原始数据",
