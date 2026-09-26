@@ -100,6 +100,10 @@ export default async function PresencePage({
   const etat = await chargerPresence(supabase, id);
   if (!etat) notFound();
   const { restaurant, relies: reliesFr, constats, tableAbsente } = etat;
+  const presenceMeta = restaurant as typeof restaurant & {
+    presence_urls?: Record<string, string> | null;
+    presence_auditee_le?: string | null;
+  };
   const { data: auditRows } = await supabase
     .from("restaurant_presence_audits")
     .select("plateforme, statut, ecarts, note, nombre_avis, audite_le")
@@ -124,6 +128,32 @@ export default async function PresencePage({
   const auditsIncoherents = auditsListe.filter((audit) => audit.statut === "incoherence");
   const auditsInaccessibles = auditsListe.filter((audit) => audit.statut === "inaccessible");
   const auditsAvecNote = auditsListe.filter((audit) => audit.note != null);
+  const auditsCoherents = auditsListe.filter((audit) => audit.statut === "coherente");
+  const auditsInsuffisants = auditsListe.filter((audit) => audit.statut === "donnees_insuffisantes");
+  const derniereAnalyse = presenceMeta.presence_auditee_le ?? auditsListe[0]?.audite_le ?? null;
+  const prochaineAnalyse = derniereAnalyse
+    ? new Date(Date.parse(derniereAnalyse) + 30 * 24 * 60 * 60 * 1000)
+    : null;
+  const urlsSurveillees = Object.keys(presenceMeta.presence_urls ?? {}).length;
+  const dateAnalyse = (iso: string | null) =>
+    iso
+      ? new Date(iso).toLocaleString(locale, {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          timeZone: "Europe/Paris",
+        })
+      : "Jamais";
+  const dateProchaineAnalyse = prochaineAnalyse
+    ? prochaineAnalyse.toLocaleDateString(locale, {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+        timeZone: "Europe/Paris",
+      })
+    : "Après l’enregistrement d’une fiche";
   const champs = etat.champs.map((c) => ({
     ...c,
     libelle: t.champs[c.libelle] ?? c.libelle,
@@ -184,6 +214,42 @@ export default async function PresencePage({
           L’URL n’a pas pu être enregistrée. Vérifie que la migration 0090 est bien appliquée dans Supabase.
         </p>
       )}
+
+      <section className="flex flex-col gap-5 rounded-2xl border border-brand-navy/15 bg-brand-navy/[0.03] p-6 shadow-sm sm:p-8">
+        <div className="flex flex-col gap-2">
+          <h2 className="font-serif text-2xl text-ink">Tableau de bord du suivi</h2>
+          <p className="text-sm leading-relaxed text-zinc-600">
+            Une vue rapide de la santé de tes fiches publiques. La prochaine analyse est prévue environ 30 jours après la dernière analyse complète.
+          </p>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="rounded-xl bg-white p-4">
+            <div className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Dernière analyse</div>
+            <div className="mt-2 text-base font-semibold text-ink">{dateAnalyse(derniereAnalyse)}</div>
+          </div>
+          <div className="rounded-xl bg-white p-4">
+            <div className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Prochaine analyse</div>
+            <div className="mt-2 text-base font-semibold text-ink">{dateProchaineAnalyse}</div>
+          </div>
+          <div className="rounded-xl bg-white p-4">
+            <div className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Fiches surveillées</div>
+            <div className="mt-2 text-2xl font-semibold text-ink">{urlsSurveillees}</div>
+          </div>
+          <div className={`rounded-xl bg-white p-4 ${auditsIncoherents.length || auditsInaccessibles.length ? "ring-1 ring-brand-orange/50" : ""}`}>
+            <div className="text-xs font-semibold uppercase tracking-wide text-zinc-500">À traiter</div>
+            <div className="mt-2 text-2xl font-semibold text-brand-orange-dark">{auditsIncoherents.length + auditsInaccessibles.length}</div>
+          </div>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="rounded-xl border border-zinc-200/70 bg-white px-4 py-3 text-sm"><strong className="text-emerald-700">{auditsCoherents.length}</strong> fiche{auditsCoherents.length > 1 ? "s" : ""} cohérente{auditsCoherents.length > 1 ? "s" : ""}</div>
+          <div className="rounded-xl border border-zinc-200/70 bg-white px-4 py-3 text-sm"><strong className="text-brand-orange-dark">{auditsIncoherents.length}</strong> incohérence{auditsIncoherents.length > 1 ? "s" : ""}</div>
+          <div className="rounded-xl border border-zinc-200/70 bg-white px-4 py-3 text-sm"><strong className="text-brand-orange-dark">{auditsInaccessibles.length}</strong> page{auditsInaccessibles.length > 1 ? "s" : ""} inaccessible{auditsInaccessibles.length > 1 ? "s" : ""}</div>
+          <div className="rounded-xl border border-zinc-200/70 bg-white px-4 py-3 text-sm"><strong className="text-ink">{auditsAvecNote.length}</strong> note{auditsAvecNote.length > 1 ? "s" : ""} relevée{auditsAvecNote.length > 1 ? "s" : ""}{auditsInsuffisants.length ? ` · ${auditsInsuffisants.length} donnée${auditsInsuffisants.length > 1 ? "s" : ""} insuffisante${auditsInsuffisants.length > 1 ? "s" : ""}` : ""}</div>
+        </div>
+        {derniereAnalyse && (
+          <p className="text-xs text-zinc-500">Dernière analyse enregistrée le {dateAnalyse(derniereAnalyse)}. Les fiches sont contrôlées uniquement à partir des URLs publiques que tu as enregistrées.</p>
+        )}
+      </section>
 
       <section className="flex flex-col gap-5 rounded-2xl border border-brand-navy/15 bg-brand-navy/[0.03] p-6 shadow-sm sm:p-8">
         <div className="flex flex-col gap-2">
