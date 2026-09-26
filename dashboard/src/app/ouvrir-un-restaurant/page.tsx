@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Commis } from "@/components/commis/Commis";
+import { LECTURE, PAGE_OUTIL } from "@/components/outils/colonnes";
 import { EnteteOutil } from "@/components/outils/EnteteOutil";
 import { RappelOuverture } from "@/components/ouverture/RappelOuverture";
 import { DonneesStructurees } from "@/components/seo/DonneesStructurees";
@@ -50,7 +51,7 @@ export default async function OuvrirPage() {
     <div className="flex min-h-screen flex-col bg-brand-cream">
       <EnteteOutil langue={langue} />
 
-      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-5 py-12">
+      <main className={PAGE_OUTIL}>
         <DonneesStructurees
           donnees={filAriane([
             { nom: "Klarr", url: siteUrl() },
@@ -65,10 +66,12 @@ export default async function OuvrirPage() {
           <h1 className="font-serif text-4xl text-ink sm:text-5xl">
             {t(PLAN.titre, langue)}
           </h1>
-          <p className="text-base text-zinc-600">{t(PLAN.chapo, langue)}</p>
+          <p className={`text-base text-zinc-600 ${LECTURE}`}>
+            {t(PLAN.chapo, langue)}
+          </p>
         </div>
 
-        <ol className="flex flex-col gap-4">
+        <ol className="grid gap-4 md:grid-cols-2">
           {ETAPES.map((etape, rang) => (
             <li
               key={etape.lien}
@@ -87,7 +90,7 @@ export default async function OuvrirPage() {
               </p>
               <Link
                 href={etape.lien}
-                className="w-fit rounded-md border border-zinc-200 px-4 py-2 text-sm font-medium text-brand-navy transition-colors hover:border-brand-navy"
+                className="mt-auto w-fit rounded-md border border-zinc-200 px-4 py-2 text-sm font-medium text-brand-navy transition-colors hover:border-brand-navy"
               >
                 {t(PLAN.actions[etape.id], langue)} →
               </Link>
@@ -95,22 +98,25 @@ export default async function OuvrirPage() {
           ))}
         </ol>
 
-        <div className="flex flex-col gap-3 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm">
-          <p className="text-base font-semibold text-zinc-900">
-            {t(PLAN.resteTitre, langue)}
-          </p>
-          <p className="text-base text-zinc-600">
-            {t(PLAN.resteTexte, langue)}
-          </p>
-          <Link
-            href="/blog"
-            className="w-fit text-base text-brand-navy underline-offset-2 hover:underline"
-          >
-            {t(PLAN.journal, langue)}
-          </Link>
-        </div>
+        {/* Le journal et le rappel, côte à côte sur grand écran. */}
+        <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
+          <div className="flex flex-col gap-3 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm">
+            <p className="text-base font-semibold text-zinc-900">
+              {t(PLAN.resteTitre, langue)}
+            </p>
+            <p className="text-base text-zinc-600">
+              {t(PLAN.resteTexte, langue)}
+            </p>
+            <Link
+              href="/blog"
+              className="w-fit text-base text-brand-navy underline-offset-2 hover:underline"
+            >
+              {t(PLAN.journal, langue)}
+            </Link>
+          </div>
 
-        <RappelOuverture source="plan-ouverture" langue={langue} />
+          <RappelOuverture source="plan-ouverture" langue={langue} />
+        </div>
       </main>
 
       <Commis />

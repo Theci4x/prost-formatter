@@ -1,6 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Commis } from "@/components/commis/Commis";
+import {
+  COLONNES,
+  COTE,
+  LECTURE,
+  PAGE_OUTIL,
+  PRINCIPALE,
+} from "@/components/outils/colonnes";
 import { EnteteOutil } from "@/components/outils/EnteteOutil";
 import { SuiteOutils } from "@/components/outils/SuiteOutils";
 import { DonneesStructurees } from "@/components/seo/DonneesStructurees";
@@ -49,7 +56,7 @@ export default async function AuditPage() {
     <div className="flex min-h-screen flex-col bg-brand-cream">
       <EnteteOutil langue={langue} />
 
-      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-5 py-12">
+      <main className={PAGE_OUTIL}>
         <DonneesStructurees
           donnees={filAriane([
             { nom: "Klarr", url: siteUrl() },
@@ -64,7 +71,9 @@ export default async function AuditPage() {
           <h1 className="font-serif text-4xl text-ink sm:text-5xl">
             {t(ECRAN.titre, langue)}
           </h1>
-          <p className="text-base text-zinc-600">{t(ECRAN.chapo, langue)}</p>
+          <p className={`text-base text-zinc-600 ${LECTURE}`}>
+            {t(ECRAN.chapo, langue)}
+          </p>
           <Link
             href="/test-presence-google"
             className="w-fit rounded-md bg-brand-navy px-5 py-3 text-base font-medium text-white transition-colors hover:bg-brand-navy-hover"
@@ -77,87 +86,94 @@ export default async function AuditPage() {
           <h2 className="font-serif text-3xl text-ink">
             {t(ECRAN.regardeTitre, langue)}
           </h2>
-          {PILIERS.map((pilier) => {
-            // Un article non traduit perd son lien et garde son texte :
-            // c'est la règle du journal, et renvoyer un lecteur chinois
-            // vers une page française serait une impasse annoncée comme
-            // une piste.
-            const adresse = adressePour(pilier.article.slug, langue);
-            return (
-              <article
-                key={pilier.id}
-                className="flex flex-col gap-3 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm"
-              >
-                <div className="flex flex-col gap-1">
-                  <h3 className="text-base font-semibold text-zinc-900">
-                    {t(pilier.titre, langue)}
-                  </h3>
-                  <p className="text-base text-zinc-600">
-                    {t(pilier.quoi, langue)}
-                  </p>
-                </div>
-                <ul className="flex flex-col gap-1.5">
-                  {pilier.signaux.map((signal) => (
-                    <li
-                      key={signal.fr}
-                      className="flex gap-2 text-base text-zinc-600"
+          <div className="grid gap-4 lg:grid-cols-3">
+            {PILIERS.map((pilier) => {
+              // Un article non traduit perd son lien et garde son texte :
+              // c'est la règle du journal, et renvoyer un lecteur chinois
+              // vers une page française serait une impasse annoncée comme
+              // une piste.
+              const adresse = adressePour(pilier.article.slug, langue);
+              return (
+                <article
+                  key={pilier.id}
+                  className="flex flex-col gap-3 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm"
+                >
+                  <div className="flex flex-col gap-1">
+                    <h3 className="text-base font-semibold text-zinc-900">
+                      {t(pilier.titre, langue)}
+                    </h3>
+                    <p className="text-base text-zinc-600">
+                      {t(pilier.quoi, langue)}
+                    </p>
+                  </div>
+                  <ul className="flex flex-col gap-1.5">
+                    {pilier.signaux.map((signal) => (
+                      <li
+                        key={signal.fr}
+                        className="flex gap-2 text-base text-zinc-600"
+                      >
+                        <span aria-hidden="true" className="text-zinc-300">
+                          —
+                        </span>
+                        {t(signal, langue)}
+                      </li>
+                    ))}
+                  </ul>
+                  {adresse && (
+                    <Link
+                      href={adresse}
+                      className="mt-auto w-fit text-base text-brand-navy underline-offset-2 hover:underline"
                     >
-                      <span aria-hidden="true" className="text-zinc-300">
-                        —
-                      </span>
-                      {t(signal, langue)}
-                    </li>
-                  ))}
-                </ul>
-                {adresse && (
-                  <Link
-                    href={adresse}
-                    className="w-fit text-base text-brand-navy underline-offset-2 hover:underline"
-                  >
-                    {t(pilier.article.titre, langue)} →
-                  </Link>
-                )}
-              </article>
-            );
-          })}
+                      {t(pilier.article.titre, langue)} →
+                    </Link>
+                  )}
+                </article>
+              );
+            })}
+          </div>
         </section>
 
-        {/* La frontière, dite franchement. Un prospect qui comprend ce
+        <div className={COLONNES}>
+          <div className={PRINCIPALE}>
+            {/* La frontière, dite franchement. Un prospect qui comprend ce
             qu'il achète discute moins et reste plus longtemps. */}
-        <section className="flex flex-col gap-3 rounded-2xl border border-zinc-300 bg-white p-6">
-          <h2 className="text-base font-semibold text-zinc-900">
-            {t(ECRAN.frontiereTitre, langue)}
-          </h2>
-          <p className="text-base text-zinc-600">
-            <strong>{t(ECRAN.gratuitFort, langue)}</strong>
-            {t(ECRAN.gratuitSuite, langue)}
-          </p>
-          <p className="text-base text-zinc-600">
-            <strong>{t(ECRAN.payantFort, langue)}</strong>{" "}
-            {t(ECRAN.payantTexte, langue)
-              .replace("{module}", LIBELLE_MODULE.visibilite)
-              .replace("{prix}", PRIX_MODULE.visibilite)}
-          </p>
-          <p className="text-base text-zinc-600">
-            {t(ECRAN.gesteTexte, langue)}
-          </p>
-        </section>
-
-        <div className="flex flex-col gap-3 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm">
-          <p className="text-base font-semibold text-zinc-900">
-            {t(ECRAN.ouvertureTitre, langue)}
-          </p>
-          <p className="text-base text-zinc-600">
-            {t(ECRAN.ouvertureTexte, langue)}
-          </p>
-          <Link
-            href="/calendrier-ouverture-restaurant"
-            className="w-fit text-base text-brand-navy underline-offset-2 hover:underline"
-          >
-            {t(ECRAN.ouvertureLien, langue)}
-          </Link>
+            <section className="flex flex-col gap-3 rounded-2xl border border-zinc-300 bg-white p-6">
+              <h2 className="text-base font-semibold text-zinc-900">
+                {t(ECRAN.frontiereTitre, langue)}
+              </h2>
+              <p className="text-base text-zinc-600">
+                <strong>{t(ECRAN.gratuitFort, langue)}</strong>
+                {t(ECRAN.gratuitSuite, langue)}
+              </p>
+              <p className="text-base text-zinc-600">
+                <strong>{t(ECRAN.payantFort, langue)}</strong>{" "}
+                {t(ECRAN.payantTexte, langue)
+                  .replace("{module}", LIBELLE_MODULE.visibilite)
+                  .replace("{prix}", PRIX_MODULE.visibilite)}
+              </p>
+              <p className="text-base text-zinc-600">
+                {t(ECRAN.gesteTexte, langue)}
+              </p>
+            </section>
+          </div>
+          <aside className={COTE}>
+            <div className="flex flex-col gap-3 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm">
+              <p className="text-base font-semibold text-zinc-900">
+                {t(ECRAN.ouvertureTitre, langue)}
+              </p>
+              <p className="text-base text-zinc-600">
+                {t(ECRAN.ouvertureTexte, langue)}
+              </p>
+              <Link
+                href="/calendrier-ouverture-restaurant"
+                className="w-fit text-base text-brand-navy underline-offset-2 hover:underline"
+              >
+                {t(ECRAN.ouvertureLien, langue)}
+              </Link>
+            </div>
+            <SuiteOutils actuel="audit" langue={langue} />
+          </aside>
         </div>
-        <SuiteOutils actuel="audit" langue={langue} />
       </main>
 
       <Commis />
