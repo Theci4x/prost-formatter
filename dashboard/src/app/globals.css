@@ -1,0 +1,495 @@
+@import "tailwindcss";
+
+/* ── La palette de Klarr, pour tout le site ─────────────────────────────
+   Longtemps, seule la page d'accueil avait ces couleurs et ces fontes ; le
+   reste (connexion, aide, pages légales, vitrine) tournait en gris Tailwind
+   et en police système. Quelqu'un qui cliquait « Connexion » changeait de
+   maison. Tout part d'ici désormais, et les pages n'ont qu'à s'y référer. */
+:root {
+  --bg: oklch(98% 0.006 80);
+  --bg-alt: oklch(95.5% 0.012 75);
+  --paper: oklch(100% 0 0);
+  --ink: oklch(19% 0.012 60);
+  --ink-soft: oklch(46% 0.02 60);
+  --line: oklch(89% 0.012 70);
+  --accent: #e8871e;
+  --accent-dark: oklch(46% 0.13 50);
+  --accent-soft: color-mix(in oklch, #e8871e 12%, white);
+  --background: var(--bg);
+  --foreground: var(--ink);
+}
+
+@theme {
+  /* Manrope pour le texte, Instrument Serif pour ce qui se lit de loin.
+     Chargées une fois dans le layout racine : `font-sans` et `font-serif`
+     les prennent partout, le dashboard compris. */
+  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-instrument-serif), Georgia, serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  /* Couleurs de marque (bg-brand-navy, text-brand-orange, bg-brand-cream…). */
+  --color-brand-navy: #0f1e3d;
+  --color-brand-navy-hover: #16295a;
+  --color-brand-orange: #e8871e;
+  --color-brand-orange-dark: oklch(46% 0.13 50);
+  --color-brand-orange-soft: #fdf1e2;
+  --color-brand-cream: oklch(98% 0.006 80);
+  --color-brand-sand: oklch(95.5% 0.012 75);
+  --color-ink: oklch(19% 0.012 60);
+  --color-ink-soft: oklch(46% 0.02 60);
+  --color-line: oklch(89% 0.012 70);
+  --color-paper: #ffffff;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Les titres en serif ne sont jamais gras : Instrument Serif n'a qu'une
+   graisse, et un faux gras synthétique la salit. */
+.font-serif {
+  font-weight: 400;
+}
+
+/* Barre d'attente de l'audit : elle va et vient plutôt que de se remplir,
+   parce qu'on ignore où en est l'analyse. Une barre qui prétend le savoir
+   et se fige à 90 % inquiète plus qu'une barre qui ne promet rien. */
+@keyframes klarr-attente {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(300%);
+  }
+}
+.klarr-attente {
+  animation: klarr-attente 1.6s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  /* Sans mouvement, la barre resterait immobile à gauche et passerait pour
+     un chargement bloqué : on la déploie en entier, en retrait. */
+  .klarr-attente {
+    animation: none;
+    width: 100%;
+    opacity: 0.45;
+  }
+}
+
+/* La roue du sélecteur de langue : changer de langue fait un aller-retour
+   au serveur, et une seconde de silence se lit comme un bouton cassé. */
+@keyframes klarr-tourne {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  /* Immobile, la roue ne dit plus rien : on la laisse en place, à demi
+     effacée, plutôt que de faire tourner ce que quelqu'un a refusé. */
+  [style*="klarr-tourne"] {
+    animation: none !important;
+    opacity: 0.5;
+  }
+}
+
+/* Bandeau de logos clients (landing) : deux copies de la liste se
+   suivent, translater de -50% boucle donc sans saut visible. */
+@keyframes klarr-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+.klarr-marquee-track {
+  animation: klarr-marquee 38s linear infinite;
+}
+.klarr-marquee:hover .klarr-marquee-track {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .klarr-marquee-track {
+    animation: none;
+  }
+}
+
+/* Grain de pellicule sur la landing : casse le côté "aplat numérique" des
+   fonds unis. Fixe plutôt qu'en défilement, sinon la texture "glisse" sur le
+   contenu. pointer-events évite qu'il n'intercepte les clics. */
+.klarr-grain::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0.045;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Landing page (/) only — scoped so it never leaks into the dashboard. */
+.klarr-landing a {
+  color: inherit;
+  text-decoration: none;
+}
+.klarr-landing .nav-link:hover {
+  color: var(--accent-dark) !important;
+}
+.klarr-landing .btn-primary {
+  transition:
+    background 0.15s ease,
+    transform 0.15s ease;
+  display: inline-block;
+}
+.klarr-landing .btn-primary:hover {
+  transform: translateY(-1px);
+}
+
+/* ── Le journal ────────────────────────────────────────────────────────
+   Le corps d'un article arrive en HTML déjà fabriqué : aucune classe
+   Tailwind ne peut s'y accrocher. Ces règles-là sont donc le seul endroit
+   où la mise en forme d'un billet peut vivre. */
+.billet {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  /* 17 px sur un téléphone, 19 px sur un écran large. Un article se lit
+     d'une traite : la taille qui convient à un pouce dans le métro n'est
+     pas celle qui convient à un bras tendu devant un grand écran, et
+     figer l'une des deux oblige l'autre à zoomer. */
+  font-size: clamp(1.0625rem, 0.95rem + 0.5vw, 1.25rem);
+  line-height: 1.75;
+  color: var(--ink-soft);
+}
+.billet h2 {
+  font-family: var(--font-instrument-serif), Georgia, serif;
+  font-size: clamp(1.65rem, 1.45rem + 0.8vw, 2.15rem);
+  line-height: 1.2;
+  color: var(--ink);
+  margin-top: 1.5rem;
+}
+.billet h3 {
+  font-size: clamp(1.0625rem, 0.95rem + 0.5vw, 1.25rem);
+  font-weight: 700;
+  color: var(--ink);
+  margin-top: 0.8rem;
+}
+.billet strong {
+  font-weight: 600;
+  color: var(--ink);
+}
+.billet a {
+  color: var(--accent-dark);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+.billet ul,
+.billet ol {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-left: 1.3rem;
+}
+.billet li {
+  list-style: disc;
+}
+.billet ol li {
+  list-style: decimal;
+}
+.billet hr {
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin: 0.4rem 0;
+}
+.billet figure {
+  margin: 2rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+.billet figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 0.9rem;
+  border: 1px solid var(--line);
+}
+.billet figcaption {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+.billet em {
+  font-style: italic;
+}
+
+/* Les encadrés. Trois tons, et pas un de plus : dès qu'un article a
+   quatre couleurs d'encadrés, plus aucune ne veut dire quelque chose. */
+.billet .encadre {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 1.15rem 1.3rem;
+  border-radius: 1rem;
+  border: 1px solid var(--line);
+  background: var(--paper);
+}
+.billet .encadre-corps {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+.billet .encadre-titre {
+  /* 0,72 rem tombait à 11,5 px : le seul endroit du journal sous les
+     13, et c'était un titre — donc la ligne qu'on lit en premier. */
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+/* Ce qui coûte de l'argent si on passe à côté. */
+.billet .encadre[data-ton="attention"] {
+  border-color: color-mix(in oklch, var(--accent) 40%, white);
+  background: var(--accent-soft);
+}
+.billet .encadre[data-ton="attention"] .encadre-titre {
+  color: var(--accent-dark);
+}
+/* Un seuil, un montant, un délai : le titre est le chiffre lui-même. */
+.billet .encadre[data-ton="chiffre"] {
+  border: 0;
+  border-left: 3px solid var(--accent);
+  border-radius: 0 0.75rem 0.75rem 0;
+  background: var(--bg-alt);
+}
+.billet .encadre[data-ton="chiffre"] .encadre-titre {
+  font-family: var(--font-instrument-serif), Georgia, serif;
+  font-size: 2rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  line-height: 1.1;
+  color: var(--ink);
+}
+/* Un cas concret, raconté. */
+.billet .encadre[data-ton="exemple"] {
+  background: var(--bg-alt);
+}
+
+/* Les trois derniers billets en bas de l'accueil : une colonne au
+   téléphone, trois à partir de la tablette. */
+.grid-journal {
+  grid-template-columns: 1fr;
+}
+@media (min-width: 720px) {
+  .grid-journal {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Les tableaux d'un billet. Le conteneur défile, pas la page : sans lui,
+   un tableau à six colonnes pousse tout le corps de l'article au-delà de
+   l'écran d'un téléphone. */
+.billet .billet-tableau {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 0.9rem;
+  background: var(--paper);
+}
+.billet table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+.billet th,
+.billet td {
+  padding: 0.7rem 0.9rem;
+  text-align: left;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--line);
+}
+.billet th {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.billet tbody tr:last-child td {
+  border-bottom: 0;
+}
+.billet td strong {
+  color: var(--ink);
+}
+
+/* Une citation dans un billet sert à isoler une formule ou une phrase
+   qu'on veut pouvoir relire seule. Discrète : ce n'est pas un encadré. */
+.billet blockquote {
+  margin: 0;
+  padding: 0.2rem 0 0.2rem 1.1rem;
+  border-left: 2px solid var(--accent);
+  color: var(--ink);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+/* ── Le devis à l'impression ───────────────────────────────────────────
+   « Enregistrer en PDF » depuis le navigateur doit donner un document
+   qu'un client range dans ses papiers : pas de fond crème qui mange
+   l'encre, pas de boutons, et jamais un tableau coupé entre deux pages. */
+/*
+ * Le devis sur papier — ou en PDF, ce qui revient au même : « Enregistrer
+ * au format PDF » du navigateur passe par cette feuille-là.
+ *
+ * Un devis de vingt prestations tient rarement sur une page. On ne cherche
+ * donc pas à garder le document d'un seul tenant — ce serait ingérable —
+ * mais à empêcher les coupures qui font douter : une prestation scindée en
+ * deux, un total séparé de ses lignes, un pied de page orphelin.
+ */
+@media print {
+  @page {
+    margin: 14mm;
+  }
+
+  /*
+   * Le panneau de table.
+   *
+   * Tout le reste du tableau de bord disparaît — en-tête collant, bandeau
+   * d'installation, bulle d'aide. On masque par `visibility` plutôt que par
+   * `display` : les ancêtres du panneau gardent ainsi leur place dans le
+   * flux, et le panneau ne se retrouve pas décalé d'un demi-centimètre pour
+   * une raison qu'on cherche pendant vingt minutes.
+   */
+  body:has(.panneau) * {
+    visibility: hidden;
+  }
+  body:has(.panneau) .panneau,
+  body:has(.panneau) .panneau * {
+    visibility: visible;
+  }
+  .panneau {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    /* Un chevalet se lit de près : le blanc autour compte autant que le
+       contenu. */
+    padding: 0;
+  }
+  .sans-impression {
+    display: none !important;
+  }
+  body {
+    background: #fff;
+  }
+  .devis-feuille {
+    break-inside: auto;
+  }
+  .devis-feuille > header,
+  .devis-totaux,
+  .devis-mentions {
+    break-inside: avoid;
+  }
+  .devis-lignes > div {
+    break-inside: avoid;
+  }
+
+  /*
+   * Le rapport d'audit, imprimé ou enregistré en PDF.
+   *
+   * Même règle que pour le devis : on n'essaie pas de tenir le document
+   * sur une page, on empêche les coupures qui font douter — une barre de
+   * score séparée de son intitulé, un encadré scindé en deux, un titre
+   * seul en bas de page.
+   */
+  .audit-rapport > * {
+    break-inside: avoid;
+  }
+  .audit-rapport h2,
+  .audit-rapport h3 {
+    break-after: avoid;
+  }
+}
+
+/* Les blocs de l'écran d'attente. Ils respirent doucement plutôt que de
+   défiler : un écran entier qui glisse donne le mal de mer, et ce qu'on
+   veut dire est seulement « ça arrive », pas « regardez-moi ». */
+@keyframes klarr-respire {
+  50% {
+    opacity: 0.45;
+  }
+}
+.klarr-squelette {
+  animation: klarr-respire 1.8s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  /* Figés, les blocs passeraient pour une page à moitié chargée : on les
+     laisse en place, en retrait, sans les animer. */
+  .klarr-squelette {
+    animation: none;
+    opacity: 0.6;
+  }
+}
+
+/* ── L'attente de l'analyse SEO ─────────────────────────────────────────
+   Une analyse prend une vingtaine de secondes. Trois mouvements, tous
+   lents : une rangée d'icônes de cuisine et de recherche qui défile
+   (deux copies, -50 % boucle sans saut), un balayage clair sur la forme
+   du texte à venir, et l'étape en cours qui respire. Rien ne rebondit,
+   rien ne clignote : c'est un outil, pas un jeu. */
+@keyframes klarr-defile {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+@keyframes klarr-balaie {
+  from {
+    transform: translateX(-60%);
+  }
+  to {
+    transform: translateX(160%);
+  }
+}
+@keyframes klarr-etape {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 0.85;
+  }
+}
+.klarr-defile {
+  animation: klarr-defile 22s linear infinite;
+}
+.klarr-balaie {
+  animation: klarr-balaie 2.4s ease-in-out infinite;
+}
+.klarr-etape {
+  animation: klarr-etape 1.8s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  /* Sans mouvement, la rangée reste lisible et le balayage disparaît :
+     l'étape en cours est déjà nommée en toutes lettres. */
+  .klarr-defile,
+  .klarr-balaie,
+  .klarr-etape {
+    animation: none;
+  }
+  .klarr-balaie {
+    opacity: 0;
+  }
+}

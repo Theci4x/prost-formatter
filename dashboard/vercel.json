@@ -1,0 +1,28 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/reputation",
+      "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/cron/options-expirees",
+      "schedule": "0 4 * * *"
+    },
+    {
+      "path": "/api/cron/rappels-ouverture",
+      "schedule": "0 7 * * 1"
+    },
+    {
+      "path": "/api/cron/rapport-mensuel",
+      "schedule": "0 7 1-3 * *"
+    },
+    {
+      "path": "/api/cron/avis-apres-visite",
+      "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron/voisins",
+      "schedule": "0 5 * * 1"
+    }
+  ]
+}

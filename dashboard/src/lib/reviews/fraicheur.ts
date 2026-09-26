@@ -1,0 +1,35 @@
+/**
+ * Combien de temps une lecture d'avis peut resservir.
+ *
+ * La page Avis peut interroger les pages publiques de Google, Yelp et
+ * Tripadvisor à chaque affichage. La note bouge rarement : on limite donc
+ * explicitement la fraîcheur côté serveur pour éviter les relectures inutiles.
+ *
+ * Next 16 ne met plus rien en cache sans qu'on le demande : le défaut est
+ * donc explicite ici, et se choisit par appelant. L'écran se contente de
+ * six heures ; le relevé de nuit, lui, est la source de vérité et doit
+ * voir l'état réel, pas ce qu'un visiteur a mis en cache à deux heures du
+ * matin.
+ */
+
+/** Six heures : un avis n'arrive pas à la minute, un écran non plus. */
+export const FRAICHEUR_ECRAN = 6 * 3600;
+
+/**
+ * Vingt-quatre heures : ce qu'on charge à la demande, comme les avis
+ * Tripadvisor de la page Avis. Un second clic dans la journée ne refait
+ * pas l'appel.
+ */
+export const FRAICHEUR_DEMANDE = 24 * 3600;
+
+/** Zéro : toujours frais, pour qui fait autorité. */
+export const TOUJOURS_FRAIS = 0;
+
+export function optionsFraicheur(secondes: number): RequestInit {
+  return secondes > 0
+    ? ({
+        cache: "force-cache",
+        next: { revalidate: secondes },
+      } as RequestInit)
+    : { cache: "no-store" };
+}

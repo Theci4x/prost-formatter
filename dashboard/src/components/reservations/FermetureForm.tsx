@@ -1,0 +1,143 @@
+"use client";
+
+import { useActionState } from "react";
+import {
+  ajouterFermeture,
+  type FermetureState,
+} from "@/app/dashboard/[id]/reservations/actions";
+import {
+  FERMETURE_VIDE,
+  type Espace,
+  type FermetureValeurs,
+} from "@/types/reservation";
+import type { Langue } from "@/lib/i18n/langues";
+import { CONFIGURATION } from "@/lib/i18n/configuration";
+
+const initialState: FermetureState = {
+  error: null,
+  rendu: 0,
+  valeurs: FERMETURE_VIDE,
+};
+
+const champ =
+  "w-full rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none focus:border-brand-navy";
+const label = "flex flex-col gap-1 text-sm font-medium text-zinc-700";
+
+function Champs({
+  restaurantId,
+  espaces,
+  valeurs,
+  langue,
+}: {
+  restaurantId: string;
+  espaces: Espace[];
+  valeurs: FermetureValeurs;
+  langue: Langue;
+}) {
+  const cfg = CONFIGURATION[langue];
+  return (
+    <>
+      <input type="hidden" name="restaurant_id" value={restaurantId} />
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <label className={label} htmlFor="fermeture-debut">
+          {cfg.du}
+          <input
+            id="fermeture-debut"
+            name="date_debut"
+            type="date"
+            required
+            defaultValue={valeurs.dateDebut}
+            className={champ}
+          />
+        </label>
+        <label className={label} htmlFor="fermeture-fin">
+          {cfg.au}{" "}
+          <span className="font-normal text-zinc-400">
+            {cfg.videUnSeulJour}
+          </span>
+          <input
+            id="fermeture-fin"
+            name="date_fin"
+            type="date"
+            defaultValue={valeurs.dateFin}
+            className={champ}
+          />
+        </label>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <label className={label} htmlFor="fermeture-espace">
+          {cfg.ceQuiFerme}
+          <select
+            id="fermeture-espace"
+            name="espace_id"
+            defaultValue={valeurs.espaceId}
+            className={champ}
+          >
+            <option value="">{cfg.toutEtablissement}</option>
+            {espaces.map((espace) => (
+              <option key={espace.id} value={espace.id}>
+                {cfg.espaceSeulement(espace.nom)}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className={label} htmlFor="fermeture-motif">
+          {cfg.motif}{" "}
+          <span className="font-normal text-zinc-400">{cfg.motifAide}</span>
+          <input
+            id="fermeture-motif"
+            name="motif"
+            defaultValue={valeurs.motif}
+            placeholder={cfg.motifPlaceholder}
+            className={champ}
+          />
+        </label>
+      </div>
+    </>
+  );
+}
+
+export function FermetureForm({
+  restaurantId,
+  espaces,
+  langue,
+}: {
+  restaurantId: string;
+  espaces: Espace[];
+  langue: Langue;
+}) {
+  const cfg = CONFIGURATION[langue];
+  const [state, action, pending] = useActionState(
+    ajouterFermeture,
+    initialState,
+  );
+
+  return (
+    <form
+      action={action}
+      className="flex flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-5 shadow-sm"
+    >
+      {/* Voir EspaceForm : React vide le formulaire après l'action, la clé le
+          remonte avec les valeurs renvoyées. */}
+      <Champs
+        key={state.rendu}
+        restaurantId={restaurantId}
+        espaces={espaces}
+        valeurs={state.valeurs}
+        langue={langue}
+      />
+
+      {state.error && <p className="text-sm text-red-600">{state.error}</p>}
+
+      <button
+        type="submit"
+        disabled={pending}
+        className="w-fit rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-navy-hover disabled:opacity-50"
+      >
+        {pending ? cfg.enregistrement : cfg.fermerCettePeriode}
+      </button>
+    </form>
+  );
+}

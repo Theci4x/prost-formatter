@@ -1,0 +1,148 @@
+import Link from "next/link";
+import { createClient } from "@/lib/supabase/server";
+import { AlertsPanel } from "@/components/dashboard/AlertsPanel";
+import { CarteRestaurant } from "@/components/dashboard/CarteRestaurant";
+import { ACCUEIL } from "@/lib/i18n/accueil";
+import { DETAILS, dateDuJour } from "@/lib/i18n/detailsAccueil";
+import { ChoixLangueSite } from "@/components/landing/ChoixLangueSite";
+import { choisirLangue } from "@/app/dashboard/langue-actions";
+import { langueUtilisateur } from "@/lib/i18n/langue";
+import { dashboardIcons } from "@/components/dashboard/PageHeader";
+import { fetchAlerts } from "@/lib/reputation/alerts";
+import { roleSur } from "@/lib/equipe/roles";
+import type { Restaurant } from "@/types/restaurant";
+import { chargerAcces } from "@/lib/abonnement/acces";
+import { ACCES_COMPLET } from "@/lib/abonnement/modules";
+import { chargerPouls } from "@/lib/dashboard/pouls";
+
+// Les colonnes arrivées après le type : la carte de couverture et la
+// publication du site. `select("*")` les rapporte, le type ne les connaît
+// pas encore.
+type RestaurantEtendu = Restaurant & {
+  photo_couverture_id?: string | null;
+  site_publie?: boolean | null;
+  email_contact?: string | null;
+};
+
+export default async function DashboardPage() {
+  const langue = await langueUtilisateur();
+  const t = ACCUEIL[langue];
+  const d = DETAILS[langue];
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("restaurants")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  const restaurants = (data ?? []) as RestaurantEtendu[];
+
+  const { alerts, surveillanceActive } = await fetchAlerts(supabase);
+  const restaurantNames = new Map(restaurants.map((r) => [r.id, r.nom]));
+
+  // Le rôle peut différer d'un établissement à l'autre : propriétaire du
+  // sien, serveur chez un confrère.
+  const roles = new Map(
+    await Promise.all(
+      restaurants.map(
+        async (restaurant) =>
+          [restaurant.id, await roleSur(restaurant.id)] as const,
+      ),
+    ),
+  );
+
+  // Ce que chaque établissement a payé. Un abonnement ne couvre jamais
+  // deux maisons : chacune a son carnet, sa fiche Google et sa clientèle.
+  const acces = new Map(
+    await Promise.all(
+      restaurants.map(
+        async (restaurant) =>
+          [restaurant.id, await chargerAcces(restaurant.id, supabase)] as const,
+      ),
+    ),
+  );
+
+  // Les chiffres du jour, maison par maison.
+  const pouls = new Map(
+    await Promise.all(
+      restaurants.map(
+        async (restaurant) =>
+          [restaurant.id, await chargerPouls(supabase, restaurant)] as const,
+      ),
+    ),
+  );
+
+  return (
+    <div className="mx-auto flex w-full max-w-[1800px] flex-1 flex-col gap-6 px-4 py-8 sm:px-6 lg:px-10">
+      {/* Le même sélecteur que sur le site public, et plus une seconde
+          implémentation. Celle d'ici affichait trois petites pastilles
+          grises dont deux ressemblaient à des boutons désactivés — au
+          point qu'on n'essayait même pas de cliquer. Un seul composant,
+          déjà éprouvé ailleurs, vaut mieux que deux qui divergent. */}
+      <div className="flex justify-end">
+        <ChoixLangueSite courante={langue} action={choisirLangue} />
+      </div>
+
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="font-serif text-4xl text-ink sm:text-5xl">
+            {d.titreListe(restaurants.length)}
+          </h1>
+          <p className="mt-1 text-sm text-ink-soft first-letter:capitalize sm:text-base">
+            {dateDuJour(langue)}
+          </p>
+        </div>
+        <Link
+          href="/dashboard/new"
+          className="rounded-lg bg-brand-navy px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-navy-hover"
+        >
+          {d.ajouterRestaurant}
+        </Link>
+      </div>
+
+      {restaurants.length > 0 && (
+        <AlertsPanel
+          alerts={alerts}
+          restaurantNames={restaurantNames}
+          surveillanceActive={surveillanceActive}
+          langue={langue}
+        />
+      )}
+
+      {restaurants.length === 0 ? (
+        <div className="flex flex-col items-center gap-5 rounded-2xl border border-dashed border-zinc-300 bg-white px-6 py-20 text-center shadow-sm">
+          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-brand-orange-soft to-white text-brand-navy shadow-sm">
+            {dashboardIcons.menu}
+          </div>
+          <div className="flex flex-col gap-1">
+            <p className="font-serif text-3xl text-ink">
+              {d.aucunRestaurantTitre}
+            </p>
+            <p className="max-w-md text-sm text-zinc-500">
+              {d.aucunRestaurantTexte}
+            </p>
+          </div>
+          <Link
+            href="/dashboard/new"
+            className="rounded-lg bg-brand-navy px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-navy-hover"
+          >
+            {d.ajouterRestaurant}
+          </Link>
+        </div>
+      ) : (
+        <ul className="flex flex-col gap-8">
+          {restaurants.map((restaurant) => (
+            <CarteRestaurant
+              t={t}
+              langue={langue}
+              key={restaurant.id}
+              restaurant={restaurant}
+              role={roles.get(restaurant.id) ?? null}
+              acces={acces.get(restaurant.id) ?? ACCES_COMPLET}
+              pouls={pouls.get(restaurant.id)!}
+            />
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
