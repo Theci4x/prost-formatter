@@ -8,6 +8,7 @@ import { Comparison } from "@/components/landing/Comparison";
 import { Founder, Problem } from "@/components/landing/Manifesto";
 import { Partner } from "@/components/landing/Partner";
 import { Journal } from "@/components/landing/Journal";
+import { ActualitesAccueil } from "@/components/landing/ActualitesAccueil";
 import { Reservation } from "@/components/landing/Reservation";
 import { Tarifs } from "@/components/landing/Tarifs";
 import { Faq } from "@/components/landing/Faq";
@@ -829,6 +830,8 @@ export default async function Home() {
         <Reveal>
           <Journal t={t.journal} langue={langue} />
         </Reveal>
+
+        <ActualitesAccueil langue={langue} />
       </main>
 
       {/* FOOTER */}
@@ -920,6 +923,9 @@ export default async function Home() {
         >
           <Link href="/blog" style={{ color: "inherit" }}>
             {t.pied.journal}
+          </Link>
+          <Link href="/actualites" style={{ color: "inherit" }}>
+            {t.pied.actualites}
           </Link>
           <Link href="/aide" style={{ color: "inherit" }}>
             {t.pied.aide}

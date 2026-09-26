@@ -333,6 +333,7 @@ export type ClesAccueilPublic = {
     audit: string;
     calculateur: string;
     journal: string;
+    actualites: string;
     aide: string;
     mentions: string;
     cgu: string;
@@ -986,6 +987,7 @@ const fr: ClesAccueilPublic = {
     audit: "Audit de fiche Google",
     calculateur: "Calculateur de commissions",
     journal: "Le journal",
+    actualites: "Actualités",
     aide: "Aide",
     mentions: "Mentions légales",
     cgu: "Conditions d'utilisation",
@@ -1572,6 +1574,7 @@ const en: ClesAccueilPublic = {
     audit: "Google listing audit",
     calculateur: "Commission calculator",
     journal: "Journal (in French)",
+    actualites: "News (in French)",
     aide: "Help",
     mentions: "Legal notice",
     cgu: "Terms of use",
@@ -2136,6 +2139,7 @@ const zh: ClesAccueilPublic = {
     audit: "Google 商家资料检测",
     calculateur: "抽成计算器",
     journal: "专栏（法语）",
+    actualites: "行业新闻（法语）",
     aide: "帮助",
     mentions: "法律声明",
     cgu: "使用条款",

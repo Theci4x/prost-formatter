@@ -1,3 +1,4 @@
+import { CHEMIN_ACTUALITES, toutesLesActualites } from "@/lib/actualites";
 import type { MetadataRoute } from "next";
 import { createServiceClient } from "@/lib/supabase/service";
 import { visibiliteOuvertePour } from "@/lib/abonnement/acces";
@@ -75,6 +76,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...tousLesBillets().map((billet) => ({
       url: `${site}/blog/${billet.slug}`,
       lastModified: new Date(`${billet.misAJourLe}T12:00:00`),
+      priority: 0.7,
+    })),
+    // Les actualités : datées de leur dernière mise à jour, comme le
+    // journal, et l'index avec la plus récente.
+    {
+      url: `${site}${CHEMIN_ACTUALITES}`,
+      lastModified: new Date(
+        `${toutesLesActualites()[0]?.misAJourLe ?? "2026-09-26"}T12:00:00`,
+      ),
+      priority: 0.7,
+    },
+    ...toutesLesActualites().map((actualite) => ({
+      url: `${site}${CHEMIN_ACTUALITES}/${actualite.slug}`,
+      lastModified: new Date(`${actualite.misAJourLe}T12:00:00`),
       priority: 0.7,
     })),
     // Les traductions sont des pages à part entière : sans elles au plan
