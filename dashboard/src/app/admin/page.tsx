@@ -127,7 +127,7 @@ export default async function AdminPage() {
         .order("created_at", { ascending: false }),
     ]);
 
-  // Les audits de prospection : lus à part, pour qu'une migration 0089 pas
+  // Les audits de prospection : lus à part, pour qu'une migration 0091 pas
   // encore passée ne fasse tomber que cette liste.
   const prospection = await supabase
     .from("visibility_audits")
@@ -224,7 +224,7 @@ export default async function AdminPage() {
           {prospection.error ? (
             <p className="text-sm text-amber-800">
               Migration à passer dans Supabase :
-              supabase/migrations/0089_audits_prospection.sql.
+              supabase/migrations/0091_audits_prospection.sql.
             </p>
           ) : (
             auditsProspection.length > 0 && (

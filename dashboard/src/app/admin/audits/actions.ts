@@ -112,7 +112,7 @@ export async function auditerPourProspection(
         etat: "erreur",
         erreur:
           error?.code === "42703" || error?.code === "PGRST204"
-            ? "La migration 0089_audits_prospection.sql n'est pas encore passée dans Supabase."
+            ? "La migration 0091_audits_prospection.sql n'est pas encore passée dans Supabase."
             : "L'audit n'a pas pu être enregistré.",
         ...valeurs,
       };
