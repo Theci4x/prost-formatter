@@ -35,7 +35,7 @@ export const TEINTE_STATUT: Record<Statut, string> = {
 };
 
 export type Suivi = {
-  cible_type: "prospect" | "restaurant";
+  cible_type: "prospect" | "restaurant" | "audit";
   cible_id: string;
   statut: Statut;
   note: string | null;

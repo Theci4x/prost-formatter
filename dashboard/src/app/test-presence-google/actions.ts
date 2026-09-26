@@ -11,22 +11,12 @@ import {
   empreinte,
   secretEmpreinte,
 } from "@/lib/limites/publiques";
-import { searchPlaces, getPlaceDetails } from "@/lib/google/places";
+import { searchPlaces } from "@/lib/google/places";
 import { trancher, type Candidat } from "@/lib/audit/correspondance";
 import { normaliserTelephone } from "@/lib/contact/telephone";
-import { checkWebsite } from "@/lib/audit/website";
-import {
-  scoreLocalSeo,
-  scoreEReputation,
-  scoreGeo,
-  scoreGlobal,
-  scoreLabel,
-} from "@/lib/audit/scoring";
-import {
-  actionsPrioritaires,
-  type ActionPrioritaire,
-} from "@/lib/audit/actions";
-import { mesurerPresenceIa, type PresenceIa } from "@/lib/audit/ia";
+import type { ActionPrioritaire } from "@/lib/audit/actions";
+import type { PresenceIa } from "@/lib/audit/ia";
+import { mesurerEtablissement } from "@/lib/audit/mesure";
 import { notifierInterne } from "@/lib/notifications/interne";
 import { envoyerRapportAuProspect } from "@/lib/courriel/audit";
 import { estLangue, type Lang } from "@/lib/i18n/testPresence";
@@ -162,69 +152,18 @@ async function auditer(
   const supabase = await createClient();
 
   try {
-    const details = await getPlaceDetails(placeId);
-    const website = await checkWebsite(details.websiteUri);
-
-    const localSeo = scoreLocalSeo(details);
-    const eReputation = scoreEReputation(details);
-    const geo = scoreGeo(website);
-    const global = scoreGlobal(localSeo, eReputation, geo);
-
-    const signals = {
-      restaurant: details.displayName,
-      adresse: details.formattedAddress,
-      note: details.rating,
-      nombreAvis: details.userRatingCount,
-      photos: details.photoCount,
-      siteWeb: details.websiteUri,
-      siteAccessible: website.reachable,
-      donneesStructurees: website.hasJsonLd,
-      liensReseauxSociaux: website.hasSameAs,
-      scores: { localSeo, eReputation, geo, global },
-    };
-
-    const actions = actionsPrioritaires(details, website);
-
-    // La seule mesure de l'audit qui interroge vraiment un assistant. Elle
-    // vient après les scores : ceux-ci ne doivent pas dépendre d'elle, et
-    // l'audit reste complet quand elle manque.
-    const presenceIa = await mesurerPresenceIa(
-      details.displayName || restaurantName,
-      details.primaryType,
+    const { audit, ligne } = await mesurerEtablissement(
+      placeId,
+      restaurantName,
       ville,
     );
-
     await supabase.from("visibility_audits").insert({
       prospect_id: prospectId,
       restaurant_name: restaurantName,
       ville,
-      google_place_id: placeId,
-      local_seo_score: localSeo,
-      e_reputation_score: eReputation,
-      geo_score: geo,
-      global_score: global,
-      // Les actions dorment avec les signaux : un audit qu'on relit six mois
-      // plus tard doit dire ce qu'on avait conseillé, pas seulement ce qu'on
-      // avait mesuré.
-      raw_signals: { ...signals, actions, presenceIa },
+      ...ligne,
     });
-
-    return {
-      score: global,
-      label: scoreLabel(global),
-      fiche: {
-        nom: details.displayName || restaurantName,
-        genre: details.primaryType,
-        adresse: details.formattedAddress,
-        telephone: details.nationalPhoneNumber,
-        siteWeb: details.websiteUri,
-        note: details.rating,
-        avis: details.userRatingCount,
-      },
-      pillars: { localSeo, eReputation, geo },
-      actions,
-      presenceIa: presenceIa ?? undefined,
-    };
+    return audit;
   } catch (err) {
     // L'audit est un bonus : s'il échoue (clé API manquante, service
     // indisponible...), on garde quand même le lead et on retombe sur le

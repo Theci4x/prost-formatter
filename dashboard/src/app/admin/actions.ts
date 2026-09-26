@@ -56,7 +56,7 @@ export async function enregistrerSuivi(formData: FormData): Promise<void> {
   const statut = ((formData.get("statut") as string) ?? "").trim();
   const note = ((formData.get("note") as string) ?? "").trim();
 
-  if (cibleType !== "prospect" && cibleType !== "restaurant") return;
+  if (!["prospect", "restaurant", "audit"].includes(cibleType)) return;
   if (!cibleId) return;
   if (!(STATUTS as readonly string[]).includes(statut)) return;
 
@@ -72,4 +72,5 @@ export async function enregistrerSuivi(formData: FormData): Promise<void> {
   if (error) console.error("[enregistrerSuivi]", error);
 
   revalidatePath("/admin");
+  if (cibleType === "audit") revalidatePath(`/admin/audits/${cibleId}`);
 }
