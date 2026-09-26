@@ -93,6 +93,8 @@ export async function createRestaurant(
   const adresse = formData.get("adresse") as string;
   const telephone = formData.get("telephone") as string;
   const siteWeb = formData.get("site_web") as string;
+  const yelpUrl = String(formData.get("yelp_url") ?? "").trim();
+  const tripadvisorUrl = String(formData.get("tripadvisor_url") ?? "").trim();
   const description = formData.get("description") as string;
   const typeCuisine = formData.get("type_cuisine") as string;
 
@@ -112,6 +114,8 @@ export async function createRestaurant(
     adresse: adresse || null,
     telephone: telephone || null,
     site_web: siteWeb || null,
+    yelp_url: yelpUrl || null,
+    tripadvisor_url: tripadvisorUrl || null,
     description: description || null,
     type_cuisine: typeCuisine?.trim() || null,
     horaires,
@@ -185,6 +189,8 @@ export async function updateRestaurant(
   const adresse = formData.get("adresse") as string;
   const telephone = formData.get("telephone") as string;
   const siteWeb = formData.get("site_web") as string;
+  const yelpUrl = String(formData.get("yelp_url") ?? "").trim();
+  const tripadvisorUrl = String(formData.get("tripadvisor_url") ?? "").trim();
   const description = formData.get("description") as string;
   const typeCuisine = formData.get("type_cuisine") as string;
 
@@ -206,6 +212,8 @@ export async function updateRestaurant(
     adresse: adresse || null,
     telephone: telephone || null,
     site_web: siteWeb || null,
+    yelp_url: yelpUrl || null,
+    tripadvisor_url: tripadvisorUrl || null,
     horaires,
   };
 

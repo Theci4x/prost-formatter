@@ -1,11 +1,9 @@
 /**
  * Combien de temps une lecture d'avis peut resservir.
  *
- * La page Avis interrogeait Google Places, Yelp et Tripadvisor à chaque
- * affichage. Trois appels facturés par rafraîchissement, par retour en
- * arrière, par onglet rouvert — pour une note qui bouge une fois par
- * semaine. Un restaurateur qui laisse sa page ouverte et la recharge dix
- * fois dans la journée payait trente appels pour la même information.
+ * La page Avis peut interroger les pages publiques de Google, Yelp et
+ * Tripadvisor à chaque affichage. La note bouge rarement : on limite donc
+ * explicitement la fraîcheur côté serveur pour éviter les relectures inutiles.
  *
  * Next 16 ne met plus rien en cache sans qu'on le demande : le défaut est
  * donc explicite ici, et se choisit par appelant. L'écran se contente de

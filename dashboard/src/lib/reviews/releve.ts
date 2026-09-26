@@ -15,12 +15,13 @@ export async function tripadvisorDuReleve(
   supabase: SupabaseClient,
   restaurant: {
     id: string;
+    tripadvisor_url?: string | null;
     tripadvisor_location_id?: string | null;
     reputation_relevee_le?: string | null;
   },
 ): Promise<PlatformReviews> {
   const epingle = Boolean(restaurant.tripadvisor_location_id);
-  if (!process.env.TRIPADVISOR_API_KEY) {
+  if (!restaurant.tripadvisor_url) {
     return {
       platform: "tripadvisor",
       configured: false,
@@ -61,6 +62,7 @@ export async function tripadvisorDuReleve(
     configured: true,
     found: true,
     epingle,
+    businessUrl: restaurant.tripadvisor_url ?? null,
     rating: releve.note == null ? null : Number(releve.note),
     reviewCount: releve.nombre_avis,
     releveLe: releve.releve_le,

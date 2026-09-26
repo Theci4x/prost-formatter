@@ -27,7 +27,7 @@ import {
 import { langueUtilisateur } from "@/lib/i18n/langue";
 import { PRESENCE, plateformeEn, type ClesPresence } from "@/lib/i18n/presence";
 import { localeDe } from "@/lib/i18n/seo";
-import { majPresence } from "./actions";
+import { majPresence, enregistrerUrlPresence } from "./actions";
 
 /**
  * La présence du restaurant hors de Klarr.
@@ -80,10 +80,10 @@ export default async function PresencePage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ filtre?: string }>;
+  searchParams: Promise<{ filtre?: string; presence?: string }>;
 }) {
   const { id } = await params;
-  const { filtre: filtreDemande } = await searchParams;
+  const { filtre: filtreDemande, presence: presenceResultat } = await searchParams;
   const filtre: Filtre = CLES_FILTRES.some((f) => f === filtreDemande)
     ? (filtreDemande as Filtre)
     : "toutes";
@@ -100,6 +100,30 @@ export default async function PresencePage({
   const etat = await chargerPresence(supabase, id);
   if (!etat) notFound();
   const { restaurant, relies: reliesFr, constats, tableAbsente } = etat;
+  const { data: auditRows } = await supabase
+    .from("restaurant_presence_audits")
+    .select("plateforme, statut, ecarts, note, nombre_avis, audite_le")
+    .eq("restaurant_id", id)
+    .order("audite_le", { ascending: false })
+    .limit(100);
+  const audits = new Map<string, { statut: string; ecarts: string[]; note: number | null; nombre_avis: number | null; audite_le: string }>();
+  for (const row of auditRows ?? []) {
+    if (!audits.has(row.plateforme)) audits.set(row.plateforme, {
+      statut: row.statut,
+      ecarts: Array.isArray(row.ecarts) ? row.ecarts as string[] : [],
+      note: row.note,
+      nombre_avis: row.nombre_avis,
+      audite_le: row.audite_le,
+    });
+  }
+  const auditsListe = Array.from(audits.entries()).map(([cle, audit]) => ({
+    cle,
+    plateforme: PLATEFORMES.find((p) => p.cle === cle),
+    ...audit,
+  }));
+  const auditsIncoherents = auditsListe.filter((audit) => audit.statut === "incoherence");
+  const auditsInaccessibles = auditsListe.filter((audit) => audit.statut === "inaccessible");
+  const auditsAvecNote = auditsListe.filter((audit) => audit.note != null);
   const champs = etat.champs.map((c) => ({
     ...c,
     libelle: t.champs[c.libelle] ?? c.libelle,
@@ -149,6 +173,56 @@ export default async function PresencePage({
           {t.migration}
         </p>
       )}
+
+      {presenceResultat === "ok" && (
+        <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-3 text-sm text-emerald-800">
+          URL enregistrée. Elle sera contrôlée lors du prochain relevé mensuel.
+        </p>
+      )}
+      {presenceResultat === "erreur" && (
+        <p className="rounded-xl border border-red-200 bg-red-50 px-5 py-3 text-sm text-red-800">
+          L’URL n’a pas pu être enregistrée. Vérifie que la migration 0090 est bien appliquée dans Supabase.
+        </p>
+      )}
+
+      <section className="flex flex-col gap-5 rounded-2xl border border-brand-navy/15 bg-brand-navy/[0.03] p-6 shadow-sm sm:p-8">
+        <div className="flex flex-col gap-2">
+          <h2 className="font-serif text-2xl text-ink">Suivi automatique des fiches</h2>
+          <p className="max-w-3xl text-sm leading-relaxed text-zinc-600">
+            Tu enregistres ici l’URL publique exacte d’une fiche. Klarr la relira environ une fois par mois, relèvera la note et le nombre d’avis quand ils sont visibles, puis comparera le nom et l’adresse avec ta fiche Klarr. Klarr ne se connecte pas et ne modifie jamais les plateformes.
+          </p>
+        </div>
+        {auditsListe.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-zinc-300 bg-white px-4 py-4 text-sm leading-relaxed text-zinc-600">
+            <strong className="text-ink">Aucun contrôle effectué pour le moment.</strong> Enregistre au moins une URL dans une plateforme. Le prochain passage automatique indiquera ici les incohérences et les notes trouvées.
+          </div>
+        ) : (
+          <>
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div className="rounded-xl bg-white p-4"><div className="text-2xl font-semibold text-ink">{auditsListe.length}</div><div className="text-xs text-zinc-500">fiches contrôlées</div></div>
+              <div className={`rounded-xl bg-white p-4 ${auditsIncoherents.length ? "ring-1 ring-brand-orange/50" : ""}`}><div className="text-2xl font-semibold text-brand-orange-dark">{auditsIncoherents.length}</div><div className="text-xs text-zinc-500">incohérence{auditsIncoherents.length > 1 ? "s" : ""} à corriger</div></div>
+              <div className="rounded-xl bg-white p-4"><div className="text-2xl font-semibold text-ink">{auditsAvecNote.length}</div><div className="text-xs text-zinc-500">note{auditsAvecNote.length > 1 ? "s" : ""} relevée{auditsAvecNote.length > 1 ? "s" : ""}</div></div>
+            </div>
+            {(auditsIncoherents.length > 0 || auditsInaccessibles.length > 0) && (
+              <div className="overflow-x-auto rounded-xl border border-zinc-200 bg-white">
+                <table className="w-full min-w-[38rem] text-left text-sm">
+                  <thead className="border-b border-zinc-100 text-xs uppercase tracking-wide text-zinc-500"><tr><th className="px-4 py-3">Plateforme</th><th className="px-4 py-3">Résultat</th><th className="px-4 py-3">Note / avis</th><th className="px-4 py-3">Action</th></tr></thead>
+                  <tbody>
+                    {[...auditsIncoherents, ...auditsInaccessibles].map((audit) => (
+                      <tr key={audit.cle} className="border-b border-zinc-100 last:border-0">
+                        <td className="px-4 py-3 font-semibold text-ink">{audit.plateforme?.nom ?? audit.cle}</td>
+                        <td className="px-4 py-3 text-brand-orange-dark">{audit.statut === "incoherence" ? `À vérifier : ${audit.ecarts.join(", ")}` : "Page inaccessible"}</td>
+                        <td className="px-4 py-3 text-zinc-600">{audit.note != null ? `${audit.note}/5` : "—"}{audit.nombre_avis != null ? ` · ${audit.nombre_avis} avis` : ""}</td>
+                        <td className="px-4 py-3"><a href={`#${audit.cle}`} className="font-semibold text-brand-navy hover:underline">Ouvrir la fiche</a></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </>
+        )}
+      </section>
 
       {/* Ce qui est devenu faux passe avant tout le reste : une fiche
           fausse coûte plus qu'une fiche absente. */}
@@ -349,6 +423,8 @@ export default async function PresencePage({
                       adresse={adresseRecherche}
                       t={t}
                       locale={locale}
+                      url={restaurant.presence_urls?.[plateforme.cle] ?? ""}
+                      audit={audits.get(plateforme.cle) ?? null}
                     />
                   ))}
                 </ul>
@@ -422,6 +498,8 @@ function LignePlateforme({
   premier,
   t,
   locale,
+  url,
+  audit,
 }: {
   plateforme: Plateforme;
   restaurantId: string;
@@ -434,6 +512,8 @@ function LignePlateforme({
   premier: boolean;
   t: ClesPresence;
   locale: string;
+  url: string;
+  audit: { statut: string; ecarts: string[]; note: number | null; nombre_avis: number | null; audite_le: string } | null;
 }) {
   const aFaire =
     etat === "a_revoir" || etat === "a_corriger" || etat === "absente";
@@ -509,6 +589,24 @@ function LignePlateforme({
             <p className="rounded-lg bg-white px-3 py-2 text-sm leading-relaxed text-ink">
               {plateforme.conseil}
             </p>
+          )}
+
+          <form action={enregistrerUrlPresence} className="flex flex-wrap items-end gap-2 rounded-lg border border-zinc-200 bg-white p-3">
+            <input type="hidden" name="restaurant_id" value={restaurantId} />
+            <input type="hidden" name="plateforme" value={plateforme.cle} />
+            <label className="flex min-w-[16rem] flex-1 flex-col gap-1 text-xs font-semibold text-zinc-600">
+              URL publique de la fiche à contrôler
+              <input name="url" type="url" defaultValue={url} placeholder="https://..." className="rounded-lg border border-zinc-200 px-3 py-2 text-sm font-normal text-ink outline-none focus:border-brand-navy" />
+              <span className="font-normal leading-relaxed text-zinc-500">Colle le lien que tes clients voient, pas un lien de connexion professionnel. Klarr ouvrira cette page publiquement lors du contrôle mensuel.</span>
+            </label>
+            <button type="submit" className="rounded-lg border border-zinc-200 px-4 py-2 text-sm font-semibold text-zinc-700 hover:border-brand-navy hover:text-brand-navy">Enregistrer le lien</button>
+          </form>
+
+          {audit && (
+            <div className={`rounded-lg px-3 py-2 text-sm ${audit.statut === "incoherence" ? "bg-brand-orange-soft text-ink" : "bg-emerald-50 text-emerald-800"}`}>
+              <strong>Dernier contrôle :</strong> {audit.statut === "incoherence" ? `incohérence — ${audit.ecarts.join(", ")}` : audit.statut === "coherente" ? "cohérente" : audit.statut}
+              {(audit.note != null || audit.nombre_avis != null) && <> · {audit.note ?? "—"}/5 · {audit.nombre_avis ?? "—"} avis</>}
+            </div>
           )}
 
           <div className="flex flex-wrap items-center gap-2">
