@@ -1,10 +1,14 @@
 import Image, { type StaticImageData } from "next/image";
 import type { ClesAccueilPublic } from "@/lib/i18n/accueilPublic";
 import portraitAn from "../../../public/temoignages/an.jpg";
+import portraitXuanmin from "../../../public/temoignages/xuanmin.jpg";
 
 // Des clients, avec leur visage et leur nom : juste sous les logos, la
 // preuve qu'il y a quelqu'un derrière chaque enseigne.
-const PORTRAITS: Record<string, StaticImageData> = { an: portraitAn };
+const PORTRAITS: Record<string, StaticImageData> = {
+  an: portraitAn,
+  xuanmin: portraitXuanmin,
+};
 
 function Portrait({ id, nom }: { id: string; nom: string }) {
   const style = {
