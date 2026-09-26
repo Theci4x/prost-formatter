@@ -80,10 +80,10 @@ export default async function PresencePage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ filtre?: string }>;
+  searchParams: Promise<{ filtre?: string; presence?: string }>;
 }) {
   const { id } = await params;
-  const { filtre: filtreDemande } = await searchParams;
+  const { filtre: filtreDemande, presence: presenceResultat } = await searchParams;
   const filtre: Filtre = CLES_FILTRES.some((f) => f === filtreDemande)
     ? (filtreDemande as Filtre)
     : "toutes";
@@ -163,6 +163,17 @@ export default async function PresencePage({
       {tableAbsente && (
         <p className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm leading-relaxed text-amber-900">
           {t.migration}
+        </p>
+      )}
+
+      {presenceResultat === "ok" && (
+        <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-3 text-sm text-emerald-800">
+          URL enregistrée. Elle sera contrôlée lors du prochain relevé mensuel.
+        </p>
+      )}
+      {presenceResultat === "erreur" && (
+        <p className="rounded-xl border border-red-200 bg-red-50 px-5 py-3 text-sm text-red-800">
+          L’URL n’a pas pu être enregistrée. Vérifie que la migration 0090 est bien appliquée dans Supabase.
         </p>
       )}
 

@@ -70,11 +70,15 @@ export async function enregistrerUrlPresence(formData: FormData) {
     } catch { return; }
   }
   const supabase = await createClient();
-  const { data: restaurant } = await supabase
+  const { data: restaurant, error: lectureError } = await supabase
     .from("restaurants")
     .select("presence_urls")
     .eq("id", restaurantId)
     .maybeSingle();
+  if (lectureError) {
+    console.error("[presence/url] lecture", lectureError.message);
+    redirect(`/dashboard/${restaurantId}/presence?presence=erreur`);
+  }
   const urls = (restaurant?.presence_urls ?? {}) as Record<string, string>;
   if (url) urls[plateforme] = url;
   else delete urls[plateforme];
@@ -83,5 +87,9 @@ export async function enregistrerUrlPresence(formData: FormData) {
     .update({ presence_urls: urls })
     .eq("id", restaurantId);
   if (error) console.error("[presence/url]", error.message);
+  if (error) {
+    redirect(`/dashboard/${restaurantId}/presence?presence=erreur`);
+  }
   revalidatePath(`/dashboard/${restaurantId}/presence`);
+  redirect(`/dashboard/${restaurantId}/presence?presence=ok`);
 }
