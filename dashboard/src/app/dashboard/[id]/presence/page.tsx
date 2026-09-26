@@ -116,6 +116,14 @@ export default async function PresencePage({
       audite_le: row.audite_le,
     });
   }
+  const auditsListe = Array.from(audits.entries()).map(([cle, audit]) => ({
+    cle,
+    plateforme: PLATEFORMES.find((p) => p.cle === cle),
+    ...audit,
+  }));
+  const auditsIncoherents = auditsListe.filter((audit) => audit.statut === "incoherence");
+  const auditsInaccessibles = auditsListe.filter((audit) => audit.statut === "inaccessible");
+  const auditsAvecNote = auditsListe.filter((audit) => audit.note != null);
   const champs = etat.champs.map((c) => ({
     ...c,
     libelle: t.champs[c.libelle] ?? c.libelle,
@@ -176,6 +184,45 @@ export default async function PresencePage({
           L’URL n’a pas pu être enregistrée. Vérifie que la migration 0090 est bien appliquée dans Supabase.
         </p>
       )}
+
+      <section className="flex flex-col gap-5 rounded-2xl border border-brand-navy/15 bg-brand-navy/[0.03] p-6 shadow-sm sm:p-8">
+        <div className="flex flex-col gap-2">
+          <h2 className="font-serif text-2xl text-ink">Suivi automatique des fiches</h2>
+          <p className="max-w-3xl text-sm leading-relaxed text-zinc-600">
+            Tu enregistres ici l’URL publique exacte d’une fiche. Klarr la relira environ une fois par mois, relèvera la note et le nombre d’avis quand ils sont visibles, puis comparera le nom et l’adresse avec ta fiche Klarr. Klarr ne se connecte pas et ne modifie jamais les plateformes.
+          </p>
+        </div>
+        {auditsListe.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-zinc-300 bg-white px-4 py-4 text-sm leading-relaxed text-zinc-600">
+            <strong className="text-ink">Aucun contrôle effectué pour le moment.</strong> Enregistre au moins une URL dans une plateforme. Le prochain passage automatique indiquera ici les incohérences et les notes trouvées.
+          </div>
+        ) : (
+          <>
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div className="rounded-xl bg-white p-4"><div className="text-2xl font-semibold text-ink">{auditsListe.length}</div><div className="text-xs text-zinc-500">fiches contrôlées</div></div>
+              <div className={`rounded-xl bg-white p-4 ${auditsIncoherents.length ? "ring-1 ring-brand-orange/50" : ""}`}><div className="text-2xl font-semibold text-brand-orange-dark">{auditsIncoherents.length}</div><div className="text-xs text-zinc-500">incohérence{auditsIncoherents.length > 1 ? "s" : ""} à corriger</div></div>
+              <div className="rounded-xl bg-white p-4"><div className="text-2xl font-semibold text-ink">{auditsAvecNote.length}</div><div className="text-xs text-zinc-500">note{auditsAvecNote.length > 1 ? "s" : ""} relevée{auditsAvecNote.length > 1 ? "s" : ""}</div></div>
+            </div>
+            {(auditsIncoherents.length > 0 || auditsInaccessibles.length > 0) && (
+              <div className="overflow-x-auto rounded-xl border border-zinc-200 bg-white">
+                <table className="w-full min-w-[38rem] text-left text-sm">
+                  <thead className="border-b border-zinc-100 text-xs uppercase tracking-wide text-zinc-500"><tr><th className="px-4 py-3">Plateforme</th><th className="px-4 py-3">Résultat</th><th className="px-4 py-3">Note / avis</th><th className="px-4 py-3">Action</th></tr></thead>
+                  <tbody>
+                    {[...auditsIncoherents, ...auditsInaccessibles].map((audit) => (
+                      <tr key={audit.cle} className="border-b border-zinc-100 last:border-0">
+                        <td className="px-4 py-3 font-semibold text-ink">{audit.plateforme?.nom ?? audit.cle}</td>
+                        <td className="px-4 py-3 text-brand-orange-dark">{audit.statut === "incoherence" ? `À vérifier : ${audit.ecarts.join(", ")}` : "Page inaccessible"}</td>
+                        <td className="px-4 py-3 text-zinc-600">{audit.note != null ? `${audit.note}/5` : "—"}{audit.nombre_avis != null ? ` · ${audit.nombre_avis} avis` : ""}</td>
+                        <td className="px-4 py-3"><a href={`#${audit.cle}`} className="font-semibold text-brand-navy hover:underline">Ouvrir la fiche</a></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </>
+        )}
+      </section>
 
       {/* Ce qui est devenu faux passe avant tout le reste : une fiche
           fausse coûte plus qu'une fiche absente. */}
@@ -550,8 +597,9 @@ function LignePlateforme({
             <label className="flex min-w-[16rem] flex-1 flex-col gap-1 text-xs font-semibold text-zinc-600">
               URL publique de la fiche à contrôler
               <input name="url" type="url" defaultValue={url} placeholder="https://..." className="rounded-lg border border-zinc-200 px-3 py-2 text-sm font-normal text-ink outline-none focus:border-brand-navy" />
+              <span className="font-normal leading-relaxed text-zinc-500">Colle le lien que tes clients voient, pas un lien de connexion professionnel. Klarr ouvrira cette page publiquement lors du contrôle mensuel.</span>
             </label>
-            <button type="submit" className="rounded-lg border border-zinc-200 px-4 py-2 text-sm font-semibold text-zinc-700 hover:border-brand-navy hover:text-brand-navy">Enregistrer</button>
+            <button type="submit" className="rounded-lg border border-zinc-200 px-4 py-2 text-sm font-semibold text-zinc-700 hover:border-brand-navy hover:text-brand-navy">Enregistrer le lien</button>
           </form>
 
           {audit && (
