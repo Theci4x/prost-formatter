@@ -45,10 +45,11 @@ Voir `dashboard/README.md` pour l'installation et la configuration.
 - [ ] Statistiques (vues, recherches, appels) via la Business Profile
       Performance API — réutilise la connexion OAuth déjà en place
 
-**Bloquant externe** : le scope `business.manage` nécessite une
-vérification Google (écran de consentement OAuth) avant un usage public —
-démarche à faire côté Google Cloud Console, peut prendre plusieurs
-semaines. Développement possible en attendant via un compte de test.
+**Écran de consentement OAuth : réglé le 26/09/2026.** Application
+publiée en production (projet `klarr-507805`), branding Klarr validé et
+publié. Les quatre scopes (`openid`, `userinfo.email`, `business.manage`,
+`webmasters.readonly`) sont classés non sensibles par Google : aucune
+vérification de données ni vidéo exigée.
 
 **Bloquant externe (2)** : les API Account Management / Business
 Information ("My Business") ont un quota par défaut de zéro requête tant
