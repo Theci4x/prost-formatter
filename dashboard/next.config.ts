@@ -25,6 +25,11 @@ const nextConfig: NextConfig = {
   // corps de la requête, et on retomberait sur le même silence.
   experimental: {
     serverActions: { bodySizeLimit: "4mb" },
+    // Le CSS dans la page plutôt qu'en fichiers à part : PageSpeed comptait
+    // un demi-seconde de rendu bloqué sur mobile, le temps d'aller chercher
+    // trois feuilles de style. Tailwind n'en produit qu'une vingtaine de
+    // Ko, que la page transporte sans peine.
+    inlineCss: true,
   },
 
   images: {

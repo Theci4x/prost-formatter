@@ -251,10 +251,20 @@ export function HeroProduit({ t }: { t: ClesAccueilPublic["produit"] }) {
                     gap: 2,
                     padding: "8px 0",
                     borderRadius: 12,
-                    border: `1px solid ${j.choisi ? "var(--ink)" : "var(--line)"}`,
-                    background: j.choisi ? "var(--ink)" : "var(--paper)",
-                    color: j.choisi ? "var(--paper)" : "var(--ink)",
-                    opacity: j.ferme ? 0.4 : 1,
+                    border: `1px ${j.ferme ? "dashed" : "solid"} ${j.choisi ? "var(--ink)" : "var(--line)"}`,
+                    // Un jour fermé s'efface par sa couleur, pas par une
+                    // opacité : à 40 %, le texte tombait sous le contraste
+                    // lisible, et PageSpeed le signalait.
+                    background: j.choisi
+                      ? "var(--ink)"
+                      : j.ferme
+                        ? "var(--bg-alt)"
+                        : "var(--paper)",
+                    color: j.choisi
+                      ? "var(--paper)"
+                      : j.ferme
+                        ? "var(--ink-soft)"
+                        : "var(--ink)",
                   }}
                 >
                   <span style={{ fontSize: 10.5, fontWeight: 600 }}>

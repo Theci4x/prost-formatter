@@ -57,13 +57,24 @@ export function HeroBackdrop() {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const reduceMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
+    // Sur téléphone, le fond reste immobile. Redessiner tout le hero à
+    // chaque image occupait le fil principal pendant le chargement — des
+    // secondes de calcul sur un mobile modeste, que PageSpeed comptait
+    // contre l'affichage du texte. Immobile, il ne coûte qu'un dessin.
+    const immobile =
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches ||
+      window.matchMedia("(max-width: 640px)").matches;
+
+    // Trente images par seconde suffisent à une dérive aussi lente ; la
+    // moitié du travail d'un rafraîchissement complet.
+    const INTERVALLE = 1000 / 30;
 
     let frame = 0;
+    let derniere = 0;
     let width = 0;
     let height = 0;
+    let visible = true;
+    let lance = false;
 
     function resize() {
       const parent = canvas!.parentElement;
@@ -80,12 +91,12 @@ export function HeroBackdrop() {
       ctx!.setTransform(ratio, 0, 0, ratio, 0, 0);
     }
 
-    function draw(time: number) {
+    function peindre(time: number) {
       ctx!.clearRect(0, 0, width, height);
       const base = Math.max(width, height);
 
       for (const blob of BLOBS) {
-        const t = reduceMotion ? 0 : time * blob.speed + blob.phase;
+        const t = immobile ? blob.phase : time * blob.speed + blob.phase;
         const cx = (blob.x + Math.cos(t) * blob.ampX) * width;
         const cy = (blob.y + Math.sin(t * 1.3) * blob.ampY) * height;
         const r = blob.radius * base;
@@ -98,21 +109,70 @@ export function HeroBackdrop() {
         ctx!.fillStyle = gradient;
         ctx!.fillRect(0, 0, width, height);
       }
+    }
 
-      if (!reduceMotion) frame = requestAnimationFrame(draw);
+    function boucle(time: number) {
+      frame = 0;
+      if (!visible || document.hidden) return;
+      if (time - derniere >= INTERVALLE) {
+        derniere = time;
+        peindre(time);
+      }
+      frame = requestAnimationFrame(boucle);
+    }
+
+    function relancer() {
+      if (immobile || !lance || frame || !visible || document.hidden) return;
+      frame = requestAnimationFrame(boucle);
     }
 
     resize();
-    frame = requestAnimationFrame(draw);
+    peindre(0);
+
+    // L'animation attend que la page soit chargée et que le navigateur
+    // souffle : le texte du hero passe avant le décor.
+    let attenteIdle = 0;
+    let attenteMinuteur: ReturnType<typeof setTimeout> | undefined;
+    const demarrer = () => {
+      lance = true;
+      relancer();
+    };
+    const apresChargement = () => {
+      if (typeof window.requestIdleCallback === "function") {
+        attenteIdle = window.requestIdleCallback(demarrer, { timeout: 2000 });
+      } else {
+        attenteMinuteur = setTimeout(demarrer, 500);
+      }
+    };
+    if (!immobile) {
+      if (document.readyState === "complete") apresChargement();
+      else window.addEventListener("load", apresChargement, { once: true });
+    }
+
+    // Hors de l'écran ou onglet caché, rien ne se dessine.
+    const vue = new IntersectionObserver(([entree]) => {
+      visible = entree?.isIntersecting ?? true;
+      relancer();
+    });
+    vue.observe(canvas);
+    const surVisibilite = () => relancer();
+    document.addEventListener("visibilitychange", surVisibilite);
 
     const observer = new ResizeObserver(() => {
       resize();
-      if (reduceMotion) draw(0);
+      peindre(derniere);
     });
     if (canvas.parentElement) observer.observe(canvas.parentElement);
 
     return () => {
       cancelAnimationFrame(frame);
+      if (typeof window.cancelIdleCallback === "function") {
+        window.cancelIdleCallback(attenteIdle);
+      }
+      clearTimeout(attenteMinuteur);
+      window.removeEventListener("load", apresChargement);
+      document.removeEventListener("visibilitychange", surVisibilite);
+      vue.disconnect();
       observer.disconnect();
     };
   }, []);

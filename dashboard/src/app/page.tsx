@@ -360,465 +360,471 @@ export default async function Home() {
         </Link>
       </div>
 
-      {/* HERO */}
-      <div style={{ position: "relative" }}>
-        <HeroBackdrop />
-        <div
-          className="flex-col px-5 pt-8 pb-16 sm:flex-row sm:px-8 sm:pt-12 sm:pb-24"
-          style={{
-            position: "relative",
-            display: "flex",
-            alignItems: "center",
-            gap: 56,
-            maxWidth: 1180,
-            margin: "0 auto",
-          }}
-        >
+      {/* Le contenu, entre la barre de navigation et le pied de page :
+          un lecteur d'écran y saute directement. */}
+      <main>
+        {/* HERO */}
+        <div style={{ position: "relative" }}>
+          <HeroBackdrop />
           <div
+            className="flex-col px-5 pt-8 pb-16 sm:flex-row sm:px-8 sm:pt-12 sm:pb-24"
             style={{
-              flex: "1 1 480px",
+              position: "relative",
               display: "flex",
-              flexDirection: "column",
-              gap: 26,
-              minWidth: 0,
+              alignItems: "center",
+              gap: 56,
+              maxWidth: 1180,
+              margin: "0 auto",
             }}
           >
             <div
               style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 8,
-                alignSelf: "flex-start",
-                background: "var(--accent-soft)",
-                border: "1px solid var(--line)",
-                borderRadius: 100,
-                padding: "6px 14px 6px 10px",
+                flex: "1 1 480px",
+                display: "flex",
+                flexDirection: "column",
+                gap: 26,
+                minWidth: 0,
               }}
             >
               <div
                 style={{
-                  width: 6,
-                  height: 6,
-                  borderRadius: "50%",
-                  background: "var(--accent)",
-                }}
-              />
-              <span
-                style={{
-                  fontSize: 12.5,
-                  fontWeight: 600,
-                  color: "var(--ink-soft)",
-                  letterSpacing: "0.02em",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                  alignSelf: "flex-start",
+                  background: "var(--accent-soft)",
+                  border: "1px solid var(--line)",
+                  borderRadius: 100,
+                  padding: "6px 14px 6px 10px",
                 }}
               >
-                {t.hero.badge}
-              </span>
+                <div
+                  style={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: "50%",
+                    background: "var(--accent)",
+                  }}
+                />
+                <span
+                  style={{
+                    fontSize: 12.5,
+                    fontWeight: 600,
+                    color: "var(--ink-soft)",
+                    letterSpacing: "0.02em",
+                  }}
+                >
+                  {t.hero.badge}
+                </span>
+              </div>
+              <h1
+                style={{
+                  fontFamily: "var(--font-instrument-serif), Georgia, serif",
+                  fontWeight: 400,
+                  margin: 0,
+                  fontSize: "clamp(40px, 5vw, 66px)",
+                  lineHeight: 1.04,
+                  letterSpacing: "-0.015em",
+                  textWrap: "pretty",
+                }}
+              >
+                {t.hero.titreDebut}{" "}
+                <em
+                  style={{ fontStyle: "italic", color: "var(--accent-dark)" }}
+                >
+                  {t.hero.titreAccent}
+                </em>
+                {t.hero.titreFin}
+              </h1>
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: 18,
+                  lineHeight: 1.6,
+                  color: "var(--ink-soft)",
+                  maxWidth: 480,
+                }}
+              >
+                {t.hero.chapo}
+              </p>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                  gap: "14px 22px",
+                  marginTop: 8,
+                }}
+              >
+                <Link
+                  href="/test-presence-google"
+                  className="btn-primary"
+                  style={{
+                    background: "var(--ink)",
+                    color: "var(--paper)",
+                    fontSize: 15,
+                    fontWeight: 600,
+                    padding: "15px 26px",
+                    borderRadius: 10,
+                    boxShadow: "0 14px 30px -14px oklch(20% 0.02 60 / 50%)",
+                  }}
+                >
+                  {t.hero.ctaTest}
+                </Link>
+                <Link
+                  href="/login"
+                  style={{
+                    fontSize: 15,
+                    fontWeight: 600,
+                    color: "var(--ink)",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                  }}
+                >
+                  {t.hero.ctaEssai}
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M5 12h14M13 5l7 7-7 7" />
+                  </svg>
+                </Link>
+              </div>
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: 13,
+                  color: "var(--ink-soft)",
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: "4px 10px",
+                }}
+              >
+                {t.hero.garanties.map((garantie, rang) => (
+                  <span key={garantie} style={{ display: "contents" }}>
+                    {rang > 0 && <span aria-hidden="true">·</span>}
+                    <span>{garantie}</span>
+                  </span>
+                ))}
+              </p>
             </div>
-            <h1
+
+            <div
               style={{
-                fontFamily: "var(--font-instrument-serif), Georgia, serif",
-                fontWeight: 400,
-                margin: 0,
-                fontSize: "clamp(40px, 5vw, 66px)",
-                lineHeight: 1.04,
-                letterSpacing: "-0.015em",
-                textWrap: "pretty",
+                flex: "1 1 420px",
+                minWidth: 0,
+                width: "100%",
+                position: "relative",
               }}
             >
-              {t.hero.titreDebut}{" "}
-              <em style={{ fontStyle: "italic", color: "var(--accent-dark)" }}>
-                {t.hero.titreAccent}
-              </em>
-              {t.hero.titreFin}
-            </h1>
-            <p
-              style={{
-                margin: 0,
-                fontSize: 18,
-                lineHeight: 1.6,
-                color: "var(--ink-soft)",
-                maxWidth: 480,
-              }}
-            >
-              {t.hero.chapo}
-            </p>
+              <HeroProduit t={t.produit} />
+            </div>
+          </div>
+        </div>
+
+        <Reveal>
+          <ClientLogos confiance={t.clients.confiance} />
+        </Reveal>
+
+        <Reveal>
+          <Problem t={t.probleme} />
+        </Reveal>
+
+        {/* Comment ça marche — chaque promesse avec son écran en face. */}
+        <Showcase
+          t={t.benefices}
+          v={t.vitrine}
+          langue={langue}
+          icones={ICONES_BENEFICES}
+          lieu={t.produit.lieu}
+        />
+
+        {/* Ce qui vient d'arriver, juste après ce qui a toujours été là. */}
+        <Nouveautes
+          t={t.nouveautes}
+          exemple={t.vitrine.exemple}
+          langue={langue}
+        />
+
+        <Reveal>
+          <Comparison t={t.difference} />
+        </Reveal>
+
+        <Reveal>
+          <Reservation t={t.reservations} />
+        </Reveal>
+
+        <Reveal>
+          <Tarifs t={t.tarifs} />
+        </Reveal>
+
+        <Reveal>
+          <Faq t={t.faq} />
+        </Reveal>
+
+        <Reveal>
+          <Founder t={t.fondateur} />
+        </Reveal>
+
+        <Reveal>
+          <Partner t={t.editeur} />
+        </Reveal>
+
+        {/* FREE GOOGLE PRESENCE TEST */}
+        <div
+          id="test-presence"
+          style={{ maxWidth: 1180, margin: "0 auto", padding: "90px 32px" }}
+        >
+          <div
+            className="flex-col sm:flex-row"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 32,
+              background: "var(--accent-soft)",
+              border: "1px solid var(--line)",
+              borderRadius: 20,
+              padding: "44px 48px",
+            }}
+          >
             <div
               style={{
                 display: "flex",
-                alignItems: "center",
-                flexWrap: "wrap",
-                gap: "14px 22px",
-                marginTop: 8,
+                flexDirection: "column",
+                gap: 14,
+                maxWidth: 560,
               }}
             >
-              <Link
-                href="/test-presence-google"
-                className="btn-primary"
+              <div
                 style={{
-                  background: "var(--ink)",
-                  color: "var(--paper)",
-                  fontSize: 15,
-                  fontWeight: 600,
-                  padding: "15px 26px",
-                  borderRadius: 10,
-                  boxShadow: "0 14px 30px -14px oklch(20% 0.02 60 / 50%)",
-                }}
-              >
-                {t.hero.ctaTest}
-              </Link>
-              <Link
-                href="/login"
-                style={{
-                  fontSize: 15,
-                  fontWeight: 600,
-                  color: "var(--ink)",
+                  width: 44,
+                  height: 44,
+                  borderRadius: 11,
+                  background: "var(--paper)",
+                  border: "1px solid var(--line)",
                   display: "flex",
                   alignItems: "center",
-                  gap: 6,
+                  justifyContent: "center",
                 }}
               >
-                {t.hero.ctaEssai}
                 <svg
-                  width="14"
-                  height="14"
+                  width="20"
+                  height="20"
                   viewBox="0 0 24 24"
                   fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
+                  stroke="var(--accent-dark)"
+                  strokeWidth="1.8"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 >
-                  <path d="M5 12h14M13 5l7 7-7 7" />
+                  <path d="M18 10c0 5-6 11-6 11s-6-6-6-11a6 6 0 0 1 12 0z" />
+                  <circle cx="12" cy="10" r="4.2" />
+                  <path d="M20.5 20.5l-3-3" />
                 </svg>
-              </Link>
+              </div>
+              <span
+                style={{
+                  fontSize: 13,
+                  fontWeight: 700,
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase",
+                  color: "var(--accent-dark)",
+                }}
+              >
+                {t.test.surtitre}
+              </span>
+              <h2
+                style={{
+                  fontFamily: "var(--font-instrument-serif), Georgia, serif",
+                  fontWeight: 400,
+                  margin: 0,
+                  fontSize: 30,
+                  lineHeight: 1.25,
+                }}
+              >
+                {t.test.titre}
+              </h2>
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: 15,
+                  lineHeight: 1.65,
+                  color: "var(--ink-soft)",
+                }}
+              >
+                {t.test.texte}
+              </p>
             </div>
-            <p
+            <Link
+              href="/test-presence-google"
+              className="btn-primary"
               style={{
-                margin: 0,
-                fontSize: 13,
-                color: "var(--ink-soft)",
-                display: "flex",
-                flexWrap: "wrap",
-                gap: "4px 10px",
+                flexShrink: 0,
+                background: "var(--ink)",
+                color: "var(--paper)",
+                fontSize: 15,
+                fontWeight: 600,
+                padding: "15px 28px",
+                borderRadius: 9,
+                whiteSpace: "nowrap",
               }}
             >
-              {t.hero.garanties.map((garantie, rang) => (
-                <span key={garantie} style={{ display: "contents" }}>
-                  {rang > 0 && <span aria-hidden="true">·</span>}
-                  <span>{garantie}</span>
-                </span>
-              ))}
-            </p>
-          </div>
-
-          <div
-            style={{
-              flex: "1 1 420px",
-              minWidth: 0,
-              width: "100%",
-              position: "relative",
-            }}
-          >
-            <HeroProduit t={t.produit} />
+              {t.test.bouton}
+            </Link>
           </div>
         </div>
-      </div>
 
-      <Reveal>
-        <ClientLogos confiance={t.clients.confiance} />
-      </Reveal>
-
-      <Reveal>
-        <Problem t={t.probleme} />
-      </Reveal>
-
-      {/* Comment ça marche — chaque promesse avec son écran en face. */}
-      <Showcase
-        t={t.benefices}
-        v={t.vitrine}
-        langue={langue}
-        icones={ICONES_BENEFICES}
-        lieu={t.produit.lieu}
-      />
-
-      {/* Ce qui vient d'arriver, juste après ce qui a toujours été là. */}
-      <Nouveautes
-        t={t.nouveautes}
-        exemple={t.vitrine.exemple}
-        langue={langue}
-      />
-
-      <Reveal>
-        <Comparison t={t.difference} />
-      </Reveal>
-
-      <Reveal>
-        <Reservation t={t.reservations} />
-      </Reveal>
-
-      <Reveal>
-        <Tarifs t={t.tarifs} />
-      </Reveal>
-
-      <Reveal>
-        <Faq t={t.faq} />
-      </Reveal>
-
-      <Reveal>
-        <Founder t={t.fondateur} />
-      </Reveal>
-
-      <Reveal>
-        <Partner t={t.editeur} />
-      </Reveal>
-
-      {/* FREE GOOGLE PRESENCE TEST */}
-      <div
-        id="test-presence"
-        style={{ maxWidth: 1180, margin: "0 auto", padding: "90px 32px" }}
-      >
+        {/* COMING SOON */}
         <div
-          className="flex-col sm:flex-row"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 32,
-            background: "var(--accent-soft)",
-            border: "1px solid var(--line)",
-            borderRadius: 20,
-            padding: "44px 48px",
-          }}
+          id="bientot"
+          style={{ maxWidth: 1180, margin: "0 auto", padding: "0px 32px 90px" }}
         >
           <div
+            className="flex-col sm:flex-row"
             style={{
               display: "flex",
-              flexDirection: "column",
-              gap: 14,
-              maxWidth: 560,
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 40,
             }}
           >
             <div
               style={{
-                width: 44,
-                height: 44,
-                borderRadius: 11,
-                background: "var(--paper)",
-                border: "1px solid var(--line)",
                 display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
+                flexDirection: "column",
+                gap: 14,
+                maxWidth: 480,
               }}
             >
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="var(--accent-dark)"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M18 10c0 5-6 11-6 11s-6-6-6-11a6 6 0 0 1 12 0z" />
-                <circle cx="12" cy="10" r="4.2" />
-                <path d="M20.5 20.5l-3-3" />
-              </svg>
-            </div>
-            <span
-              style={{
-                fontSize: 13,
-                fontWeight: 700,
-                letterSpacing: "0.08em",
-                textTransform: "uppercase",
-                color: "var(--accent-dark)",
-              }}
-            >
-              {t.test.surtitre}
-            </span>
-            <h2
-              style={{
-                fontFamily: "var(--font-instrument-serif), Georgia, serif",
-                fontWeight: 400,
-                margin: 0,
-                fontSize: 30,
-                lineHeight: 1.25,
-              }}
-            >
-              {t.test.titre}
-            </h2>
-            <p
-              style={{
-                margin: 0,
-                fontSize: 15,
-                lineHeight: 1.65,
-                color: "var(--ink-soft)",
-              }}
-            >
-              {t.test.texte}
-            </p>
-          </div>
-          <Link
-            href="/test-presence-google"
-            className="btn-primary"
-            style={{
-              flexShrink: 0,
-              background: "var(--ink)",
-              color: "var(--paper)",
-              fontSize: 15,
-              fontWeight: 600,
-              padding: "15px 28px",
-              borderRadius: 9,
-              whiteSpace: "nowrap",
-            }}
-          >
-            {t.test.bouton}
-          </Link>
-        </div>
-      </div>
-
-      {/* COMING SOON */}
-      <div
-        id="bientot"
-        style={{ maxWidth: 1180, margin: "0 auto", padding: "0px 32px 90px" }}
-      >
-        <div
-          className="flex-col sm:flex-row"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 40,
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: 14,
-              maxWidth: 480,
-            }}
-          >
-            <span
-              style={{
-                fontSize: 13,
-                fontWeight: 700,
-                letterSpacing: "0.08em",
-                textTransform: "uppercase",
-                color: "var(--ink-soft)",
-              }}
-            >
-              {t.bientot.surtitre}
-            </span>
-            <h2
-              style={{
-                fontFamily: "var(--font-instrument-serif), Georgia, serif",
-                fontWeight: 400,
-                margin: 0,
-                fontSize: 30,
-                lineHeight: 1.25,
-              }}
-            >
-              {t.bientot.titre}
-            </h2>
-            <p
-              style={{
-                margin: 0,
-                fontSize: 15,
-                lineHeight: 1.65,
-                color: "var(--ink-soft)",
-              }}
-            >
-              {t.bientot.texte}
-            </p>
-          </div>
-          <div
-            style={{
-              display: "flex",
-              gap: 12,
-              flexWrap: "wrap",
-              maxWidth: 420,
-            }}
-          >
-            {t.bientot.puces.map((puce) => (
               <span
-                key={puce}
                 style={{
                   fontSize: 13,
-                  fontWeight: 600,
+                  fontWeight: 700,
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase",
                   color: "var(--ink-soft)",
-                  background: "var(--bg-alt)",
-                  border: "1px solid var(--line)",
-                  borderRadius: 100,
-                  padding: "8px 16px",
                 }}
               >
-                {puce}
+                {t.bientot.surtitre}
               </span>
-            ))}
+              <h2
+                style={{
+                  fontFamily: "var(--font-instrument-serif), Georgia, serif",
+                  fontWeight: 400,
+                  margin: 0,
+                  fontSize: 30,
+                  lineHeight: 1.25,
+                }}
+              >
+                {t.bientot.titre}
+              </h2>
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: 15,
+                  lineHeight: 1.65,
+                  color: "var(--ink-soft)",
+                }}
+              >
+                {t.bientot.texte}
+              </p>
+            </div>
+            <div
+              style={{
+                display: "flex",
+                gap: 12,
+                flexWrap: "wrap",
+                maxWidth: 420,
+              }}
+            >
+              {t.bientot.puces.map((puce) => (
+                <span
+                  key={puce}
+                  style={{
+                    fontSize: 13,
+                    fontWeight: 600,
+                    color: "var(--ink-soft)",
+                    background: "var(--bg-alt)",
+                    border: "1px solid var(--line)",
+                    borderRadius: 100,
+                    padding: "8px 16px",
+                  }}
+                >
+                  {puce}
+                </span>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* CTA BAND */}
-      <Reveal>
-        <div
-          id="cta"
-          style={{ background: "var(--ink)", padding: "90px 32px" }}
-        >
+        {/* CTA BAND */}
+        <Reveal>
           <div
-            style={{
-              maxWidth: 640,
-              margin: "0 auto",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              textAlign: "center",
-              gap: 24,
-            }}
+            id="cta"
+            style={{ background: "var(--ink)", padding: "90px 32px" }}
           >
-            <h2
+            <div
               style={{
-                fontFamily: "var(--font-instrument-serif), Georgia, serif",
-                fontWeight: 400,
-                margin: 0,
-                fontSize: 38,
-                lineHeight: 1.2,
-                color: "var(--paper)",
+                maxWidth: 640,
+                margin: "0 auto",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                textAlign: "center",
+                gap: 24,
               }}
             >
-              {t.cta.titre}
-            </h2>
-            <p
-              style={{
-                margin: 0,
-                fontSize: 16,
-                lineHeight: 1.6,
-                color: "oklch(80% 0.01 60)",
-              }}
-            >
-              {t.cta.texte}
-            </p>
-            <Link
-              href="/login"
-              style={{
-                background: "var(--accent)",
-                color: "var(--paper)",
-                fontSize: 15,
-                fontWeight: 600,
-                padding: "15px 30px",
-                borderRadius: 9,
-              }}
-            >
-              {t.cta.bouton}
-            </Link>
+              <h2
+                style={{
+                  fontFamily: "var(--font-instrument-serif), Georgia, serif",
+                  fontWeight: 400,
+                  margin: 0,
+                  fontSize: 38,
+                  lineHeight: 1.2,
+                  color: "var(--paper)",
+                }}
+              >
+                {t.cta.titre}
+              </h2>
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: 16,
+                  lineHeight: 1.6,
+                  color: "oklch(80% 0.01 60)",
+                }}
+              >
+                {t.cta.texte}
+              </p>
+              <Link
+                href="/login"
+                style={{
+                  background: "var(--accent)",
+                  color: "var(--paper)",
+                  fontSize: 15,
+                  fontWeight: 600,
+                  padding: "15px 30px",
+                  borderRadius: 9,
+                }}
+              >
+                {t.cta.bouton}
+              </Link>
+            </div>
           </div>
-        </div>
-      </Reveal>
+        </Reveal>
 
-      <Reveal>
-        <Journal t={t.journal} langue={langue} />
-      </Reveal>
+        <Reveal>
+          <Journal t={t.journal} langue={langue} />
+        </Reveal>
+      </main>
 
       {/* FOOTER */}
       <div
