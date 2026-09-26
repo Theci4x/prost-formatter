@@ -8,6 +8,8 @@ import {
   fetchYelpPlatformReviews,
   fetchTripadvisorPlatformReviews,
 } from "@/lib/reviews/aggregate";
+import { auditerFiche } from "@/lib/presence/audit";
+import { alerterIncoherenceCritique } from "@/lib/presence/alerte";
 
 export const maxDuration = 60;
 
@@ -29,15 +31,22 @@ const JOURS_DU_CYCLE = 7;
  * compte passent donc en tête.
  */
 const BUDGET_MS = 45_000;
+const AUDIT_INTERVAL_MS = 30 * 24 * 60 * 60 * 1000;
 
 type RestaurantRow = {
   id: string;
   nom: string;
+  proprietaire_id: string;
+  email_contact: string | null;
   adresse: string | null;
   // L'établissement Tripadvisor confirmé par le restaurateur. Le relevé de
   // nuit doit l'honorer comme l'écran : sinon il enregistrerait chaque nuit
   // la note d'un homonyme par-dessus celle qu'on lui a désignée.
   tripadvisor_location_id: string | null;
+  yelp_url: string | null;
+  tripadvisor_url: string | null;
+  presence_urls?: Record<string, string> | null;
+  presence_auditee_le?: string | null;
   // Celui que la recherche automatique a trouvé un soir précédent : on ne
   // repaie pas la recherche pour retrouver le même. Absent tant que la
   // migration 0078 n'est pas passée — d'où la lecture de toute la ligne.
@@ -125,14 +134,66 @@ export async function GET(request: Request) {
 
     const location = restaurant.adresse ?? "";
 
+    const urls = restaurant.presence_urls ?? {};
+    const dernierAudit = restaurant.presence_auditee_le
+      ? Date.parse(restaurant.presence_auditee_le)
+      : 0;
+    if (Object.keys(urls).length > 0 && Date.now() - dernierAudit >= AUDIT_INTERVAL_MS) {
+      const attendu = {
+        nom: restaurant.nom,
+        adresse: restaurant.adresse,
+        telephone: null,
+        site: null,
+        horaires: null,
+      };
+      for (const [plateforme, url] of Object.entries(urls)) {
+        if (!url || Date.now() - debut > BUDGET_MS) break;
+        const audit = await auditerFiche(url, attendu);
+        const { error: auditError } = await supabase
+          .from("restaurant_presence_audits")
+          .insert({
+            restaurant_id: restaurant.id,
+            plateforme,
+            url: audit.url,
+            statut: audit.statut,
+            donnees: audit.donnees,
+            ecarts: audit.ecarts,
+            note: audit.note,
+            nombre_avis: audit.nombreAvis,
+          });
+        if (auditError) console.error("[cron/reputation] audit présence", plateforme, auditError.message);
+        if (!auditError) {
+          await alerterIncoherenceCritique({
+            supabase,
+            restaurant,
+            plateforme,
+            url,
+            audit: {
+              statut: audit.statut,
+              ecarts: audit.ecarts,
+              note: audit.note,
+              nombreAvis: audit.nombreAvis,
+            },
+          });
+        }
+      }
+      await supabase.from("restaurants").update({ presence_auditee_le: new Date().toISOString() }).eq("id", restaurant.id);
+    }
+
     const platforms = await Promise.all([
       fetchGooglePlatformReviews(restaurant.nom, location, TOUJOURS_FRAIS),
-      fetchYelpPlatformReviews(restaurant.nom, location, TOUJOURS_FRAIS),
+      fetchYelpPlatformReviews(
+        restaurant.nom,
+        location,
+        restaurant.yelp_url,
+        TOUJOURS_FRAIS,
+      ),
       fetchTripadvisorPlatformReviews(restaurant.nom, location, {
         epingle: restaurant.tripadvisor_location_id,
         devine: restaurant.tripadvisor_location_devine ?? null,
         fraicheur: TOUJOURS_FRAIS,
         avecAvis: false,
+        sourceUrl: restaurant.tripadvisor_url,
       }),
     ]);
 

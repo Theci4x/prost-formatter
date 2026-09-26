@@ -14,7 +14,6 @@ import {
 } from "@/components/reviews/PlatformReviewsCard";
 import { tripadvisorDuReleve } from "@/lib/reviews/releve";
 import { FRAICHEUR_DEMANDE } from "@/lib/reviews/fraicheur";
-import { ConfirmationTripadvisor } from "@/components/reviews/ConfirmationTripadvisor";
 import { RepondreAvisLibre } from "@/components/reviews/RepondreAvisLibre";
 import { chargerReponses, cleAvis } from "@/lib/reviews/reponses";
 import { chargerAvisGoogleDirect } from "@/lib/reviews/googleDirect";
@@ -59,6 +58,8 @@ export default async function AvisPage({
   const t = traducteur(langue, AVIS, COMMUN);
   const location = restaurant.adresse ?? "";
   const suivi = restaurant as Restaurant & {
+    yelp_url?: string | null;
+    tripadvisor_url?: string | null;
     tripadvisor_location_id?: string | null;
     tripadvisor_location_devine?: string | null;
     reputation_relevee_le?: string | null;
@@ -68,13 +69,14 @@ export default async function AvisPage({
   const [google, yelp, releveTripadvisor, direct, suiviReponses, ficheGoogle] =
     await Promise.all([
       fetchGooglePlatformReviews(restaurant.nom, location),
-      fetchYelpPlatformReviews(restaurant.nom, location),
+      fetchYelpPlatformReviews(restaurant.nom, location, suivi.yelp_url ?? null),
       tripadvisorDuReleve(supabase, suivi),
       chargerTripadvisor
         ? fetchTripadvisorPlatformReviews(restaurant.nom, location, {
             epingle: epingleTripadvisor,
             devine: suivi.tripadvisor_location_devine ?? null,
             fraicheur: FRAICHEUR_DEMANDE,
+            sourceUrl: suivi.tripadvisor_url ?? null,
           })
         : Promise.resolve(null),
       chargerReponses(supabase, id),
@@ -317,30 +319,19 @@ export default async function AvisPage({
             pied={
               p.platform === "tripadvisor" ? (
                 <div className="flex flex-col gap-3">
-                  {!direct && (
+                  {!direct && p.releveAttendu && (
                     <Link
-                      href={`/dashboard/${id}/avis?tripadvisor=avis`}
+                      href={`/dashboard/${id}/edit`}
                       className="w-fit rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-semibold text-ink transition-colors hover:border-ink"
                     >
                       {t("Charger les derniers avis Tripadvisor")}
                     </Link>
                   )}
-                  <ConfirmationTripadvisor
-                    restaurantId={id}
-                    langue={langue}
-                    nomTrouve={
-                      // Le relevé ne garde que la note : le nom exact se
-                      // voit en chargeant les avis, qui l'apportent.
-                      p.businessName ??
-                      (p.epingle
-                        ? t("l'établissement que tu as choisi")
-                        : p.found
-                          ? t("nom visible en chargeant les avis")
-                          : null)
-                    }
-                    requeteInitiale={`${restaurant.nom} ${location}`.trim()}
-                    epingle={Boolean(p.epingle)}
-                  />
+                  <p className="text-xs text-zinc-500">
+                    Note relevée depuis l&apos;URL publique enregistrée dans ta
+                    fiche établissement. Pour modifier le lien, ouvre les
+                    réglages de la fiche restaurant.
+                  </p>
                 </div>
               ) : null
             }

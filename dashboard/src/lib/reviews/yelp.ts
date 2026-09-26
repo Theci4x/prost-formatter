@@ -1,8 +1,4 @@
-import { optionsFraicheur, FRAICHEUR_ECRAN } from "@/lib/reviews/fraicheur";
-// Yelp Fusion API — clé API self-service (yelp.com/developers), pas de
-// programme partenaire à valider. Les avis renvoyés sont limités à 3 par
-// Yelp (restriction de leurs conditions d'utilisation).
-const YELP_BASE_URL = "https://api.yelp.com/v3";
+import { scraperFiche, type ScrapedReview } from "@/lib/reviews/scrape";
 
 export type YelpBusiness = {
   id: string;
@@ -12,91 +8,27 @@ export type YelpBusiness = {
   reviewCount: number;
 };
 
-export type YelpReview = {
-  author: string;
-  rating: number;
-  text: string;
-  publishedAt: string | null;
-  url: string | null;
-};
+export type YelpReview = ScrapedReview;
 
-function apiKey() {
-  const key = process.env.YELP_API_KEY;
-  if (!key) throw new Error("YELP_API_KEY manquante");
-  return key;
-}
-
-export async function searchYelpBusiness(
-  term: string,
-  location: string,
-  fraicheur: number = FRAICHEUR_ECRAN,
+/** Relevé limité à l'URL publique confirmée par le restaurateur. */
+export async function scrapeYelpBusiness(
+  sourceUrl: string,
+  fraicheur = 0,
 ): Promise<YelpBusiness | null> {
-  const url = new URL(`${YELP_BASE_URL}/businesses/search`);
-  url.searchParams.set("term", term);
-  url.searchParams.set("location", location);
-  url.searchParams.set("limit", "1");
-
-  const res = await fetch(url, {
-    headers: { Authorization: `Bearer ${apiKey()}` },
-    ...optionsFraicheur(fraicheur),
-  });
-
-  if (!res.ok) {
-    throw new Error(`Yelp search a échoué : ${res.status} ${await res.text()}`);
-  }
-
-  const data = (await res.json()) as {
-    businesses?: {
-      id: string;
-      name: string;
-      url: string;
-      rating: number;
-      review_count: number;
-    }[];
-  };
-
-  const first = data.businesses?.[0];
-  if (!first) return null;
-
+  const fiche = await scraperFiche("yelp", sourceUrl, fraicheur);
+  if (fiche.rating == null && fiche.reviewCount == null) return null;
   return {
-    id: first.id,
-    name: first.name,
-    url: first.url,
-    rating: first.rating,
-    reviewCount: first.review_count,
+    id: fiche.url,
+    name: fiche.name ?? "Établissement Yelp",
+    url: fiche.url,
+    rating: fiche.rating ?? 0,
+    reviewCount: fiche.reviewCount ?? 0,
   };
 }
 
-export async function getYelpReviews(
-  businessId: string,
-  fraicheur: number = FRAICHEUR_ECRAN,
+export async function scrapeYelpReviews(
+  sourceUrl: string,
+  fraicheur = 0,
 ): Promise<YelpReview[]> {
-  const res = await fetch(`${YELP_BASE_URL}/businesses/${businessId}/reviews`, {
-    headers: { Authorization: `Bearer ${apiKey()}` },
-    ...optionsFraicheur(fraicheur),
-  });
-
-  if (!res.ok) {
-    throw new Error(
-      `Yelp reviews a échoué : ${res.status} ${await res.text()}`,
-    );
-  }
-
-  const data = (await res.json()) as {
-    reviews?: {
-      text: string;
-      rating: number;
-      time_created?: string;
-      url?: string;
-      user?: { name?: string };
-    }[];
-  };
-
-  return (data.reviews ?? []).map((r) => ({
-    author: r.user?.name ?? "Client Yelp",
-    rating: r.rating,
-    text: r.text,
-    publishedAt: r.time_created ?? null,
-    url: r.url ?? null,
-  }));
+  return (await scraperFiche("yelp", sourceUrl, fraicheur)).reviews;
 }

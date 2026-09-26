@@ -395,6 +395,18 @@ export const PLATEFORMES: Plateforme[] = [
     verifier: avecLeNom("Hotfrog"),
     etapes: [...ANNUAIRE, COLLER],
   },
+  ...[
+    ["amazon-alexa", "Amazon Alexa"], ["around-me", "AroundMe"],
+    ["map-quest", "MapQuest"], ["navmii", "Navmii"],
+    ["horaire", "horaire.com"], ["i-global", "iGlobal"],
+    ["opendi", "Opendi FR"], ["pages-24", "Pages24 FR"],
+    ["pitney-bowes", "Pitney Bowes"], ["tupalo", "Tupalo"],
+    ["where-to", "Where To"],
+  ].map(([cle, nom]) => ({
+    cle, nom, groupe: "annuaires" as const, niveau: 2 as const, minutes: 5,
+    pourquoi: "Une source de données locale à contrôler pour garder la fiche cohérente.",
+    verifier: avecLeNom(nom), etapes: [...ANNUAIRE, COLLER],
+  })),
 ];
 export const STATUTS = ["a_jour", "a_corriger", "absente"] as const;
 export type StatutPresence = (typeof STATUTS)[number];
