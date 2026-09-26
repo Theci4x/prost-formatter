@@ -42,6 +42,8 @@ export type Restaurant = {
   site_web: string | null;
   yelp_url?: string | null;
   tripadvisor_url?: string | null;
+  presence_urls?: Record<string, string> | null;
+  presence_auditee_le?: string | null;
   description: string | null;
   // « Allemande », « Bistrot, cuisine française »… Texte libre : la liste
   // fermée des cuisines n'existe nulle part, et forcer un restaurateur à

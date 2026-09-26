@@ -27,7 +27,7 @@ import {
 import { langueUtilisateur } from "@/lib/i18n/langue";
 import { PRESENCE, plateformeEn, type ClesPresence } from "@/lib/i18n/presence";
 import { localeDe } from "@/lib/i18n/seo";
-import { majPresence } from "./actions";
+import { majPresence, enregistrerUrlPresence } from "./actions";
 
 /**
  * La présence du restaurant hors de Klarr.
@@ -100,6 +100,22 @@ export default async function PresencePage({
   const etat = await chargerPresence(supabase, id);
   if (!etat) notFound();
   const { restaurant, relies: reliesFr, constats, tableAbsente } = etat;
+  const { data: auditRows } = await supabase
+    .from("restaurant_presence_audits")
+    .select("plateforme, statut, ecarts, note, nombre_avis, audite_le")
+    .eq("restaurant_id", id)
+    .order("audite_le", { ascending: false })
+    .limit(100);
+  const audits = new Map<string, { statut: string; ecarts: string[]; note: number | null; nombre_avis: number | null; audite_le: string }>();
+  for (const row of auditRows ?? []) {
+    if (!audits.has(row.plateforme)) audits.set(row.plateforme, {
+      statut: row.statut,
+      ecarts: Array.isArray(row.ecarts) ? row.ecarts as string[] : [],
+      note: row.note,
+      nombre_avis: row.nombre_avis,
+      audite_le: row.audite_le,
+    });
+  }
   const champs = etat.champs.map((c) => ({
     ...c,
     libelle: t.champs[c.libelle] ?? c.libelle,
@@ -349,6 +365,8 @@ export default async function PresencePage({
                       adresse={adresseRecherche}
                       t={t}
                       locale={locale}
+                      url={restaurant.presence_urls?.[plateforme.cle] ?? ""}
+                      audit={audits.get(plateforme.cle) ?? null}
                     />
                   ))}
                 </ul>
@@ -422,6 +440,8 @@ function LignePlateforme({
   premier,
   t,
   locale,
+  url,
+  audit,
 }: {
   plateforme: Plateforme;
   restaurantId: string;
@@ -434,6 +454,8 @@ function LignePlateforme({
   premier: boolean;
   t: ClesPresence;
   locale: string;
+  url: string;
+  audit: { statut: string; ecarts: string[]; note: number | null; nombre_avis: number | null; audite_le: string } | null;
 }) {
   const aFaire =
     etat === "a_revoir" || etat === "a_corriger" || etat === "absente";
@@ -509,6 +531,23 @@ function LignePlateforme({
             <p className="rounded-lg bg-white px-3 py-2 text-sm leading-relaxed text-ink">
               {plateforme.conseil}
             </p>
+          )}
+
+          <form action={enregistrerUrlPresence} className="flex flex-wrap items-end gap-2 rounded-lg border border-zinc-200 bg-white p-3">
+            <input type="hidden" name="restaurant_id" value={restaurantId} />
+            <input type="hidden" name="plateforme" value={plateforme.cle} />
+            <label className="flex min-w-[16rem] flex-1 flex-col gap-1 text-xs font-semibold text-zinc-600">
+              URL publique de la fiche à contrôler
+              <input name="url" type="url" defaultValue={url} placeholder="https://..." className="rounded-lg border border-zinc-200 px-3 py-2 text-sm font-normal text-ink outline-none focus:border-brand-navy" />
+            </label>
+            <button type="submit" className="rounded-lg border border-zinc-200 px-4 py-2 text-sm font-semibold text-zinc-700 hover:border-brand-navy hover:text-brand-navy">Enregistrer</button>
+          </form>
+
+          {audit && (
+            <div className={`rounded-lg px-3 py-2 text-sm ${audit.statut === "incoherence" ? "bg-brand-orange-soft text-ink" : "bg-emerald-50 text-emerald-800"}`}>
+              <strong>Dernier contrôle :</strong> {audit.statut === "incoherence" ? `incohérence — ${audit.ecarts.join(", ")}` : audit.statut === "coherente" ? "cohérente" : audit.statut}
+              {(audit.note != null || audit.nombre_avis != null) && <> · {audit.note ?? "—"}/5 · {audit.nombre_avis ?? "—"} avis</>}
+            </div>
           )}
 
           <div className="flex flex-wrap items-center gap-2">

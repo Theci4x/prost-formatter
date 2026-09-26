@@ -55,7 +55,13 @@ Dashboard de gestion des restaurants. Next.js (App Router) + Supabase.
     rotation hebdomadaire. Applique aussi
     `supabase/migrations/0089_reputation_sources.sql` dans le SQL editor
     Supabase avant de saisir les URLs.
-13. Pour Facebook/Instagram : va sur
+13. Pour le contrôle mensuel de présence, applique aussi
+    `supabase/migrations/0090_presence_audits.sql`. Dans chaque plateforme de
+    `/dashboard/[id]/presence`, le restaurateur peut enregistrer l'URL publique
+    exacte de sa fiche. Le cron relève ensuite les données accessibles (nom,
+    adresse, note et nombre d'avis quand présents), compare la fiche Klarr et
+    conserve l'historique. Klarr ne modifie aucune plateforme externe.
+14. Pour Facebook/Instagram : va sur
     [developers.facebook.com](https://developers.facebook.com), crée une
     App (type "Business"), ajoute le produit **"Facebook Login for
     Business"**, et déclare comme "Redirect URI" (dans Facebook Login for

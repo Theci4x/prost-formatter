@@ -56,3 +56,32 @@ export async function majPresence(formData: FormData) {
     );
   }
 }
+
+export async function enregistrerUrlPresence(formData: FormData) {
+  const restaurantId = String(formData.get("restaurant_id") ?? "");
+  const plateforme = String(formData.get("plateforme") ?? "");
+  const url = String(formData.get("url") ?? "").trim();
+  if (!restaurantId || !estPlateforme(plateforme)) return;
+  await exiger(restaurantId, "gerant");
+  if (url) {
+    try {
+      const parsed = new URL(url);
+      if (!["http:", "https:"].includes(parsed.protocol)) return;
+    } catch { return; }
+  }
+  const supabase = await createClient();
+  const { data: restaurant } = await supabase
+    .from("restaurants")
+    .select("presence_urls")
+    .eq("id", restaurantId)
+    .maybeSingle();
+  const urls = (restaurant?.presence_urls ?? {}) as Record<string, string>;
+  if (url) urls[plateforme] = url;
+  else delete urls[plateforme];
+  const { error } = await supabase
+    .from("restaurants")
+    .update({ presence_urls: urls })
+    .eq("id", restaurantId);
+  if (error) console.error("[presence/url]", error.message);
+  revalidatePath(`/dashboard/${restaurantId}/presence`);
+}
