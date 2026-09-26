@@ -91,7 +91,17 @@ export default async function IntegrerPage({
     "async",
   ].filter(Boolean);
   const codeScript = `<script ${attributs.join(" ")}></script>`;
-  const codeIframe = `<iframe src="${site}/reserver/${slug ?? ""}?integre=1" title="${echapperAttribut(t("Réserver chez {nom}", { nom: restaurant.nom }))}" style="width:100%;min-height:860px;border:0;border-radius:12px" loading="lazy"></iframe>`;
+  // Sous le formulaire, une ligne qui dit par où passe la réservation, avec
+  // un lien vers Klarr. Un lien dans l'iframe ne compte pour aucun moteur :
+  // il n'est pas sur le site du restaurant. Celui-ci y est, et c'est la
+  // façon la plus honnête pour Klarr d'être cité — le nom de la marque,
+  // rien d'autre, et le restaurateur est prévenu qu'il peut l'enlever.
+  const credit = `<p style="margin:8px 0 0;font:12px/1.4 system-ui,sans-serif;color:#8a8178;text-align:center">${t(
+    "Réservations propulsées par {klarr}",
+    { klarr: `<a href="${site}" style="color:inherit">Klarr</a>` },
+  )}</p>`;
+  const codeIframe = `<iframe src="${site}/reserver/${slug ?? ""}?integre=1" title="${echapperAttribut(t("Réserver chez {nom}", { nom: restaurant.nom }))}" style="width:100%;min-height:860px;border:0;border-radius:12px" loading="lazy"></iframe>
+${credit}`;
   const lien = `${site}/reserver/${slug ?? ""}`;
 
   // L'aperçu : une fausse page de site, avec le vrai script dedans.
@@ -282,6 +292,11 @@ ${codeScript}</div></body></html>`;
               )}
             </p>
             <Code code={codeIframe} libelle={t("Copier le code")} t={t} />
+            <p className="text-xs text-zinc-500">
+              {t(
+                "La dernière ligne indique que les réservations passent par Klarr. Tu peux la retirer : le formulaire fonctionne sans.",
+              )}
+            </p>
           </section>
 
           <section className="flex flex-col gap-4 rounded-2xl border border-zinc-200/70 bg-white p-6 shadow-sm">

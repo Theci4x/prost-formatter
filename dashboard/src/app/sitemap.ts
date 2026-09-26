@@ -12,7 +12,18 @@ import { cheminJournal } from "@/types/blog";
 // page de réservation ouverte après coup n'y entrerait jamais.
 export const revalidate = 3600;
 
-const PAGES_FIXES = [
+/**
+ * La date de la dernière retouche commune des pages fixes.
+ *
+ * Elles annonçaient toutes « modifiée à l'instant », à chaque passage du
+ * robot. Un moteur qui voit une date changer sans que la page change
+ * apprend à ne plus lire la date du tout — y compris le jour où elle dit
+ * vrai. On met donc la vraie : celle-ci pour le lot, et une date propre
+ * (`misAJour`) sur la page qu'on retouche seule.
+ */
+const PAGES_FIXES_MISES_A_JOUR = "2026-09-26";
+
+const PAGES_FIXES: { chemin: string; priorite: number; misAJour?: string }[] = [
   { chemin: "", priorite: 1 },
   { chemin: "/mentions-legales", priorite: 0.3 },
   { chemin: "/cgu", priorite: 0.3 },
@@ -63,14 +74,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const fixes = [
     ...PAGES_FIXES.map((page) => ({
       url: `${site}${page.chemin}`,
-      lastModified: new Date(),
+      lastModified: new Date(
+        `${page.misAJour ?? PAGES_FIXES_MISES_A_JOUR}T12:00:00`,
+      ),
       priority: page.priorite,
     })),
     // Le mode d'emploi répond à des questions qu'on tape dans Google
     // (« comment bloquer un jour de réservation »). Autant qu'il soit trouvé.
     ...tousLesArticles().map((article) => ({
       url: `${site}/aide/${article.slug}`,
-      lastModified: new Date(),
+      // Pas de date propre dans le mode d'emploi : celle du lot.
+      lastModified: new Date(`${PAGES_FIXES_MISES_A_JOUR}T12:00:00`),
       priority: 0.5,
     })),
     // Le journal vise des recherches qu'on ne fait qu'une fois dans sa vie

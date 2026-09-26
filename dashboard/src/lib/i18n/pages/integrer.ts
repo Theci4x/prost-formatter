@@ -47,6 +47,15 @@ export const INTEGRER: Traductions = {
   "Réserver une table": { en: "Book a table", zh: "预订餐桌" },
   Appliquer: { en: "Apply", zh: "应用" },
   "Copier le code": { en: "Copy the code", zh: "复制代码" },
+  "Réservations propulsées par {klarr}": {
+    en: "Bookings powered by {klarr}",
+    zh: "订位服务由 {klarr} 提供",
+  },
+  "La dernière ligne indique que les réservations passent par Klarr. Tu peux la retirer : le formulaire fonctionne sans.":
+    {
+      en: "The last line says bookings go through Klarr. You can remove it: the form works without it.",
+      zh: "最后一行说明订位通过 Klarr 进行。您可以删掉它，表单照常工作。",
+    },
   "Le texte suit la langue de ton site si tu ne le changes pas : « Book a table » sur une page en anglais. Tes propres boutons peuvent aussi ouvrir la réservation : ajoute-leur l'attribut {attribut}.":
     {
       en: "If you don't change it, the text follows your site's language: “Réserver une table” on a French page. Your own buttons can open the booking too: add the {attribut} attribute to them.",
