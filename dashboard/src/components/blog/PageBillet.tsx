@@ -210,6 +210,8 @@ export async function PageBillet({
             image={billet.image}
             ratio={6}
             ratioPhoto={2}
+            prioritaire
+            largeur="(max-width: 896px) 100vw, 896px"
           />
         </div>
         {billet.image?.credit && (

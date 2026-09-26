@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { teinteBillet } from "@/lib/blog/teintes";
 import type { Illustration } from "@/types/blog";
 
@@ -23,6 +24,8 @@ export function Couverture({
   image,
   ratio = 3.4,
   ratioPhoto = 1.9,
+  prioritaire = false,
+  largeur = "(max-width: 768px) 100vw, 400px",
 }: {
   slug: string;
   rubrique: string;
@@ -34,6 +37,14 @@ export function Couverture({
    * va bien à un motif décapiterait le sujet. D'où deux proportions.
    */
   ratioPhoto?: number;
+  /**
+   * Vrai pour la photo en tête d'un article : c'est elle que le lecteur
+   * attend, elle se charge tout de suite. Ailleurs, sur une carte en bas
+   * de page, elle attend d'approcher de l'écran.
+   */
+  prioritaire?: boolean;
+  /** La largeur affichée, pour que le navigateur prenne la bonne taille. */
+  largeur?: string;
 }) {
   const { fond, trait } = teinteBillet(slug);
 
@@ -48,19 +59,17 @@ export function Couverture({
           margin: 0,
         }}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element -- photo
-            servie telle quelle depuis /public : la faire passer par
-            l'optimiseur ajouterait un aller-retour sans rien gagner sur
-            une image déjà dimensionnée à la main. */}
-        <img
+        {/* Par l'optimiseur de Next : la photo de 1 400 pixels et 150 Ko
+            partait telle quelle vers une carte de 400 pixels de large.
+            Redimensionnée et convertie en WebP, elle pèse une fraction de
+            ça — PageSpeed comptait 1,4 Mo de photos sur l'accueil. */}
+        <Image
           src={image.fichier}
           alt={image.alt}
-          style={{
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
-            display: "block",
-          }}
+          fill
+          sizes={largeur}
+          priority={prioritaire}
+          style={{ objectFit: "cover" }}
         />
         {/* Le même trait de couleur que les couvertures dessinées : c'est
             lui qui fait tenir la série ensemble quand les deux se

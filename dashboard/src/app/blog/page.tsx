@@ -102,6 +102,8 @@ export default function BlogPage() {
               image={premier.image}
               ratio={5}
               ratioPhoto={2}
+              prioritaire
+              largeur="(max-width: 1180px) 100vw, 1180px"
             />
             <div className="flex flex-col gap-2 p-6">
               <span
