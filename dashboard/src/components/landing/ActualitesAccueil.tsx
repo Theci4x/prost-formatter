@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { CHEMIN_ACTUALITES, toutesLesActualites } from "@/lib/actualites";
 import { dateLisible } from "@/lib/blog/billets";
@@ -93,19 +94,41 @@ export function ActualitesAccueil({ langue }: { langue: Langue }) {
                 href={`${CHEMIN_ACTUALITES}/${actualite.slug}`}
                 style={{
                   display: "flex",
-                  flexDirection: "column",
-                  gap: 6,
+                  alignItems: "center",
+                  gap: 14,
                   textDecoration: "none",
                   color: "var(--ink)",
                 }}
               >
-                <span style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>
-                  {dateLisible(actualite.publieLe)}
-                </span>
+                <Image
+                  src={actualite.image.fichier}
+                  alt=""
+                  width={1600}
+                  height={900}
+                  sizes="128px"
+                  style={{
+                    flex: "none",
+                    width: 128,
+                    height: 72,
+                    objectFit: "cover",
+                    borderRadius: 10,
+                  }}
+                />
                 <span
-                  style={{ fontSize: 16.5, fontWeight: 600, lineHeight: 1.35 }}
+                  style={{ display: "flex", flexDirection: "column", gap: 6 }}
                 >
-                  {actualite.titre}
+                  <span style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>
+                    {dateLisible(actualite.publieLe)}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: 16.5,
+                      fontWeight: 600,
+                      lineHeight: 1.35,
+                    }}
+                  >
+                    {actualite.titre}
+                  </span>
                 </span>
               </Link>
             </li>

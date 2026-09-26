@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CadreJournal, Separateur } from "@/components/blog/CadreJournal";
@@ -38,6 +39,7 @@ export async function generateMetadata({
       description: actualite.resume,
       publishedTime: actualite.publieLe,
       modifiedTime: actualite.misAJourLe,
+      images: [{ url: actualite.image.fichier, width: 1600, height: 900 }],
     },
   };
 }
@@ -82,6 +84,7 @@ export default async function PageActualite({
             dateModified: actualite.misAJourLe,
             inLanguage: "fr",
             mainEntityOfPage: adresse,
+            image: `${site}${actualite.image.fichier}`,
             author: { "@type": "Organization", name: "Klarr", url: site },
             publisher: { "@type": "Organization", name: "Klarr", url: site },
             citation: actualite.sources.map((source) => source.intitule),
@@ -130,6 +133,28 @@ export default async function PageActualite({
             </p>
           )}
         </header>
+
+        <figure className="flex flex-col gap-1.5">
+          <Image
+            src={actualite.image.fichier}
+            alt={actualite.image.alt}
+            width={1600}
+            height={900}
+            priority
+            sizes="(min-width: 960px) 896px, 100vw"
+            style={{
+              width: "100%",
+              height: "auto",
+              borderRadius: "1rem",
+              border: "1px solid var(--line)",
+            }}
+          />
+          {actualite.image.credit && (
+            <figcaption style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>
+              {actualite.image.credit}
+            </figcaption>
+          )}
+        </figure>
 
         {/* L'essentiel d'abord : une actualité se lit souvent entre deux
             services, et c'est parfois tout ce qu'on en lira. */}

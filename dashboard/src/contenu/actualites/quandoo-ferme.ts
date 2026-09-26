@@ -7,6 +7,11 @@ export const actualite: Actualite = {
     "Quandoo cesse de fonctionner pour les restaurants le 30 septembre 2026 et ferme définitivement au 31 décembre. Le calendrier, ce qu'il faut récupérer avant la date, et les solutions pour la suite.",
   publieLe: "2026-09-26",
   misAJourLe: "2026-09-26",
+  image: {
+    fichier: "/actualites/quandoo-ferme.jpg",
+    alt: "Une restauratrice au comptoir de son bistrot vide, le matin avant le service, recopie des réservations dans un carnet papier à côté de son ordinateur portable.",
+    credit: "Illustration",
+  },
   essentiel: [
     "Quandoo a annoncé le 24 mars 2026 l'arrêt de son activité, décidé par sa maison mère, le groupe japonais Recruit Holdings.",
     "Le 30 septembre 2026 est le dernier jour où les restaurants peuvent utiliser leurs outils Quandoo. Le site, l'application et les serveurs s'éteignent au plus tard le 31 décembre.",
@@ -74,6 +79,11 @@ Il y a deux familles de solutions, et elles ne répondent pas au même besoin.
 **Les logiciels à abonnement** vous donnent une page de réservation à votre nom et un carnet, pour un prix fixe, sans commission. Ils ne vous amènent personne : ils reçoivent ceux qui vous cherchent déjà. C'est la famille de Zenchef, de Guestonline, et celle de Klarr.
 
 Disons-le, puisque vous lisez notre site : **Klarr vend un logiciel de la seconde famille**, et nous avons donc un intérêt à ce que vous la choisissiez. Klarr est pensé d'abord pour les restaurants en France. Il fonctionne en français, en anglais et en chinois, et il importe un carnet exporté d'un autre outil sous forme de fichier CSV. Nous n'avons pas testé l'import d'un fichier Quandoo : si vous essayez, dites-nous ce qui manque.
+
+<figure>
+<img src="/actualites/klarr-import-tableur.jpg" alt="L'écran d'import de Klarr : choix entre fichier client et réservations à venir, source « Un tableur », et les trois étapes pour préparer un fichier CSV." width="1650" height="1140" loading="lazy" />
+<figcaption>L'import de Klarr, source « Un tableur » : une ligne par client, au moins une colonne e-mail, enregistré en CSV. Capture du restaurant de démonstration.</figcaption>
+</figure>
 
 Pour choisir sans nous croire sur parole :
 

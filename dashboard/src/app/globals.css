@@ -208,6 +208,24 @@ body {
   border-top: 1px solid var(--line);
   margin: 0.4rem 0;
 }
+.billet figure {
+  margin: 2rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+.billet figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 0.9rem;
+  border: 1px solid var(--line);
+}
+.billet figcaption {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
 .billet em {
   font-style: italic;
 }

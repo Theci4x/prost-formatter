@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { CadreJournal } from "@/components/blog/CadreJournal";
 import { Commis } from "@/components/commis/Commis";
@@ -48,44 +49,55 @@ export default function ActualitesPage() {
             <li key={actualite.slug}>
               <Link
                 href={`${CHEMIN_ACTUALITES}/${actualite.slug}`}
-                className="flex flex-col gap-2 transition-colors hover:border-[var(--ink-soft)]"
+                className="grid gap-4 overflow-hidden transition-colors hover:border-[var(--ink-soft)] sm:grid-cols-[240px_minmax(0,1fr)]"
                 style={{
                   borderRadius: "1rem",
                   border: "1px solid var(--line)",
                   background: "var(--paper)",
-                  padding: "1.25rem 1.4rem",
                   textDecoration: "none",
                   color: "var(--ink)",
                 }}
               >
-                <span
-                  style={{
-                    fontSize: 12,
-                    fontWeight: 700,
-                    letterSpacing: "0.06em",
-                    textTransform: "uppercase",
-                    color: "var(--accent-dark)",
-                  }}
-                >
-                  {dateLisible(actualite.publieLe)}
-                </span>
-                <span
-                  style={{
-                    fontFamily: "var(--font-instrument-serif), Georgia, serif",
-                    fontSize: "1.45rem",
-                    lineHeight: 1.2,
-                  }}
-                >
-                  {actualite.titre}
-                </span>
-                <span
-                  style={{
-                    fontSize: 15,
-                    lineHeight: 1.6,
-                    color: "var(--ink-soft)",
-                  }}
-                >
-                  {actualite.resume}
+                <Image
+                  src={actualite.image.fichier}
+                  alt=""
+                  width={1600}
+                  height={900}
+                  sizes="(min-width: 640px) 240px, 100vw"
+                  className="h-full w-full object-cover"
+                  style={{ aspectRatio: "16 / 9" }}
+                />
+                <span className="flex flex-col gap-2 px-5 pb-5 sm:py-5 sm:pr-5 sm:pl-0">
+                  <span
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 700,
+                      letterSpacing: "0.06em",
+                      textTransform: "uppercase",
+                      color: "var(--accent-dark)",
+                    }}
+                  >
+                    {dateLisible(actualite.publieLe)}
+                  </span>
+                  <span
+                    style={{
+                      fontFamily:
+                        "var(--font-instrument-serif), Georgia, serif",
+                      fontSize: "1.45rem",
+                      lineHeight: 1.2,
+                    }}
+                  >
+                    {actualite.titre}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: 15,
+                      lineHeight: 1.6,
+                      color: "var(--ink-soft)",
+                    }}
+                  >
+                    {actualite.resume}
+                  </span>
                 </span>
               </Link>
             </li>

@@ -1,4 +1,4 @@
-import type { Source } from "@/types/blog";
+import type { Illustration, Source } from "@/types/blog";
 
 /**
  * Une actualité du secteur : une plateforme qui ferme, un rachat, une loi
@@ -25,6 +25,13 @@ export type Actualite = {
   /** Format ISO. */
   publieLe: string;
   misAJourLe: string;
+  /**
+   * L'image d'en-tête. Une illustration, jamais une photo de l'événement :
+   * pas de logo, pas de marque, et la légende le dit — une image générée
+   * qu'on laisserait passer pour un reportage serait un mensonge de plus
+   * dans un article qui parle d'entreprises réelles.
+   */
+  image: Illustration;
   /** Ce qu'il faut retenir, en trois ou quatre lignes, avant le texte. */
   essentiel: string[];
   sources: Source[];

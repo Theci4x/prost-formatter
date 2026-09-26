@@ -7,6 +7,11 @@ export const actualite: Actualite = {
     "Tripadvisor vend TheFork à American Express pour 700 millions de dollars. La vente n'est pas encore conclue. Ce qui est annoncé, ce qui ne l'est pas, et ce qu'un restaurateur peut surveiller.",
   publieLe: "2026-09-26",
   misAJourLe: "2026-09-26",
+  image: {
+    fichier: "/actualites/thefork-rachat-amex.jpg",
+    alt: "Une table de brasserie en fin de dîner : un téléphone posé à côté d'une carte de paiement sans marque et de l'addition dans une coupelle, à la lueur d'une bougie.",
+    credit: "Illustration",
+  },
   essentiel: [
     "Mi-juin 2026, Tripadvisor a signé un accord pour vendre TheFork à American Express, pour 700 millions de dollars en numéraire.",
     "La vente n'est pas encore conclue : elle est attendue avant la fin de 2026, après consultation des salariés et accord des autorités.",
@@ -59,6 +64,11 @@ Rien. Votre contrat, votre commission, votre accès et votre application restent
 Trois sujets méritent votre attention dans les mois qui viennent. Ce sont des questions, pas des prévisions.
 
 **Les conditions tarifaires.** Un changement de propriétaire est souvent suivi, tôt ou tard, d'une révision des offres. Relisez les nouvelles conditions quand elles arriveront, et refaites votre calcul : combien de couverts vous viennent de la plateforme, et combien seraient venus sans elle. [Notre calculateur](/calculateur-commissions-restaurant) fait l'opération en une minute.
+
+<figure>
+<img src="/actualites/calculateur-commissions.jpg" alt="Le résultat du calculateur de commissions de Klarr pour 400 couverts par mois à 2 € : 9 600 € par an, dont 4 800 € payés sur des clients qui seraient venus sans la plateforme." width="1040" height="940" loading="lazy" />
+<figcaption>Le calculateur, pour 400 couverts par mois à 2 € la commission, dont la moitié seraient venus de toute façon. Mettez vos propres chiffres.</figcaption>
+</figure>
 
 **Les paiements et la fidélité.** American Express est d'abord une entreprise de cartes de paiement. Aux États-Unis, il se sert de Resy pour offrir à ses porteurs de carte un accès privilégié à certaines tables. Rien n'est annoncé de tel pour TheFork, mais c'est la logique affichée du rachat : relier la réservation, le paiement et la fidélité.
 
