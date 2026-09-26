@@ -54,6 +54,10 @@ export type ClesAccueilPublic = {
     garanties: string[];
   };
   clients: { confiance: string };
+  temoignages: {
+    surtitre: string;
+    liste: { id: string; citation: string; nom: string; role: string }[];
+  };
   probleme: {
     surtitre: string;
     titre: string;
@@ -444,6 +448,33 @@ const fr: ClesAccueilPublic = {
     ],
   },
   clients: { confiance: "Ils nous font déjà confiance" },
+  temoignages: {
+    surtitre: "Ce qu'en disent nos clients",
+    liste: [
+      {
+        id: "an",
+        citation:
+          "« Avec deux restaurants, je n'ai pas le temps de jongler entre dix outils. Avec Klarr, réservations, avis et fiche Google sont au même endroit — et je ne paie aucune commission. »",
+        nom: "An",
+        role: "Patron de Kokodak et Joayo 13",
+      },
+      {
+        id: "xuanmin",
+        citation:
+          "« Chez TAN, on a aussi le karaoké : privatisations et acomptes, c'était un casse-tête. Avec Klarr, le client réserve sa salle, verse son acompte en ligne, et tout arrive directement chez nous. »",
+        nom: "Xuanmin",
+        role: "Fondatrice de TAN",
+      },
+      {
+        id: "huijun",
+        citation:
+          "« Pendant le service, je vois toute la salle table par table et les demandes arrivent directement. Plus besoin du cahier ni de rappeler chaque client. »",
+        nom: "Huijun Yan",
+        role: "Gérante du Prost",
+      },
+    ],
+  },
+
   probleme: {
     surtitre: "Le problème",
     titre:
@@ -1005,6 +1036,33 @@ const en: ClesAccueilPublic = {
     garanties: ["No card required", "No contract", "Cancel in one click"],
   },
   clients: { confiance: "Already working with" },
+  temoignages: {
+    surtitre: "What our clients say",
+    liste: [
+      {
+        id: "an",
+        citation:
+          "“With two restaurants, I don't have time to juggle ten tools. With Klarr, bookings, reviews and my Google listing are all in one place — and I pay no commission.”",
+        nom: "An",
+        role: "Owner of Kokodak and Joayo 13",
+      },
+      {
+        id: "xuanmin",
+        citation:
+          "“At TAN we also run karaoke: private bookings and deposits used to be a headache. With Klarr, guests book their room, pay the deposit online, and everything comes straight to us.”",
+        nom: "Xuanmin",
+        role: "Founder of TAN",
+      },
+      {
+        id: "huijun",
+        citation:
+          "“During service I see the whole room table by table, and requests come straight in. No more notebook, no more calling every guest back.”",
+        nom: "Huijun Yan",
+        role: "Manager of Prost",
+      },
+    ],
+  },
+
   probleme: {
     surtitre: "The problem",
     titre:
@@ -1551,6 +1609,33 @@ const zh: ClesAccueilPublic = {
     garanties: ["无需信用卡", "无需签约", "一键取消"],
   },
   clients: { confiance: "他们已经在用" },
+  temoignages: {
+    surtitre: "客户怎么说",
+    liste: [
+      {
+        id: "an",
+        citation:
+          "“我有两家餐厅，没时间在十个工具之间来回切换。用 Klarr，订位、评价和 Google 商家资料都在一个地方，而且不用付任何佣金。”",
+        nom: "An",
+        role: "Kokodak 和 Joayo 13 老板",
+      },
+      {
+        id: "xuanmin",
+        citation:
+          "“TAN 还有卡拉 OK，包场和订金以前特别麻烦。用 Klarr，客人直接订包间、在线付订金，所有信息都直接到我们这里。”",
+        nom: "Xuanmin",
+        role: "TAN 创始人",
+      },
+      {
+        id: "huijun",
+        citation:
+          "“营业时，整个餐厅一桌一桌看得清清楚楚，订位申请直接进来。不用再记本子，也不用一个个回电话。”",
+        nom: "Huijun Yan",
+        role: "Prost 店长",
+      },
+    ],
+  },
+
   probleme: {
     surtitre: "问题所在",
     titre:

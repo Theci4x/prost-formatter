@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { KlarrMark } from "@/components/brand/KlarrMark";
 import { ClientLogos } from "@/components/landing/ClientLogos";
+import { Temoignages } from "@/components/landing/Temoignages";
 import { Comparison } from "@/components/landing/Comparison";
 import { Founder, Problem } from "@/components/landing/Manifesto";
 import { Partner } from "@/components/landing/Partner";
@@ -531,6 +532,10 @@ export default async function Home() {
 
         <Reveal>
           <ClientLogos confiance={t.clients.confiance} />
+        </Reveal>
+
+        <Reveal>
+          <Temoignages t={t.temoignages} />
         </Reveal>
 
         <Reveal>
