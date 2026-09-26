@@ -222,7 +222,19 @@ export default function ConfidentialitePage() {
               <tr>
                 <td>Google Business Profile</td>
                 <td>
-                  Compte Google associé (e-mail), fiche(s) d&apos;établissement
+                  Compte Google associé (e-mail), fiche(s) d&apos;établissement,
+                  statistiques de la fiche (vues, appels, itinéraires)
+                </td>
+                <td>
+                  Oui — uniquement les posts que vous rédigez et validez dans
+                  Klarr
+                </td>
+              </tr>
+              <tr>
+                <td>Google Search Console</td>
+                <td>
+                  Requêtes de recherche, impressions, clics et position moyenne
+                  de votre site (<code>webmasters.readonly</code>)
                 </td>
                 <td>Non — lecture seule</td>
               </tr>
@@ -251,8 +263,33 @@ export default function ConfidentialitePage() {
           </table>
         </div>
         <p>
-          Aucune de ces connexions ne permet à Klarr de publier du contenu,
-          modifier vos paramètres ou agir en votre nom sur ces plateformes.
+          Hormis la publication, à votre demande, des posts Google que vous avez
+          rédigés et validés, aucune de ces connexions ne permet à Klarr de
+          publier du contenu, de modifier vos paramètres ou d&apos;agir en votre
+          nom sur ces plateformes.
+        </p>
+        <p>
+          Les données reçues de Google ne servent qu&apos;aux fonctions que vous
+          utilisez dans Klarr : afficher votre fiche et ses statistiques, publier
+          vos posts, et analyser le référencement de votre site. Pour cette
+          analyse, vos requêtes Search Console peuvent être transmises à notre
+          sous-traitant d&apos;intelligence artificielle (Anthropic), qui ne
+          s&apos;en sert pas pour entraîner ses modèles. Elles ne sont ni
+          vendues, ni utilisées à des fins publicitaires, ni lues par un humain
+          sans votre accord. L&apos;accès à votre compte Google est supprimé dès
+          que vous le déconnectez ; les analyses déjà produites restent dans
+          votre compte Klarr jusqu&apos;à sa suppression.
+        </p>
+        <p lang="en">
+          Klarr&apos;s use and transfer of information received from Google APIs
+          will adhere to the{" "}
+          <a
+            href="https://developers.google.com/terms/api-services-user-data-policy"
+            className="underline"
+          >
+            Google API Services User Data Policy
+          </a>
+          , including the Limited Use requirements.
         </p>
       </LegalSection>
 
