@@ -154,7 +154,7 @@ export function LigneService({
               nombre nu se lit mal. */}
           <span className="font-medium tabular-nums text-ink">
             {detail.couverts}{" "}
-            <span className="font-normal text-ink-soft">couv.</span>
+            <span className="font-normal text-ink-soft">{sv.couvAbrege}</span>
           </span>
         </span>
       </div>

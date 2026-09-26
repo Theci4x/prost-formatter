@@ -45,7 +45,7 @@ export function PlacerReservation({
   return (
     <span className="flex flex-col items-end gap-1">
       <label className="flex items-center gap-2 text-sm">
-        <span className="text-zinc-500">Table</span>
+        <span className="text-zinc-500">{sv.table}</span>
         <select
           aria-label={sv.tableDeCetteReservation}
           value={tableActuelle?.id ?? ""}
@@ -69,7 +69,7 @@ export function PlacerReservation({
       </label>
       {serre && (
         <span className="text-xs text-amber-700">
-          {couverts} convives sur une table de {tableActuelle.places}.
+          {sv.convivesSurTable(couverts, tableActuelle.places)}
         </span>
       )}
       {erreur && <span className="text-xs text-red-600">{erreur}</span>}

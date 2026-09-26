@@ -8,6 +8,8 @@ import { BandeauInstallation } from "@/components/dashboard/BandeauInstallation"
 import { LiaisonCoupee } from "@/components/dashboard/LiaisonCoupee";
 import { lireSession } from "@/lib/supabase/session";
 import { langueUtilisateur } from "@/lib/i18n/langue";
+import { traducteur } from "@/lib/i18n/t";
+import { CADRE } from "@/lib/i18n/pages/cadre";
 
 export default async function DashboardLayout({
   children,
@@ -49,6 +51,7 @@ export default async function DashboardLayout({
   }
 
   const user = verdict.user;
+  const t = traducteur(await langueUtilisateur(), CADRE);
 
   return (
     <div className="flex min-h-screen flex-1 flex-col bg-brand-cream print:min-h-0 print:bg-white">
@@ -78,12 +81,12 @@ export default async function DashboardLayout({
             href="/aide"
             className="text-sm text-zinc-500 transition-colors hover:text-brand-navy"
           >
-            Aide
+            {t("Aide")}
           </Link>
           <span className="hidden text-sm text-zinc-500 sm:inline">
             {user.email}
           </span>
-          <LogoutButton />
+          <LogoutButton libelle={t("Se déconnecter")} />
         </div>
       </header>
       {/* Sous l'en-tête, au-dessus du travail : visible sans couvrir quoi

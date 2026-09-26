@@ -18,6 +18,8 @@ import {
   PRIX_MODULE,
 } from "@/lib/abonnement/modules";
 import { DeleteRestaurantButton } from "@/components/restaurants/DeleteRestaurantButton";
+import { COMMUN, traducteur } from "@/lib/i18n/t";
+import { CADRE } from "@/lib/i18n/pages/cadre";
 
 /**
  * Un établissement sur l'accueil du tableau de bord.
@@ -633,7 +635,11 @@ export function CarteRestaurant({
               </Link>
             )}
             {role === "proprietaire" && (
-              <DeleteRestaurantButton id={restaurant.id} />
+              <DeleteRestaurantButton
+                id={restaurant.id}
+                libelle={traducteur(langue, COMMUN)("Supprimer")}
+                confirmation={traducteur(langue, CADRE)("Supprimer ce restaurant ?")}
+              />
             )}
           </div>
         </div>

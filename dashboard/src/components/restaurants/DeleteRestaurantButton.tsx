@@ -2,12 +2,20 @@
 
 import { deleteRestaurant } from "@/app/dashboard/actions";
 
-export function DeleteRestaurantButton({ id }: { id: string }) {
+export function DeleteRestaurantButton({
+  id,
+  libelle,
+  confirmation,
+}: {
+  id: string;
+  libelle: string;
+  confirmation: string;
+}) {
   return (
     <form
       action={deleteRestaurant}
       onSubmit={(event) => {
-        if (!confirm("Supprimer ce restaurant ?")) {
+        if (!confirm(confirmation)) {
           event.preventDefault();
         }
       }}
@@ -17,7 +25,7 @@ export function DeleteRestaurantButton({ id }: { id: string }) {
         type="submit"
         className="text-sm font-medium text-red-600 hover:text-red-800"
       >
-        Supprimer
+        {libelle}
       </button>
     </form>
   );

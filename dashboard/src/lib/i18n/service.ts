@@ -36,6 +36,9 @@ export type ClesService = {
   tableDeCetteReservation: string;
   aPlacer: string;
   tableEtPlaces(nom: string, places: number): string;
+  table: string;
+  convivesSurTable(convives: number, places: number): string;
+  couvAbrege: string;
 
   /** La ligne dépliable d'un convive. */
   privatise: string;
@@ -104,6 +107,9 @@ const fr: ClesService = {
   tableDeCetteReservation: "Table de cette réservation",
   aPlacer: "À placer",
   tableEtPlaces: (nom, p) => `${nom} · ${p}p`,
+  table: "Table",
+  convivesSurTable: (c, p) => `${c} convives sur une table de ${p}.`,
+  couvAbrege: "couv.",
   privatise: "privatisé",
   absent: "absent",
   appeler: "Appeler",
@@ -167,6 +173,9 @@ const en: ClesService = {
   tableDeCetteReservation: "Table for this booking",
   aPlacer: "To seat",
   tableEtPlaces: (nom, p) => `${nom} · ${p} seats`,
+  table: "Table",
+  convivesSurTable: (c, p) => `${c} guests at a table for ${p}.`,
+  couvAbrege: "cov.",
   privatise: "private hire",
   absent: "no-show",
   appeler: "Call",
@@ -229,6 +238,9 @@ const zh: ClesService = {
   tableDeCetteReservation: "这笔订位的桌号",
   aPlacer: "待安排",
   tableEtPlaces: (nom, p) => `${nom} · ${p} 座`,
+  table: "餐桌",
+  convivesSurTable: (c, p) => `${c} 位客人坐 ${p} 人桌。`,
+  couvAbrege: "位",
   privatise: "包场",
   absent: "未到",
   appeler: "打电话",

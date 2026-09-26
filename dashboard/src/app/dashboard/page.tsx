@@ -104,6 +104,7 @@ export default async function DashboardPage() {
           alerts={alerts}
           restaurantNames={restaurantNames}
           surveillanceActive={surveillanceActive}
+          langue={langue}
         />
       )}
 
