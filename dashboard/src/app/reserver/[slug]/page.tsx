@@ -621,7 +621,6 @@ export default async function ReserverPage({
                           <div className="rounded-xl border border-zinc-200 bg-zinc-50/70 p-4">
                             <p className="font-medium text-zinc-900">
                               {r.uneTablePour(couverts)}
-                              {couverts > 1 ? "s" : ""}
                             </p>
                             <p className="mt-1 text-base text-zinc-500">
                               {r.placeeParEtablissement}

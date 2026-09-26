@@ -97,6 +97,8 @@ That is exactly what Klarr's Visibility module does: it puts your questions to t
 
 For scale, since that is the subject of the article: the Bookings module is €29 excluding VAT per month, with no commission on covers or on private hire, and deposits go straight to your own Stripe account. Thirty days' trial, no card, cancel in one click.
 
+To see how it actually works — a guest books, the request arrives, you handle it — we have filmed the whole journey and put the screens online: [commission-free booking software, screen by screen](/logiciel-reservation-restaurant-sans-commission).
+
 Compare that line with the one you worked out above. If your platform volume is 200 covers a month of which half would have come anyway, you are paying roughly €100 to €200 a month for customers you already had. That is the sum to do, and it needs nothing but a multiplication.
 
 If you want to see the four solutions on the market side by side, including what we cannot do, we have written a page for that: [the comparison with TheFork, Zenchef and Guestonline](/comparatif-logiciels-reservation-restaurant) — in French.

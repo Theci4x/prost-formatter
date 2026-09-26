@@ -198,6 +198,8 @@ export type ClesAccueilPublic = {
     points: { titre: string; texte: string }[];
     zeroLegende: string;
     zeroLien: string;
+    /** Le lien vers la page qui montre le module, écran par écran. */
+    voirParcours: string;
     zeroTexte: string;
     zeroExemple: string;
     ensuite: { titre: string; texte: string }[];
@@ -693,6 +695,7 @@ const fr: ClesAccueilPublic = {
     zeroExemple:
       "Sur 400 couverts par mois, une plateforme à 2 € le couvert prend 800 €.",
     zeroLien: "Calculer ce que la vôtre vous coûte",
+    voirParcours: "Voir comment ça marche, en vidéo",
     ensuite: [
       {
         titre: "Le carnet",
@@ -1281,6 +1284,7 @@ const en: ClesAccueilPublic = {
     zeroExemple:
       "On 400 covers a month, a platform charging €2 per cover takes €800.",
     zeroLien: "Work out what yours costs you",
+    voirParcours: "See how it works, on video",
     ensuite: [
       {
         titre: "The book",
@@ -1852,6 +1856,7 @@ const zh: ClesAccueilPublic = {
     zeroTexte: `无论是散客还是包场，都不抽成。订位模块每月 ${ht(HT.reservations, "zh")}——即 ${ttc(TTC.reservations, "zh")}——没有其他费用。`,
     zeroExemple: "每月 400 位客人，按每位 2 欧元抽成的平台要收走 800 欧元。",
     zeroLien: "算一算您自己的抽成成本",
+    voirParcours: "观看视频，了解如何运作",
     ensuite: [
       {
         titre: "预订簿",

@@ -161,6 +161,25 @@ export function Reservation({ t }: { t: ClesAccueilPublic["reservations"] }) {
                 </div>
               ))}
             </div>
+
+            {/* Quatre promesses se lisent ; un parcours filmé se croit.
+                Le lien mène aux écrans eux-mêmes. */}
+            <Link
+              href="/logiciel-reservation-restaurant-sans-commission"
+              style={{
+                alignSelf: "flex-start",
+                marginTop: 8,
+                borderRadius: 10,
+                border: "1px solid #F0A93C",
+                color: "#F0A93C",
+                padding: "11px 18px",
+                fontSize: 15,
+                fontWeight: 600,
+                textDecoration: "none",
+              }}
+            >
+              ▶ {t.voirParcours}
+            </Link>
           </div>
 
           <div

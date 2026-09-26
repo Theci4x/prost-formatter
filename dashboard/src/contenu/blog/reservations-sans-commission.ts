@@ -136,6 +136,8 @@ C'est exactement ce que fait le module Visibilité de Klarr : il pose vos questi
 
 Pour situer, puisque c'est le sujet de l'article : le module Réservations est à 29 € HT par mois, sans commission sur les couverts ni sur les privatisations, et les acomptes vont directement sur votre compte Stripe. Trente jours d'essai, sans carte bancaire, résiliation en un clic.
 
+Pour voir concrètement comment ça marche — un client réserve, la demande arrive, vous la gérez —, nous avons filmé le parcours complet et mis les écrans en ligne : [le logiciel de réservation sans commission, écran par écran](/logiciel-reservation-restaurant-sans-commission).
+
 Comparez cette ligne à celle que vous avez calculée plus haut. Si votre volume plateforme est de 200 couverts par mois dont la moitié seraient venus sans elle, vous payez environ 100 à 200 € par mois pour des clients que vous aviez déjà. C'est le calcul à faire, et il ne demande rien d'autre qu'une multiplication.
 
 Si vous voulez voir les quatre solutions du marché côte à côte, avec ce que nous ne savons pas faire, nous avons écrit une page pour ça : [le comparatif avec TheFork, Zenchef et Guestonline](/comparatif-logiciels-reservation-restaurant).

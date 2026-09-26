@@ -97,6 +97,8 @@ export const traduction: TraductionBillet = {
 
 作个参照，既然这是本文的主题：订位模块每月 29 欧元（不含税），对客位和包场都不抽佣金，定金直接进您自己的 Stripe 账户。三十天试用，不需要绑卡，一键退订。
 
+想具体看看它如何运作——客人订位、请求到达、您来处理——我们把完整流程拍成了视频，并把每个画面放在网上：[不抽佣金的订位系统，逐屏演示](/logiciel-reservation-restaurant-sans-commission)。
+
 把这条数字和您在上面算出来的那条比一比。如果您经平台来的客流量是每月 200 位，其中一半本来就会来，那么您每月大约在为早已属于您的客人付 100 到 200 欧元。这就是要算的那笔账，除了一次乘法之外不需要别的。
 
 如果您想把市面上四种方案并排看一遍，包括我们做不到的事，我们为此写了一个页面：[与 TheFork、Zenchef、Guestonline 的对比](/comparatif-logiciels-reservation-restaurant)——该页面为法语。
