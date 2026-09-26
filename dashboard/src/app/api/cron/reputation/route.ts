@@ -9,6 +9,7 @@ import {
   fetchTripadvisorPlatformReviews,
 } from "@/lib/reviews/aggregate";
 import { auditerFiche } from "@/lib/presence/audit";
+import { alerterIncoherenceCritique } from "@/lib/presence/alerte";
 
 export const maxDuration = 60;
 
@@ -35,6 +36,8 @@ const AUDIT_INTERVAL_MS = 30 * 24 * 60 * 60 * 1000;
 type RestaurantRow = {
   id: string;
   nom: string;
+  proprietaire_id: string;
+  email_contact: string | null;
   adresse: string | null;
   // L'établissement Tripadvisor confirmé par le restaurateur. Le relevé de
   // nuit doit l'honorer comme l'écran : sinon il enregistrerait chaque nuit
@@ -159,6 +162,20 @@ export async function GET(request: Request) {
             nombre_avis: audit.nombreAvis,
           });
         if (auditError) console.error("[cron/reputation] audit présence", plateforme, auditError.message);
+        if (!auditError) {
+          await alerterIncoherenceCritique({
+            supabase,
+            restaurant,
+            plateforme,
+            url,
+            audit: {
+              statut: audit.statut,
+              ecarts: audit.ecarts,
+              note: audit.note,
+              nombreAvis: audit.nombreAvis,
+            },
+          });
+        }
       }
       await supabase.from("restaurants").update({ presence_auditee_le: new Date().toISOString() }).eq("id", restaurant.id);
     }
