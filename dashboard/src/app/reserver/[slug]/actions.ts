@@ -17,6 +17,7 @@ import { decisionAutomatique } from "@/lib/reservations/confirmation";
 import { garantieRequise } from "@/lib/reservations/garantie";
 import { jetonAnnulation } from "@/lib/reservations/annulation";
 import {
+  lienCarnet,
   prevenirClient,
   prevenirRestaurateur,
 } from "@/lib/courriel/reservation";
@@ -374,7 +375,12 @@ export async function demanderReservation(
       prevenirRestaurateur({
         supabase,
         reservationId,
-        contexte,
+        // Le lien vers le tableau de bord ne va qu'au restaurateur : le
+        // client n'a rien à faire de l'adresse du carnet.
+        contexte: {
+          ...contexte,
+          lienCarnet: lienCarnet(restaurant.id, date, confirmee),
+        },
         destinataire: restaurant.email_contact ?? null,
         confirmee,
       }),

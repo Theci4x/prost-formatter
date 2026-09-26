@@ -36,6 +36,13 @@ export type Contexte = {
    */
   lienAnnulation?: string | null;
   /**
+   * Pour les alertes au restaurateur : où retrouver la réservation dans
+   * Klarr. Sans lui, l'e-mail annonce une table et laisse chercher le
+   * tableau de bord ; avec lui, un geste suffit — y compris depuis le
+   * téléphone, où l'on passe par la connexion puis revient ici.
+   */
+  lienCarnet?: string | null;
+  /**
    * L'engagement de consommation, tel qu'il a été annoncé. Il figure
    * dans le message parce qu'un engagement qu'on ne peut pas relire se
    * conteste à l'addition.
@@ -377,6 +384,16 @@ export function alerteRestaurateur(c: Contexte, confirmee: boolean): Message {
     encadre(c),
     etat,
   ];
+  // Un seul bouton, et il dit ce qu'on va faire : regarder une table déjà
+  // acquise, ou trancher une demande qui attend.
+  if (c.lienCarnet) {
+    blocs.push({
+      bouton: {
+        libelle: confirmee ? "Voir la réservation" : "Accepter ou refuser",
+        url: c.lienCarnet,
+      },
+    });
+  }
   return {
     sujet: sujet(
       `${confirmee ? "Réservation" : "À valider"} — ${c.clientNom}, ${rappel(c)}`,

@@ -11,6 +11,7 @@ import {
   type ReservationRattrapee,
 } from "@/lib/courriel/rattrapage-regles";
 import { siteUrl } from "@/lib/site-url";
+import { lienCarnet } from "@/lib/courriel/reservation";
 
 export type Bilan = {
   examines: number;
@@ -161,6 +162,13 @@ export async function rattraperCourriels({
       lienAnnulation: reservation.annulation_token
         ? `${siteUrl()}/annuler/${reservation.annulation_token}`
         : null,
+      // Lu seulement par l'alerte au restaurateur. Renvoyée plus tard,
+      // elle mène là où la réservation en est maintenant.
+      lienCarnet: lienCarnet(
+        reservation.restaurant_id,
+        reservation.date_reservation,
+        reservation.statut === "confirmee",
+      ),
     };
 
     const message = messageDe(ligne.genre, contexte);

@@ -1,6 +1,7 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { envoyerCourriel } from "@/lib/courriel/envoyer";
+import { siteUrl } from "@/lib/site-url";
 import {
   alerteAnnulationClient,
   alerteRestaurateur,
@@ -182,6 +183,24 @@ export async function renvoyerAuClient({
   }
   if (error) console.error("[courriel/renvoi]", genre, error.message);
   return resultat;
+}
+
+/**
+ * Où la réservation se regarde dans Klarr, selon son état.
+ *
+ * Confirmée : l'écran de service de ce jour-là, qui la montre à sa place
+ * parmi les autres, table comprise. En attente : la liste « À traiter »,
+ * où sont les boutons pour l'accepter ou la refuser.
+ */
+export function lienCarnet(
+  restaurantId: string,
+  date: string,
+  confirmee: boolean,
+): string {
+  const base = `${siteUrl()}/dashboard/${restaurantId}`;
+  return confirmee
+    ? `${base}/service?jour=${date}`
+    : `${base}/reservations#a-traiter`;
 }
 
 /** Prévient le restaurateur qu'une réservation est entrée. */
