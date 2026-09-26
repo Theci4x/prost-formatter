@@ -57,6 +57,8 @@ qu'une demande d'accès n'est pas approuvée par Google (formulaire
 developers.google.com/my-business/content/prereqs). Demande soumise le
 06/09/2026, numéro **9-9237000040848**, délai annoncé 7 à 10 jours
 ouvrés.
+Relance le 26/09/2026 (API Account Management, projet `klarr-507805`),
+numéro **6-9596000041383**.
 
 ### Étape 4 — SEO (en cours)
 
